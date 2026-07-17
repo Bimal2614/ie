@@ -13,6 +13,7 @@ import {
   type PaginatedSetResult,
   type SetSubmissionResult,
 } from "@/app/actions/questions";
+import { scoreAttemptSpeaking } from "@/app/actions/speaking";
 import { SetBody, type PlayerSet } from "./set-body";
 
 /**
@@ -47,6 +48,7 @@ export function PracticeSession({
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const [result, setResult] = useState<SetSubmissionResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [scoring, setScoring] = useState(false);
   const [, setAttemptedSets] = useState<Set<number>>(() => new Set(initialAttempted.setIndices));
 
   const sec = SECTIONS[section];
@@ -97,6 +99,16 @@ export function PracticeSession({
       setResult(res);
       setAttemptedSets((prev) => new Set([...prev, currentSetIndex]));
       topRef.current?.scrollIntoView({ behavior: "smooth" });
+
+      // Speaking bands are computed server-side after the fact — a SpeechSuper
+      // call takes ~9s each, so blocking the submit on seven of them would
+      // stall the UI. Rows show "awaiting score" until this fills them in.
+      if (section === "speaking") {
+        setScoring(true);
+        scoreAttemptSpeaking(res.attemptId)
+          .catch(() => {}) // a scoring outage must not break the attempt
+          .finally(() => setScoring(false));
+      }
     } finally {
       setSubmitting(false);
     }
@@ -259,10 +271,19 @@ export function PracticeSession({
                           : "Response submitted"}
                       </p>
                       <p className="text-sm text-ink-muted">
-                        {result.subjective > 0 &&
-                          `${result.subjective} response${result.subjective > 1 ? "s" : ""} sent for AI band scoring. `}
-                        {result.total > 0 &&
-                          `Accuracy ${Math.round((result.correct / result.total) * 100)}%`}
+                        {scoring ? (
+                          <span className="inline-flex items-center gap-1.5">
+                            <Loader2 className="size-3.5 animate-spin" />
+                            Scoring your speaking — this takes a few seconds per answer.
+                          </span>
+                        ) : (
+                          <>
+                            {result.subjective > 0 &&
+                              `${result.subjective} response${result.subjective > 1 ? "s" : ""} sent for AI band scoring. `}
+                            {result.total > 0 &&
+                              `Accuracy ${Math.round((result.correct / result.total) * 100)}%`}
+                          </>
+                        )}
                       </p>
                     </div>
                     <div className="flex gap-2">

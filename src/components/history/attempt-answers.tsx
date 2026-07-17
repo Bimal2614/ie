@@ -9,6 +9,18 @@ import type { SetLayout, OptionsLayout } from "@/lib/question-content";
  * ({index}, {indices}, {value}, {key}, {text}), so each family needs its own
  * translation back to "you picked B — Green space supports wellbeing".
  */
+/** What scoreSpeaking stores in `aiFeedback` for a speaking answer. */
+type SpeakingFeedback = {
+  criteria?: {
+    fluencyCoherence?: number;
+    lexicalResource?: number;
+    grammar?: number;
+    pronunciation?: number;
+  };
+  relevance?: number | null;
+  speed?: number | null;
+};
+
 export function AttemptAnswers({
   questionType,
   content,
@@ -19,6 +31,7 @@ export function AttemptAnswers({
   isCorrect,
   transcript,
   audioUrl,
+  aiFeedback = null,
 }: {
   questionType: QuestionTypeKey;
   content: unknown;
@@ -29,6 +42,7 @@ export function AttemptAnswers({
   isCorrect: boolean | null;
   transcript: string | null;
   audioUrl: string | null;
+  aiFeedback?: unknown;
 }) {
   const meta = QUESTION_TYPES[questionType];
   const family = meta.family;
@@ -54,25 +68,48 @@ export function AttemptAnswers({
     );
   }
 
-  /* ---- Speaking: the recording (S3 upload lands in a later phase) ---- */
+  /* ---- Speaking: the recording, its transcript, and the AI criteria ---- */
   if (family === "speaking") {
+    const fb = (aiFeedback ?? null) as SpeakingFeedback | null;
+    const criteria = fb?.criteria;
     return (
       <Block title="Your response">
-        {audioUrl ? (
-          // eslint-disable-next-line jsx-a11y/media-has-caption
-          <audio controls preload="none" src={audioUrl} className="w-full" />
-        ) : (
+        {ans.recorded ? (
           <p className="inline-flex items-center gap-2 text-sm text-ink-muted">
             <Mic className="size-4" />
-            {ans.recorded
-              ? `Recorded ${ans.durationSec ?? "?"}s — audio upload is wired in a later phase, so the file wasn't kept.`
-              : "No recording captured."}
+            Recorded {String(ans.durationSec ?? "?")}s
+            {/* Recordings live in a private bucket; playback needs a signed URL. */}
+            {!audioUrl && " — recording not stored."}
           </p>
+        ) : (
+          <p className="text-sm italic text-ink-muted">No recording captured.</p>
         )}
+
         {transcript && (
-          <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-ink-soft">
-            {transcript}
-          </p>
+          <div className="mt-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
+              What we heard
+            </p>
+            <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink-soft">
+              {transcript}
+            </p>
+          </div>
+        )}
+
+        {criteria && (
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {[
+              ["Fluency", criteria.fluencyCoherence],
+              ["Lexical", criteria.lexicalResource],
+              ["Grammar", criteria.grammar],
+              ["Pronunciation", criteria.pronunciation],
+            ].map(([label, value]) => (
+              <div key={String(label)} className="rounded-lg bg-paper-sunken p-2 text-center">
+                <p className="text-[10px] uppercase tracking-wider text-ink-muted">{label}</p>
+                <p className="display text-lg tabular-nums text-ink">{String(value ?? "—")}</p>
+              </div>
+            ))}
+          </div>
         )}
       </Block>
     );

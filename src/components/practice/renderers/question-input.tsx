@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Mic, Square } from "lucide-react";
+import { Mic, Square, Loader2 } from "lucide-react";
+import { storeSpeakingRecording } from "@/app/actions/speaking";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -259,12 +260,16 @@ function Speaking({ question, disabled, onChange }: InputProps) {
   const cue = question.content?.cueCard as { topic: string; bullets: string[] } | undefined;
   const [recording, setRecording] = useState(false);
   const [recorded, setRecorded] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const recRef = useRef<MediaRecorder | null>(null);
   const chunks = useRef<Blob[]>([]);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  // `elapsed` is stale inside MediaRecorder's onstop closure.
+  const elapsedRef = useRef(0);
+  elapsedRef.current = elapsed;
 
   useEffect(
     () => () => {
@@ -281,12 +286,29 @@ function Speaking({ question, disabled, onChange }: InputProps) {
       const rec = new MediaRecorder(stream);
       chunks.current = [];
       rec.ondataavailable = (e) => chunks.current.push(e.data);
-      rec.onstop = () => {
+      rec.onstop = async () => {
         const blob = new Blob(chunks.current, { type: "audio/webm" });
         setUrl(URL.createObjectURL(blob));
         stream.getTracks().forEach((t) => t.stop());
         setRecorded(true);
-        onChange({ recorded: true, durationSec: elapsed });
+
+        // Upload immediately: the answer must carry a durable audio location,
+        // not a blob URL that dies with the page. The score is computed on the
+        // server after submit — never sent from here.
+        setUploading(true);
+        const durationSec = elapsedRef.current;
+        onChange({ recorded: true, durationSec });
+        try {
+          const fd = new FormData();
+          fd.append("audio", blob, "answer.webm");
+          const res = await storeSpeakingRecording(fd);
+          if ("error" in res) setError(`Couldn't save the recording: ${res.error}`);
+          else onChange({ recorded: true, durationSec, audioUrl: res.audioUrl });
+        } catch {
+          setError("Couldn't save the recording. Check your connection and re-record.");
+        } finally {
+          setUploading(false);
+        }
       };
       rec.start();
       recRef.current = rec;
@@ -321,7 +343,12 @@ function Speaking({ question, disabled, onChange }: InputProps) {
       )}
       <div className="flex items-center gap-3">
         {!recording ? (
-          <Button type="button" variant={recorded ? "outline" : "default"} disabled={disabled} onClick={start}>
+          <Button
+            type="button"
+            variant={recorded ? "outline" : "default"}
+            disabled={disabled || uploading}
+            onClick={start}
+          >
             <Mic className="h-4 w-4" /> {recorded ? "Re-record" : "Record answer"}
           </Button>
         ) : (
@@ -330,6 +357,11 @@ function Speaking({ question, disabled, onChange }: InputProps) {
             {String(elapsed % 60).padStart(2, "0")}
             {limit > 0 && <span className="ml-1 opacity-70">/ {Math.floor(limit / 60)}:{String(limit % 60).padStart(2, "0")}</span>}
           </Button>
+        )}
+        {uploading && (
+          <span className="inline-flex items-center gap-1.5 text-xs text-ink-muted">
+            <Loader2 className="size-3.5 animate-spin" /> Saving recording…
+          </span>
         )}
         {url && !recording && (
           // eslint-disable-next-line jsx-a11y/media-has-caption

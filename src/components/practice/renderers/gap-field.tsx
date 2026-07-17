@@ -51,7 +51,9 @@ export function GapField({
   const { number, value, disabled, state, expected, onChange } = binding;
 
   return (
-    <span className="mx-1 inline-flex flex-col align-middle">
+    // Anchor + focus scroll target so the mock's question palette can jump to
+    // this exact gap. `scroll-mt` keeps it clear of the sticky exam header.
+    <span id={`mq-${number}`} data-qnum={number} className="mx-1 inline-flex scroll-mt-28 flex-col align-middle">
       <span
         className={cn(
           "inline-flex items-center gap-1.5 rounded-md border bg-paper-elev px-1.5 py-1 transition-colors",

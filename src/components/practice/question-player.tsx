@@ -5,6 +5,7 @@ import { Loader2, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Answer } from "@/lib/question-content";
 import { submitPractice, type PracticeResult } from "@/app/actions/practice";
+import { scoreAttemptSpeaking } from "@/app/actions/speaking";
 import { SetBody, type PlayerSet, type PlayerQuestion } from "./set-body";
 
 export type { PlayerSet, PlayerQuestion };
@@ -17,6 +18,7 @@ export type { PlayerSet, PlayerQuestion };
 export function QuestionPlayer({ set, questions }: { set: PlayerSet; questions: PlayerQuestion[] }) {
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const [pending, setPending] = useState(false);
+  const [scoring, setScoring] = useState(false);
   const [result, setResult] = useState<PracticeResult | null>(null);
 
   const handleAnswer = useCallback((qid: string, value: Answer) => {
@@ -26,8 +28,18 @@ export function QuestionPlayer({ set, questions }: { set: PlayerSet; questions: 
   const onSubmit = async () => {
     setPending(true);
     try {
-      setResult(await submitPractice(set.id, answers));
+      const res = await submitPractice(set.id, answers);
+      setResult(res);
       window.scrollTo({ top: 0, behavior: "smooth" });
+
+      // Speaking bands are computed server-side after submit — each SpeechSuper
+      // call takes a few seconds, so blocking the submit on them would stall.
+      if (set.section === "speaking") {
+        setScoring(true);
+        scoreAttemptSpeaking(res.attemptId)
+          .catch(() => {}) // a scoring outage must not break the attempt
+          .finally(() => setScoring(false));
+      }
     } finally {
       setPending(false);
     }
@@ -41,10 +53,17 @@ export function QuestionPlayer({ set, questions }: { set: PlayerSet; questions: 
             <p className="display text-lg">
               {result.total > 0 ? `${result.correct} / ${result.total} correct` : "Response submitted"}
             </p>
-            {result.subjective > 0 && (
-              <p className="text-sm text-ink-muted">
-                {result.subjective} response{result.subjective > 1 ? "s" : ""} sent for AI band scoring.
+            {scoring ? (
+              <p className="inline-flex items-center gap-1.5 text-sm text-ink-muted">
+                <Loader2 className="size-3.5 animate-spin" />
+                Scoring your speaking — a few seconds per answer.
               </p>
+            ) : (
+              result.subjective > 0 && (
+                <p className="text-sm text-ink-muted">
+                  {result.subjective} response{result.subjective > 1 ? "s" : ""} sent for AI band scoring.
+                </p>
+              )
             )}
           </div>
           <Button

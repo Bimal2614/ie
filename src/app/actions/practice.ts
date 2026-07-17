@@ -20,6 +20,8 @@ export type QuestionResult = {
 };
 
 export type PracticeResult = {
+  /** Groups this submit's rows — lets the caller kick off AI scoring for it. */
+  attemptId: string;
   results: QuestionResult[];
   correct: number;
   total: number; // objective questions only
@@ -66,9 +68,12 @@ export async function submitPractice(setId: string, answers: AnswerMap): Promise
         questionType: q.questionType,
         module: user.targetModule,
         response: ans,
+        // Where the recording was stored at record time. The band is NOT taken
+        // from the client — it's computed server-side by scoreAttemptSpeaking.
+        audioUrl: typeof ans.audioUrl === "string" ? ans.audioUrl : null,
         isCorrect,
         rawScore: isCorrect === null ? null : isCorrect ? 1 : 0,
-        band: null, // AI band scoring (Writing/Speaking) wired in a later phase
+        band: null, // filled in by scoreAttemptSpeaking after submit
       });
     }
 
@@ -89,6 +94,7 @@ export async function submitPractice(setId: string, answers: AnswerMap): Promise
   const answered = results.filter((r) => answers[r.questionId]);
   const objective = answered.filter((r) => r.isCorrect !== null);
   return {
+    attemptId,
     results,
     correct: objective.filter((r) => r.isCorrect).length,
     total: objective.length,

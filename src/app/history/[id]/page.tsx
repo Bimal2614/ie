@@ -169,6 +169,7 @@ function ProseReview({ attempt: a }: { attempt: AttemptDetail }) {
               isCorrect={item.isCorrect}
               transcript={item.transcript}
               audioUrl={item.audioUrl}
+              aiFeedback={item.aiFeedback}
             />
 
             {item.question?.explanation && (

@@ -184,6 +184,8 @@ export type SetQuestionResult = {
 
 export type SetSubmissionResult = {
   setId: string;
+  /** Groups this submit's rows — lets the caller kick off AI scoring for it. */
+  attemptId: string;
   results: SetQuestionResult[];
   correct: number;
   total: number;
@@ -235,6 +237,9 @@ export async function submitSetAnswers(
         questionType: q.questionType,
         module: user.targetModule,
         response: userAns,
+        // Where the recording was stored at record time. The band is NOT taken
+        // from the client — it's computed server-side by scoreAttemptSpeaking.
+        audioUrl: typeof userAns.audioUrl === "string" ? userAns.audioUrl : null,
         isCorrect,
         rawScore: isCorrect === null ? null : isCorrect ? q.marks : 0,
         timeSpentSec: timeSpentSec ? Math.round(timeSpentSec / qs.length) : null,
@@ -257,7 +262,7 @@ export async function submitSetAnswers(
     await db.insert(userResponses).values(rows);
   }
 
-  return { setId, results, correct, total, subjective };
+  return { setId, attemptId, results, correct, total, subjective };
 }
 
 /* ------------------------------------------------------------------ *

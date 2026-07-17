@@ -395,6 +395,21 @@ export const mockTestSessions = pgTable(
     status: mockSessionStatus().notNull().default("in_progress"),
     currentSection: section(),
 
+    // --- Resume state (a mock can be left and continued) ---
+    // Which section the candidate is on, 0-indexed into the frozen section list.
+    currentSectionIndex: integer().notNull().default(0),
+    /**
+     * Server-authoritative deadline for the active section. The clock keeps
+     * running while the tab is closed — leaving does not pause it, matching the
+     * real exam — and "remaining" is always computed from this, so the timer
+     * cannot be extended by tampering with the client or the device clock.
+     */
+    currentSectionEndsAt: timestamp({ withTimezone: true }),
+    // Autosaved answers so a resumed session restores what was typed/selected.
+    draftAnswers: jsonb().$type<Record<string, unknown>>(),
+    // Accumulated seconds of focus per question id, for per-question timing.
+    draftTimings: jsonb().$type<Record<string, number>>(),
+
     startedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     completedAt: timestamp({ withTimezone: true }),
     expiresAt: timestamp({ withTimezone: true }),

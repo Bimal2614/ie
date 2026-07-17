@@ -170,7 +170,14 @@ export function SetBody({
             const numberInGap = qMeta.family === "completion";
 
             return (
-              <li key={q.id} className="rounded-xl border border-line bg-paper-elev p-4">
+              // Anchor for the mock question palette; scroll-mt clears the
+              // sticky exam header. `numberInGap` rows anchor on their gap field.
+              <li
+                key={q.id}
+                id={numberInGap ? undefined : `mq-${number}`}
+                data-qnum={number}
+                className="scroll-mt-28 rounded-xl border border-line bg-paper-elev p-4"
+              >
                 <div className="flex items-start gap-3">
                   {!numberInGap && (
                     <span
