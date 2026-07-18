@@ -12,6 +12,7 @@
   --font-heading: var(--font-inter), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-body: var(--font-inter), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: var(--font-jbmono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* --font-serif (Fraunces) is set on <html> by next/font; used via var(--font-serif). */
 
   /* Surface */
   --bg: 39 38% 97%;            /* paper-warm #FAFAF7 */
@@ -42,6 +43,13 @@
   --accent-hover: 32 95% 44%;
   --accent-soft: 48 100% 95%;
   --accent-ink: 26 83% 14%;
+
+  /* Brand-green accent — the single accent colour on solid CTA cards
+     (mock test, AI band scoring). `-ink` is the near-black green used for text
+     and inset buttons on the green fill. */
+  --green: 142 71% 45%;
+  --green-ink: 146 80% 10%;
+  --green-soft: 141 79% 92%;
 
   /* Status */
   --success: 158 64% 35%;
@@ -152,6 +160,10 @@
   --color-accent-soft: hsl(var(--accent-soft));
   --color-accent-foreground: hsl(var(--accent-ink));
 
+  --color-green: hsl(var(--green));
+  --color-green-ink: hsl(var(--green-ink));
+  --color-green-soft: hsl(var(--green-soft));
+
   --color-ink: hsl(var(--ink));
   --color-ink-strong: hsl(var(--ink-strong));
   --color-ink-soft: hsl(var(--ink-soft));
@@ -219,6 +231,19 @@
     font-weight: 700;
     letter-spacing: -0.02em;
     color: inherit;
+  }
+  /* Auth fields: stop Chrome's autofill from painting them pale lavender. The
+     inset shadow repaints the field in the form's own surface colour (theme
+     tokens, so it tracks light/dark); the long transition defeats the autofill
+     background animation. */
+  .auth-input:-webkit-autofill,
+  .auth-input:-webkit-autofill:hover,
+  .auth-input:-webkit-autofill:focus {
+    -webkit-text-fill-color: hsl(var(--ink));
+    caret-color: hsl(var(--ink));
+    -webkit-box-shadow: 0 0 0 1000px hsl(var(--bg-elev)) inset;
+    box-shadow: 0 0 0 1000px hsl(var(--bg-elev)) inset;
+    transition: background-color 9999s ease-in-out 0s;
   }
   :focus-visible {
     outline: 2px solid hsl(var(--brand-ring));
@@ -421,6 +446,62 @@
   .bg-info-soft   { background-color: hsl(var(--info-soft)); }
   .bg-danger-soft  { background-color: hsl(var(--danger-soft)); }
   .text-info       { color: hsl(var(--info)); }
+}
+
+/* ------------------------------------------------------------------ *
+ * Marketing / landing — premium motion + editorial type
+ * ------------------------------------------------------------------ */
+
+/* Editorial serif display, used for big marketing headings. */
+.font-serif { font-family: var(--font-serif); font-weight: 500; letter-spacing: -0.02em; }
+
+/* Line clip-reveal — each line rises out from behind a mask. Used ONCE on the
+   hero headline (not sprayed on every element, which is the AI-slop fade). The
+   stagger is set per-line with an inline --i custom property. */
+.reveal-line { overflow: hidden; }
+.reveal-line > span {
+  display: inline-block;
+  transform: translateY(105%);
+  animation: reveal-line 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 110ms);
+}
+@keyframes reveal-line { to { transform: translateY(0); } }
+
+/* Skeleton shimmer for loading states — a soft sweep across a placeholder. */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: hsl(var(--bg-sunken));
+  border-radius: 0.5rem;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, hsl(var(--bg-elev) / 0.7), transparent);
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer { 100% { transform: translateX(100%); } }
+
+/* A gentle float for product mock cards. */
+.float-slow { animation: float-slow 6s ease-in-out infinite; }
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Reveal-on-load for supporting content, below the kinetic headline. */
+.rise { opacity: 0; transform: translateY(16px); animation: rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+@keyframes rise { to { opacity: 1; transform: translateY(0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-line > span, .float-slow, .rise, .skeleton::after {
+    animation: none;
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
 }
 
 /* Scrollbar */

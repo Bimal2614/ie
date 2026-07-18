@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { LoginForm } from "@/components/auth/login-form";
+import { AuthHeader } from "@/components/auth/auth-ui";
 
 export const metadata: Metadata = {
   title: "Sign in · IELTS Ace",
@@ -9,12 +10,11 @@ export const metadata: Metadata = {
 export default function LoginPage() {
   return (
     <div className="space-y-6">
-      <div className="space-y-1.5">
-        <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
-        <p className="text-sm text-[var(--muted-foreground)]">
-          Sign in to continue your IELTS prep.
-        </p>
-      </div>
+      <AuthHeader
+        chip="Welcome back"
+        title="Sign in"
+        subtitle="Sign in to continue your IELTS prep."
+      />
       <LoginForm />
     </div>
   );

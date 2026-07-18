@@ -29,9 +29,12 @@ function buildCsp(nonce: string): string {
     // 'strict-dynamic' lets the nonce'd Next bootstrap script load the rest;
     // 'unsafe-eval' is dev-only (React uses eval for better stack traces).
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
-    // Next injects some inline styles; allow them via nonce in prod,
-    // 'unsafe-inline' only in dev (Fast Refresh).
-    `style-src 'self' 'nonce-${nonce}'${isDev ? " 'unsafe-inline'" : ""}`,
+    // Styles use 'unsafe-inline' WITHOUT a nonce. Per the CSP spec, a nonce (or
+    // hash) in style-src makes the browser IGNORE 'unsafe-inline' — which would
+    // block every React inline style={{…}} (colours, gradients, widths, fonts)
+    // and Next's own injected styles. Inline style is low-risk (it can't run
+    // JS); scripts stay strict with the nonce above, where the real risk is.
+    `style-src 'self' 'unsafe-inline'`,
     `img-src 'self' blob: data:`,
     `font-src 'self'`,
     `object-src 'none'`,

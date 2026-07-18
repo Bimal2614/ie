@@ -2,17 +2,15 @@
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, ArrowRight } from "lucide-react";
 import { signup } from "@/app/actions/auth";
 import { type AuthFormState } from "@/lib/validation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { AuthField, authButton, authError } from "./auth-ui";
 
 const MODULES = [
-  { value: "academic", label: "Academic", hint: "University / professional registration" },
-  { value: "general", label: "General Training", hint: "Migration / work experience" },
+  { value: "academic", label: "Academic", hint: "University / professional" },
+  { value: "general", label: "General Training", hint: "Migration / work" },
 ] as const;
 
 export function SignupForm() {
@@ -22,71 +20,64 @@ export function SignupForm() {
 
   return (
     <form action={action} className="space-y-4" noValidate>
-      {state?.error ? (
-        <p
-          role="alert"
-          className="rounded-md border border-[var(--destructive)]/30 bg-[var(--destructive)]/10 px-3 py-2 text-sm text-[var(--destructive)]"
-        >
+      {state?.error && (
+        <p role="alert" className={authError}>
           {state.error}
         </p>
-      ) : null}
+      )}
 
-      <div className="space-y-2">
-        <Label htmlFor="name">Full name</Label>
-        <Input id="name" name="name" autoComplete="name" placeholder="Alex Morgan" required
-          aria-invalid={Boolean(state?.fieldErrors?.name)} />
-        {state?.fieldErrors?.name ? (
-          <p className="text-xs text-[var(--destructive)]">{state.fieldErrors.name[0]}</p>
-        ) : null}
-      </div>
+      <AuthField
+        label="Full name"
+        id="name"
+        name="name"
+        autoComplete="name"
+        placeholder="Alex Morgan"
+        required
+        error={state?.fieldErrors?.name?.[0]}
+      />
 
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" name="email" type="email" autoComplete="email" placeholder="you@example.com" required
-          aria-invalid={Boolean(state?.fieldErrors?.email)} />
-        {state?.fieldErrors?.email ? (
-          <p className="text-xs text-[var(--destructive)]">{state.fieldErrors.email[0]}</p>
-        ) : null}
-      </div>
+      <AuthField
+        label="Email address"
+        id="email"
+        name="email"
+        type="email"
+        autoComplete="email"
+        placeholder="you@example.com"
+        required
+        error={state?.fieldErrors?.email?.[0]}
+      />
 
-      <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
-        <div className="relative">
-          <Input
-            id="password"
-            name="password"
-            type={show ? "text" : "password"}
-            autoComplete="new-password"
-            placeholder="At least 10 characters"
-            required
-            className="pr-10"
-            aria-invalid={Boolean(state?.fieldErrors?.password)}
-          />
-          <button
-            type="button"
-            onClick={() => setShow((s) => !s)}
-            className="absolute inset-y-0 right-0 flex items-center px-3 text-[var(--muted-foreground)]"
-            aria-label={show ? "Hide password" : "Show password"}
-            tabIndex={-1}
-          >
-            {show ? <EyeOff /> : <Eye />}
-          </button>
-        </div>
-        {state?.fieldErrors?.password ? (
-          <ul className="space-y-0.5 text-xs text-[var(--destructive)]">
-            {state.fieldErrors.password.map((e) => (
-              <li key={e}>• {e}</li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-xs text-[var(--muted-foreground)]">
+      <div>
+        <AuthField
+          label="Password"
+          id="password"
+          name="password"
+          type={show ? "text" : "password"}
+          autoComplete="new-password"
+          placeholder="At least 10 characters"
+          required
+          error={state?.fieldErrors?.password?.[0]}
+          adornment={
+            <button
+              type="button"
+              onClick={() => setShow((s) => !s)}
+              className="text-ink-muted transition-colors hover:text-ink"
+              aria-label={show ? "Hide password" : "Show password"}
+              tabIndex={-1}
+            >
+              {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            </button>
+          }
+        />
+        {!state?.fieldErrors?.password && (
+          <p className="mt-1 text-xs text-ink-muted">
             Use upper &amp; lower case, a number and a symbol.
           </p>
         )}
       </div>
 
-      <div className="space-y-2">
-        <Label>I&apos;m preparing for</Label>
+      <div>
+        <span className="mb-1.5 block text-xs font-medium text-ink-soft">I&apos;m preparing for</span>
         <input type="hidden" name="targetModule" value={module} />
         <div className="grid grid-cols-2 gap-2">
           {MODULES.map((m) => (
@@ -97,27 +88,31 @@ export function SignupForm() {
               className={cn(
                 "rounded-lg border p-3 text-left transition-colors",
                 module === m.value
-                  ? "border-[var(--primary)] bg-[var(--accent)]"
-                  : "border-[var(--border)] hover:bg-[var(--muted)]",
+                  ? "border-brand bg-brand-soft"
+                  : "border-line hover:bg-paper-sunken",
               )}
               aria-pressed={module === m.value}
             >
-              <span className="block text-sm font-medium">{m.label}</span>
-              <span className="block text-xs text-[var(--muted-foreground)]">{m.hint}</span>
+              <span className="block text-sm font-medium text-ink">{m.label}</span>
+              <span className="block text-xs text-ink-muted">{m.hint}</span>
             </button>
           ))}
         </div>
       </div>
 
-      <Button type="submit" className="w-full" disabled={pending}>
-        {pending ? <Loader2 className="animate-spin" /> : null}
+      <button type="submit" disabled={pending} className={authButton}>
+        {pending ? <Loader2 className="size-4 animate-spin" /> : null}
         {pending ? "Creating account…" : "Create account"}
-      </Button>
+        {!pending && <ArrowRight className="size-4" />}
+      </button>
 
-      <p className="text-center text-sm text-[var(--muted-foreground)]">
+      <p className="pt-1 text-center text-sm text-ink-muted">
         Already have an account?{" "}
-        <Link href="/login" className="font-medium text-[var(--primary)] hover:underline">
-          Sign in
+        <Link
+          href="/login"
+          className="ml-1 rounded-full border border-line px-3 py-1 font-medium text-ink transition-colors hover:bg-paper-sunken"
+        >
+          Log in
         </Link>
       </p>
     </form>
