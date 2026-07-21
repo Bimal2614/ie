@@ -3,24 +3,30 @@ import { GraduationCap, Check, Loader2, Headphones, BookOpen, PenLine, Mic, Arro
 import { cn } from "@/lib/utils";
 
 /**
- * Auth shell — split-screen, LIGHT form + DARK showcase, matching the marketing
- * pages' light/dark rhythm. Left is a calm paper-white form column; right is the
- * dark bento showcase (an amber accent card + a "pipeline" chip stack that
- * mirrors the product's real AI flow). Premium through restraint.
+ * Auth shell — split-screen, LIGHT form + DARK showcase, matching the landing's
+ * exact light/dark language: the dark panel is the theme's `bg-paper-strong`
+ * surface (same as the landing hero/method/footer), with the green accent card
+ * and a "pipeline" chip stack mirroring the product's real AI flow.
  */
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
+  // Fixed to the viewport — the auth pages never scroll; content fits.
   return (
-    <div className="grid min-h-svh bg-paper text-ink lg:grid-cols-[minmax(0,460px)_1fr]">
-      {/* ── Form column (light) ── */}
-      <div className="flex flex-col px-6 py-8 sm:px-12">
-        <Link href="/" className="mx-auto inline-flex w-fit items-center gap-2.5 lg:mx-0">
-          <span className="grid size-9 place-items-center rounded-xl bg-brand text-white">
-            <GraduationCap className="size-5" strokeWidth={1.75} />
-          </span>
-          <span className="text-lg font-semibold tracking-tight">IELTSAce</span>
-        </Link>
+    <div className="grid h-svh overflow-hidden bg-paper text-ink lg:grid-cols-[minmax(0,460px)_1fr]">
+      {/* ── Form column (light). Slim top bar: logo (home) + back-to-site. ── */}
+      <div className="flex h-full flex-col overflow-y-auto px-6 py-6 sm:px-12">
+        <div className="flex items-center justify-between">
+          <Link href="/" className="inline-flex w-fit items-center gap-2.5">
+            <span className="grid size-9 place-items-center rounded-xl bg-brand text-white">
+              <GraduationCap className="size-5" strokeWidth={1.75} />
+            </span>
+            <span className="text-lg font-semibold tracking-tight">IELTSAce</span>
+          </Link>
+          <Link href="/" className="text-xs font-medium text-ink-muted transition-colors hover:text-ink">
+            ← Back to site
+          </Link>
+        </div>
 
-        <div className="flex flex-1 items-center justify-center py-10">
+        <div className="flex flex-1 items-center justify-center py-6">
           <div className="w-full max-w-sm">{children}</div>
         </div>
 
@@ -30,7 +36,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </div>
 
       {/* ── Showcase column (desktop) ── */}
-      <aside className="relative hidden flex-col justify-between gap-6 overflow-hidden border-l border-white/[0.06] bg-[#0c0c0e] p-10 lg:flex xl:p-12">
+      <aside className="relative hidden flex-col justify-between gap-6 overflow-hidden border-l border-white/10 bg-paper-strong p-10 lg:flex xl:p-12">
         <Showcase />
       </aside>
     </div>
@@ -57,7 +63,7 @@ function Showcase() {
           AI-scored IELTS practice
         </p>
         <h2 className="font-serif mt-4 max-w-md text-[2.5rem] leading-[1.05] tracking-tight text-white">
-          Band 9 starts with the right practice.
+          <span className="italic text-brand-soft">Band 9</span> starts with the right practice.
         </h2>
       </div>
 

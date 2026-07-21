@@ -21,6 +21,24 @@ const EnvSchema = z.object({
   SPEECHSUPER_SECRET_KEY: z.string().optional(),
   SPEECHSUPER_BASE_URL: z.string().url().optional(),
 
+  // --- Writing AI band scoring (Google Gemini). Optional: the app boots and
+  //     runs without it; Writing simply stays unscored until the key is set. ---
+  GEMINI_API_KEY: z.string().optional(),
+  GEMINI_MODEL: z.string().default("gemini-2.5-flash"),
+
+  // --- Rate limiting (all configurable; sensible production defaults) ---
+  // General API/action limits per authenticated user.
+  RATE_LIMIT_GENERAL_PER_MINUTE: z.coerce.number().int().positive().default(60),
+  RATE_LIMIT_GENERAL_PER_DAY: z.coerce.number().int().positive().default(6000),
+  // AI (Writing/Speaking scoring) — expensive, so tighter.
+  RATE_LIMIT_AI_PER_DAY: z.coerce.number().int().positive().default(100),
+  RATE_LIMIT_AI_PER_ACCOUNT: z.coerce.number().int().positive().default(10000),
+  RATE_LIMIT_AI_ACCOUNT_WINDOW_DAYS: z.coerce.number().int().positive().default(365),
+  // Repeated throttling → deactivate the account after this many violations.
+  RATE_LIMIT_VIOLATIONS_BEFORE_DEACTIVATE: z.coerce.number().int().positive().default(3),
+  // Window over which violations accumulate toward deactivation.
+  RATE_LIMIT_VIOLATION_WINDOW_DAYS: z.coerce.number().int().positive().default(30),
+
   // --- S3 (speaking audio storage). Optional for the same reason. ---
   AWS_ACCESS_KEY_ID: z.string().optional(),
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
@@ -37,6 +55,15 @@ export const env = EnvSchema.parse({
   SPEECHSUPER_API_KEY: process.env.SPEECHSUPER_API_KEY,
   SPEECHSUPER_SECRET_KEY: process.env.SPEECHSUPER_SECRET_KEY,
   SPEECHSUPER_BASE_URL: process.env.SPEECHSUPER_BASE_URL,
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+  GEMINI_MODEL: process.env.GEMINI_MODEL,
+  RATE_LIMIT_GENERAL_PER_MINUTE: process.env.RATE_LIMIT_GENERAL_PER_MINUTE,
+  RATE_LIMIT_GENERAL_PER_DAY: process.env.RATE_LIMIT_GENERAL_PER_DAY,
+  RATE_LIMIT_AI_PER_DAY: process.env.RATE_LIMIT_AI_PER_DAY,
+  RATE_LIMIT_AI_PER_ACCOUNT: process.env.RATE_LIMIT_AI_PER_ACCOUNT,
+  RATE_LIMIT_AI_ACCOUNT_WINDOW_DAYS: process.env.RATE_LIMIT_AI_ACCOUNT_WINDOW_DAYS,
+  RATE_LIMIT_VIOLATIONS_BEFORE_DEACTIVATE: process.env.RATE_LIMIT_VIOLATIONS_BEFORE_DEACTIVATE,
+  RATE_LIMIT_VIOLATION_WINDOW_DAYS: process.env.RATE_LIMIT_VIOLATION_WINDOW_DAYS,
   AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
   AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
   AWS_REGION: process.env.AWS_REGION,
@@ -53,6 +80,11 @@ export const isProd = env.NODE_ENV === "production";
  */
 export function isSpeechSuperConfigured(): boolean {
   return Boolean(env.SPEECHSUPER_API_KEY && env.SPEECHSUPER_SECRET_KEY && env.SPEECHSUPER_BASE_URL);
+}
+
+/** True when Gemini is configured for Writing band scoring. */
+export function isWritingAiConfigured(): boolean {
+  return Boolean(env.GEMINI_API_KEY);
 }
 
 /** True when S3 credentials + bucket + region are present. */

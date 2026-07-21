@@ -28,7 +28,7 @@ export function EmptyState({
   return (
     <div className="flex flex-col items-center rounded-3xl border border-dashed border-line bg-paper-elev/50 px-6 py-16 text-center">
       <div className="text-brand">{art ?? <RisingChartArt />}</div>
-      <h3 className="mt-6 text-2xl tracking-tight text-ink" style={{ fontFamily: "var(--font-serif)" }}>
+      <h3 className="font-serif mt-6 text-2xl tracking-tight text-ink">
         {title}
       </h3>
       <p className="mt-2 max-w-sm text-sm text-ink-soft">{description}</p>

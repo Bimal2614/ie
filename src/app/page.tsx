@@ -1,25 +1,30 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import {
-  GraduationCap, ArrowRight, ArrowUpRight, Check, Quote,
-  Headphones, BookOpen, PenLine, Mic, ShieldCheck,
+  ArrowRight, ArrowUpRight, Check, Quote,
+  Headphones, BookOpen, PenLine, Mic,
 } from "lucide-react";
 import { getCurrentUser } from "@/lib/dal";
 import { EntryLoader } from "@/components/marketing/entry-loader";
 import { PremiumCursor } from "@/components/marketing/premium-cursor";
 import { CountUp } from "@/components/marketing/count-up";
+import { LandingNav } from "@/components/marketing/landing-nav";
+import { LandingHero } from "@/components/marketing/landing-hero";
+import { Reveal, ScrollWords } from "@/components/marketing/motion";
+import { LandingFooter } from "@/components/marketing/landing-footer";
 
 export const metadata: Metadata = {
   title: "IELTS Practice Online — AI Band Scoring & Mock Tests | IELTSAce",
   description:
     "Practise IELTS online with instant AI band scores for Writing & Speaking, full-length mock tests, and 15,000+ Academic and General Training questions. Real band jumps, scored the way examiners mark.",
   keywords: [
-    "IELTS practice", "IELTS practice test online", "IELTS online practice", "best IELTS platform",
-    "IELTS preparation online", "IELTS mock test", "AI IELTS band score", "IELTS writing checker",
-    "IELTS speaking practice", "IELTS Academic practice", "IELTS General Training practice", "free IELTS practice test",
+    "IELTS practice", "IELTS test", "test IELTS", "IELTS practice test online", "IELTS online practice",
+    "best IELTS platform", "IELTS preparation online", "IELTS mock test", "AI IELTS band score",
+    "IELTS reading", "IELTS writing", "IELTS speaking", "IELTS listening",
+    "IELTS writing checker", "IELTS speaking practice", "IELTS Academic practice",
+    "IELTS General Training practice", "free IELTS practice test",
   ],
   alternates: { canonical: "/" },
   openGraph: {
@@ -73,67 +78,26 @@ const FAQS = [
 export default async function Home() {
   const user = await getCurrentUser();
   if (user) redirect("/dashboard");
-  const nonce = (await headers()).get("x-nonce") ?? undefined;
 
   return (
     <div className="landing min-h-svh bg-paper text-ink">
       <PremiumCursor />
       <EntryLoader />
-      <StructuredData nonce={nonce} />
-      <Nav />
+      <StructuredData />
 
-      {/* ══ Hero — authority-led, asymmetric, no badge pill / glow / gradient word ══ */}
-      <section className="border-b border-line">
-        <div className="mx-auto grid w-full max-w-6xl gap-12 px-5 py-16 lg:grid-cols-[7fr_5fr] lg:items-center lg:py-24">
-          <div>
-            <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-ink-muted">
-              <span className="h-px w-8 bg-ink-muted/40" /> IELTS Academic &amp; General · 2026 format
-            </p>
+      {/* Sticky header across the whole landing (transparent → solid on scroll) */}
+      <LandingNav />
 
-            <h1 className="reveal-line font-serif mt-5 text-[2.6rem] leading-[1.04] tracking-tight sm:text-6xl">
-              <span style={{ ["--i" as string]: 0 }}>The band you&apos;re capable of,</span><br />
-              <span style={{ ["--i" as string]: 1 }} className="text-brand">scored the way examiners mark.</span>
-            </h1>
-
-            <p className="mt-6 max-w-lg text-lg text-ink-soft">
-              Instant AI band scores for Writing &amp; Speaking, full-length mock tests, and 15,000+
-              Academic and General Training questions — the practice platform behind real band jumps.
-            </p>
-
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Link href="/signup" className="group inline-flex items-center gap-2 rounded-lg bg-brand px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-brand/20 transition-colors hover:bg-brand-hover">
-                Start practising free <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
-              </Link>
-              <Link href="#results" className="inline-flex items-center gap-2 rounded-lg border border-line bg-paper-elev px-6 py-3.5 text-sm font-semibold text-ink transition-colors hover:bg-paper-sunken">
-                See real results
-              </Link>
-            </div>
-
-            <div className="mt-8 flex items-center gap-3 text-sm text-ink-muted">
-              <ShieldCheck className="size-4 text-green" /> No card required · free to start · scored in seconds
-            </div>
-          </div>
-
-          {/* Proof artifact — a result, not a product screenshot. */}
-          <div className="relative mx-auto w-full max-w-sm">
-            <div className="overflow-hidden rounded-2xl border border-line bg-paper-elev shadow-2xl shadow-ink/10">
-              <Image src="/test-5.png" alt="IELTS score report — sample result" width={920} height={1150} className="h-auto w-full" priority />
-            </div>
-            {/* Band chip, offset over the corner. */}
-            <div className="absolute -bottom-4 -left-4 rounded-xl border border-line bg-paper-elev px-4 py-3 shadow-xl">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-muted">Overall band</p>
-              <p className="font-serif text-3xl leading-none tabular-nums text-brand">8.5</p>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* ══ Hero — dark, image-backed, one quiet entrance ══ */}
+      <LandingHero />
 
       {/* ══ Results — the authority centrepiece: real band jumps ══ */}
       <section id="results" className="mx-auto w-full max-w-6xl scroll-mt-20 px-5 py-20">
-        <Header eyebrow="Real results" title="Band jumps, not promises." lead="Students who practised the way examiners mark — and moved on with their lives." />
+        <Reveal><Header eyebrow="Real results" title="Band jumps, not promises." lead="Students who practised the way examiners mark — and moved on with their lives." /></Reveal>
         <div className="mt-12 grid gap-5 md:grid-cols-3">
-          {RESULTS.map((r) => (
-            <figure key={r.name} className="flex flex-col overflow-hidden rounded-2xl border border-line bg-paper-elev">
+          {RESULTS.map((r, i) => (
+            <Reveal key={r.name} delay={i * 0.12} className="h-full">
+            <figure className="flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-paper-elev">
               <Image src={r.img} alt={`${r.name} — IELTS result`} width={1000} height={680} className="aspect-[3/2] w-full object-cover" />
               <div className="flex flex-1 flex-col p-5">
                 <div className="flex items-center gap-2">
@@ -152,13 +116,14 @@ export default async function Home() {
                 </figcaption>
               </div>
             </figure>
+            </Reveal>
           ))}
         </div>
       </section>
 
       {/* ══ DARK SHOWCASE — stats + method, a rounded near-black panel like auth ══ */}
       <section id="method" className="scroll-mt-20 px-4 py-8 sm:px-5">
-        <div className="mx-auto w-full max-w-6xl overflow-hidden rounded-[2rem] bg-[#0a0a0b] px-6 py-20 text-white sm:px-12 sm:py-24">
+        <div className="mx-auto w-full max-w-6xl overflow-hidden rounded-[2rem] bg-paper-strong px-6 py-20 text-white sm:px-12 sm:py-24">
           {/* Stats — count-up, white serif on dark */}
           <div className="grid grid-cols-2 gap-x-6 gap-y-10 border-b border-white/10 pb-14 lg:grid-cols-4">
             {STATS.map((s) => (
@@ -182,8 +147,9 @@ export default async function Home() {
             </p>
 
             <div className="mt-12 divide-y divide-white/10 border-y border-white/10">
-              {METHOD.map((m) => (
-                <div key={m.n} className="group grid gap-4 py-7 sm:grid-cols-[auto_1fr_auto] sm:items-center sm:gap-8">
+              {METHOD.map((m, i) => (
+                <Reveal key={m.n} delay={i * 0.08} x={-24} y={0}>
+                <div className="group grid gap-4 py-7 sm:grid-cols-[auto_1fr_auto] sm:items-center sm:gap-8">
                   <span className="font-serif text-4xl tabular-nums text-white/15 transition-colors group-hover:text-green sm:text-5xl">{m.n}</span>
                   <div className="sm:flex sm:items-baseline sm:gap-8">
                     <h3 className="w-40 shrink-0 text-xl font-semibold text-white">{m.title}</h3>
@@ -191,6 +157,7 @@ export default async function Home() {
                   </div>
                   <ArrowUpRight className="hidden size-5 text-white/25 transition-all group-hover:translate-x-1 group-hover:text-green sm:block" />
                 </div>
+                </Reveal>
               ))}
             </div>
           </div>
@@ -200,10 +167,10 @@ export default async function Home() {
       {/* ══ What you get — editorial: one feature image + a skills list ══ */}
       <section id="features" className="scroll-mt-20 border-y border-line bg-paper-elev">
         <div className="mx-auto grid w-full max-w-6xl gap-12 px-5 py-20 lg:grid-cols-2 lg:items-center">
-          <div className="order-2 overflow-hidden rounded-2xl border border-line shadow-xl lg:order-1">
+          <Reveal x={-30} y={0} className="order-2 overflow-hidden rounded-2xl border border-line shadow-xl lg:order-1">
             <Image src="/test-6.png" alt="AI band scoring in the IELTSAce app" width={1280} height={720} className="h-auto w-full" />
-          </div>
-          <div className="order-1 lg:order-2">
+          </Reveal>
+          <Reveal x={30} y={0} delay={0.1} className="order-1 lg:order-2">
             <Header align="left" eyebrow="Scored like the real thing" title="AI band scoring on every criterion." lead="" />
             <p className="mt-4 max-w-md text-ink-soft">
               Writing and Speaking graded on Task Response, Coherence, Lexical Resource, Grammar,
@@ -220,42 +187,41 @@ export default async function Home() {
                 </div>
               ))}
             </div>
-          </div>
+          </Reveal>
         </div>
       </section>
 
-      {/* ══ Reframe narrative — the un-AI, empathy angle ══ */}
-      <section className="mx-auto w-full max-w-3xl px-5 py-20 text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand">Why fluent speakers still miss their band</p>
-        <p className="font-serif mt-5 text-2xl leading-relaxed text-ink sm:text-[1.75rem]">
-          You&apos;ve studied for months. Friends say your English is strong. Yet the band comes
-          back short — again. It&apos;s rarely your English. It&apos;s that IELTS rewards specific,
-          criteria-driven answers, and no one shows you which ones. That&apos;s the gap we close.
-        </p>
+      {/* ══ Reframe narrative — word-by-word scroll reveal (signature motion) ══ */}
+      <section className="mx-auto w-full max-w-3xl px-5 py-24 text-center">
+        <Reveal><p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand">Why fluent speakers still miss their band</p></Reveal>
+        <ScrollWords
+          className="font-serif mt-5 text-2xl leading-relaxed text-ink sm:text-[1.85rem]"
+          text="Fluent English alone rarely earns a Band 8. IELTS scores your Writing and Speaking against four precise criteria — and most test-takers never learn what examiners actually reward. Criteria-based practice, scored the way the real exam marks, is how you close that gap and reach your target band."
+        />
       </section>
 
       {/* ══ Two paths — decision ══ */}
       <section className="border-y border-line bg-paper-elev">
         <div className="mx-auto grid w-full max-w-5xl gap-5 px-5 py-20 md:grid-cols-2">
-          <div className="rounded-2xl border border-line bg-paper p-7">
+          <Reveal x={-28} y={0} className="rounded-2xl border border-line bg-paper p-7">
             <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">Keep guessing</p>
             <ul className="mt-4 space-y-3 text-sm text-ink-soft">
               {["Re-book the test and hope the next attempt is different", "Random YouTube tips with no idea what's scoring", "Pay exam fees again for the same band"].map((t) => (
                 <li key={t} className="flex gap-2"><span className="mt-2 size-1.5 shrink-0 rounded-full bg-ink-muted/40" />{t}</li>
               ))}
             </ul>
-          </div>
-          <div className="rounded-2xl border-2 border-brand bg-brand-soft/40 p-7">
+          </Reveal>
+          <Reveal x={28} y={0} delay={0.1} className="rounded-2xl border-2 border-brand bg-brand-soft/40 p-7">
             <p className="text-xs font-semibold uppercase tracking-wider text-brand">Practise the way it&apos;s marked</p>
             <ul className="mt-4 space-y-3 text-sm text-ink">
               {["See your band on every answer, instantly", "Drill the exact question types costing you marks", "Walk in knowing you're already at your target"].map((t) => (
                 <li key={t} className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-green" />{t}</li>
               ))}
             </ul>
-            <Link href="/signup" className="mt-6 inline-flex items-center gap-2 rounded-lg bg-brand px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-hover">
+            <Link href="/signup" className="mt-6 inline-flex items-center gap-2 rounded-lg bg-green px-5 py-2.5 text-sm font-semibold text-green-ink transition-[filter] hover:brightness-105">
               Start free <ArrowRight className="size-4" />
             </Link>
-          </div>
+          </Reveal>
         </div>
       </section>
 
@@ -275,8 +241,8 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ══ DARK CLOSE — CTA + footer, matching the auth panel ══ */}
-      <Footer />
+      {/* ══ DARK CLOSE — shared CTA + footer ══ */}
+      <LandingFooter />
     </div>
   );
 }
@@ -285,30 +251,6 @@ export default async function Home() {
  * Pieces
  * ------------------------------------------------------------------ */
 
-function Nav() {
-  return (
-    <header className="sticky top-0 z-40 border-b border-line bg-paper/80 backdrop-blur-md">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-3.5">
-        <span className="flex items-center gap-2 font-semibold">
-          <span className="grid size-8 place-items-center rounded-lg bg-brand text-white"><GraduationCap className="size-5" /></span>
-          IELTSAce
-        </span>
-        <nav className="hidden items-center gap-8 text-[13px] font-medium text-ink-soft md:flex">
-          <a href="#results" className="transition-colors hover:text-ink">Results</a>
-          <a href="#method" className="transition-colors hover:text-ink">Method</a>
-          <a href="#features" className="transition-colors hover:text-ink">Scoring</a>
-          <a href="#faq" className="transition-colors hover:text-ink">FAQ</a>
-        </nav>
-        <div className="flex items-center gap-2">
-          <Link href="/login" className="rounded-lg px-3.5 py-2 text-sm font-medium text-ink-soft transition-colors hover:text-ink">Sign in</Link>
-          <Link href="/signup" className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-hover">
-            Get started <ArrowRight className="size-4" />
-          </Link>
-        </div>
-      </div>
-    </header>
-  );
-}
 
 function Header({ eyebrow, title, lead, align = "center" }: { eyebrow: string; title: string; lead: string; align?: "center" | "left" }) {
   return (
@@ -320,63 +262,8 @@ function Header({ eyebrow, title, lead, align = "center" }: { eyebrow: string; t
   );
 }
 
-function Footer() {
-  const cols = [
-    { title: "Practice", links: ["Listening", "Reading", "Writing", "Speaking", "Mock tests"] },
-    { title: "Platform", links: ["Sign in", "Get started", "The method", "FAQ"] },
-  ];
-  return (
-    <footer className="mt-8 overflow-hidden rounded-t-[2.5rem] bg-[#0a0a0b] text-white">
-      {/* Dark CTA — the auth-style closing moment */}
-      <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-6 px-5 py-24 text-center">
-        <h2 className="font-serif max-w-2xl text-3xl tracking-tight sm:text-5xl">
-          Your target band is closer than the last attempt made it feel.
-        </h2>
-        <p className="max-w-xl text-white/55">Start free today — practise, get scored, and watch your band climb.</p>
-        <Link href="/signup" className="inline-flex items-center gap-2 rounded-lg bg-green px-6 py-3.5 text-sm font-semibold text-green-ink transition-transform hover:scale-[1.02]">
-          Start practising free <ArrowRight className="size-4" />
-        </Link>
-      </div>
 
-      {/* Footer columns */}
-      <div className="mx-auto grid w-full max-w-6xl gap-8 border-t border-white/10 px-5 py-14 md:grid-cols-[1.6fr_1fr_1fr]">
-        <div>
-          <span className="flex items-center gap-2 font-semibold">
-            <span className="grid size-8 place-items-center rounded-lg bg-white/10"><GraduationCap className="size-5" /></span>
-            IELTSAce
-          </span>
-          <p className="mt-3 max-w-xs text-sm text-white/45">
-            The complete IELTS preparation platform — AI band scoring, mock tests, and 15,000+
-            questions for Academic &amp; General Training.
-          </p>
-        </div>
-        {cols.map((c) => (
-          <div key={c.title}>
-            <p className="text-sm font-semibold text-white">{c.title}</p>
-            <ul className="mt-3 space-y-2 text-sm text-white/45">
-              {c.links.map((l) => <li key={l}><Link href="/signup" className="transition-colors hover:text-white">{l}</Link></li>)}
-            </ul>
-          </div>
-        ))}
-      </div>
-
-      {/* Oversized wordmark */}
-      <div className="overflow-hidden border-t border-white/10 px-4 pb-8 pt-10">
-        <p className="font-serif select-none text-center leading-none tracking-tight text-white/[0.05]" style={{ fontSize: "clamp(3rem, 18vw, 16rem)" }}>IELTSAce</p>
-        <p className="-mt-1 text-center text-[10px] uppercase tracking-[0.3em] text-white/30 sm:text-sm">The best way to practise IELTS online</p>
-      </div>
-
-      <div className="border-t border-white/10">
-        <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-2 px-5 py-6 text-xs text-white/35 sm:flex-row">
-          <p>© {new Date().getFullYear()} IELTSAce · Practise IELTS online, smarter.</p>
-          <p>IELTS is a trademark of its respective owners. This is an independent practice platform.</p>
-        </div>
-      </div>
-    </footer>
-  );
-}
-
-function StructuredData({ nonce }: { nonce?: string }) {
+function StructuredData() {
   const json = {
     "@context": "https://schema.org",
     "@graph": [
@@ -385,5 +272,8 @@ function StructuredData({ nonce }: { nonce?: string }) {
       { "@type": "FAQPage", mainEntity: FAQS.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) },
     ],
   };
-  return <script type="application/ld+json" nonce={nonce} dangerouslySetInnerHTML={{ __html: JSON.stringify(json) }} />;
+  // JSON-LD is data, not executable script — CSP script-src doesn't gate it, so
+  // no nonce is needed. Omitting it keeps server/client identical (no hydration
+  // mismatch — the browser would otherwise blank a nonce and differ from SSR).
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(json) }} />;
 }

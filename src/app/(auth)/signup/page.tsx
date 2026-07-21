@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function SignupPage() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <AuthHeader
         chip="Your path to Band 9"
         title="Create account"

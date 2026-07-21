@@ -1,27 +1,13 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono, Fraunces } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
-// Inter for UI/body, JetBrains Mono for timers/numerics, Fraunces (an optical
-// serif) for editorial display headings — the academic-authority voice that
-// lifts the marketing pages out of generic-SaaS territory.
+// One typeface for the entire app — Inter. The theme maps heading/body/mono/
+// serif tokens all to this, so landing, auth and dashboard share a single font.
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
   display: "swap",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-jbmono",
-  display: "swap",
-});
-
-const fraunces = Fraunces({
-  subsets: ["latin"],
-  variable: "--font-serif",
-  display: "swap",
-  axes: ["opsz", "SOFT"],
 });
 
 // Our nonce-based CSP (see src/proxy.ts) injects a fresh script nonce per
@@ -51,7 +37,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${jetbrainsMono.variable} ${fraunces.variable} h-full antialiased`}
+      className={`${inter.variable} h-full antialiased`}
     >
       {/* Browser extensions (password managers, etc.) inject attributes onto
           <body> before React hydrates, causing a benign attribute mismatch.

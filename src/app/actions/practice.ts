@@ -7,6 +7,7 @@ import { questions as questionsT, userResponses } from "@/db/schema";
 import { requireUser } from "@/lib/dal";
 import { QUESTION_TYPES, isObjective, type QuestionTypeKey } from "@/lib/ielts";
 import { grade } from "@/lib/grading";
+import { guardGeneral } from "@/lib/security/rate-guard";
 
 // Loosely-typed because answer shape varies per question family.
 type AnswerMap = Record<string, Record<string, unknown>>;
@@ -30,6 +31,7 @@ export type PracticeResult = {
 
 export async function submitPractice(setId: string, answers: AnswerMap): Promise<PracticeResult> {
   const user = await requireUser();
+  await guardGeneral(user.id);
 
   const qs = await db
     .select()

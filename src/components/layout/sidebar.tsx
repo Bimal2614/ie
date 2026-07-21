@@ -69,7 +69,7 @@ const GROUPS: Group[] = [
   {
     label: "Learn",
     items: [
-      { href: "/study-guide", label: "Study Guide", icon: GraduationCap },
+      { href: "/resources", label: "Study Materials", icon: GraduationCap },
       { href: "/blog", label: "Blog", icon: Newspaper },
     ],
   },

@@ -45,7 +45,7 @@ export function EntryLoader() {
 
   return (
     <div
-      className={`fixed inset-0 z-[100] grid place-items-center bg-[#0a0a0b] transition-opacity duration-400 ${
+      className={`fixed inset-0 z-[100] grid place-items-center bg-paper-strong transition-opacity duration-400 ${
         leaving ? "opacity-0" : "opacity-100"
       }`}
       aria-hidden
@@ -62,13 +62,10 @@ export function EntryLoader() {
 
         {/* Progress bar */}
         <div className="mt-6 h-1 w-full overflow-hidden rounded-full bg-white/10">
-          <div className="h-full rounded-full bg-[#22c55e]" style={{ animation: "ielts-load 1.6s ease-out forwards" }} />
+          <div className="h-full rounded-full bg-green" style={{ animation: "ielts-load 1.6s ease-out forwards" }} />
         </div>
 
-        <p
-          className="mt-6 h-4 text-[11px] uppercase tracking-wider text-white/35"
-          style={{ fontFamily: "var(--font-mono)" }}
-        >
+        <p className="mt-6 h-4 text-[11px] uppercase tracking-wider text-white/35">
           {STEPS[step]}
         </p>
       </div>

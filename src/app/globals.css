@@ -8,11 +8,13 @@
    accents (blue/lime/amber/violet) are their own tokens. Values are HSL triples
    so they compose with hsl()/alpha. */
 :root {
-  /* Typography — fonts are wired via next/font in layout.tsx (--font-inter, --font-jbmono) */
+  /* Typography — ONE typeface across the whole app: Inter (wired via next/font
+     in layout.tsx). heading/body/mono/serif all resolve to Inter so there is a
+     single font on landing, auth and dashboard. */
   --font-heading: var(--font-inter), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-body: var(--font-inter), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono: var(--font-jbmono), ui-monospace, SFMono-Regular, Menlo, monospace;
-  /* --font-serif (Fraunces) is set on <html> by next/font; used via var(--font-serif). */
+  --font-mono: var(--font-body);
+  --font-serif: var(--font-body);
 
   /* Surface */
   --bg: 39 38% 97%;            /* paper-warm #FAFAF7 */
@@ -27,11 +29,19 @@
   --ink-muted: 215 16% 47%;
   --ink-inverted: 0 0% 100%;
 
-  /* Lines */
-  --line: 220 13% 91%;
+  /* Lines — darker, more defined box borders (was 91%, too faint) */
+  --line: 220 13% 82%;
   --line-strong: 215 14% 75%;
 
-  /* Brand */
+  /* ── COLOUR USAGE (the app runs on two accents — keep them disciplined) ──
+     BLUE  (--brand): links, nav, text-links ("Full history", "see all"),
+                      secondary/utility buttons, focus rings, active/selected.
+     GREEN (--green): the ONE primary "go" CTA per surface (Start free, Create
+                      account, upgrade), highlight cards (mock test, AI scoring),
+                      and success (checkmarks, band gains, "Saved").
+     Everything else stays monochrome (ink on paper). */
+
+  /* Brand (blue) */
   --brand: 218 81% 32%;
   --brand-hover: 218 85% 25%;
   --brand-soft: 218 100% 96%;
@@ -452,8 +462,9 @@
  * Marketing / landing — premium motion + editorial type
  * ------------------------------------------------------------------ */
 
-/* Editorial serif display, used for big marketing headings. */
-.font-serif { font-family: var(--font-serif); font-weight: 500; letter-spacing: -0.02em; }
+/* Display heading utility. Resolves to the single app font (Inter) via the
+   theme token — kept as a class so the many existing usages need no edits. */
+.font-serif { font-family: var(--font-serif); font-weight: 600; letter-spacing: -0.02em; }
 
 /* Line clip-reveal — each line rises out from behind a mask. Used ONCE on the
    hero headline (not sprayed on every element, which is the AI-slop fade). The

@@ -14,12 +14,15 @@ const MODULES = [
 ] as const;
 
 export function SignupForm() {
-  const [state, action, pending] = useActionState<AuthFormState, FormData>(signup, null);
+  const [state, action, pending] = useActionState<AuthFormState, FormData>(
+    signup,
+    null,
+  );
   const [show, setShow] = useState(false);
   const [module, setModule] = useState<"academic" | "general">("academic");
 
   return (
-    <form action={action} className="space-y-4" noValidate>
+    <form action={action} className="space-y-3.5" noValidate>
       {state?.error && (
         <p role="alert" className={authError}>
           {state.error}
@@ -65,7 +68,11 @@ export function SignupForm() {
               aria-label={show ? "Hide password" : "Show password"}
               tabIndex={-1}
             >
-              {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              {show ? (
+                <EyeOff className="size-4" />
+              ) : (
+                <Eye className="size-4" />
+              )}
             </button>
           }
         />
@@ -77,7 +84,9 @@ export function SignupForm() {
       </div>
 
       <div>
-        <span className="mb-1.5 block text-xs font-medium text-ink-soft">I&apos;m preparing for</span>
+        <span className="mb-1.5 block text-xs font-medium text-ink-soft">
+          I&apos;m preparing for
+        </span>
         <input type="hidden" name="targetModule" value={module} />
         <div className="grid grid-cols-2 gap-2">
           {MODULES.map((m) => (
@@ -86,15 +95,17 @@ export function SignupForm() {
               key={m.value}
               onClick={() => setModule(m.value)}
               className={cn(
-                "rounded-lg border p-3 text-left transition-colors",
+                "rounded-lg border p-2.5 text-left transition-colors",
                 module === m.value
                   ? "border-brand bg-brand-soft"
                   : "border-line hover:bg-paper-sunken",
               )}
               aria-pressed={module === m.value}
             >
-              <span className="block text-sm font-medium text-ink">{m.label}</span>
-              <span className="block text-xs text-ink-muted">{m.hint}</span>
+              <span className="block text-sm font-medium text-ink">
+                {m.label}
+              </span>
+              {/* <span className="block text-xs text-ink-muted">{m.hint}</span> */}
             </button>
           ))}
         </div>

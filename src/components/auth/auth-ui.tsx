@@ -5,9 +5,9 @@ import { cn } from "@/lib/utils";
  * Kept in one place so login and signup stay identical.
  */
 
-/** Primary CTA — solid brand fill, clearly the clickable action. */
+/** Primary "go" CTA — solid green (the conversion action per the colour system). */
 export const authButton =
-  "flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand text-sm font-semibold text-white shadow-lg shadow-brand/20 transition-colors hover:bg-brand-hover disabled:opacity-60";
+  "flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-green text-sm font-semibold text-green-ink transition-[filter] hover:brightness-105 disabled:opacity-60";
 
 export const authError =
   "rounded-lg border border-danger/25 bg-danger-soft px-3 py-2 text-sm text-danger";
@@ -16,19 +16,24 @@ export const authError =
  * The header block — a mono pill chip, a serif heading (matching the marketing
  * pages' editorial voice), and a subtitle. Centred.
  */
-export function AuthHeader({ chip, title, subtitle }: { chip: string; title: string; subtitle: string }) {
+export function AuthHeader({
+  chip,
+  title,
+  subtitle,
+}: {
+  chip: string;
+  title: string;
+  subtitle: string;
+}) {
   return (
     <div className="text-center">
-      <span
-        className="inline-flex rounded-full border border-line bg-paper-elev px-3 py-1 text-[11px] tracking-wide text-ink-soft"
-        style={{ fontFamily: "var(--font-mono)" }}
-      >
+      <span className="font-mono inline-flex rounded-full border border-line bg-paper-elev px-3 py-1 text-[11px] tracking-wide text-ink-soft">
         {chip}
       </span>
-      <h1 className="mt-4 text-3xl tracking-tight text-ink" style={{ fontFamily: "var(--font-serif)" }}>
+      <h1 className="font-serif mt-4 text-3xl tracking-tight text-ink">
         {title}
       </h1>
-      <p className="mt-1.5 text-sm text-ink-muted">{subtitle}</p>
+      {/* <p className="mt-1.5 text-sm text-ink-muted">{subtitle}</p> */}
     </div>
   );
 }
@@ -49,7 +54,10 @@ export function AuthField({
   return (
     <div>
       {!hideLabel && (
-        <label htmlFor={props.id} className="mb-1.5 block text-xs font-medium text-ink-soft">
+        <label
+          htmlFor={props.id}
+          className="mb-1.5 block text-xs font-medium text-ink-soft"
+        >
           {label}
         </label>
       )}
@@ -67,7 +75,11 @@ export function AuthField({
           )}
           {...props}
         />
-        {adornment && <span className="absolute inset-y-0 right-3 flex items-center">{adornment}</span>}
+        {adornment && (
+          <span className="absolute inset-y-0 right-3 flex items-center">
+            {adornment}
+          </span>
+        )}
       </div>
       {error && <p className="mt-1 text-xs text-danger">{error}</p>}
     </div>

@@ -35,3 +35,26 @@ export type AuthFormState = {
   error?: string;
   fieldErrors?: Record<string, string[]>;
 } | null;
+
+/* ------------------------------------------------------------------ *
+ * Settings — profile + password change
+ * ------------------------------------------------------------------ */
+
+export const TARGET_BANDS = [
+  "4.0", "4.5", "5.0", "5.5", "6.0", "6.5", "7.0", "7.5", "8.0", "8.5", "9.0",
+] as const;
+
+export const profileSchema = z.object({
+  name: z.string().trim().min(2, "Tell us your name").max(80),
+  country: z.string().trim().max(60).optional(),
+  targetModule: z.enum(["academic", "general"]),
+  targetBand: z.string().trim().max(4).optional(),
+  // yyyy-mm-dd from a native date input; empty string means "cleared".
+  examDate: z.string().trim().max(10).optional(),
+});
+export type ProfileInput = z.infer<typeof profileSchema>;
+
+export const passwordChangeSchema = z.object({
+  currentPassword: z.string().min(1, "Enter your current password").max(128),
+  newPassword: password,
+});

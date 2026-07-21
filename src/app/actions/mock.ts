@@ -25,6 +25,8 @@ import { grade } from "@/lib/grading";
 import { downloadSpeakingAudio, keyFromUrl } from "@/lib/speech/s3";
 import { toWav16kMono } from "@/lib/speech/transcode";
 import { scoreSpeaking, taskTypeFor } from "@/lib/speech/speechsuper";
+import { scoreWriting, type WritingTaskType } from "@/lib/writing/gemini";
+import { guardAi, guardGeneral, RateLimitError } from "@/lib/security/rate-guard";
 
 type AnswerMap = Record<string, Record<string, unknown>>;
 
@@ -57,6 +59,7 @@ function bandFromRatio(correct: number, total: number): number | null {
 /** Start a full mock: one set per section for the chosen module. */
 export async function startMock(formData: FormData): Promise<void> {
   const user = await requireUser();
+  await guardGeneral(user.id);
   const moduleArg = (formData.get("module") === "general" ? "general" : "academic") as "academic" | "general";
 
   const [session] = await db
@@ -142,6 +145,7 @@ export async function finishMock(
   timings: Record<string, number> = {},
 ): Promise<void> {
   const user = await requireUser();
+  await guardGeneral(user.id);
 
   const [session] = await db
     .select()
@@ -444,6 +448,13 @@ export async function scoreMockSpeaking(sessionId: string): Promise<{ scored: nu
     .limit(1);
   if (!session) return { scored: 0 };
 
+  try {
+    await guardAi(user.id);
+  } catch (e) {
+    if (e instanceof RateLimitError) return { scored: 0 };
+    throw e;
+  }
+
   const rows = await db
     .select({ a: mockTestAnswers, q: questionsT })
     .from(mockTestAnswers)
@@ -509,14 +520,112 @@ export async function scoreMockSpeaking(sessionId: string): Promise<{ scored: nu
     // band — the IELTS convention.
     const mean = bands.reduce((a, b) => a + b, 0) / bands.length;
     const speakingBand = Math.round(mean * 2) / 2;
-    await recomputeOverall(sessionId, speakingBand);
+    await recomputeOverall(sessionId, "speaking", speakingBand);
   }
 
   return { scored };
 }
 
-/** Re-average the report now that a section band exists. */
-async function recomputeOverall(sessionId: string, speakingBand: number): Promise<void> {
+/**
+ * Score a finished mock's Writing answers with Gemini and fold the writing band
+ * into the report. Mirrors scoreMockSpeaking: post-submit, idempotent (only rows
+ * with no band), degrades to "unscored" on an outage.
+ */
+export async function scoreMockWriting(sessionId: string): Promise<{ scored: number }> {
+  const user = await requireUser();
+
+  const [session] = await db
+    .select({ id: mockTestSessions.id })
+    .from(mockTestSessions)
+    .where(and(eq(mockTestSessions.id, sessionId), eq(mockTestSessions.userId, user.id)))
+    .limit(1);
+  if (!session) return { scored: 0 };
+
+  try {
+    await guardAi(user.id);
+  } catch (e) {
+    if (e instanceof RateLimitError) return { scored: 0 };
+    throw e;
+  }
+
+  const rows = await db
+    .select({ a: mockTestAnswers, q: questionsT })
+    .from(mockTestAnswers)
+    .innerJoin(questionsT, eq(mockTestAnswers.questionId, questionsT.id))
+    .where(
+      and(
+        eq(mockTestAnswers.sessionId, sessionId),
+        eq(mockTestAnswers.section, "writing"),
+        isNull(mockTestAnswers.band),
+      ),
+    );
+
+  let scored = 0;
+  // Kept apart so we can apply the official IELTS weighting (Task 2 ×2, Task 1 ×1).
+  const task1Bands: number[] = [];
+  const task2Bands: number[] = [];
+
+  for (const row of rows) {
+    const r = row.a.response as Record<string, unknown> | null;
+    const text = typeof r?.text === "string" ? r.text.trim() : "";
+    if (!text) continue;
+
+    const qt = row.q.questionType as QuestionTypeKey;
+    const meta = QUESTION_TYPES[qt];
+    if (!meta || meta.family !== "writing") continue;
+
+    const res = await scoreWriting({
+      text,
+      taskType: qt as WritingTaskType,
+      module: user.targetModule,
+      questionPrompt: row.q.prompt ?? meta.instruction ?? "",
+      wordMin: meta.wordLimitMin ?? (qt === "writing_task2" ? 250 : 150),
+    });
+    if (!res.ok) continue;
+
+    const s = res.score;
+    (qt === "writing_task2" ? task2Bands : task1Bands).push(s.overall);
+    await db
+      .update(mockTestAnswers)
+      .set({
+        band: s.overall.toFixed(1),
+        aiFeedback: {
+          onTask: s.onTask,
+          wordCount: s.wordCount,
+          overallFeedback: s.overallFeedback,
+          criteria: s.criteria,
+          corrections: s.corrections,
+          improvedExamples: s.improvedExamples,
+          nextSteps: s.nextSteps,
+          provider: "gemini",
+        },
+      })
+      .where(eq(mockTestAnswers.id, row.a.id));
+    scored++;
+  }
+
+  if (task1Bands.length > 0 || task2Bands.length > 0) {
+    const avg = (a: number[]) => a.reduce((x, y) => x + y, 0) / a.length;
+    // Official IELTS: the Writing band weights Task 2 twice as heavily as Task 1
+    // → (T1 + 2·T2) / 3. If only one task was attempted, use it alone.
+    let writingBand: number;
+    if (task1Bands.length && task2Bands.length) {
+      writingBand = (avg(task1Bands) + 2 * avg(task2Bands)) / 3;
+    } else {
+      writingBand = task2Bands.length ? avg(task2Bands) : avg(task1Bands);
+    }
+    await recomputeOverall(sessionId, "writing", Math.round(writingBand * 2) / 2);
+  }
+
+  return { scored };
+}
+
+/** Re-average the report now that an AI-scored section band exists. */
+async function recomputeOverall(
+  sessionId: string,
+  section: "writing" | "speaking",
+  band: number,
+): Promise<void> {
   const [result] = await db
     .select()
     .from(mockTestResults)
@@ -524,10 +633,12 @@ async function recomputeOverall(sessionId: string, speakingBand: number): Promis
     .limit(1);
   if (!result) return;
 
-  const present = [result.listeningBand, result.readingBand, result.writingBand]
-    .map((b) => (b === null ? null : Number(b)))
+  const num = (b: string | null) => (b === null ? null : Number(b));
+  const writingBand = section === "writing" ? band : num(result.writingBand);
+  const speakingBand = section === "speaking" ? band : num(result.speakingBand);
+
+  const present = [num(result.listeningBand), num(result.readingBand), writingBand, speakingBand]
     .filter((b): b is number => b !== null);
-  present.push(speakingBand);
 
   const overall =
     present.length > 0
@@ -537,7 +648,7 @@ async function recomputeOverall(sessionId: string, speakingBand: number): Promis
   await db
     .update(mockTestResults)
     .set({
-      speakingBand: speakingBand.toFixed(1),
+      ...(section === "writing" ? { writingBand: band.toFixed(1) } : { speakingBand: band.toFixed(1) }),
       overallBand: overall === null ? null : overall.toFixed(1),
     })
     .where(eq(mockTestResults.sessionId, sessionId));
@@ -557,6 +668,7 @@ export type MockReviewItem = {
   response: unknown;
   isCorrect: boolean | null;
   band: string | null;
+  aiFeedback: unknown;
   timeSpentSec: number | null;
 };
 
@@ -631,6 +743,7 @@ export async function getMockSectionReview(
       response: r.a.response,
       isCorrect: r.a.isCorrect,
       band: r.a.band,
+      aiFeedback: r.a.aiFeedback,
       timeSpentSec: r.a.timeSpentSec,
     })),
   };

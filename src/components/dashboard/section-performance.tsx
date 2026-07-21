@@ -22,17 +22,14 @@ export function SectionPerformance({ sectionStats }: { sectionStats: DashboardSt
           const { Icon, tile } = SECTION_META[key];
           const s = sectionStats[key];
           return (
-            <div key={key} className={cn(cardInteractive, "flex flex-col p-5")}>
+            <Link key={key} href={`/practice/${key}`} className={cn(cardInteractive, "group flex flex-col p-5")}>
               <div className="mb-4 flex items-center justify-between">
                 <span className={cn("grid size-10 place-items-center rounded-xl", tile)}>
                   <Icon className="size-5" />
                 </span>
-                <Link
-                  href={`/practice/${key}`}
-                  className="inline-flex items-center gap-1 rounded-lg border border-line px-3 py-1.5 text-xs font-semibold text-ink transition-colors hover:bg-paper-sunken"
-                >
-                  Open <ArrowRight className="size-3.5" />
-                </Link>
+                <span className="inline-flex items-center gap-1 rounded-lg border border-line px-3 py-1.5 text-xs font-semibold text-ink transition-colors group-hover:bg-paper-sunken">
+                  Open <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+                </span>
               </div>
 
               <p className="font-semibold text-ink">{SECTIONS[key].label}</p>
@@ -55,7 +52,7 @@ export function SectionPerformance({ sectionStats }: { sectionStats: DashboardSt
                 </div>
                 <p className="mt-1.5 text-[11px] text-ink-muted">{s.completion}% complete</p>
               </div>
-            </div>
+            </Link>
           );
         })}
       </div>
