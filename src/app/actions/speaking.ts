@@ -8,6 +8,7 @@ import { QUESTION_TYPES, type QuestionTypeKey } from "@/lib/ielts";
 import { uploadSpeakingAudio, downloadSpeakingAudio, keyFromUrl } from "@/lib/speech/s3";
 import { toWav16kMono } from "@/lib/speech/transcode";
 import { scoreSpeaking, taskTypeFor } from "@/lib/speech/speechsuper";
+import { guardAi, RateLimitError } from "@/lib/security/rate-guard";
 
 /**
  * Speaking answers: store the recording, then score it server-side.
@@ -50,8 +51,17 @@ export async function storeSpeakingRecording(form: FormData): Promise<{ audioUrl
  * band=null and are filled in here; the UI already renders "awaiting score"
  * until then.
  */
-export async function scoreAttemptSpeaking(attemptId: string): Promise<{ scored: number }> {
+export async function scoreAttemptSpeaking(
+  attemptId: string,
+): Promise<{ scored: number; limited?: boolean; message?: string }> {
   const user = await requireUser();
+
+  try {
+    await guardAi(user.id);
+  } catch (e) {
+    if (e instanceof RateLimitError) return { scored: 0, limited: true, message: e.message };
+    throw e;
+  }
 
   const rows = await db
     .select()

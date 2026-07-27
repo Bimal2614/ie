@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SignupForm } from "@/components/auth/signup-form";
+import { AuthHeader } from "@/components/auth/auth-ui";
 
 export const metadata: Metadata = {
   title: "Create account · IELTS Ace",
@@ -8,13 +9,12 @@ export const metadata: Metadata = {
 
 export default function SignupPage() {
   return (
-    <div className="space-y-6">
-      <div className="space-y-1.5">
-        <h1 className="text-2xl font-semibold tracking-tight">Create your account</h1>
-        <p className="text-sm text-[var(--muted-foreground)]">
-          Start practicing in minutes. No card required.
-        </p>
-      </div>
+    <div className="space-y-5">
+      <AuthHeader
+        chip="Your path to Band 9"
+        title="Create account"
+        subtitle="Enter your details to start practising."
+      />
       <SignupForm />
     </div>
   );

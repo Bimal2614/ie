@@ -107,6 +107,8 @@ export async function validateSession(): Promise<AuthenticatedUser | null> {
       and(
         eq(sessions.tokenHash, tokenHash),
         isNull(sessions.revokedAt),
+        // A deactivated account cannot use the app — reject its sessions.
+        isNull(users.deactivatedAt),
         gt(sessions.idleExpiresAt, new Date()),
         gt(sessions.absoluteExpiresAt, new Date()),
       ),

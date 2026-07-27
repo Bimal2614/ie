@@ -14,6 +14,7 @@ import {
   type SetSubmissionResult,
 } from "@/app/actions/questions";
 import { scoreAttemptSpeaking } from "@/app/actions/speaking";
+import { scoreAttemptWriting } from "@/app/actions/writing";
 import { SetBody, type PlayerSet } from "./set-body";
 
 /**
@@ -49,6 +50,7 @@ export function PracticeSession({
   const [result, setResult] = useState<SetSubmissionResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [scoring, setScoring] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
   const [, setAttemptedSets] = useState<Set<number>>(() => new Set(initialAttempted.setIndices));
 
   const sec = SECTIONS[section];
@@ -94,21 +96,27 @@ export function PracticeSession({
   const handleSubmit = async () => {
     if (!currentSet) return;
     setSubmitting(true);
+    setNotice(null);
     try {
       const res = await submitSetAnswers(currentSet.id, answers);
       setResult(res);
       setAttemptedSets((prev) => new Set([...prev, currentSetIndex]));
       topRef.current?.scrollIntoView({ behavior: "smooth" });
 
-      // Speaking bands are computed server-side after the fact — a SpeechSuper
-      // call takes ~9s each, so blocking the submit on seven of them would
+      // Writing & Speaking bands are computed server-side after the fact — an
+      // AI call takes a few seconds each, so blocking submit on several would
       // stall the UI. Rows show "awaiting score" until this fills them in.
-      if (section === "speaking") {
+      if (section === "speaking" || section === "writing") {
         setScoring(true);
-        scoreAttemptSpeaking(res.attemptId)
+        const scoreFn = section === "speaking" ? scoreAttemptSpeaking : scoreAttemptWriting;
+        scoreFn(res.attemptId)
+          .then((r) => { if (r?.limited && r.message) setNotice(r.message); })
           .catch(() => {}) // a scoring outage must not break the attempt
           .finally(() => setScoring(false));
       }
+    } catch {
+      // Most likely a rate-limit throttle (server messages are redacted in prod).
+      setNotice("You're going too fast — please wait a moment and try again.");
     } finally {
       setSubmitting(false);
     }
@@ -166,6 +174,11 @@ export function PracticeSession({
 
   return (
     <div className="mx-auto w-full max-w-6xl" ref={topRef}>
+      {notice && (
+        <div className="mb-3 rounded-lg border border-warning/40 bg-warning-soft px-4 py-2.5 text-sm text-ink-soft">
+          {notice}
+        </div>
+      )}
       <div className="surface pb-0">
         {/* ── Top bar ── */}
         <div className="flex items-center gap-2 border-b border-line px-3 py-2.5 sm:px-4">

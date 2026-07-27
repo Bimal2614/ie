@@ -2,12 +2,10 @@
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, ArrowRight } from "lucide-react";
 import { login } from "@/app/actions/auth";
 import { type AuthFormState } from "@/lib/validation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { AuthField, authButton, authError } from "./auth-ui";
 
 export function LoginForm() {
   const [state, action, pending] = useActionState<AuthFormState, FormData>(login, null);
@@ -15,72 +13,66 @@ export function LoginForm() {
 
   return (
     <form action={action} className="space-y-4" noValidate>
-      {state?.error ? (
-        <p
-          role="alert"
-          className="rounded-md border border-[var(--destructive)]/30 bg-[var(--destructive)]/10 px-3 py-2 text-sm text-[var(--destructive)]"
-        >
+      {state?.error && (
+        <p role="alert" className={authError}>
           {state.error}
         </p>
-      ) : null}
+      )}
 
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          placeholder="you@example.com"
-          required
-          aria-invalid={Boolean(state?.fieldErrors?.email)}
-        />
-        {state?.fieldErrors?.email ? (
-          <p className="text-xs text-[var(--destructive)]">{state.fieldErrors.email[0]}</p>
-        ) : null}
-      </div>
+      <AuthField
+        label="Email address"
+        id="email"
+        name="email"
+        type="email"
+        autoComplete="email"
+        placeholder="you@example.com"
+        required
+        error={state?.fieldErrors?.email?.[0]}
+      />
 
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="password">Password</Label>
-          <Link href="/forgot-password" className="text-xs text-[var(--primary)] hover:underline">
+      <div>
+        <div className="mb-1.5 flex items-center justify-between">
+          <span className="text-xs font-medium text-ink-soft">Password</span>
+          <Link href="/forgot-password" className="text-xs text-ink-muted transition-colors hover:text-ink">
             Forgot password?
           </Link>
         </div>
-        <div className="relative">
-          <Input
-            id="password"
-            name="password"
-            type={show ? "text" : "password"}
-            autoComplete="current-password"
-            placeholder="Your password"
-            required
-            className="pr-10"
-            aria-invalid={Boolean(state?.fieldErrors?.password)}
-          />
-          <button
-            type="button"
-            onClick={() => setShow((s) => !s)}
-            className="absolute inset-y-0 right-0 flex items-center px-3 text-[var(--muted-foreground)]"
-            aria-label={show ? "Hide password" : "Show password"}
-            tabIndex={-1}
-          >
-            {show ? <EyeOff /> : <Eye />}
-          </button>
-        </div>
-        {state?.fieldErrors?.password ? (
-          <p className="text-xs text-[var(--destructive)]">{state.fieldErrors.password[0]}</p>
-        ) : null}
+        <AuthField
+          hideLabel
+          label="Password"
+          id="password"
+          name="password"
+          type={show ? "text" : "password"}
+          autoComplete="current-password"
+          placeholder="Enter your password"
+          required
+          error={state?.fieldErrors?.password?.[0]}
+          adornment={
+            <button
+              type="button"
+              onClick={() => setShow((s) => !s)}
+              className="text-ink-muted transition-colors hover:text-ink"
+              aria-label={show ? "Hide password" : "Show password"}
+              tabIndex={-1}
+            >
+              {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            </button>
+          }
+        />
       </div>
 
-      <Button type="submit" className="w-full" disabled={pending}>
-        {pending ? <Loader2 className="animate-spin" /> : null}
+      <button type="submit" disabled={pending} className={authButton}>
+        {pending ? <Loader2 className="size-4 animate-spin" /> : null}
         {pending ? "Signing in…" : "Sign in"}
-      </Button>
+        {!pending && <ArrowRight className="size-4" />}
+      </button>
 
-      <p className="text-center text-sm text-[var(--muted-foreground)]">
+      <p className="pt-1 text-center text-sm text-ink-muted">
         New here?{" "}
-        <Link href="/signup" className="font-medium text-[var(--primary)] hover:underline">
+        <Link
+          href="/signup"
+          className="ml-1 rounded-full border border-line px-3 py-1 font-medium text-ink transition-colors hover:bg-paper-sunken"
+        >
           Create an account
         </Link>
       </p>

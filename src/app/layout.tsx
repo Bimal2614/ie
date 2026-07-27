@@ -1,17 +1,12 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
-// PTEAce typography: Inter for UI + headings, JetBrains Mono for timers/numerics.
+// One typeface for the entire app — Inter. The theme maps heading/body/mono/
+// serif tokens all to this, so landing, auth and dashboard share a single font.
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
-  display: "swap",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-jbmono",
   display: "swap",
 });
 
@@ -22,12 +17,16 @@ const jetbrainsMono = JetBrains_Mono({
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.APP_URL ?? "https://ieltsace.com"),
   title: {
-    default: "IELTSAce — AI-scored IELTS practice",
+    // Pages set their own full title; this default (used when a page doesn't)
+    // still leads with the query people search, not the brand name.
+    default: "IELTS Practice Online — AI Band Scoring & Mock Tests | IELTSAce",
     template: "%s",
   },
   description:
-    "Practice IELTS Academic & General Training with AI band scoring, real exam timing, and a personalized progress dashboard.",
+    "Practise IELTS online with instant AI band scores for Writing & Speaking, full-length mock tests, and 15,000+ Academic and General Training questions.",
+  applicationName: "IELTSAce",
 };
 
 export default function RootLayout({
@@ -38,9 +37,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full">{children}</body>
+      {/* Browser extensions (password managers, etc.) inject attributes onto
+          <body> before React hydrates, causing a benign attribute mismatch.
+          suppressHydrationWarning silences it for this element only — not the
+          tree — which is the documented fix for extension-injected attributes. */}
+      <body className="min-h-full" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }

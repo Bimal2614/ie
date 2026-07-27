@@ -7,6 +7,7 @@ import { questionSets, questions, userResponses } from "@/db/schema";
 import { requireUser } from "@/lib/dal";
 import { QUESTION_TYPES, isObjective, type SectionKey, type QuestionTypeKey } from "@/lib/ielts";
 import { grade } from "@/lib/grading";
+import { guardGeneral } from "@/lib/security/rate-guard";
 import type { SetLayout } from "@/lib/question-content";
 
 /* ------------------------------------------------------------------ *
@@ -198,6 +199,7 @@ export async function submitSetAnswers(
   timeSpentSec?: number,
 ): Promise<SetSubmissionResult> {
   const user = await requireUser();
+  await guardGeneral(user.id);
 
   // Fetch all questions for this set
   const qs = await db.select().from(questions).where(eq(questions.setId, setId)).orderBy(questions.orderIndex);

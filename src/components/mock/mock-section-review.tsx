@@ -158,6 +158,7 @@ function QuestionRow({
             isCorrect={item.isCorrect}
             transcript={null}
             audioUrl={null}
+            aiFeedback={item.aiFeedback}
           />
           {item.explanation && (
             <div className="rounded-lg bg-paper-elev p-3">

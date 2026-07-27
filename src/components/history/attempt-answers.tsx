@@ -1,4 +1,4 @@
-import { Check, X, Mic } from "lucide-react";
+import { Check, X, Mic, ArrowRight } from "lucide-react";
 import { QUESTION_TYPES, type QuestionTypeKey } from "@/lib/ielts";
 import type { SetLayout, OptionsLayout } from "@/lib/question-content";
 
@@ -19,6 +19,22 @@ type SpeakingFeedback = {
   };
   relevance?: number | null;
   speed?: number | null;
+};
+
+/** What scoreWriting stores in `aiFeedback` for a writing answer. */
+type WritingCriterionFB = { band?: number; summary?: string; strengths?: string[]; improvements?: string[] };
+type WritingFeedback = {
+  onTask?: boolean;
+  overallFeedback?: string;
+  criteria?: {
+    taskResponse?: WritingCriterionFB;
+    coherenceCohesion?: WritingCriterionFB;
+    lexicalResource?: WritingCriterionFB;
+    grammaticalRange?: WritingCriterionFB;
+  };
+  corrections?: { quote: string; issue: string; fix: string }[];
+  improvedExamples?: { original: string; improved: string }[];
+  nextSteps?: string[];
 };
 
 export function AttemptAnswers({
@@ -50,21 +66,25 @@ export function AttemptAnswers({
   const ca = (correctAnswer ?? {}) as Record<string, unknown>;
   const c = (content ?? {}) as Record<string, unknown>;
 
-  /* ---- Writing: show the essay, not a diff ---- */
+  /* ---- Writing: the essay + the full AI examiner analysis ---- */
   if (family === "writing") {
     const text = (ans.text as string) ?? "";
     const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    const fb = (aiFeedback ?? null) as WritingFeedback | null;
     return (
-      <Block title="Your response">
-        {text ? (
-          <>
-            <p className="whitespace-pre-line text-sm leading-relaxed text-ink-soft">{text}</p>
-            <p className="mt-3 font-mono text-xs tabular-nums text-ink-muted">{words} words</p>
-          </>
-        ) : (
-          <Empty />
-        )}
-      </Block>
+      <div className="space-y-4">
+        <Block title="Your response">
+          {text ? (
+            <>
+              <p className="whitespace-pre-line text-sm leading-relaxed text-ink-soft">{text}</p>
+              <p className="mt-3 font-mono text-xs tabular-nums text-ink-muted">{words} words</p>
+            </>
+          ) : (
+            <Empty />
+          )}
+        </Block>
+        {fb && <WritingAnalysis fb={fb} isTask2={questionType === "writing_task2"} />}
+      </div>
     );
   }
 
@@ -188,6 +208,102 @@ export function AttemptAnswers({
 
 function letter(i: number): string {
   return String.fromCharCode(65 + i);
+}
+
+/** The AI examiner analysis for a writing answer — criteria, corrections, rewrites, next steps. */
+function WritingAnalysis({ fb, isTask2 }: { fb: WritingFeedback; isTask2: boolean }) {
+  const c = fb.criteria ?? {};
+  const criteria: [string, WritingCriterionFB | undefined][] = [
+    [isTask2 ? "Task Response" : "Task Achievement", c.taskResponse],
+    ["Coherence & Cohesion", c.coherenceCohesion],
+    ["Lexical Resource", c.lexicalResource],
+    ["Grammatical Range & Accuracy", c.grammaticalRange],
+  ];
+
+  return (
+    <div className="rounded-xl border border-line bg-paper-elev p-4">
+      <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">AI examiner analysis</p>
+
+      {fb.overallFeedback && (
+        <p className="mt-3 text-sm leading-relaxed text-ink-soft">{fb.overallFeedback}</p>
+      )}
+
+      {/* Criteria */}
+      <div className="mt-4 space-y-3">
+        {criteria.map(([label, cr]) =>
+          cr ? (
+            <div key={label} className="rounded-lg border border-line p-3">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-ink">{label}</p>
+                <span className="rounded-full bg-brand-soft px-2.5 py-0.5 text-sm font-semibold tabular-nums text-brand">
+                  {typeof cr.band === "number" ? cr.band.toFixed(1) : "—"}
+                </span>
+              </div>
+              {cr.summary && <p className="mt-1.5 text-sm text-ink-soft">{cr.summary}</p>}
+              {(cr.strengths?.length || cr.improvements?.length) && (
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                  <ul className="space-y-1">
+                    {cr.strengths?.map((s) => (
+                      <li key={s} className="flex gap-1.5 text-xs text-ink-soft"><Check className="mt-0.5 size-3 shrink-0 text-green" />{s}</li>
+                    ))}
+                  </ul>
+                  <ul className="space-y-1">
+                    {cr.improvements?.map((s) => (
+                      <li key={s} className="flex gap-1.5 text-xs text-ink-soft"><ArrowRight className="mt-0.5 size-3 shrink-0 text-brand" />{s}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          ) : null,
+        )}
+      </div>
+
+      {/* Corrections */}
+      {fb.corrections && fb.corrections.length > 0 && (
+        <div className="mt-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">Corrections</p>
+          <ul className="mt-2 space-y-2">
+            {fb.corrections.map((cor, i) => (
+              <li key={i} className="rounded-lg bg-paper-sunken p-3 text-sm">
+                <span className="text-danger line-through">{cor.quote}</span>
+                <span className="mx-2 text-ink-muted">→</span>
+                <span className="font-medium text-ink">{cor.fix}</span>
+                {cor.issue && <p className="mt-1 text-xs text-ink-muted">{cor.issue}</p>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Upgraded sentences */}
+      {fb.improvedExamples && fb.improvedExamples.length > 0 && (
+        <div className="mt-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">Band-raising rewrites</p>
+          <ul className="mt-2 space-y-2">
+            {fb.improvedExamples.map((ex, i) => (
+              <li key={i} className="rounded-lg border border-line p-3 text-sm">
+                <p className="text-ink-muted">{ex.original}</p>
+                <p className="mt-1 flex gap-1.5 text-ink"><ArrowRight className="mt-0.5 size-3.5 shrink-0 text-green" />{ex.improved}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Next steps */}
+      {fb.nextSteps && fb.nextSteps.length > 0 && (
+        <div className="mt-4">
+          <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">Your next half-band</p>
+          <ul className="mt-2 space-y-1.5">
+            {fb.nextSteps.map((s) => (
+              <li key={s} className="flex gap-2 text-sm text-ink-soft"><Check className="mt-0.5 size-3.5 shrink-0 text-green" />{s}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function Block({

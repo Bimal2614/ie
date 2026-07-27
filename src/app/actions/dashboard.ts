@@ -1,8 +1,8 @@
 "use server";
 
-import { and, eq, gte, lte, count, sql, desc } from "drizzle-orm";
+import { and, eq, gte, lte, count, countDistinct, sql, desc } from "drizzle-orm";
 import { db } from "@/db";
-import { userResponses, questionSets, mockTestResults, mockTestSessions } from "@/db/schema";
+import { userResponses, questions, questionSets, mockTestResults, mockTestSessions } from "@/db/schema";
 import { requireUser } from "@/lib/dal";
 import type { SectionKey, QuestionTypeKey } from "@/lib/ielts";
 
@@ -31,6 +31,12 @@ export type DashboardStats = {
       attempted: number;
       correct: number;
       accuracy: number;
+      /** Distinct questions the user has practised in this section. */
+      practised: number;
+      /** Total active questions available in this section. */
+      available: number;
+      /** practised / available, as a whole percent. */
+      completion: number;
     }
   >;
   // Recent mock results
@@ -116,16 +122,24 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   const totalTimeMin = Math.round(Number(allTime.timeSec) / 60);
   const totalAccuracy = totalAttempted > 0 ? Math.round((totalCorrect / totalAttempted) * 100) : 0;
 
-  // -- Section breakdown --
+  // -- Section breakdown -- attempts + distinct questions practised, per section.
   const sectionRows = await db
     .select({
       section: userResponses.section,
       total: count(),
       correct: sql<number>`count(*) filter (where ${userResponses.isCorrect} = true)`,
+      practised: countDistinct(userResponses.questionId),
     })
     .from(userResponses)
     .where(eq(userResponses.userId, userId))
     .groupBy(userResponses.section);
+
+  // Total active questions available per section (the denominator).
+  const availableRows = await db
+    .select({ section: questions.section, total: count() })
+    .from(questions)
+    .where(eq(questions.isActive, true))
+    .groupBy(questions.section);
 
   const sections: SectionKey[] = ["listening", "reading", "writing", "speaking"];
   const sectionStats = Object.fromEntries(
@@ -133,60 +147,50 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       const row = sectionRows.find((r) => r.section === s);
       const attempted = row ? Number(row.total) : 0;
       const correct = row ? Number(row.correct) : 0;
-      return [s, { attempted, correct, accuracy: attempted > 0 ? Math.round((correct / attempted) * 100) : 0 }];
+      const practised = row ? Number(row.practised) : 0;
+      const available = Number(availableRows.find((r) => r.section === s)?.total ?? 0);
+      const completion = available > 0 ? Math.round((practised / available) * 100) : 0;
+      return [s, {
+        attempted,
+        correct,
+        accuracy: attempted > 0 ? Math.round((correct / attempted) * 100) : 0,
+        practised,
+        available,
+        completion,
+      }];
     }),
   ) as DashboardStats["sectionStats"];
 
-  // -- Streak calculation (consecutive days with activity) --
-  const activeDaysRows = await db
-    .select({
-      day: sql<string>`date(${userResponses.createdAt} AT TIME ZONE 'UTC')`,
-    })
-    .from(userResponses)
-    .where(eq(userResponses.userId, userId))
-    .groupBy(sql`date(${userResponses.createdAt} AT TIME ZONE 'UTC')`)
-    .orderBy(desc(sql`date(${userResponses.createdAt} AT TIME ZONE 'UTC')`));
+  // -- Streak calculation, entirely in SQL (gaps-and-islands) --
+  // Group activity into distinct UTC days, then number consecutive days: a run
+  // of consecutive days shares the same (day - row_number) offset, so grouping
+  // on that offset gives each streak's length in one pass. The current streak
+  // is the run ending today or yesterday. Returns two integers, not rows to
+  // reduce on the client.
+  const [streakRow] = await db.execute<{ current_streak: number; longest_streak: number }>(sql`
+    WITH days AS (
+      SELECT DISTINCT (created_at AT TIME ZONE 'UTC')::date AS d
+      FROM ${userResponses}
+      WHERE user_id = ${userId}
+    ),
+    runs AS (
+      SELECT d, d - (row_number() OVER (ORDER BY d))::int AS grp
+      FROM days
+    ),
+    streaks AS (
+      SELECT count(*)::int AS len, max(d) AS last_day
+      FROM runs GROUP BY grp
+    )
+    SELECT
+      COALESCE(max(len), 0)::int AS longest_streak,
+      COALESCE(max(len) FILTER (
+        WHERE last_day >= (now() AT TIME ZONE 'UTC')::date - 1
+      ), 0)::int AS current_streak
+    FROM streaks
+  `);
 
-  const activeDays = activeDaysRows.map((r) => r.day);
-  let currentStreak = 0;
-  let longestStreak = 0;
-
-  if (activeDays.length > 0) {
-    // Check if user was active today or yesterday
-    const todayStr = todayStart.toISOString().slice(0, 10);
-    const yesterday = new Date(todayStart);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().slice(0, 10);
-
-    if (activeDays[0] === todayStr || activeDays[0] === yesterdayStr) {
-      currentStreak = 1;
-      for (let i = 1; i < activeDays.length; i++) {
-        const prev = new Date(activeDays[i - 1]);
-        const curr = new Date(activeDays[i]);
-        const diff = (prev.getTime() - curr.getTime()) / (1000 * 60 * 60 * 24);
-        if (Math.round(diff) === 1) {
-          currentStreak++;
-        } else {
-          break;
-        }
-      }
-    }
-
-    // Longest streak
-    let streak = 1;
-    for (let i = 1; i < activeDays.length; i++) {
-      const prev = new Date(activeDays[i - 1]);
-      const curr = new Date(activeDays[i]);
-      const diff = (prev.getTime() - curr.getTime()) / (1000 * 60 * 60 * 24);
-      if (Math.round(diff) === 1) {
-        streak++;
-      } else {
-        longestStreak = Math.max(longestStreak, streak);
-        streak = 1;
-      }
-    }
-    longestStreak = Math.max(longestStreak, streak);
-  }
+  const currentStreak = Number(streakRow?.current_streak ?? 0);
+  const longestStreak = Number(streakRow?.longest_streak ?? 0);
 
   // -- Recent mock results --
   const mockRows = await db

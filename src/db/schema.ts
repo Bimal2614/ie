@@ -55,6 +55,10 @@ export const users = pgTable(
     lastLoginIp: text(),
     // Bump on password change to invalidate any pre-change tokens.
     passwordChangedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    // Set when the account is disabled (e.g. repeated rate-limit abuse). While
+    // set, sessions are rejected so the user cannot use the app.
+    deactivatedAt: timestamp({ withTimezone: true }),
+    deactivationReason: text(),
 
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
