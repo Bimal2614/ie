@@ -29,6 +29,13 @@
       "when": 1784192584880,
       "tag": "0003_brainy_namorita",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1785132766857,
+      "tag": "0004_wise_manta",
+      "breakpoints": true
     }
   ]
 }
