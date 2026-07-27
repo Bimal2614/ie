@@ -12,6 +12,9 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
+    "db:migrate:staging": "drizzle-kit migrate --config=drizzle.staging.config.ts",
+    "db:push:staging": "drizzle-kit push --config=drizzle.staging.config.ts",
+    "db:studio:staging": "drizzle-kit studio --config=drizzle.staging.config.ts",
     "db:seed": "tsx src/db/seed.ts",
     "db:seed:questions": "tsx src/db/seed-questions.ts",
     "db:seed:responses": "tsx src/db/seed-responses.ts"
