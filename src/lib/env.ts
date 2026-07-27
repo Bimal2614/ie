@@ -26,6 +26,14 @@ const EnvSchema = z.object({
   GEMINI_API_KEY: z.string().optional(),
   GEMINI_MODEL: z.string().default("gemini-2.5-flash"),
 
+  // --- Transactional email (SMTP — any provider). Optional: without it,
+  //     verification/reset emails are skipped (link is logged in dev). ---
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.coerce.number().int().positive().optional(),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  EMAIL_FROM: z.string().optional(), // e.g. "IELTSAce <no-reply@ieltsace.com>"
+
   // --- Rate limiting (all configurable; sensible production defaults) ---
   // General API/action limits per authenticated user.
   RATE_LIMIT_GENERAL_PER_MINUTE: z.coerce.number().int().positive().default(60),
@@ -57,6 +65,11 @@ export const env = EnvSchema.parse({
   SPEECHSUPER_BASE_URL: process.env.SPEECHSUPER_BASE_URL,
   GEMINI_API_KEY: process.env.GEMINI_API_KEY,
   GEMINI_MODEL: process.env.GEMINI_MODEL,
+  SMTP_HOST: process.env.SMTP_HOST,
+  SMTP_PORT: process.env.SMTP_PORT,
+  SMTP_USER: process.env.SMTP_USER,
+  SMTP_PASS: process.env.SMTP_PASS,
+  EMAIL_FROM: process.env.EMAIL_FROM,
   RATE_LIMIT_GENERAL_PER_MINUTE: process.env.RATE_LIMIT_GENERAL_PER_MINUTE,
   RATE_LIMIT_GENERAL_PER_DAY: process.env.RATE_LIMIT_GENERAL_PER_DAY,
   RATE_LIMIT_AI_PER_DAY: process.env.RATE_LIMIT_AI_PER_DAY,
@@ -85,6 +98,11 @@ export function isSpeechSuperConfigured(): boolean {
 /** True when Gemini is configured for Writing band scoring. */
 export function isWritingAiConfigured(): boolean {
   return Boolean(env.GEMINI_API_KEY);
+}
+
+/** True when SMTP is configured to actually send email. */
+export function isEmailConfigured(): boolean {
+  return Boolean(env.SMTP_HOST && env.SMTP_PORT && env.SMTP_USER && env.SMTP_PASS && env.EMAIL_FROM);
 }
 
 /** True when S3 credentials + bucket + region are present. */

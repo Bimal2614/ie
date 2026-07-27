@@ -100,6 +100,33 @@ export const sessions = pgTable(
 );
 
 /* ------------------------------------------------------------------ *
+ * Auth tokens (email verification + password reset)
+ *
+ * Opaque, single-use, expiring tokens. Only the SHA-256 hash is stored; the raw
+ * token lives solely in the emailed link. Same security model as sessions.
+ * ------------------------------------------------------------------ */
+export const authTokenType = pgEnum("auth_token_type", ["email_verify", "password_reset"]);
+
+export const authTokens = pgTable(
+  "auth_tokens",
+  {
+    id: uuid().defaultRandom().primaryKey(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    tokenHash: text().notNull(), // sha256(rawToken) hex
+    type: authTokenType().notNull(),
+    expiresAt: timestamp({ withTimezone: true }).notNull(),
+    usedAt: timestamp({ withTimezone: true }), // set when consumed (single-use)
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("auth_tokens_token_hash_uq").on(t.tokenHash),
+    index("auth_tokens_user_idx").on(t.userId),
+  ],
+);
+
+/* ------------------------------------------------------------------ *
  * Rate limiting (DB-backed sliding window)
  *
  * Keyed by "action:dimension:value", e.g. "login:ip:1.2.3.4" or
