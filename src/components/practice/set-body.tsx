@@ -308,8 +308,9 @@ function Stimulus({ set }: { set: PlayerSet }) {
           <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-muted">
             Audio — plays once in the real test
           </p>
+          {/* Auth-gated route → short-lived presigned S3 URL; bucket never exposed. */}
           {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-          <audio controls preload="none" src={set.audioUrl} className="w-full" />
+          <audio controls preload="none" src={`/api/media/${set.id}`} className="w-full" />
         </div>
       )}
       {hasImage && (
