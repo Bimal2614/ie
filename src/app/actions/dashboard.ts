@@ -74,6 +74,13 @@ export type DashboardStats = {
     avgBand: number | null;
     createdAt: Date;
   }>;
+  /** The most recent thing the user practised — powers "Continue where you left off". */
+  continueLast: {
+    section: string;
+    questionType: string;
+    setTitle: string | null;
+    createdAt: Date;
+  } | null;
 };
 
 export async function getDashboardStats(): Promise<DashboardStats> {
@@ -278,6 +285,18 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     createdAt: new Date(r.createdAt),
   }));
 
+  // The freshest attempt drives "Continue where you left off". Speaking/writing
+  // are practised set-by-set too, so the same /practice/<section>/<type> route
+  // resumes any of them (the player itself restores the last passage locally).
+  const continueLast = recentActivity[0]
+    ? {
+        section: recentActivity[0].section,
+        questionType: recentActivity[0].questionType,
+        setTitle: recentActivity[0].setTitle,
+        createdAt: recentActivity[0].createdAt,
+      }
+    : null;
+
   return {
     todayAttempted,
     todayCorrect,
@@ -293,5 +312,6 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     recentMocks,
     typeStats,
     recentActivity,
+    continueLast,
   };
 }

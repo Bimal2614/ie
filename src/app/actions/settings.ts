@@ -59,7 +59,11 @@ export async function changePassword(_prev: AuthFormState, formData: FormData): 
     .where(eq(users.id, user.id))
     .limit(1);
 
-  if (!row || !(await verifyPassword(parsed.data.currentPassword, row.passwordHash))) {
+  // OAuth-only accounts (Google) have no password to change.
+  if (!row?.passwordHash) {
+    return { error: "Your account uses Google sign-in, so there's no password to change." };
+  }
+  if (!(await verifyPassword(parsed.data.currentPassword, row.passwordHash))) {
     return { fieldErrors: { currentPassword: ["That password is incorrect"] } };
   }
   if (await verifyPassword(parsed.data.newPassword, row.passwordHash)) {

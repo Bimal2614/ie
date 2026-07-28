@@ -36,8 +36,11 @@ export const users = pgTable(
     emailNormalized: text().notNull(),
     emailVerified: boolean().notNull().default(false),
 
-    // bcrypt hash (cost 12). Never the plaintext.
-    passwordHash: text().notNull(),
+    // bcrypt hash (cost 12). Never the plaintext. NULL for OAuth-only accounts
+    // (e.g. Google sign-in), which have no password.
+    passwordHash: text(),
+    // Google account subject id ("sub"), set when linked via Google sign-in.
+    googleId: text(),
     name: text().notNull(),
     role: userRole().notNull().default("user"),
 
@@ -63,7 +66,10 @@ export const users = pgTable(
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("users_email_normalized_uq").on(t.emailNormalized)],
+  (t) => [
+    uniqueIndex("users_email_normalized_uq").on(t.emailNormalized),
+    uniqueIndex("users_google_id_uq").on(t.googleId), // NULLs don't conflict in PG
+  ],
 );
 
 /* ------------------------------------------------------------------ *

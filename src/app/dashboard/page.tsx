@@ -6,6 +6,7 @@ import { getDashboardStats } from "@/app/actions/dashboard";
 import { recommendFocus } from "@/lib/dashboard";
 import { StatTile } from "@/components/dashboard/ui";
 import { FocusNext } from "@/components/dashboard/focus-next";
+import { ContinueCard } from "@/components/dashboard/continue-card";
 import { SectionPerformance } from "@/components/dashboard/section-performance";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { MockResults } from "@/components/dashboard/mock-results";
@@ -45,6 +46,9 @@ export default async function DashboardPage() {
           )}
         </div>
       </header>
+
+      {/* Resume the last thing they practised — the fastest path back in. */}
+      {stats.continueLast && <ContinueCard last={stats.continueLast} />}
 
       {/* What you've done — questions and consistency, the metrics that move a band. */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

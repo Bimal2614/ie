@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import Image from "next/image";
-import { Check, X, Sparkles } from "lucide-react";
+import { Check, X, Sparkles, Flag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   QUESTION_TYPES,
@@ -15,6 +15,7 @@ import {
 import type { Answer, SetLayout, OptionsLayout, CorrectAnswer } from "@/lib/question-content";
 import { SetLayoutRenderer, layoutOwnsAnswers } from "./renderers/layouts";
 import { QuestionInput, type RenderQuestion, type QuestionState } from "./renderers/question-input";
+import { ReportQuestionButton } from "./report-question";
 import { SpeakingInterview } from "./renderers/speaking-interview";
 import type { GapBinding, GapResolver } from "./renderers/gap-field";
 
@@ -72,16 +73,24 @@ export function SetBody({
   answers,
   results,
   onAnswer,
+  onClearAnswer,
+  flagged,
+  onToggleFlag,
 }: {
   set: PlayerSet;
   questions: PlayerQuestion[];
   answers: Record<string, Answer>;
   results: PlayerResult[] | null;
   onAnswer: (questionId: string, value: Answer) => void;
+  onClearAnswer?: (questionId: string) => void;
+  /** Client-side "mark for review" set + toggle (optional — omitted in mock review). */
+  flagged?: Set<string>;
+  onToggleFlag?: (questionId: string) => void;
 }) {
   const meta = QUESTION_TYPES[set.questionType];
   const sec = SECTIONS[set.section];
   const disabled = results !== null;
+  const answeredCount = questions.filter((q) => answers[q.id] !== undefined).length;
 
   const resultFor = useCallback(
     (id: string) => results?.find((r) => r.questionId === id),
@@ -151,7 +160,19 @@ export function SetBody({
       )}
 
       {showQuestionRows && (
-        <ol className="space-y-4">
+        <div className="space-y-3">
+          {!disabled && questions.length > 1 && (
+            <div className="flex items-center gap-3 text-sm">
+              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-paper-sunken">
+                <div className="h-full rounded-full bg-brand transition-all" style={{ width: `${(answeredCount / questions.length) * 100}%` }} />
+              </div>
+              <span className="shrink-0 tabular-nums text-ink-muted">
+                {answeredCount} / {questions.length} answered
+                {flagged && flagged.size > 0 && ` · ${flagged.size} flagged`}
+              </span>
+            </div>
+          )}
+          <ol className="space-y-4">
           {numbered.map(({ q, number }) => {
             const result = resultFor(q.id);
             const state = stateFor(result);
@@ -176,7 +197,10 @@ export function SetBody({
                 key={q.id}
                 id={numberInGap ? undefined : `mq-${number}`}
                 data-qnum={number}
-                className="scroll-mt-28 rounded-xl border border-line bg-paper-elev p-4"
+                className={cn(
+                  "scroll-mt-28 rounded-xl border border-line bg-paper-elev p-4",
+                  flagged?.has(q.id) && "ring-1 ring-warning/60",
+                )}
               >
                 <div className="flex items-start gap-3">
                   {!numberInGap && (
@@ -204,22 +228,47 @@ export function SetBody({
                     />
                     {result && <ResultNote result={result} />}
                   </div>
-                  {result && state !== "review" && (
-                    <span
-                      className={cn(
-                        "grid size-6 shrink-0 place-items-center rounded-full",
-                        state === "correct" ? "bg-success-soft text-success" : "bg-danger-soft text-danger",
-                      )}
-                      aria-label={state === "correct" ? "Correct" : "Incorrect"}
-                    >
-                      {state === "correct" ? <Check className="size-4" /> : <X className="size-4" />}
-                    </span>
-                  )}
+                  <div className="flex shrink-0 items-center gap-1">
+                    {!disabled && onClearAnswer && answers[q.id] !== undefined && (
+                      <button
+                        type="button"
+                        onClick={() => onClearAnswer(q.id)}
+                        className="rounded-md px-2 py-1 text-xs font-medium text-ink-muted transition-colors hover:bg-paper-sunken hover:text-ink"
+                      >
+                        Clear
+                      </button>
+                    )}
+                    {result && state !== "review" && (
+                      <span
+                        className={cn(
+                          "grid size-6 place-items-center rounded-full",
+                          state === "correct" ? "bg-success-soft text-success" : "bg-danger-soft text-danger",
+                        )}
+                        aria-label={state === "correct" ? "Correct" : "Incorrect"}
+                      >
+                        {state === "correct" ? <Check className="size-4" /> : <X className="size-4" />}
+                      </span>
+                    )}
+                    {onToggleFlag && (
+                      <button
+                        type="button"
+                        onClick={() => onToggleFlag(q.id)}
+                        title={flagged?.has(q.id) ? "Unflag" : "Flag for review"}
+                        aria-label="Flag for review"
+                        aria-pressed={flagged?.has(q.id) ?? false}
+                        className="grid size-7 place-items-center rounded-md text-ink-muted transition-colors hover:bg-paper-sunken hover:text-ink"
+                      >
+                        <Flag className={cn("size-4", flagged?.has(q.id) && "fill-warning text-warning")} />
+                      </button>
+                    )}
+                    <ReportQuestionButton questionId={q.id} />
+                  </div>
                 </div>
               </li>
             );
           })}
-        </ol>
+          </ol>
+        </div>
       )}
     </div>
   );
@@ -326,7 +375,12 @@ function Stimulus({ set }: { set: PlayerSet }) {
         </div>
       )}
       {set.passageText && (
-        <article className="whitespace-pre-line text-sm leading-relaxed text-ink-soft">
+        // Copy-protected: auth-gated practice content only (never on indexed pages).
+        <article
+          className="select-none whitespace-pre-line text-sm leading-relaxed text-ink-soft"
+          onCopy={(e) => e.preventDefault()}
+          onContextMenu={(e) => e.preventDefault()}
+        >
           {set.passageText}
         </article>
       )}

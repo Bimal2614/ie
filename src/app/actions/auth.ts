@@ -159,6 +159,13 @@ export async function login(
     return { error: INVALID_CREDENTIALS };
   }
 
+  // OAuth-only account (Google, no password). Spend bcrypt time, then nudge to
+  // the right method without confirming the account exists to a stranger.
+  if (!user.passwordHash) {
+    await fakeVerify(password);
+    return { error: "This account uses Google sign-in. Please continue with Google." };
+  }
+
   // Honor an active lockout.
   if (user.lockedUntil && user.lockedUntil > new Date()) {
     await audit(user.id, "login.blocked.locked", ip, userAgent);

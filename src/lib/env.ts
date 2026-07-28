@@ -34,6 +34,11 @@ const EnvSchema = z.object({
   SMTP_PASS: z.string().optional(),
   EMAIL_FROM: z.string().optional(), // e.g. "IELTSAce <no-reply@ieltsace.com>"
 
+  // --- Google sign-in (OAuth 2.0). Optional: the button degrades gracefully
+  //     when unset. Redirect URI = `${APP_URL}/api/auth/google/callback`. ---
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+
   // --- Rate limiting (all configurable; sensible production defaults) ---
   // General API/action limits per authenticated user.
   RATE_LIMIT_GENERAL_PER_MINUTE: z.coerce.number().int().positive().default(60),
@@ -70,6 +75,8 @@ export const env = EnvSchema.parse({
   SMTP_USER: process.env.SMTP_USER,
   SMTP_PASS: process.env.SMTP_PASS,
   EMAIL_FROM: process.env.EMAIL_FROM,
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
   RATE_LIMIT_GENERAL_PER_MINUTE: process.env.RATE_LIMIT_GENERAL_PER_MINUTE,
   RATE_LIMIT_GENERAL_PER_DAY: process.env.RATE_LIMIT_GENERAL_PER_DAY,
   RATE_LIMIT_AI_PER_DAY: process.env.RATE_LIMIT_AI_PER_DAY,
@@ -103,6 +110,11 @@ export function isWritingAiConfigured(): boolean {
 /** True when SMTP is configured to actually send email. */
 export function isEmailConfigured(): boolean {
   return Boolean(env.SMTP_HOST && env.SMTP_PORT && env.SMTP_USER && env.SMTP_PASS && env.EMAIL_FROM);
+}
+
+/** True when Google OAuth is configured. */
+export function isGoogleConfigured(): boolean {
+  return Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
 }
 
 /** True when S3 credentials + bucket + region are present. */
