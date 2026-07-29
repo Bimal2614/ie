@@ -36,8 +36,11 @@ export const users = pgTable(
     emailNormalized: text().notNull(),
     emailVerified: boolean().notNull().default(false),
 
-    // bcrypt hash (cost 12). Never the plaintext.
-    passwordHash: text().notNull(),
+    // bcrypt hash (cost 12). Never the plaintext. NULL for OAuth-only accounts
+    // (e.g. Google sign-in), which have no password.
+    passwordHash: text(),
+    // Google account subject id ("sub"), set when linked via Google sign-in.
+    googleId: text(),
     name: text().notNull(),
     role: userRole().notNull().default("user"),
 
@@ -63,7 +66,10 @@ export const users = pgTable(
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("users_email_normalized_uq").on(t.emailNormalized)],
+  (t) => [
+    uniqueIndex("users_email_normalized_uq").on(t.emailNormalized),
+    uniqueIndex("users_google_id_uq").on(t.googleId), // NULLs don't conflict in PG
+  ],
 );
 
 /* ------------------------------------------------------------------ *
@@ -96,6 +102,33 @@ export const sessions = pgTable(
   (t) => [
     uniqueIndex("sessions_token_hash_uq").on(t.tokenHash),
     index("sessions_user_id_idx").on(t.userId),
+  ],
+);
+
+/* ------------------------------------------------------------------ *
+ * Auth tokens (email verification + password reset)
+ *
+ * Opaque, single-use, expiring tokens. Only the SHA-256 hash is stored; the raw
+ * token lives solely in the emailed link. Same security model as sessions.
+ * ------------------------------------------------------------------ */
+export const authTokenType = pgEnum("auth_token_type", ["email_verify", "password_reset"]);
+
+export const authTokens = pgTable(
+  "auth_tokens",
+  {
+    id: uuid().defaultRandom().primaryKey(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    tokenHash: text().notNull(), // sha256(rawToken) hex
+    type: authTokenType().notNull(),
+    expiresAt: timestamp({ withTimezone: true }).notNull(),
+    usedAt: timestamp({ withTimezone: true }), // set when consumed (single-use)
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("auth_tokens_token_hash_uq").on(t.tokenHash),
+    index("auth_tokens_user_idx").on(t.userId),
   ],
 );
 

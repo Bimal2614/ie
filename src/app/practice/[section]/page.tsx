@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, Clock, Layers, BookOpen, Headphones, PenLine, Mic, Sparkles } from "lucide-react";
-import { and, eq, count, sql } from "drizzle-orm";
+import { and, eq, countDistinct } from "drizzle-orm";
 import { db } from "@/db";
 import { questionSets, questions } from "@/db/schema";
-import { SECTIONS, SECTION_ORDER, SECTION_TYPES, QUESTION_TYPES, type SectionKey, type QuestionTypeKey } from "@/lib/ielts";
+import { SECTIONS, SECTION_ORDER, SECTION_TYPES, SET_NOUN, QUESTION_TYPES, type SectionKey, type QuestionTypeKey } from "@/lib/ielts";
 import { cn } from "@/lib/utils";
 
 export async function generateMetadata({ params }: { params: Promise<{ section: string }> }): Promise<Metadata> {
@@ -50,12 +50,15 @@ export default async function SectionPracticePage({ params }: { params: Promise<
   const frame = SECTION_FRAME[secKey];
   const sectionTypes = SECTION_TYPES[secKey];
 
-  // Questions per type, in one grouped join. This used to fetch every set and
-  // then run a COUNT per set — a query per row, growing with the content.
+  // Practice UNITS per type — a "unit" is one set (a recording / passage), the
+  // thing the player pages through (1/1, 2/2…), not each numbered sub-question
+  // under it. Counting sub-questions overstated the library: a single recording
+  // with three MCs read as "3 questions" but is one exercise. The inner join
+  // still requires at least one active question, so empty shells aren't counted.
   const typeCounts = await db
     .select({
       questionType: questionSets.questionType,
-      n: count(questions.id),
+      n: countDistinct(questionSets.id),
     })
     .from(questionSets)
     .innerJoin(
@@ -69,6 +72,9 @@ export default async function SectionPracticePage({ params }: { params: Promise<
     typeCounts.map((r) => [r.questionType, Number(r.n)]),
   );
   const totalAvailable = [...countByType.values()].reduce((a, b) => a + b, 0);
+  // The player's own word for one set: Recording / Passage / Task / Topic.
+  const unit = SET_NOUN[secKey].toLowerCase();
+  const plural = (n: number) => `${n.toLocaleString()} ${unit}${n === 1 ? "" : "s"}`;
 
   return (
     <div className="space-y-8">
@@ -91,7 +97,7 @@ export default async function SectionPracticePage({ params }: { params: Promise<
             </span>
             <span className="chip">
               <BookOpen className="h-3.5 w-3.5" />
-              {totalAvailable.toLocaleString()} questions available
+              {plural(totalAvailable)} available
             </span>
           </div>
         </div>
@@ -112,7 +118,7 @@ export default async function SectionPracticePage({ params }: { params: Promise<
                 frame.border,
               )}
             >
-              <TaskCardInner meta={meta} qCount={qCount} disabled secKey={secKey} />
+              <TaskCardInner meta={meta} qCount={qCount} unit={unit} disabled secKey={secKey} />
             </div>
           ) : (
             <Link
@@ -124,7 +130,7 @@ export default async function SectionPracticePage({ params }: { params: Promise<
                 frame.hoverBorder,
               )}
             >
-              <TaskCardInner meta={meta} qCount={qCount} disabled={false} secKey={secKey} />
+              <TaskCardInner meta={meta} qCount={qCount} unit={unit} disabled={false} secKey={secKey} />
             </Link>
           );
         })}
@@ -137,11 +143,13 @@ export default async function SectionPracticePage({ params }: { params: Promise<
 function TaskCardInner({
   meta,
   qCount,
+  unit,
   disabled,
   secKey,
 }: {
   meta: (typeof QUESTION_TYPES)[QuestionTypeKey];
   qCount: number;
+  unit: string;
   disabled: boolean;
   secKey: SectionKey;
 }) {
@@ -175,7 +183,7 @@ function TaskCardInner({
       {/* Count + CTA */}
       <div className="mt-auto flex items-center justify-between gap-3 pt-1">
         <span className="text-xs text-ink-muted">
-          {qCount > 0 ? `${qCount.toLocaleString()} question${qCount !== 1 ? "s" : ""}` : "Library coming"}
+          {qCount > 0 ? `${qCount.toLocaleString()} ${unit}${qCount !== 1 ? "s" : ""}` : "Library coming"}
         </span>
         <span
           className={cn(

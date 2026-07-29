@@ -43,6 +43,7 @@ function ChoiceRow({
   selected,
   disabled,
   multi,
+  state,
   onSelect,
 }: {
   letter: string;
@@ -50,13 +51,25 @@ function ChoiceRow({
   selected: boolean;
   disabled: boolean;
   multi: boolean;
+  state: QuestionState;
   onSelect: () => void;
 }) {
+  // After grading, the SELECTED option reflects correctness (green/red);
+  // while answering it's the neutral brand highlight.
+  const selectedRow =
+    state === "correct"
+      ? "border-success bg-success-soft"
+      : state === "incorrect"
+        ? "border-danger bg-danger-soft"
+        : "border-brand bg-brand-soft";
+  const selectedBadge =
+    state === "correct" ? "bg-success text-white" : state === "incorrect" ? "bg-danger text-white" : "bg-brand text-white";
+
   return (
     <label
       className={cn(
         "flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 text-sm transition-colors",
-        selected ? "border-brand bg-brand-soft" : "border-line hover:bg-paper-sunken",
+        selected ? selectedRow : "border-line hover:bg-paper-sunken",
         disabled && "cursor-default",
       )}
     >
@@ -70,7 +83,7 @@ function ChoiceRow({
       <span
         className={cn(
           "grid size-5 shrink-0 place-items-center rounded font-mono text-[11px] font-semibold",
-          selected ? "bg-brand text-white" : "bg-paper-sunken text-ink-muted",
+          selected ? selectedBadge : "bg-paper-sunken text-ink-muted",
         )}
       >
         {letter}
@@ -80,7 +93,7 @@ function ChoiceRow({
   );
 }
 
-function SingleChoice({ question, value, disabled, onChange }: InputProps) {
+function SingleChoice({ question, value, disabled, state, onChange }: InputProps) {
   const options = (question.content?.options as string[]) ?? [];
   const selected = value?.index as number | undefined;
   return (
@@ -93,6 +106,7 @@ function SingleChoice({ question, value, disabled, onChange }: InputProps) {
           selected={selected === i}
           disabled={disabled}
           multi={false}
+          state={state}
           onSelect={() => onChange({ index: i })}
         />
       ))}
@@ -100,7 +114,7 @@ function SingleChoice({ question, value, disabled, onChange }: InputProps) {
   );
 }
 
-function MultiChoice({ question, value, disabled, onChange }: InputProps) {
+function MultiChoice({ question, value, disabled, state, onChange }: InputProps) {
   const options = (question.content?.options as string[]) ?? [];
   const selectCount = (question.content?.selectCount as number) ?? 2;
   const chosen = (value?.indices as number[]) ?? [];
@@ -127,6 +141,7 @@ function MultiChoice({ question, value, disabled, onChange }: InputProps) {
           selected={chosen.includes(i)}
           disabled={disabled || (!chosen.includes(i) && chosen.length >= selectCount)}
           multi
+          state={state}
           onSelect={() => toggle(i)}
         />
       ))}
@@ -138,7 +153,7 @@ function MultiChoice({ question, value, disabled, onChange }: InputProps) {
  * Judgement types — True/False/Not Given, Yes/No/Not Given
  * ------------------------------------------------------------------ */
 
-function Judgement({ question, value, disabled, onChange }: InputProps) {
+function Judgement({ question, value, disabled, state, onChange }: InputProps) {
   const meta = QUESTION_TYPES[question.questionType];
   const choices =
     (question.content?.choices as string[]) ??
@@ -156,7 +171,11 @@ function Judgement({ question, value, disabled, onChange }: InputProps) {
           className={cn(
             "rounded-md border px-4 py-1.5 text-sm font-medium transition-colors",
             selected === c
-              ? "border-brand bg-brand text-white"
+              ? state === "correct"
+                ? "border-success bg-success text-white"
+                : state === "incorrect"
+                  ? "border-danger bg-danger text-white"
+                  : "border-brand bg-brand text-white"
               : "border-line text-ink-soft hover:bg-paper-sunken",
             disabled && "cursor-default",
           )}
@@ -262,24 +281,63 @@ function Speaking({ question, disabled, onChange }: InputProps) {
   const [recorded, setRecorded] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  const [prepLeft, setPrepLeft] = useState<number | null>(null); // null = not preparing
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const recRef = useRef<MediaRecorder | null>(null);
   const chunks = useRef<Blob[]>([]);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const prepTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   // `elapsed` is stale inside MediaRecorder's onstop closure.
   const elapsedRef = useRef(0);
   elapsedRef.current = elapsed;
 
+  const prep = question.prepSeconds ?? 0;
+  const limit = question.speakSeconds ?? 0;
+
   useEffect(
     () => () => {
       if (timer.current) clearInterval(timer.current);
+      if (prepTimer.current) clearInterval(prepTimer.current);
       if (url) URL.revokeObjectURL(url);
     },
     [url],
   );
 
+  // Stop automatically at the speaking limit — the real test cuts you off.
+  useEffect(() => {
+    if (recording && limit > 0 && elapsed >= limit) stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [elapsed, recording, limit]);
+
+  const startPrep = () => {
+    setError(null);
+    if (prep <= 0) {
+      start();
+      return;
+    }
+    setPrepLeft(prep);
+    prepTimer.current = setInterval(() => {
+      setPrepLeft((s) => {
+        if (s === null) return null;
+        if (s <= 1) {
+          if (prepTimer.current) clearInterval(prepTimer.current);
+          start();
+          return null;
+        }
+        return s - 1;
+      });
+    }, 1000);
+  };
+
+  const skipPrep = () => {
+    if (prepTimer.current) clearInterval(prepTimer.current);
+    setPrepLeft(null);
+    start();
+  };
+
   const start = async () => {
+    setPrepLeft(null);
     setError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -326,7 +384,11 @@ function Speaking({ question, disabled, onChange }: InputProps) {
     if (timer.current) clearInterval(timer.current);
   };
 
-  const limit = question.speakSeconds ?? 0;
+  const preparing = prepLeft !== null;
+  const remaining = limit > 0 ? Math.max(0, limit - elapsed) : 0;
+  const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  // Part 2 gives a preparation minute; Parts 1/3 (no cue card / no prep) don't.
+  const hasPrep = prep > 0 && !!cue;
 
   return (
     <div className="space-y-3">
@@ -341,22 +403,43 @@ function Speaking({ question, disabled, onChange }: InputProps) {
           </ul>
         </div>
       )}
-      <div className="flex items-center gap-3">
-        {!recording ? (
-          <Button
-            type="button"
-            variant={recorded ? "outline" : "default"}
-            disabled={disabled || uploading}
-            onClick={start}
-          >
-            <Mic className="h-4 w-4" /> {recorded ? "Re-record" : "Record answer"}
+
+      {/* Preparation countdown (IELTS Part 2 long turn) */}
+      {preparing && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-brand/40 bg-brand-soft p-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-brand">Preparation time</p>
+            <p className="mt-0.5 text-sm text-ink-soft">
+              Make notes — recording starts automatically when the timer ends.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="font-mono text-2xl tabular-nums text-ink">{mmss(prepLeft ?? 0)}</span>
+            <Button type="button" variant="outline" size="sm" onClick={skipPrep}>
+              Start speaking now
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <div className="flex flex-wrap items-center gap-3">
+        {recording ? (
+          <Button type="button" variant="destructive" onClick={stop}>
+            <Square className="h-4 w-4" /> Stop · {mmss(elapsed)}
+            {limit > 0 && <span className="ml-1 opacity-70">/ {mmss(limit)}</span>}
           </Button>
         ) : (
-          <Button type="button" variant="destructive" onClick={stop}>
-            <Square className="h-4 w-4" /> Stop · {String(Math.floor(elapsed / 60)).padStart(2, "0")}:
-            {String(elapsed % 60).padStart(2, "0")}
-            {limit > 0 && <span className="ml-1 opacity-70">/ {Math.floor(limit / 60)}:{String(limit % 60).padStart(2, "0")}</span>}
-          </Button>
+          !preparing && (
+            <Button
+              type="button"
+              variant={recorded ? "outline" : "default"}
+              disabled={disabled || uploading}
+              onClick={recorded ? start : hasPrep ? startPrep : start}
+            >
+              <Mic className="h-4 w-4" />{" "}
+              {recorded ? "Re-record" : hasPrep ? `Prepare (${mmss(prep)})` : "Record answer"}
+            </Button>
+          )
         )}
         {uploading && (
           <span className="inline-flex items-center gap-1.5 text-xs text-ink-muted">
@@ -368,6 +451,25 @@ function Speaking({ question, disabled, onChange }: InputProps) {
           <audio controls src={url} className="h-9" />
         )}
       </div>
+
+      {/* Talk-time countdown bar while recording */}
+      {recording && limit > 0 && (
+        <div className="space-y-1">
+          <div className="progress-track">
+            <div
+              className={cn(
+                "progress-fill transition-[width] duration-1000 ease-linear",
+                remaining <= 10 && "!bg-danger",
+              )}
+              style={{ width: `${Math.min(100, (elapsed / limit) * 100)}%` }}
+            />
+          </div>
+          <p className={cn("text-right font-mono text-xs tabular-nums", remaining <= 10 ? "text-danger" : "text-ink-muted")}>
+            {mmss(remaining)} left
+          </p>
+        </div>
+      )}
+
       {error && <p className="text-xs text-danger">{error}</p>}
     </div>
   );

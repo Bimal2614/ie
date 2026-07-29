@@ -13,6 +13,10 @@ import {
   getRequestContext,
 } from "@/lib/session";
 import { getCurrentUser } from "@/lib/dal";
+import { createAuthToken } from "@/lib/auth-tokens";
+import { sendEmail } from "@/lib/email/mailer";
+import { verifyEmailTemplate } from "@/lib/email/templates";
+import { env } from "@/lib/env";
 
 // Identical message for "no such user" and "wrong password" — no enumeration.
 const INVALID_CREDENTIALS = "Incorrect email or password.";
@@ -102,6 +106,18 @@ export async function signup(
 
   await createSession(userId); // rotates in a fresh session token
   await audit(userId, "signup", ip, userAgent);
+
+  // Send the verification email (best-effort — must never block signup, and the
+  // try MUST NOT wrap the redirect below, which throws NEXT_REDIRECT).
+  try {
+    const raw = await createAuthToken(userId, "email_verify");
+    const link = `${env.APP_URL ?? "https://ieltsace.com"}/verify-email?token=${raw}`;
+    const t = verifyEmailTemplate(name, link);
+    await sendEmail({ to: email, subject: t.subject, html: t.html, text: t.text });
+  } catch {
+    // A mail outage must not fail account creation; the user can resend later.
+  }
+
   redirect("/dashboard");
 }
 
@@ -141,6 +157,13 @@ export async function login(
     await fakeVerify(password);
     await audit(null, "login.fail.unknown_user", ip, userAgent, { email });
     return { error: INVALID_CREDENTIALS };
+  }
+
+  // OAuth-only account (Google, no password). Spend bcrypt time, then nudge to
+  // the right method without confirming the account exists to a stranger.
+  if (!user.passwordHash) {
+    await fakeVerify(password);
+    return { error: "This account uses Google sign-in. Please continue with Google." };
   }
 
   // Honor an active lockout.

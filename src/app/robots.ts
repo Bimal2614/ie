@@ -1,6 +1,5 @@
 import type { MetadataRoute } from "next";
-
-const BASE = process.env.APP_URL ?? "https://ieltsace.com";
+import { SITE_URL as BASE } from "@/lib/site";
 
 /**
  * robots.txt — allow crawling of all public marketing/SEO pages; keep the

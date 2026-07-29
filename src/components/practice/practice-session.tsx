@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, RotateCcw, X, AlertCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, RotateCcw, X, AlertCircle, Loader2, LayoutGrid, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SECTIONS, QUESTION_TYPES, SET_NOUN, type SectionKey, type QuestionTypeKey } from "@/lib/ielts";
@@ -47,11 +47,22 @@ export function PracticeSession({
   const [restartKey, setRestartKey] = useState(0);
 
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
+  const [flagged, setFlagged] = useState<Set<string>>(new Set());
   const [result, setResult] = useState<SetSubmissionResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [scoring, setScoring] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
-  const [, setAttemptedSets] = useState<Set<number>>(() => new Set(initialAttempted.setIndices));
+
+  const toggleFlag = useCallback((id: string) => {
+    setFlagged((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+  const [attemptedSets, setAttemptedSets] = useState<Set<number>>(() => new Set(initialAttempted.setIndices));
+  const [paletteOpen, setPaletteOpen] = useState(false);
 
   const sec = SECTIONS[section];
   const meta = QUESTION_TYPES[questionType];
@@ -64,6 +75,7 @@ export function PracticeSession({
 
     setLoading(true);
     setAnswers({});
+    setFlagged(new Set());
     setResult(null);
 
     getSetPaginated(section, questionType, setPage)
@@ -75,6 +87,7 @@ export function PracticeSession({
   const goToSet = useCallback((page: number) => {
     setSetPage(page);
     setAnswers({});
+    setFlagged(new Set());
     setResult(null);
     topRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
@@ -85,6 +98,7 @@ export function PracticeSession({
 
   const handleRestart = useCallback(() => {
     setAnswers({});
+    setFlagged(new Set());
     setResult(null);
     setRestartKey((k) => k + 1);
   }, []);
@@ -93,6 +107,65 @@ export function PracticeSession({
     setAnswers((prev) => ({ ...prev, [questionId]: answer }));
   }, []);
 
+  const clearAnswer = useCallback((questionId: string) => {
+    setAnswers((prev) => {
+      const next = { ...prev };
+      delete next[questionId];
+      return next;
+    });
+  }, []);
+
+  // Resume the last set the user was on for this question type.
+  useEffect(() => {
+    try {
+      const saved = Number(localStorage.getItem(`ielts:lastpage:${section}:${questionType}`));
+      if (saved > 1) setSetPage(saved);
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(`ielts:lastpage:${section}:${questionType}`, String(setPage));
+    } catch {}
+  }, [setPage, section, questionType]);
+
+  // Autosave the WRITING draft so a refresh doesn't lose a long essay.
+  useEffect(() => {
+    if (!currentSet || section !== "writing" || result) return;
+    if (Object.keys(answers).length === 0) return;
+    try {
+      localStorage.setItem(`ielts:draft:${currentSet.id}`, JSON.stringify(answers));
+    } catch {}
+  }, [answers, currentSet, section, result]);
+
+  // Restore a saved writing draft when the set loads (runs after the reset).
+  useEffect(() => {
+    if (!currentSet || section !== "writing") return;
+    try {
+      const raw = localStorage.getItem(`ielts:draft:${currentSet.id}`);
+      if (raw) {
+        const draft = JSON.parse(raw) as Record<string, Answer>;
+        if (draft && Object.keys(draft).length > 0) {
+          setAnswers(draft);
+          setNotice("Draft restored from your last session.");
+        }
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSet?.id]);
+
+  // Warn before leaving with un-submitted answers.
+  useEffect(() => {
+    if (result || Object.keys(answers).length === 0) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [answers, result]);
+
   const handleSubmit = async () => {
     if (!currentSet) return;
     setSubmitting(true);
@@ -100,6 +173,7 @@ export function PracticeSession({
     try {
       const res = await submitSetAnswers(currentSet.id, answers);
       setResult(res);
+      try { localStorage.removeItem(`ielts:draft:${currentSet.id}`); } catch {}
       setAttemptedSets((prev) => new Set([...prev, currentSetIndex]));
       topRef.current?.scrollIntoView({ behavior: "smooth" });
 
@@ -129,15 +203,27 @@ export function PracticeSession({
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      // Never hijack typing in a field.
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      if (e.key === "Escape") {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === "Escape") { e.preventDefault(); goBack(); return; }
+      // Enter: submit while answering, or advance after feedback.
+      if (e.key === "Enter") {
         e.preventDefault();
-        goBack();
+        if (result) handleNextAfterFeedback();
+        else if (!submitting && Object.keys(answers).length > 0) handleSubmit();
+        return;
+      }
+      // Arrows move between passages (only before submitting).
+      if (!result) {
+        if (e.key === "ArrowLeft" && data.hasPreviousSet) { e.preventDefault(); goToSet(setPage - 1); }
+        else if (e.key === "ArrowRight" && data.hasNextSet) { e.preventDefault(); goToSet(setPage + 1); }
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [goBack]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [goBack, result, submitting, answers, data.hasPreviousSet, data.hasNextSet, setPage]);
 
   const answeredCount = currentSet
     ? currentSet.questions.filter((q) => answers[q.id] !== undefined).length
@@ -247,6 +333,9 @@ export function PracticeSession({
                 answers={answers}
                 results={result?.results ?? null}
                 onAnswer={handleAnswer}
+                onClearAnswer={clearAnswer}
+                flagged={flagged}
+                onToggleFlag={toggleFlag}
               />
 
               {!result ? (
@@ -335,11 +424,18 @@ export function PracticeSession({
             <span className="ml-1 hidden sm:inline">Previous</span>
           </Button>
 
-          <div className="inline-flex items-center gap-1.5 rounded-md border border-line bg-paper-elev px-2.5 py-1 text-xs text-ink-soft">
+          <button
+            type="button"
+            onClick={() => setPaletteOpen(true)}
+            title="Jump to a passage"
+            aria-label={`Passage ${currentSetIndex + 1} of ${totalSets} — open list`}
+            className="inline-flex items-center gap-1.5 rounded-md border border-line bg-paper-elev px-2.5 py-1 text-xs text-ink-soft transition-colors hover:border-brand/50 hover:bg-brand-soft"
+          >
+            <LayoutGrid className="size-3.5 text-ink-muted" />
             <span className="font-mono tabular-nums text-ink-strong">{currentSetIndex + 1}</span>
             <span className="text-ink-muted">/</span>
             <span className="font-mono tabular-nums text-ink-muted">{totalSets}</span>
-          </div>
+          </button>
 
           <Button
             size="sm"
@@ -352,6 +448,79 @@ export function PracticeSession({
           </Button>
         </div>
       </div>
+
+      {/* ── Passage palette ── */}
+      {paletteOpen && (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-ink/40 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Jump to a passage"
+          onClick={(e) => e.target === e.currentTarget && setPaletteOpen(false)}
+        >
+          <div className="w-full max-w-lg rounded-2xl border border-line bg-paper-elev p-5 shadow-xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-semibold text-ink">Jump to a {noun.toLowerCase()}</h3>
+                <p className="mt-0.5 text-xs text-ink-muted">
+                  {attemptedSets.size} of {totalSets} attempted
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPaletteOpen(false)}
+                aria-label="Close"
+                className="text-ink-muted hover:text-ink"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+
+            <div className="mt-4 grid max-h-[55vh] grid-cols-6 gap-2 overflow-y-auto sm:grid-cols-8">
+              {Array.from({ length: totalSets }, (_, i) => {
+                const isCurrent = i === currentSetIndex;
+                const isDone = attemptedSets.has(i);
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => {
+                      goToSet(i + 1);
+                      setPaletteOpen(false);
+                    }}
+                    aria-current={isCurrent ? "true" : undefined}
+                    className={cn(
+                      "relative grid aspect-square place-items-center rounded-lg border font-mono text-sm tabular-nums transition-colors",
+                      isCurrent
+                        ? "border-brand bg-brand text-white"
+                        : isDone
+                          ? "border-success/40 bg-success-soft text-ink hover:border-success"
+                          : "border-line bg-paper text-ink-soft hover:border-brand/50 hover:bg-brand-soft",
+                    )}
+                  >
+                    {i + 1}
+                    {isDone && !isCurrent && (
+                      <Check className="absolute right-0.5 top-0.5 size-2.5 text-success" strokeWidth={3} />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 flex items-center gap-4 text-xs text-ink-muted">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="size-3 rounded border border-brand bg-brand" /> Current
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="size-3 rounded border border-success/40 bg-success-soft" /> Attempted
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="size-3 rounded border border-line bg-paper" /> Not yet
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

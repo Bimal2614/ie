@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { SignupForm } from "@/components/auth/signup-form";
 import { AuthHeader } from "@/components/auth/auth-ui";
+import { GoogleButton } from "@/components/auth/google-button";
 
 export const metadata: Metadata = {
   title: "Create account · IELTS Ace",
@@ -16,6 +17,7 @@ export default function SignupPage() {
         subtitle="Enter your details to start practising."
       />
       <SignupForm />
+      <GoogleButton label="Sign up with Google" />
     </div>
   );
 }

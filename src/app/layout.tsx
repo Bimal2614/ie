@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/components/auth/auth-provider";
+import { SITE_URL } from "@/lib/site";
 
 // One typeface for the entire app — Inter. The theme maps heading/body/mono/
 // serif tokens all to this, so landing, auth and dashboard share a single font.
@@ -17,7 +19,7 @@ const inter = Inter({
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.APP_URL ?? "https://ieltsace.com"),
+  metadataBase: new URL(SITE_URL),
   title: {
     // Pages set their own full title; this default (used when a page doesn't)
     // still leads with the query people search, not the brand name.
@@ -44,7 +46,8 @@ export default function RootLayout({
           suppressHydrationWarning silences it for this element only — not the
           tree — which is the documented fix for extension-injected attributes. */}
       <body className="min-h-full" suppressHydrationWarning>
-        {children}
+        {/* One auth probe for the whole app; consumed via useAuth() everywhere. */}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

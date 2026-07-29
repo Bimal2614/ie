@@ -1,13 +1,22 @@
 import type { Metadata } from "next";
 import { LoginForm } from "@/components/auth/login-form";
 import { AuthHeader } from "@/components/auth/auth-ui";
+import { GoogleButton } from "@/components/auth/google-button";
+
+const OAUTH_ERROR: Record<string, string> = {
+  unavailable: "Google sign-in isn't available right now. Please use your email and password.",
+  failed: "Google sign-in didn't complete. Please try again.",
+  deactivated: "This account has been deactivated. Contact support if you think this is a mistake.",
+};
 
 export const metadata: Metadata = {
   title: "Sign in · IELTS Ace",
   robots: { index: false },
 };
 
-export default function LoginPage() {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ verified?: string; verify?: string; oauth?: string }> }) {
+  const { verified, verify, oauth } = await searchParams;
+  const oauthError = oauth ? OAUTH_ERROR[oauth] : null;
   return (
     <div className="space-y-6">
       <AuthHeader
@@ -15,7 +24,21 @@ export default function LoginPage() {
         title="Sign in"
         subtitle="Sign in to continue your IELTS prep."
       />
+      {verified === "1" && (
+        <p className="rounded-lg border border-green/30 bg-green-soft px-3 py-2 text-sm text-green-ink">
+          Email verified — you can sign in now.
+        </p>
+      )}
+      {verify === "invalid" && (
+        <p className="rounded-lg border border-danger/25 bg-danger-soft px-3 py-2 text-sm text-danger">
+          That verification link is invalid or has expired. Sign in and we&apos;ll help you resend it.
+        </p>
+      )}
+      {oauthError && (
+        <p className="rounded-lg border border-danger/25 bg-danger-soft px-3 py-2 text-sm text-danger">{oauthError}</p>
+      )}
       <LoginForm />
+      <GoogleButton />
     </div>
   );
 }

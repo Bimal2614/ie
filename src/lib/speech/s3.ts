@@ -2,6 +2,7 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { env, isS3Configured } from "@/lib/env";
 
 /**
@@ -82,4 +83,16 @@ export async function downloadSpeakingAudio(key: string): Promise<Buffer | null>
 export function keyFromUrl(url: string): string | null {
   const m = /^s3:\/\/[^/]+\/(.+)$/.exec(url);
   return m ? m[1] : null;
+}
+
+/**
+ * Short-lived presigned GET URL for an object in our bucket. Pure local HMAC
+ * signing (no network round-trip), so it's cheap to call per request. Returns
+ * null if S3 isn't configured.
+ */
+export async function presignGetUrl(key: string, expiresSec = 3600): Promise<string | null> {
+  if (!isS3Configured()) return null;
+  return getSignedUrl(client(), new GetObjectCommand({ Bucket: env.S3_BUCKET_NAME!, Key: key }), {
+    expiresIn: expiresSec,
+  });
 }

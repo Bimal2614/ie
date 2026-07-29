@@ -23,6 +23,10 @@ const PROTECTED_PREFIXES = ["/dashboard", "/practice", "/mock", "/profile", "/se
 // Auth pages a logged-in user shouldn't see.
 const AUTH_ROUTES = ["/login", "/signup"];
 
+// S3-hosted media (listening audio, Task 1 images) and signed URLs live on
+// *.amazonaws.com. Allowed for media/img/fetch so playback isn't CSP-blocked.
+const S3 = "https://*.amazonaws.com";
+
 function buildCsp(nonce: string): string {
   return [
     `default-src 'self'`,
@@ -35,13 +39,14 @@ function buildCsp(nonce: string): string {
     // and Next's own injected styles. Inline style is low-risk (it can't run
     // JS); scripts stay strict with the nonce above, where the real risk is.
     `style-src 'self' 'unsafe-inline'`,
-    `img-src 'self' blob: data:`,
+    `img-src 'self' blob: data: ${S3}`,
+    `media-src 'self' blob: ${S3}`,
     `font-src 'self'`,
     `object-src 'none'`,
     `base-uri 'self'`,
     `form-action 'self'`,
     `frame-ancestors 'none'`, // clickjacking protection (with X-Frame-Options)
-    `connect-src 'self'`,
+    `connect-src 'self' ${S3}`,
     `upgrade-insecure-requests`,
   ].join("; ");
 }

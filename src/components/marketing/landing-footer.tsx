@@ -23,8 +23,9 @@ const COLS: { title: string; links: { label: string; href: string }[] }[] = [
     links: [
       { label: "Listening strategies", href: "/resources/listening" },
       { label: "Reading strategies", href: "/resources/reading" },
-      { label: "Writing templates", href: "/resources/writing" },
+      { label: "Writing guide", href: "/resources/writing" },
       { label: "Speaking guide", href: "/resources/speaking" },
+      { label: "Sentence banks & templates", href: "/templates" },
       { label: "All study materials", href: "/resources" },
     ],
   },

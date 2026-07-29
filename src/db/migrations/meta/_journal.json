@@ -36,6 +36,20 @@
       "when": 1785132766857,
       "tag": "0004_wise_manta",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1785145261228,
+      "tag": "0005_tiny_silhouette",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1785149134126,
+      "tag": "0006_clear_medusa",
+      "breakpoints": true
     }
   ]
 }
