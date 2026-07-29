@@ -18,7 +18,6 @@ import { cn } from "@/lib/utils";
 // a plain <a> triggers a full reload, which remounts the app and re-fires the
 // AuthProvider's /api/me probe on every click.
 const LINKS = [
-  { label: "Results", href: "#results" },
   { label: "Pricing", href: "/pricing" },
   { label: "Resources", href: "/resources" },
   { label: "Templates", href: "/templates" },
