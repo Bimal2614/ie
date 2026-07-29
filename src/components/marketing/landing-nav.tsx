@@ -20,6 +20,8 @@ const LINKS = [
   { label: "Results", href: "#results" },
   { label: "Pricing", href: "/pricing" },
   { label: "Resources", href: "/resources" },
+  { label: "Templates", href: "/templates" },
+  { label: "Blog", href: "/blog" },
   { label: "FAQ", href: "#faq" },
 ];
 

@@ -65,6 +65,22 @@ export default function ResourcesPage() {
           })}
         </div>
 
+        {/* Templates cross-link — the quick-reference companion to these guides. */}
+        <Link
+          href="/templates"
+          className="mt-10 flex flex-col items-start justify-between gap-4 rounded-2xl border border-brand/30 bg-brand-soft p-6 sm:flex-row sm:items-center"
+        >
+          <div>
+            <p className="text-lg font-semibold text-ink">Writing sentence banks & templates</p>
+            <p className="mt-1 text-sm text-ink-soft">
+              Band 7–9 sentence patterns for Task 1 and Task 2 you can adapt to any topic — the quick reference to go with these guides.
+            </p>
+          </div>
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-brand px-5 py-2.5 text-sm font-semibold text-white">
+            Open templates <ArrowRight className="size-4" />
+          </span>
+        </Link>
+
         {/* Internal links into the blog — flows crawl equity to articles. */}
         <BlogStrip title="Latest from the blog" eyebrow="Guides & tips" />
       </main>
