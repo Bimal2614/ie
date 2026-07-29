@@ -14,6 +14,8 @@ import { LandingNav } from "@/components/marketing/landing-nav";
 import { LandingHero } from "@/components/marketing/landing-hero";
 import { Reveal, ScrollWords } from "@/components/marketing/motion";
 import { LandingFooter } from "@/components/marketing/landing-footer";
+import { BlogStrip } from "@/components/marketing/blog-strip";
+import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "IELTS Practice Online — AI Band Scoring & Mock Tests | IELTSAce",
@@ -241,6 +243,9 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* ══ From the blog — internal links into articles for crawl + SEO ══ */}
+      <BlogStrip title="IELTS tips & guides" eyebrow="From the blog" />
+
       {/* ══ DARK CLOSE — shared CTA + footer ══ */}
       <LandingFooter />
     </div>
@@ -264,11 +269,29 @@ function Header({ eyebrow, title, lead, align = "center" }: { eyebrow: string; t
 
 
 function StructuredData() {
+  const orgId = `${SITE_URL}/#organization`;
   const json = {
     "@context": "https://schema.org",
     "@graph": [
-      { "@type": "Organization", name: "IELTSAce", description: "IELTS preparation platform with AI band scoring for Writing and Speaking, full mock tests, and 15,000+ Academic and General Training questions." },
-      { "@type": "WebSite", name: "IELTSAce — IELTS Practice Online", description: "Practise IELTS online with AI band scoring and full mock tests." },
+      {
+        "@type": "Organization",
+        "@id": orgId,
+        name: "IELTSAce",
+        url: SITE_URL,
+        logo: `${SITE_URL}/favicon.ico`,
+        description:
+          "IELTS preparation platform with AI band scoring for Writing and Speaking, full mock tests, and 15,000+ Academic and General Training questions.",
+        // sameAs: add your social profile URLs here (X, Instagram, Facebook,
+        // LinkedIn, YouTube) to strengthen the brand entity / knowledge panel.
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${SITE_URL}/#website`,
+        name: "IELTSAce — IELTS Practice Online",
+        url: SITE_URL,
+        description: "Practise IELTS online with AI band scoring and full mock tests.",
+        publisher: { "@id": orgId },
+      },
       { "@type": "FAQPage", mainEntity: FAQS.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) },
     ],
   };

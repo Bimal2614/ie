@@ -5,6 +5,7 @@ import { LandingNav } from "@/components/marketing/landing-nav";
 import { LandingFooter } from "@/components/marketing/landing-footer";
 import { Reveal } from "@/components/marketing/motion";
 import { STUDY } from "@/lib/study-content";
+import { BlogStrip } from "@/components/marketing/blog-strip";
 
 export const metadata: Metadata = {
   title: "IELTS Study Materials — Strategies, Templates & Tips (2026) | IELTSAce",
@@ -63,6 +64,9 @@ export default function ResourcesPage() {
             );
           })}
         </div>
+
+        {/* Internal links into the blog — flows crawl equity to articles. */}
+        <BlogStrip title="Latest from the blog" eyebrow="Guides & tips" />
       </main>
 
       <LandingFooter />

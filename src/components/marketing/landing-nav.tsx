@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { GraduationCap, ArrowRight } from "lucide-react";
+import { GraduationCap, ArrowRight, LayoutDashboard } from "lucide-react";
+import { useAuth } from "@/components/auth/auth-provider";
 import { cn } from "@/lib/utils";
 
 /**
@@ -25,6 +26,9 @@ const LINKS = [
 export function LandingNav({ alwaysSolid = false }: { alwaysSolid?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
   const solid = alwaysSolid || scrolled;
+  // Shared app-wide auth state (one probe, see AuthProvider). null = unknown:
+  // guests see the default CTAs immediately; logged-in visitors get "Dashboard".
+  const { authenticated: authed } = useAuth();
 
   useEffect(() => {
     // Pages with a dark hero start transparent; flip to solid past the hero.
@@ -71,18 +75,29 @@ export function LandingNav({ alwaysSolid = false }: { alwaysSolid?: boolean }) {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Link
-            href="/login"
-            className={cn("hidden rounded-lg px-3.5 py-2 text-sm font-medium transition-colors sm:block", solid ? "text-ink-soft hover:text-ink" : "text-white/70 hover:text-white")}
-          >
-            Sign in
-          </Link>
-          <Link
-            href="/signup"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-green px-4 py-2 text-sm font-semibold text-green-ink transition-[filter] hover:brightness-105"
-          >
-            Get started <ArrowRight className="size-4" />
-          </Link>
+          {authed ? (
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-green px-4 py-2 text-sm font-semibold text-green-ink transition-[filter] hover:brightness-105"
+            >
+              <LayoutDashboard className="size-4" /> Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className={cn("hidden rounded-lg px-3.5 py-2 text-sm font-medium transition-colors sm:block", solid ? "text-ink-soft hover:text-ink" : "text-white/70 hover:text-white")}
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/signup"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-green px-4 py-2 text-sm font-semibold text-green-ink transition-[filter] hover:brightness-105"
+              >
+                Get started <ArrowRight className="size-4" />
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>
