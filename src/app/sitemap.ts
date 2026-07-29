@@ -22,6 +22,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/refunds",
     "/blog",
     "/templates",
+    "/faq",
     "/resources",
     "/resources/writing",
     "/resources/writing/task-1",

@@ -13,16 +13,17 @@ import { cn } from "@/lib/utils";
  * hairline border). No glass, all colours from the theme tokens.
  */
 
-// In-page anchors (#) scroll; routes (/) navigate. Pricing & Resources are
-// real pages to be built — the header structure is ready for them.
+// In-page anchors (#) scroll (only meaningful on the homepage); routes (/) are
+// real pages. Route links MUST use <Link> below so navigation is client-side —
+// a plain <a> triggers a full reload, which remounts the app and re-fires the
+// AuthProvider's /api/me probe on every click.
 const LINKS = [
-  { label: "Method", href: "#method" },
   { label: "Results", href: "#results" },
   { label: "Pricing", href: "/pricing" },
   { label: "Resources", href: "/resources" },
   { label: "Templates", href: "/templates" },
   { label: "Blog", href: "/blog" },
-  { label: "FAQ", href: "#faq" },
+  { label: "FAQ", href: "/faq" },
 ];
 
 export function LandingNav({ alwaysSolid = false }: { alwaysSolid?: boolean }) {
@@ -65,15 +66,16 @@ export function LandingNav({ alwaysSolid = false }: { alwaysSolid?: boolean }) {
         </Link>
 
         <nav className="hidden items-center gap-8 text-[13px] font-medium md:flex">
-          {LINKS.map((l) => (
-            <a
-              key={l.label}
-              href={l.href}
-              className={cn("transition-colors", solid ? "text-ink-soft hover:text-ink" : "text-white/70 hover:text-white")}
-            >
-              {l.label}
-            </a>
-          ))}
+          {LINKS.map((l) => {
+            const cls = cn("transition-colors", solid ? "text-ink-soft hover:text-ink" : "text-white/70 hover:text-white");
+            // Hash links scroll in-page (plain <a>); route links navigate
+            // client-side via <Link> so the app doesn't reload + refetch /api/me.
+            return l.href.startsWith("#") ? (
+              <a key={l.label} href={l.href} className={cls}>{l.label}</a>
+            ) : (
+              <Link key={l.label} href={l.href} className={cls}>{l.label}</Link>
+            );
+          })}
         </nav>
 
         <div className="flex items-center gap-2">
