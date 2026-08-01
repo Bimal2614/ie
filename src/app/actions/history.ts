@@ -52,7 +52,6 @@ export type DaySummary = {
   correct: number;
   graded: number;
   accuracy: number | null;
-  timeMin: number;
   sections: SectionRow[];
 };
 
@@ -74,7 +73,6 @@ export async function getDaySummary(date: string, tzOffsetMinutes: number): Prom
       correct: sql<number>`count(*) filter (where ${userResponses.isCorrect} = true)`,
       graded: sql<number>`count(*) filter (where ${userResponses.isCorrect} is not null)`,
       avgBand: sql<number | null>`avg(${userResponses.band})`,
-      timeSec: sql<number>`coalesce(sum(${userResponses.timeSpentSec}), 0)`,
     })
     .from(userResponses)
     .where(inDay)
@@ -84,7 +82,6 @@ export async function getDaySummary(date: string, tzOffsetMinutes: number): Prom
   let attempted = 0;
   let correct = 0;
   let graded = 0;
-  let timeSec = 0;
 
   for (const r of rows) {
     const a = Number(r.attempted);
@@ -93,7 +90,6 @@ export async function getDaySummary(date: string, tzOffsetMinutes: number): Prom
     attempted += a;
     correct += c;
     graded += g;
-    timeSec += Number(r.timeSec);
 
     const list = bySection.get(r.section as SectionKey) ?? [];
     list.push({
@@ -127,7 +123,6 @@ export async function getDaySummary(date: string, tzOffsetMinutes: number): Prom
     correct,
     graded,
     accuracy: graded > 0 ? Math.round((correct / graded) * 100) : null,
-    timeMin: Math.round(timeSec / 60),
     sections,
   };
 }
@@ -241,7 +236,6 @@ export type AttemptDetail = {
   section: SectionKey;
   questionType: QuestionTypeKey;
   createdAt: Date;
-  timeSpentSec: number | null;
   correct: number;
   graded: number;
   items: AttemptItem[];
@@ -310,10 +304,6 @@ export async function getAttemptDetail(attemptId: string): Promise<AttemptDetail
       (min, row) => (row.r.createdAt < min ? row.r.createdAt : min),
       first.r.createdAt,
     ),
-    // timeSpentSec is stored per row as an equal share of the set's total.
-    timeSpentSec: rows.every((r) => r.r.timeSpentSec === null)
-      ? null
-      : rows.reduce((n, r) => n + (r.r.timeSpentSec ?? 0), 0),
     correct: items.filter((i) => i.isCorrect === true).length,
     graded: items.filter((i) => i.isCorrect !== null).length,
     items,

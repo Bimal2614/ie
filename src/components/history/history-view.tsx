@@ -6,10 +6,8 @@ import { useRouter } from "next/navigation";
 import {
   ChevronRight,
   ChevronLeft,
-  ChevronDown,
   Check,
   X,
-  Clock,
   Sparkles,
   Loader2,
   CalendarDays,
@@ -203,11 +201,10 @@ function StatTiles({ data }: { data: DaySummary }) {
       value: data.accuracy === null ? "—" : `${data.accuracy}%`,
       icon: Sparkles,
     },
-    { label: "Time spent", value: data.timeMin > 0 ? `${data.timeMin} min` : "—", icon: Clock },
   ];
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {tiles.map((t) => (
         <div key={t.label} className="rounded-xl border border-line bg-paper-elev p-4">
           <div className="flex items-center gap-2 text-ink-muted">

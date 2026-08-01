@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Check, X, Clock } from "lucide-react";
+import { ArrowLeft, Check, X } from "lucide-react";
 import { getAttemptDetail, type AttemptDetail } from "@/app/actions/history";
 import { QUESTION_TYPES, SECTIONS } from "@/lib/ielts";
 import type { Answer } from "@/lib/question-content";
@@ -50,12 +50,6 @@ export default async function AttemptPage({ params }: { params: Promise<{ id: st
               <LocalTime value={a.createdAt.toISOString()} />
             </span>
           </span>
-          {a.timeSpentSec !== null && (
-            <span className="inline-flex items-center gap-1.5 text-ink-muted">
-              <Clock className="size-3.5" />
-              <span className="font-mono tabular-nums text-ink-soft">{a.timeSpentSec}s</span>
-            </span>
-          )}
         </div>
       </div>
 
