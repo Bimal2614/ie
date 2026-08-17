@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { SECTIONS, SECTION_ORDER } from "@/lib/ielts";
+import { SECTIONS, SECTION_ORDER, SET_NOUN, isObjectiveSection } from "@/lib/ielts";
 import type { DashboardStats } from "@/app/actions/dashboard";
 import { SECTION_META, SectionHeading, cardInteractive } from "./ui";
 import { cn } from "@/lib/utils";
@@ -15,7 +15,7 @@ export function SectionPerformance({ sectionStats }: { sectionStats: DashboardSt
     <section>
       <SectionHeading title="Section performance" href="/practice" cta="All practice" />
       <p className="-mt-1 mb-3 text-sm text-ink-muted">
-        How many questions you&apos;ve worked on in each section.
+        How much of each section you&apos;ve covered, and how you&apos;re scoring.
       </p>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {SECTION_ORDER.map((key) => {
@@ -34,20 +34,47 @@ export function SectionPerformance({ sectionStats }: { sectionStats: DashboardSt
 
               <p className="font-semibold text-ink">{SECTIONS[key].label}</p>
 
+              {/* Coverage in SETS, matching the practice library ("12 recordings"),
+                  so the same content isn't counted two different ways. */}
               <p className="mt-2">
                 <span className="font-semibold text-3xl tabular-nums text-ink">
-                  {s.practised.toLocaleString()}
+                  {s.practisedSets.toLocaleString()}
                 </span>
-                <span className="text-sm text-ink-muted"> / {s.available.toLocaleString()}</span>
+                <span className="text-sm text-ink-muted"> / {s.availableSets.toLocaleString()}</span>
               </p>
-              <p className="text-xs text-ink-muted">Questions practised</p>
+              <p className="text-xs text-ink-muted">
+                {SET_NOUN[key]}s practised
+              </p>
+
+              {/* Marking stays per question — IELTS awards a mark per item, and
+                  that's what maps to a band. Criteria-marked skills show a band. */}
+              {s.graded > 0 && (
+                <p className="mt-2 text-xs text-ink-soft">
+                  {isObjectiveSection(key) ? (
+                    <>
+                      <span className="font-semibold tabular-nums text-ink">
+                        {s.right} / {s.graded}
+                      </span>{" "}
+                      marks correct
+                    </>
+                  ) : (
+                    <>
+                      band{" "}
+                      <span className="font-semibold tabular-nums text-ink">
+                        {s.avgBand?.toFixed(1) ?? "—"}
+                      </span>{" "}
+                      average
+                    </>
+                  )}
+                </p>
+              )}
 
               <div className="mt-auto pt-4">
                 <div className="h-1.5 overflow-hidden rounded-full bg-paper-sunken">
                   {/* Width is genuinely dynamic → inline; colour is a token class. */}
                   <div
                     className="h-full rounded-full bg-green transition-all"
-                    style={{ width: `${Math.min(100, Math.max(s.completion, s.practised > 0 ? 2 : 0))}%` }}
+                    style={{ width: `${Math.min(100, Math.max(s.completion, s.practisedSets > 0 ? 2 : 0))}%` }}
                   />
                 </div>
                 <p className="mt-1.5 text-[11px] text-ink-muted">{s.completion}% complete</p>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Flame, CalendarClock, ListChecks, Target, Zap } from "lucide-react";
+import { Flame, CalendarClock, ListChecks, Zap } from "lucide-react";
 import { SECTION_ORDER } from "@/lib/ielts";
 import { requireUser } from "@/lib/dal";
 import { getDashboardStats } from "@/app/actions/dashboard";
@@ -17,7 +17,9 @@ export default async function DashboardPage() {
   const user = await requireUser();
   const stats = await getDashboardStats();
   const firstName = user.name.split(" ")[0];
-  const focus = recommendFocus(stats);
+  // Measured against the learner's own target band, so clearing the pass mark
+  // still reads as "needs work" when they're aiming higher.
+  const focus = recommendFocus(stats, { targetBand: user.targetBand });
 
   const examDate = user.examDate ? new Date(user.examDate) : null;
   const daysUntilExam = examDate
@@ -51,11 +53,28 @@ export default async function DashboardPage() {
       {stats.continueLast && <ContinueCard last={stats.continueLast} />}
 
       {/* What you've done — questions and consistency, the metrics that move a band. */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatTile label="Questions today" value={stats.todayAttempted} sub={`${stats.todayCorrect} correct`} icon={<Zap className="size-4 text-ink-muted" />} />
-        <StatTile label="Total completed" value={stats.totalAttempted} sub={`${stats.totalCorrect} correct`} icon={<ListChecks className="size-4 text-ink-muted" />} />
-        <StatTile label="Overall accuracy" value={`${stats.totalAccuracy}%`} sub="all-time" icon={<Target className="size-4 text-ink-muted" />} />
-        <StatTile label="Day streak" value={stats.currentStreak} sub={`best ${stats.longestStreak}`} icon={<Flame className="size-4 text-ink-muted" />} />
+      {/* Counts, not percentages: IELTS reports a raw score (out of 40) and a
+          band, never a percentage — "31 of 40 correct" is the shape learners
+          already think in, and it shows how much work they've done too. */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <StatTile
+          label="Correct today"
+          value={stats.todayGraded > 0 ? `${stats.todayCorrect} / ${stats.todayGraded}` : "—"}
+          sub={`${stats.todayAttempted} attempted`}
+          icon={<Zap className="size-4 text-ink-muted" />}
+        />
+        <StatTile
+          label="Correct all-time"
+          value={stats.totalGraded > 0 ? `${stats.totalCorrect} / ${stats.totalGraded}` : "—"}
+          sub={`${stats.totalAttempted} attempted`}
+          icon={<ListChecks className="size-4 text-ink-muted" />}
+        />
+        <StatTile
+          label="Day streak"
+          value={stats.currentStreak}
+          sub={`best ${stats.longestStreak}`}
+          icon={<Flame className="size-4 text-ink-muted" />}
+        />
       </div>
 
       {/* What to do next */}

@@ -54,13 +54,30 @@ export async function createSession(userId: string): Promise<void> {
   const absoluteExpiresAt = new Date(now + ABSOLUTE_TTL_MS);
   const { ip, userAgent } = await getRequestContext();
 
-  await db.insert(sessions).values({
-    userId,
-    tokenHash,
-    ipAddress: ip,
-    userAgent,
-    idleExpiresAt,
-    absoluteExpiresAt,
+  // ONE DEVICE AT A TIME.
+  //
+  // Signing in anywhere revokes every other live session for this user, so the
+  // previously signed-in browser/device is logged out on its very next request
+  // or API call — validateSession() rejects rows with revokedAt set, and it runs
+  // on every request, so there is no window where both stay usable.
+  //
+  // Enforced here rather than at the call sites (login / signup / Google OAuth)
+  // so any future entry point inherits it automatically. Both statements share
+  // one transaction: a user can never end up with two live sessions, or none.
+  await db.transaction(async (tx) => {
+    await tx
+      .update(sessions)
+      .set({ revokedAt: new Date() })
+      .where(and(eq(sessions.userId, userId), isNull(sessions.revokedAt)));
+
+    await tx.insert(sessions).values({
+      userId,
+      tokenHash,
+      ipAddress: ip,
+      userAgent,
+      idleExpiresAt,
+      absoluteExpiresAt,
+    });
   });
 
   const cookieStore = await cookies();

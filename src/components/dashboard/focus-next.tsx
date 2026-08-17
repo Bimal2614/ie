@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, Target, Trophy } from "lucide-react";
-import { SECTIONS, QUESTION_TYPES, type QuestionTypeKey } from "@/lib/ielts";
+import { SECTIONS, QUESTION_TYPES, isObjectiveSection, type QuestionTypeKey } from "@/lib/ielts";
 import type { FocusRecommendation } from "@/lib/dashboard";
 import { SECTION_META, SectionHeading, cardClass } from "./ui";
 import { cn } from "@/lib/utils";
@@ -22,7 +22,8 @@ export function FocusNext({ focus }: { focus: FocusRecommendation }) {
 }
 
 function FocusCard({ focus }: { focus: FocusRecommendation }) {
-  const { weakestSection, weakTypes } = focus;
+  const { weakestSection, weakTypes, targetBand } = focus;
+  const atTarget = weakestSection !== null && weakestSection.gap === 0;
 
   return (
     <div className={cn(cardClass, "p-6 lg:col-span-2")}>
@@ -35,9 +36,29 @@ function FocusCard({ focus }: { focus: FocusRecommendation }) {
               <SectionIcon sectionKey={weakestSection.key} />
             </span>
             <div>
-              <p className="font-semibold text-2xl text-ink">{SECTIONS[weakestSection.key].label} needs work</p>
+              <p className="font-semibold text-2xl text-ink">
+                {SECTIONS[weakestSection.key].label} {atTarget ? "is on track" : "needs work"}
+              </p>
+              {/* Each skill shows its OWN metric: accuracy for the objective
+                  sections (a derived band from a short practice set would be an
+                  inference the data can't support), band for Writing/Speaking,
+                  where a band is all there is. The cross-skill ranking that chose
+                  this section happens in recommendFocus and is never shown. */}
               <p className="text-sm text-ink-muted">
-                Your lowest accuracy — {weakestSection.accuracy}% across {weakestSection.attempted} questions.
+                {isObjectiveSection(weakestSection.key) ? (
+                  <>
+                    {weakestSection.accuracy}% accuracy across {weakestSection.attempted} question
+                    {weakestSection.attempted === 1 ? "" : "s"}
+                    {atTarget ? " — on track for" : " — short of"} your target of band {targetBand}.
+                  </>
+                ) : (
+                  <>
+                    Averaging band {weakestSection.band?.toFixed(1)}
+                    {atTarget
+                      ? ` — at or above your target of ${targetBand}. Keep it up.`
+                      : ` — ${weakestSection.gap.toFixed(1)} below your target of ${targetBand}.`}
+                  </>
+                )}
               </p>
             </div>
           </div>
@@ -54,7 +75,15 @@ function FocusCard({ focus }: { focus: FocusRecommendation }) {
                     {QUESTION_TYPES[t.questionType as QuestionTypeKey]?.label ?? t.questionType}
                   </span>
                   <span className="flex items-center gap-2">
-                    <span className="text-xs tabular-nums text-ink-muted">{t.accuracy}%</span>
+                    {/* Writing/Speaking have no right/wrong worth showing — their
+                        band is the real signal. Objective types show accuracy. */}
+                    <span className="text-xs tabular-nums text-ink-muted">
+                      {isObjectiveSection(t.section)
+                        ? `${t.right} / ${t.graded}`
+                        : t.avgBand != null
+                          ? `band ${t.avgBand.toFixed(1)}`
+                          : "—"}
+                    </span>
                     <ArrowUpRight className="size-4 text-ink-muted" />
                   </span>
                 </Link>

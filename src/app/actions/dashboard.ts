@@ -4,6 +4,7 @@ import { and, eq, gte, lte, count, countDistinct, sql, desc } from "drizzle-orm"
 import { db } from "@/db";
 import { userResponses, questions, questionSets, mockTestResults, mockTestSessions } from "@/db/schema";
 import { requireUser } from "@/lib/dal";
+import { PASS_BAND } from "@/lib/ielts";
 import type { SectionKey, QuestionTypeKey } from "@/lib/ielts";
 
 /* ------------------------------------------------------------------ *
@@ -13,10 +14,13 @@ import type { SectionKey, QuestionTypeKey } from "@/lib/ielts";
 export type DashboardStats = {
   // Today
   todayAttempted: number;
+  /** Responses with a verdict — the denominator to show "x of y correct" against. */
+  todayGraded: number;
   todayCorrect: number;
   todayAccuracy: number;
   // All-time
   totalAttempted: number;
+  totalGraded: number;
   totalCorrect: number;
   totalAccuracy: number;
   // Streak
@@ -28,12 +32,20 @@ export type DashboardStats = {
     {
       attempted: number;
       correct: number;
+      /** Responses with a verdict: objective is_correct, or a band. */
+      graded: number;
+      /** Objectively correct, or band >= PASS_BAND. */
+      right: number;
+      wrong: number;
+      /** Mean band across scored responses — the only signal for Writing/Speaking. */
+      avgBand: number | null;
+      /** right / graded. */
       accuracy: number;
-      /** Distinct questions the user has practised in this section. */
-      practised: number;
-      /** Total active questions available in this section. */
-      available: number;
-      /** practised / available, as a whole percent. */
+      /** Distinct SETS (recordings/passages/tasks/topics) the user has opened. */
+      practisedSets: number;
+      /** Sets available in this section — same unit the practice library shows. */
+      availableSets: number;
+      /** practisedSets / availableSets, as a whole percent. */
       completion: number;
     }
   >;
@@ -54,6 +66,10 @@ export type DashboardStats = {
     questionType: string;
     attempted: number;
     correct: number;
+    graded: number;
+    right: number;
+    wrong: number;
+    avgBand: number | null;
     accuracy: number;
   }>;
   /**
@@ -99,7 +115,10 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       db
         .select({
           total: count(),
+          // `right`/`graded` span both marking styles — see the section query below.
           correct: sql<number>`count(*) filter (where ${userResponses.isCorrect} = true)`,
+          graded: sql<number>`count(*) filter (where ${userResponses.isCorrect} is not null or ${userResponses.band} is not null)`,
+          right: sql<number>`count(*) filter (where ${userResponses.isCorrect} = true or ${userResponses.band} >= ${PASS_BAND})`,
         })
         .from(userResponses)
         .where(
@@ -114,29 +133,45 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       db
         .select({
           total: count(),
+          // `right`/`graded` span both marking styles — see the section query below.
           correct: sql<number>`count(*) filter (where ${userResponses.isCorrect} = true)`,
+          graded: sql<number>`count(*) filter (where ${userResponses.isCorrect} is not null or ${userResponses.band} is not null)`,
+          right: sql<number>`count(*) filter (where ${userResponses.isCorrect} = true or ${userResponses.band} >= ${PASS_BAND})`,
         })
         .from(userResponses)
         .where(eq(userResponses.userId, userId)),
 
       // -- Section breakdown -- attempts + distinct questions practised, per section.
+      // `graded`/`right` span both marking styles: objective rows carry
+      // is_correct, band-scored rows (Writing/Speaking) carry a band and count as
+      // right at PASS_BAND or above. Without this, Writing and Speaking read as a
+      // permanent 0% because is_correct is never true for them.
       db
         .select({
           section: userResponses.section,
           total: count(),
           correct: sql<number>`count(*) filter (where ${userResponses.isCorrect} = true)`,
-          practised: countDistinct(userResponses.questionId),
+          graded: sql<number>`count(*) filter (where ${userResponses.isCorrect} is not null or ${userResponses.band} is not null)`,
+          right: sql<number>`count(*) filter (where ${userResponses.isCorrect} = true or ${userResponses.band} >= ${PASS_BAND})`,
+          avgBand: sql<number | null>`avg(${userResponses.band})`,
+          // Coverage is counted in SETS (recordings/passages/tasks/topics) — the
+          // unit the practice library is browsed and paginated in. Marking stays
+          // per item above, because IELTS awards a mark per question.
+          practisedSets: countDistinct(userResponses.setId),
         })
         .from(userResponses)
         .where(eq(userResponses.userId, userId))
         .groupBy(userResponses.section),
 
-      // -- Total active questions available per section (the denominator) --
+      // -- Sets available per section (the coverage denominator) --
+      // Inner-joined to questions so a set with no live questions isn't counted
+      // as practisable — matching how /practice/[section] counts its cards.
       db
-        .select({ section: questions.section, total: count() })
-        .from(questions)
-        .where(eq(questions.isActive, true))
-        .groupBy(questions.section),
+        .select({ section: questionSets.section, total: countDistinct(questionSets.id) })
+        .from(questionSets)
+        .innerJoin(questions, and(eq(questions.setId, questionSets.id), eq(questions.isActive, true)))
+        .where(eq(questionSets.isActive, true))
+        .groupBy(questionSets.section),
 
       // -- Streak, entirely in SQL (gaps-and-islands) --
       // Group activity into distinct UTC days, then number consecutive days: a
@@ -184,13 +219,16 @@ export async function getDashboardStats(): Promise<DashboardStats> {
         .orderBy(desc(mockTestSessions.completedAt))
         .limit(5),
 
-      // -- Question type breakdown --
+      // -- Question type breakdown -- same graded/right treatment as sections.
       db
         .select({
           section: userResponses.section,
           questionType: userResponses.questionType,
           total: count(),
           correct: sql<number>`count(*) filter (where ${userResponses.isCorrect} = true)`,
+          graded: sql<number>`count(*) filter (where ${userResponses.isCorrect} is not null or ${userResponses.band} is not null)`,
+          right: sql<number>`count(*) filter (where ${userResponses.isCorrect} = true or ${userResponses.band} >= ${PASS_BAND})`,
+          avgBand: sql<number | null>`avg(${userResponses.band})`,
         })
         .from(userResponses)
         .where(eq(userResponses.userId, userId))
@@ -222,15 +260,19 @@ export async function getDashboardStats(): Promise<DashboardStats> {
         .limit(10),
     ]);
 
-  const today = todayRows[0] ?? { total: 0, correct: 0 };
+  const today = todayRows[0] ?? { total: 0, correct: 0, graded: 0, right: 0 };
   const todayAttempted = Number(today.total);
-  const todayCorrect = Number(today.correct);
-  const todayAccuracy = todayAttempted > 0 ? Math.round((todayCorrect / todayAttempted) * 100) : 0;
+  const todayGraded = Number(today.graded);
+  // "Correct" counts objectively-right answers AND band-scored ones that cleared
+  // PASS_BAND, so Writing/Speaking work is represented rather than reading as 0.
+  const todayCorrect = Number(today.right);
+  const todayAccuracy = todayGraded > 0 ? Math.round((todayCorrect / todayGraded) * 100) : 0;
 
-  const allTime = allTimeRows[0] ?? { total: 0, correct: 0 };
+  const allTime = allTimeRows[0] ?? { total: 0, correct: 0, graded: 0, right: 0 };
   const totalAttempted = Number(allTime.total);
-  const totalCorrect = Number(allTime.correct);
-  const totalAccuracy = totalAttempted > 0 ? Math.round((totalCorrect / totalAttempted) * 100) : 0;
+  const totalGraded = Number(allTime.graded);
+  const totalCorrect = Number(allTime.right);
+  const totalAccuracy = totalGraded > 0 ? Math.round((totalCorrect / totalGraded) * 100) : 0;
 
   const sections: SectionKey[] = ["listening", "reading", "writing", "speaking"];
   const sectionStats = Object.fromEntries(
@@ -238,15 +280,24 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       const row = sectionRows.find((r) => r.section === s);
       const attempted = row ? Number(row.total) : 0;
       const correct = row ? Number(row.correct) : 0;
-      const practised = row ? Number(row.practised) : 0;
-      const available = Number(availableRows.find((r) => r.section === s)?.total ?? 0);
-      const completion = available > 0 ? Math.round((practised / available) * 100) : 0;
+      const graded = row ? Number(row.graded) : 0;
+      const right = row ? Number(row.right) : 0;
+      const avgBand = row?.avgBand == null ? null : Number(row.avgBand);
+      const practisedSets = row ? Number(row.practisedSets) : 0;
+      const availableSets = Number(availableRows.find((r) => r.section === s)?.total ?? 0);
+      const completion = availableSets > 0 ? Math.round((practisedSets / availableSets) * 100) : 0;
       return [s, {
         attempted,
         correct,
-        accuracy: attempted > 0 ? Math.round((correct / attempted) * 100) : 0,
-        practised,
-        available,
+        graded,
+        right,
+        wrong: Math.max(0, graded - right),
+        avgBand,
+        // Denominator is `graded`, not `attempted`: rows still awaiting a score
+        // must not count as failures.
+        accuracy: graded > 0 ? Math.round((right / graded) * 100) : 0,
+        practisedSets,
+        availableSets,
         completion,
       }];
     }),
@@ -268,13 +319,21 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     completedAt: r.completedAt,
   }));
 
-  const typeStats = typeRows.map((r) => ({
-    section: r.section,
-    questionType: r.questionType,
-    attempted: Number(r.total),
-    correct: Number(r.correct),
-    accuracy: Number(r.total) > 0 ? Math.round((Number(r.correct) / Number(r.total)) * 100) : 0,
-  }));
+  const typeStats = typeRows.map((r) => {
+    const graded = Number(r.graded);
+    const right = Number(r.right);
+    return {
+      section: r.section,
+      questionType: r.questionType,
+      attempted: Number(r.total),
+      correct: Number(r.correct),
+      graded,
+      right,
+      wrong: Math.max(0, graded - right),
+      avgBand: r.avgBand == null ? null : Number(r.avgBand),
+      accuracy: graded > 0 ? Math.round((right / graded) * 100) : 0,
+    };
+  });
 
   const recentActivity = recentRows.map((r) => ({
     attemptId: r.attemptId,
@@ -302,9 +361,11 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
   return {
     todayAttempted,
+    todayGraded,
     todayCorrect,
     todayAccuracy,
     totalAttempted,
+    totalGraded,
     totalCorrect,
     totalAccuracy,
     currentStreak,

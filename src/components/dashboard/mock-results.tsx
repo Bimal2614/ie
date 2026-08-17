@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Trophy } from "lucide-react";
 import type { DashboardStats } from "@/app/actions/dashboard";
 import { LocalTime } from "@/components/history/local-time";
-import { SectionHeading, DashEmpty, BandCell, cardInteractive } from "./ui";
+import { SectionHeading, DashEmpty, BandCell, cardClass } from "./ui";
 import { cn } from "@/lib/utils";
 
 /** Recent mock-test band reports. */
@@ -11,9 +11,15 @@ export function MockResults({ mocks }: { mocks: DashboardStats["recentMocks"] })
     <section className="flex flex-col">
       <SectionHeading title="Mock results" href="/results" cta="All" />
       {mocks.length > 0 ? (
-        <div className="flex-1 space-y-3">
-          {mocks.slice(0, 2).map((m) => (
-            <Link key={m.id} href={`/results/${m.id}`} className={cn(cardInteractive, "block p-4")}>
+        // One bordered card with divided rows — mirrors RecentActivity so both
+        // columns fill the grid row to the same height whatever the row count.
+        <div className={cn(cardClass, "flex-1 divide-y divide-line overflow-hidden")}>
+          {mocks.slice(0, 3).map((m) => (
+            <Link
+              key={m.id}
+              href={`/results/${m.id}`}
+              className="block p-4 transition-colors hover:bg-paper-sunken"
+            >
               <div className="mb-3 flex items-center justify-between">
                 <span className="chip capitalize">{m.module}</span>
                 {m.completedAt && (

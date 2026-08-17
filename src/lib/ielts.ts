@@ -230,4 +230,42 @@ export function rawToBand(section: "listening" | "reading", correct: number): nu
   return 0;
 }
 
+/**
+ * The band at which a response counts as "correct".
+ *
+ * Writing and Speaking have no right/wrong — they're marked against criteria and
+ * reported as a band, so `user_responses.is_correct` stays NULL for them. Band 6
+ * is the usual minimum entry requirement, so it's the floor we treat as a pass
+ * and the thing that makes "attempted vs right/wrong" meaningful across all four
+ * skills. Deliberately NOT written into `is_correct`: the column records whether
+ * an answer was factually right, and a threshold judgement would destroy the
+ * band's resolution (5.5 and 2.0 are not the same answer).
+ *
+ * Distinct from the learner's own `users.target_band`: clearing 6 makes a
+ * response correct, but falling short of the target is what "needs work" means.
+ */
+export const PASS_BAND = 6;
+
+/**
+ * Listening and Reading are marked right/wrong, so accuracy is meaningful for
+ * them. Writing and Speaking are marked against criteria and only ever yield a
+ * band — accuracy is meaningless there. Anything reporting a score per section
+ * has to branch on this.
+ */
+export function isObjectiveSection(section: string): boolean {
+  return section === "listening" || section === "reading";
+}
+
+/**
+ * Put an objective section's accuracy on the 0–9 band scale so Listening and
+ * Reading can be RANKED against Writing/Speaking (which only have a band).
+ *
+ * Internal comparison only — do not show this to learners. The /40 tables assume
+ * a full exam paper, so a band derived from a short practice set is a much weaker
+ * claim than a real one; display accuracy for these sections instead.
+ */
+export function accuracyToBand(section: "listening" | "reading", accuracyPct: number): number {
+  return rawToBand(section, Math.round((accuracyPct / 100) * 40));
+}
+
 export const SECTION_ORDER: SectionKey[] = ["listening", "reading", "writing", "speaking"];

@@ -31,6 +31,8 @@ type NavItem = {
   children?: NavChild[];
   badge?: string;
   exact?: boolean;
+  /** Start expanded even when none of its routes are active. */
+  defaultOpen?: boolean;
 };
 type Group = { label: string; items: NavItem[] };
 
@@ -50,6 +52,9 @@ const GROUPS: Group[] = [
         label: "All practice",
         icon: Target,
         exact: true,
+        // The four skills are the main way in, so keep them visible from the
+        // start rather than hiding them behind a chevron.
+        defaultOpen: true,
         children: [
           { href: "/practice/listening", label: "Listening", icon: Headphones },
           { href: "/practice/reading", label: "Reading", icon: BookOpen },
@@ -125,7 +130,10 @@ export function Sidebar({ onNavigate, showCloseButton, onClose }: SidebarProps) 
                 {group.items.map((item) => {
                   const parentActive = isActive(item.href, item.exact);
                   const childActive = item.children?.some((c) => isActive(c.href)) ?? false;
-                  const isOpen = expanded[item.href] ?? (parentActive || childActive);
+                  // `expanded` only holds entries the user has toggled, so an
+                  // explicit collapse always wins over the default.
+                  const isOpen =
+                    expanded[item.href] ?? (item.defaultOpen || parentActive || childActive);
                   return (
                     <li key={item.href}>
                       {item.children ? (

@@ -191,20 +191,18 @@ export function HistoryView({ initialDate }: { initialDate: string | null }) {
 function StatTiles({ data }: { data: DaySummary }) {
   const tiles = [
     { label: "Questions attempted", value: String(data.attempted), icon: Sparkles },
+    // The fraction already carries the accuracy, and it's the unit IELTS uses
+    // (a raw score, then a band) — a percentage tile alongside it said the same
+    // thing in a scale the exam never reports.
     {
       label: "Correct",
       value: data.graded > 0 ? `${data.correct} / ${data.graded}` : "—",
       icon: Check,
     },
-    {
-      label: "Accuracy",
-      value: data.accuracy === null ? "—" : `${data.accuracy}%`,
-      icon: Sparkles,
-    },
   ];
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-3 sm:grid-cols-2">
       {tiles.map((t) => (
         <div key={t.label} className="rounded-xl border border-line bg-paper-elev p-4">
           <div className="flex items-center gap-2 text-ink-muted">
