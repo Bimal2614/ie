@@ -14,8 +14,8 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ verified?: string; verify?: string; oauth?: string }> }) {
-  const { verified, verify, oauth } = await searchParams;
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ verified?: string; verify?: string; oauth?: string; signedout?: string }> }) {
+  const { verified, verify, oauth, signedout } = await searchParams;
   const oauthError = oauth ? OAUTH_ERROR[oauth] : null;
   return (
     <div className="space-y-6">
@@ -24,6 +24,13 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         title="Sign in"
         subtitle="Sign in to continue your IELTS prep."
       />
+      {/* Reached via /logout: the session was revoked or idled out. The most
+          common cause by far is a sign-in elsewhere (one device at a time). */}
+      {signedout && (
+        <p className="rounded-lg border border-info/25 bg-info-soft px-3 py-2 text-sm text-info">
+          You&apos;ve been signed out. Signing in on another device ends the session here — only one device can be signed in at a time.
+        </p>
+      )}
       {verified === "1" && (
         <p className="rounded-lg border border-green/30 bg-green-soft px-3 py-2 text-sm text-green-ink">
           Email verified — you can sign in now.

@@ -30,6 +30,26 @@ function cookieOptions(expires: Date) {
   };
 }
 
+/**
+ * The Set-Cookie that removes the session cookie.
+ *
+ * Deliberately NOT `cookies().delete(name)`: that emits the cookie with only
+ * `Path=/` and an expiry in the past — no `Secure`. The browser refuses any
+ * Set-Cookie for a `__Host-`prefixed name that isn't Secure + Path=/ + no
+ * Domain, so in production the deletion was silently dropped and the cookie
+ * survived logout (→ /dashboard → /logout → /login → /dashboard forever).
+ * Expiring it with the same attributes it was written with is what actually
+ * clears it.
+ */
+export function clearedSessionCookie() {
+  return {
+    name: SESSION_COOKIE,
+    value: "",
+    ...cookieOptions(new Date(0)),
+    maxAge: 0,
+  };
+}
+
 /** Read client IP + UA from request headers (for audit + session binding). */
 export async function getRequestContext() {
   const h = await headers();
@@ -170,7 +190,7 @@ export async function destroySession(): Promise<void> {
       .set({ revokedAt: new Date() })
       .where(eq(sessions.tokenHash, tokenHash));
   }
-  cookieStore.delete(SESSION_COOKIE);
+  cookieStore.set(clearedSessionCookie());
 }
 
 /** Revoke every active session for a user ("log out everywhere"). */

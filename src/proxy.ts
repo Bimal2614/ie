@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { SIGNED_OUT_PARAM } from "@/lib/auth-routes";
 
 /**
  * Proxy (formerly "middleware") — runs before every matched route.
@@ -98,8 +99,14 @@ export function proxy(request: NextRequest): NextResponse {
     return res;
   }
 
-  // Already logged in → keep them out of login/signup.
-  if (isAuthRoute && hasSession) {
+  // Already logged in → keep them out of login/signup. Skipped when the request
+  // is the hop straight out of /logout: if the cookie-clearing Set-Cookie ever
+  // fails to apply, bouncing to /dashboard would restart the /dashboard →
+  // /logout → /login loop and the router would give up on a blank page. With
+  // the marker honoured, a failed clear costs one extra hop and still lands on
+  // a usable login form.
+  const justSignedOut = request.nextUrl.searchParams.has(SIGNED_OUT_PARAM);
+  if (isAuthRoute && hasSession && !justSignedOut) {
     const res = NextResponse.redirect(new URL("/dashboard", request.url));
     applySecurityHeaders(res, csp);
     return res;

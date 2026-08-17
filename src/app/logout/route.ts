@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { destroySession } from "@/lib/session";
+import { clearedSessionCookie, destroySession } from "@/lib/session";
+import { SIGNED_OUT_PARAM } from "@/lib/auth-routes";
 
 /**
  * Clear the session cookie, then bounce to /login.
@@ -24,5 +25,14 @@ export async function GET(request: NextRequest) {
   if (next?.startsWith("/") && !next.startsWith("//")) {
     url.searchParams.set("next", next);
   }
-  return NextResponse.redirect(url);
+  // Tells the proxy not to bounce this /login hit back to /dashboard.
+  url.searchParams.set(SIGNED_OUT_PARAM, "1");
+
+  const res = NextResponse.redirect(url);
+  // Belt and braces: stamp the expired cookie on this response directly, so the
+  // clear does not depend on `cookies()` mutations being merged into a redirect.
+  res.cookies.set(clearedSessionCookie());
+  // This response carries a Set-Cookie — never let a CDN or the browser reuse it.
+  res.headers.set("Cache-Control", "no-store");
+  return res;
 }
