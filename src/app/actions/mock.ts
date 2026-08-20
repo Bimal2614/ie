@@ -23,9 +23,10 @@ import {
 import type { SetLayout } from "@/lib/question-content";
 import { grade } from "@/lib/grading";
 import { downloadSpeakingAudio, keyFromUrl } from "@/lib/speech/s3";
-import { toWav16kMono } from "@/lib/speech/transcode";
+import { isWav16kMono, toWav16kMono } from "@/lib/speech/transcode";
 import { scoreSpeaking, taskTypeFor } from "@/lib/speech/speechsuper";
 import { scoreWriting, type WritingTaskType } from "@/lib/writing/gemini";
+import { resolvePrompts } from "@/lib/scoring/prompts";
 import { guardAi, guardGeneral, RateLimitError } from "@/lib/security/rate-guard";
 
 type AnswerMap = Record<string, Record<string, unknown>>;
@@ -473,6 +474,12 @@ export async function scoreMockSpeaking(sessionId: string): Promise<{ scored: nu
       ),
     );
 
+  // Part 2 asks its question as a cue card, so the prompt has to be assembled
+  // from topic + bullets rather than read off `prompt` alone.
+  const prompts = await resolvePrompts(
+    rows.map((row) => ({ id: row.a.id, questionId: row.a.questionId, setId: null, questionNumber: null })),
+  );
+
   let scored = 0;
   const bands: number[] = [];
 
@@ -482,18 +489,23 @@ export async function scoreMockSpeaking(sessionId: string): Promise<{ scored: nu
     const raw = await downloadSpeakingAudio(key);
     if (!raw) continue;
 
-    // Browsers record WebM; SpeechSuper needs WAV 16k mono.
-    const wav = await toWav16kMono(raw);
+    // Stored recordings are already WAV 16k mono (normalised at upload); the
+    // transcode is only for rows whose objects predate that.
+    const wav = isWav16kMono(raw) ? ({ ok: true, wav: Buffer.from(raw) } as const) : await toWav16kMono(raw);
     if (!wav.ok) continue;
 
-    const meta = QUESTION_TYPES[row.q.questionType as QuestionTypeKey];
+    // NOT falling back to the type's generic instruction: relevance is scored
+    // against whatever we send, so "Answer questions about yourself" would mark
+    // an on-topic answer as off-topic. Omitted, SpeechSuper defaults relevance
+    // to 100 — the honest result when we can't say what was asked.
+    const questionPrompt = prompts.get(row.a.id)?.prompt ?? undefined;
     const res = await scoreSpeaking({
       audio: wav.wav,
       audioType: "wav",
       sampleRate: 16000,
       userId: user.id,
       taskType: taskTypeFor(row.q.questionType as QuestionTypeKey),
-      questionPrompt: row.q.prompt ?? meta?.instruction,
+      questionPrompt,
     });
     if (!res.ok) continue;
 
@@ -513,6 +525,10 @@ export async function scoreMockSpeaking(sessionId: string): Promise<{ scored: nu
           },
           relevance: s.relevance,
           speed: s.speed,
+          // The scorer's caveat on this take (empty / off-topic), when given.
+          warning: s.warning,
+          // Whether relevance is a measurement or the no-prompt default of 100.
+          promptKnown: Boolean(questionPrompt),
           provider: "speechsuper:speak.eval.pro",
         },
       })
@@ -565,6 +581,10 @@ export async function scoreMockWriting(sessionId: string): Promise<{ scored: num
       ),
     );
 
+  const prompts = await resolvePrompts(
+    rows.map((row) => ({ id: row.a.id, questionId: row.a.questionId, setId: null, questionNumber: null })),
+  );
+
   let scored = 0;
   // Kept apart so we can apply the official IELTS weighting (Task 2 ×2, Task 1 ×1).
   const task1Bands: number[] = [];
@@ -579,12 +599,16 @@ export async function scoreMockWriting(sessionId: string): Promise<{ scored: num
     const meta = QUESTION_TYPES[qt];
     if (!meta || meta.family !== "writing") continue;
 
+    const resolved = prompts.get(row.a.id);
     const res = await scoreWriting({
       text,
       taskType: qt as WritingTaskType,
       module: user.targetModule,
-      questionPrompt: row.q.prompt ?? meta.instruction ?? "",
-      wordMin: meta.wordLimitMin ?? (qt === "writing_task2" ? 250 : 150),
+      // Unlike speaking, a missing prompt does fall back to the type's
+      // instruction: Gemini cannot grade at all without some statement of task.
+      questionPrompt: resolved?.prompt ?? meta.instruction ?? "",
+      // The minimum authored for THIS task wins over the type default.
+      wordMin: resolved?.wordLimitMin ?? meta.wordLimitMin ?? (qt === "writing_task2" ? 250 : 150),
     });
     if (!res.ok) continue;
 

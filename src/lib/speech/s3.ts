@@ -32,7 +32,14 @@ function client(): S3Client {
 
 export type UploadResult = { ok: true; key: string; url: string } | { ok: false; reason: string };
 
-/** Store one recording. `ext` should match the bytes (webm from the browser). */
+/**
+ * Store one recording. `ext` and `contentType` must match the bytes.
+ *
+ * Callers pass audio ALREADY normalised to WAV 16 kHz mono — see
+ * storeSpeakingRecording. The scoring path verifies the format before reusing
+ * the stored bytes, so anything else merely costs a re-encode rather than
+ * producing a wrong score.
+ */
 export async function uploadSpeakingAudio(
   audio: Buffer | Uint8Array,
   opts: { userId: string; ext: string; contentType: string },

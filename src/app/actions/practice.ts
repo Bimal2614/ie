@@ -5,6 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { questions as questionsT, questionSets, userResponses } from "@/db/schema";
 import { requireUser } from "@/lib/dal";
+import { scheduleAttemptScoring } from "@/lib/scoring/background";
 import { QUESTION_TYPES, isObjective, type QuestionTypeKey } from "@/lib/ielts";
 import { grade } from "@/lib/grading";
 import { guardGeneral } from "@/lib/security/rate-guard";
@@ -140,12 +141,12 @@ export async function submitPractice(
         module: user.targetModule,
         response: ans,
         // Where the recording was stored at record time. The band is NOT taken
-        // from the client — it's computed server-side by scoreAttemptSpeaking.
+        // from the client — it's computed server-side by the background scorer.
         audioUrl: typeof ans.audioUrl === "string" ? ans.audioUrl : null,
         isCorrect,
         rawScore: isCorrect === null ? null : isCorrect ? q.marks : 0,
         timeSpentSec: timeSpentSec ? Math.round(timeSpentSec / qs.length) : null,
-        band: null, // filled in by scoreAttemptSpeaking / scoreAttemptWriting
+        band: null, // filled in by scheduleAttemptScoring, after the response
       });
     }
 
@@ -167,6 +168,11 @@ export async function submitPractice(
   // questions nobody tried — the score above already treats them as wrong.
   if (rows.length > 0) {
     await db.insert(userResponses).values(rows);
+    // Writing/Speaking bands are filled in after the response goes out, so the
+    // submit returns immediately and the scoring no longer depends on the
+    // browser staying open to ask for it. No-op when nothing subjective was
+    // answered.
+    scheduleAttemptScoring(user.id, attemptId);
   }
 
   return { setId, attemptId, results, correct, total, subjective, attempted };

@@ -1,5 +1,5 @@
 import "server-only";
-import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import { GoogleGenAI, Type } from "@google/genai";
 import { env, isWritingAiConfigured } from "@/lib/env";
 
 /**
@@ -61,49 +61,49 @@ function countWords(text: string): number {
 }
 
 const criterionSchema = {
-  type: SchemaType.OBJECT,
+  type: Type.OBJECT,
   properties: {
-    band: { type: SchemaType.NUMBER },
-    summary: { type: SchemaType.STRING },
-    strengths: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
-    improvements: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+    band: { type: Type.NUMBER },
+    summary: { type: Type.STRING },
+    strengths: { type: Type.ARRAY, items: { type: Type.STRING } },
+    improvements: { type: Type.ARRAY, items: { type: Type.STRING } },
   },
   required: ["band", "summary", "strengths", "improvements"],
 } as const;
 
 const responseSchema = {
-  type: SchemaType.OBJECT,
+  type: Type.OBJECT,
   properties: {
-    onTask: { type: SchemaType.BOOLEAN },
-    overallFeedback: { type: SchemaType.STRING },
+    onTask: { type: Type.BOOLEAN },
+    overallFeedback: { type: Type.STRING },
     taskResponse: criterionSchema,
     coherenceCohesion: criterionSchema,
     lexicalResource: criterionSchema,
     grammaticalRange: criterionSchema,
     corrections: {
-      type: SchemaType.ARRAY,
+      type: Type.ARRAY,
       items: {
-        type: SchemaType.OBJECT,
+        type: Type.OBJECT,
         properties: {
-          quote: { type: SchemaType.STRING },
-          issue: { type: SchemaType.STRING },
-          fix: { type: SchemaType.STRING },
+          quote: { type: Type.STRING },
+          issue: { type: Type.STRING },
+          fix: { type: Type.STRING },
         },
         required: ["quote", "issue", "fix"],
       },
     },
     improvedExamples: {
-      type: SchemaType.ARRAY,
+      type: Type.ARRAY,
       items: {
-        type: SchemaType.OBJECT,
+        type: Type.OBJECT,
         properties: {
-          original: { type: SchemaType.STRING },
-          improved: { type: SchemaType.STRING },
+          original: { type: Type.STRING },
+          improved: { type: Type.STRING },
         },
         required: ["original", "improved"],
       },
     },
-    nextSteps: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+    nextSteps: { type: Type.ARRAY, items: { type: Type.STRING } },
   },
   required: [
     "onTask", "overallFeedback", "taskResponse", "coherenceCohesion",
@@ -170,20 +170,25 @@ export async function scoreWriting(params: {
   if (wordCount < 3) return { ok: false, reason: "bad_response", detail: "empty" };
 
   try {
-    const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY!);
-    const model = genAI.getGenerativeModel({
+    const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY! });
+    const prompt = buildPrompt({ ...params, text, wordCount, wordMin: params.wordMin });
+
+    const res = await ai.models.generateContent({
       model: env.GEMINI_MODEL,
-      generationConfig: {
+      contents: prompt,
+      config: {
         temperature: 0.2,
         responseMimeType: "application/json",
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        responseSchema: responseSchema as any,
+        responseSchema,
       },
     });
 
-    const prompt = buildPrompt({ ...params, text, wordCount, wordMin: params.wordMin });
-    const res = await model.generateContent(prompt);
-    const parsed = JSON.parse(res.response.text());
+    // `.text` concatenates the candidate's text parts and is undefined when the
+    // model returned nothing usable (safety block, no candidate). Treat that as
+    // a bad response rather than letting JSON.parse throw on "undefined".
+    const body = res.text;
+    if (!body) return { ok: false, reason: "bad_response", detail: "empty completion" };
+    const parsed = JSON.parse(body);
 
     const crit = (c: { band?: number; summary?: string; strengths?: string[]; improvements?: string[] }): WritingCriterion => ({
       band: toHalfBand(Number(c?.band)),

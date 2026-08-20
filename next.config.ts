@@ -15,6 +15,17 @@ const projectRoot = dirname(fileURLToPath(import.meta.url));
 const nextConfig: NextConfig = {
   // Don't advertise the framework/version.
   poweredByHeader: false,
+  /**
+   * ffmpeg-static must NOT be bundled.
+   *
+   * It locates its binary with `path.join(__dirname, "ffmpeg.exe")`. Bundled
+   * into a server chunk, `__dirname` becomes the build output directory, so that
+   * path points at a file that isn't there and every transcode fails with
+   * ENOENT — which surfaced as "that recording couldn't be processed" on a
+   * perfectly good recording. Listed here, it stays a runtime `require` from
+   * node_modules and `__dirname` still means what the package thinks it means.
+   */
+  serverExternalPackages: ["ffmpeg-static"],
   reactStrictMode: true,
   turbopack: {
     root: projectRoot,

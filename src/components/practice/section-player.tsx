@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, CheckCircle2, RotateCcw, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { Answer } from "@/lib/question-content";
+import { anyUploadPending, type Answer } from "@/lib/question-content";
 import { rawToBand, SECTIONS, type SectionKey } from "@/lib/ielts";
 import {
   submitSectionPractice,
@@ -14,6 +14,7 @@ import {
 import { ExamShell, type StripPart } from "@/components/exam/exam-shell";
 import { SplitPane } from "@/components/exam/split-pane";
 import { SectionBody, type ClientSectionView } from "./section-body";
+import { AttemptFeedback } from "./attempt-feedback";
 
 /**
  * Player for one `practice_sections` row, in the exam's own layout.
@@ -151,11 +152,24 @@ export function SectionPlayer({
     },
   ];
 
+  // A recording still uploading would be submitted with no audio to score.
+  const savingRecording = anyUploadPending(answers);
+
+  // Writing and Speaking are scored by band, not by right/wrong, so a marks
+  // card has nothing to report for them — the AI report is the result.
+  const aiScored = section.sectionType === "speaking" || section.sectionType === "writing";
+
   const scoreCard = result ? (
-    <ScoreCard result={result} band={band} onRetry={reset} />
+    aiScored ? (
+      // No footer: the exam shell already carries "Try again" and "Exit", so
+      // repeating them inside the report would give two of each.
+      <AttemptFeedback attemptId={result.attemptId} section={section.sectionType as SectionKey} />
+    ) : (
+      <ScoreCard result={result} band={band} onRetry={reset} />
+    )
   ) : null;
 
-  const questions = (
+  const questions = aiScored && result ? null : (
     <SectionBody
       section={section}
       answers={answers}
@@ -248,8 +262,8 @@ export function SectionPlayer({
           : current === null || sheet.numbers.indexOf(current) < sheet.numbers.length - 1
       }
       onSubmit={result ? reset : onSubmit}
-      submitting={pending}
-      submitLabel={result ? "Try again" : "Submit"}
+      submitting={pending || savingRecording}
+      submitLabel={result ? "Try again" : savingRecording ? "Saving recording…" : "Submit"}
       menu={
         exitHref ? (
           <Link
@@ -309,7 +323,7 @@ function ScoreCard({
             <p className="text-sm text-ink-muted">
               {result.total > 0 ? `${pct}% correct` : "Sent for AI band scoring"}
               {result.subjective > 0 &&
-                ` · ${result.subjective} response${result.subjective > 1 ? "s" : ""} AI-scored`}
+                ` · ${result.subjective} response${result.subjective > 1 ? "s" : ""} sent for AI band scoring`}
             </p>
           </div>
         </div>

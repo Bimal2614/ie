@@ -2,6 +2,7 @@ import "server-only";
 
 import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
+import { existsSync } from "node:fs";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -34,8 +35,76 @@ const MAX_OUTPUT_BYTES = 64 * 1024 * 1024;
 
 export type TranscodeResult = { ok: true; wav: Buffer } | { ok: false; reason: string };
 
+/** Bytes per second of WAV 16 kHz mono 16-bit — the format we normalise to. */
+export const WAV_16K_MONO_BYTES_PER_SEC = 16000 * 2;
+/** Canonical WAV header size, excluded when deriving a duration from the size. */
+export const WAV_HEADER_BYTES = 44;
+
+/**
+ * Is this ALREADY exactly WAV 16 kHz mono 16-bit PCM?
+ *
+ * Lets the scoring path hand stored audio straight to the scorer instead of
+ * re-encoding it. It reads the `fmt ` chunk rather than trusting the RIFF magic,
+ * because the format is precisely what the API request asserts: we send
+ * `sampleRate: 16000, channel: 1`, so a 44.1 kHz stereo WAV that merely *looks*
+ * like a WAV would be described to SpeechSuper incorrectly — and a wrong rate
+ * doesn't error, it returns a confident garbage band off mis-decoded audio.
+ * Anything that isn't an exact match falls through to a real transcode.
+ *
+ * Chunks are walked rather than read at fixed offsets: `fmt ` is conventionally
+ * at byte 12, but a writer may emit a `LIST`/`JUNK` chunk ahead of it.
+ */
+export function isWav16kMono(input: Buffer | Uint8Array): boolean {
+  if (input.byteLength < WAV_HEADER_BYTES) return false;
+  // "RIFF" .... "WAVE" — read numerically, so this costs nothing on a big buffer.
+  const magic =
+    input[0] === 0x52 && input[1] === 0x49 && input[2] === 0x46 && input[3] === 0x46 &&
+    input[8] === 0x57 && input[9] === 0x41 && input[10] === 0x56 && input[11] === 0x45;
+  if (!magic) return false;
+
+  const view = new DataView(
+    input.buffer as ArrayBuffer,
+    input.byteOffset ?? 0,
+    input.byteLength,
+  );
+
+  // Walk the chunk list looking for `fmt `.
+  let at = 12;
+  while (at + 8 <= input.byteLength) {
+    const id = String.fromCharCode(input[at], input[at + 1], input[at + 2], input[at + 3]);
+    const size = view.getUint32(at + 4, true);
+    if (id === "fmt ") {
+      if (at + 8 + 16 > input.byteLength) return false;
+      const audioFormat = view.getUint16(at + 8, true);
+      const channels = view.getUint16(at + 10, true);
+      const sampleRate = view.getUint32(at + 12, true);
+      const bitsPerSample = view.getUint16(at + 22, true);
+      return audioFormat === 1 && channels === 1 && sampleRate === 16000 && bitsPerSample === 16;
+    }
+    // Chunks are word-aligned: an odd size carries a trailing pad byte.
+    at += 8 + size + (size % 2);
+  }
+  return false;
+}
+
+/** Seconds of audio in a 16 kHz mono 16-bit WAV, derived from its size. */
+export function wavDurationSeconds(input: Buffer | Uint8Array): number {
+  return Math.max(0, input.byteLength - WAV_HEADER_BYTES) / WAV_16K_MONO_BYTES_PER_SEC;
+}
+
 export async function toWav16kMono(input: Buffer | Uint8Array): Promise<TranscodeResult> {
-  if (!ffmpegPath) return { ok: false, reason: "ffmpeg binary unavailable" };
+  // Resolved path, not just presence: ffmpeg-static derives it from `__dirname`,
+  // so a bundler that inlines the package yields a path to nothing. Checking it
+  // here names the real problem instead of letting execFile report a bare ENOENT
+  // that reads like a broken recording. (See serverExternalPackages in
+  // next.config.ts, which is what keeps this resolvable.)
+  if (!ffmpegPath) return { ok: false, reason: "ffmpeg binary unavailable for this platform" };
+  if (!existsSync(ffmpegPath as unknown as string)) {
+    return {
+      ok: false,
+      reason: `ffmpeg binary not found at ${String(ffmpegPath)} — ffmpeg-static was likely bundled instead of externalised`,
+    };
+  }
 
   const dir = await mkdtemp(join(tmpdir(), "ielts-audio-"));
   const inPath = join(dir, `${randomUUID()}.in`);

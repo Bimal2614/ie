@@ -42,7 +42,12 @@ export default async function AttemptPage({ params }: { params: Promise<{ id: st
       </div>
 
       <div className="flex flex-wrap items-center gap-4 rounded-xl border border-line bg-paper-elev p-4">
-        <AttemptScore correct={a.correct} graded={a.graded} items={a.items.length} />
+        <AttemptScore
+          correct={a.correct}
+          graded={a.graded}
+          items={a.items.length}
+          bands={a.items.map((i) => i.band)}
+        />
         <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm">
           <span className="text-ink-muted">
             Attempted{" "}
@@ -196,15 +201,40 @@ function AttemptScore({
   correct,
   graded,
   items,
+  bands,
 }: {
   correct: number;
   graded: number;
   items: number;
+  /** Per-response bands. Writing/Speaking are scored here, not by right/wrong. */
+  bands: (string | null)[];
 }) {
+  // graded counts objective marks, and Writing/Speaking deliberately leave
+  // is_correct NULL — so it is ALWAYS 0 for them. Reporting "awaiting" off that
+  // alone told a candidate their band hadn't arrived when it was already stored
+  // on the row. The band is the score for these sections, so read it.
   if (graded === 0) {
+    const scored = bands
+      .filter((b): b is string => b !== null)
+      .map(Number)
+      .filter(Number.isFinite);
+
+    if (scored.length === 0) {
+      return (
+        <span className="inline-flex items-center gap-2 rounded-lg bg-info-soft px-3 py-1.5 text-sm font-semibold text-info">
+          {items} response{items !== 1 ? "s" : ""} awaiting AI band score
+        </span>
+      );
+    }
+
+    // Mean of the answers, to the nearest half band — the IELTS convention.
+    const mean = Math.round((scored.reduce((t, b) => t + b, 0) / scored.length) * 2) / 2;
+    const pending = items - scored.length;
     return (
-      <span className="inline-flex items-center gap-2 rounded-lg bg-info-soft px-3 py-1.5 text-sm font-semibold text-info">
-        {items} response{items !== 1 ? "s" : ""} awaiting AI band score
+      <span className="inline-flex items-center gap-2 rounded-lg bg-brand-soft px-3 py-1.5 text-sm font-semibold text-brand">
+        Band {mean.toFixed(1)}
+        {scored.length > 1 && ` · mean of ${scored.length}`}
+        {pending > 0 && ` · ${pending} still scoring`}
       </span>
     );
   }

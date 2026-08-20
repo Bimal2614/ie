@@ -37,6 +37,13 @@ export function taskTypeFor(qt: QuestionTypeKey): SpeakingTaskType {
 /** SpeechSuper accepts these container types; webm is NOT among them. */
 export type SpeechAudioType = "wav" | "mp3" | "ogg" | "opus" | "amr";
 
+/**
+ * Hard limit from the docs ("audio limit: 120 seconds"). Part 2 is authored at
+ * exactly 120s of talk time, so a full-length long turn sits right on this line
+ * — leave no slack anywhere upstream of here.
+ */
+export const MAX_AUDIO_SECONDS = 120;
+
 export type SpeakingScore = {
   /** IELTS overall band, 0–9 (half-band). */
   overall: number;
@@ -49,6 +56,17 @@ export type SpeakingScore = {
   transcription: string;
   /** Words per minute. */
   speed: number | null;
+  /**
+   * The scorer's own caveat about this take, when it gave one.
+   *
+   * Documented codes: 2001 "response might be empty", 2002 "response may not be
+   * relevant to the question prompt". Both come back with a NUMERIC BAND
+   * attached, so without surfacing this a silent recording is stored as a
+   * confident band 0 and the candidate is told they scored zero on content they
+   * believe they delivered. Kept as a caveat rather than a hard failure: only
+   * the candidate can say whether they actually spoke.
+   */
+  warning: unknown | null;
   /** Full raw payload, stored in aiFeedback for later UI without a re-call. */
   raw: unknown;
 };
@@ -163,6 +181,7 @@ export async function scoreSpeaking(params: {
       relevance: r.relevance ?? null,
       transcription: r.transcription ?? "",
       speed: r.speed ?? null,
+      warning: r.Warning ?? r.warning ?? null,
       raw: json,
     },
   };
@@ -180,5 +199,9 @@ type SpeechSuperResponse = {
     relevance?: number;
     transcription?: string;
     speed?: number;
+    /* The docs table names this `Warning`; nothing documents the casing against
+       a real payload, so both are accepted rather than guessing one. */
+    Warning?: unknown;
+    warning?: unknown;
   };
 };

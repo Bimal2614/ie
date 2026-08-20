@@ -3,10 +3,10 @@
 import { useState, useCallback } from "react";
 import { Loader2, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { Answer } from "@/lib/question-content";
+import { anyUploadPending, type Answer } from "@/lib/question-content";
 import { submitPractice, type PracticeResult } from "@/app/actions/practice";
-import { scoreAttemptSpeaking } from "@/app/actions/speaking";
 import { SetBody, type PlayerSet, type PlayerQuestion } from "./set-body";
+import { AttemptFeedback } from "./attempt-feedback";
 
 export type { PlayerSet, PlayerQuestion };
 
@@ -18,7 +18,6 @@ export type { PlayerSet, PlayerQuestion };
 export function QuestionPlayer({ set, questions }: { set: PlayerSet; questions: PlayerQuestion[] }) {
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const [pending, setPending] = useState(false);
-  const [scoring, setScoring] = useState(false);
   const [result, setResult] = useState<PracticeResult | null>(null);
 
   const handleAnswer = useCallback((qid: string, value: Answer) => {
@@ -31,19 +30,42 @@ export function QuestionPlayer({ set, questions }: { set: PlayerSet; questions: 
       const res = await submitPractice(set.id, answers);
       setResult(res);
       window.scrollTo({ top: 0, behavior: "smooth" });
-
-      // Speaking bands are computed server-side after submit — each SpeechSuper
-      // call takes a few seconds, so blocking the submit on them would stall.
-      if (set.section === "speaking") {
-        setScoring(true);
-        scoreAttemptSpeaking(res.attemptId)
-          .catch(() => {}) // a scoring outage must not break the attempt
-          .finally(() => setScoring(false));
-      }
+      // Nothing to kick off: submitPractice schedules AI scoring server-side
+      // after the response, so it no longer needs this tab to stay open.
     } finally {
       setPending(false);
     }
   };
+
+  // Submitting while a recording is still uploading would store it with no
+  // audio, so it could never be scored.
+  const savingRecording = anyUploadPending(answers);
+
+  // Writing and Speaking are scored by band, so the AI report is the result —
+  // there are no marks to show and nothing to re-read in the question layout.
+  const aiScored = set.section === "speaking" || set.section === "writing";
+
+  if (result && aiScored) {
+    return (
+      <AttemptFeedback
+        attemptId={result.attemptId}
+        section={set.section}
+        footer={
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setResult(null);
+                setAnswers({});
+              }}
+            >
+              <RotateCcw className="h-4 w-4" /> Try again
+            </Button>
+          </div>
+        }
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -53,17 +75,11 @@ export function QuestionPlayer({ set, questions }: { set: PlayerSet; questions: 
             <p className="display text-lg">
               {result.total > 0 ? `${result.correct} / ${result.total} correct` : "Response submitted"}
             </p>
-            {scoring ? (
-              <p className="inline-flex items-center gap-1.5 text-sm text-ink-muted">
-                <Loader2 className="size-3.5 animate-spin" />
-                Scoring your speaking — a few seconds per answer.
+            {result.subjective > 0 && (
+              <p className="text-sm text-ink-muted">
+                {result.subjective} response{result.subjective > 1 ? "s" : ""} sent for AI band
+                scoring — your band appears in History once it lands.
               </p>
-            ) : (
-              result.subjective > 0 && (
-                <p className="text-sm text-ink-muted">
-                  {result.subjective} response{result.subjective > 1 ? "s" : ""} sent for AI band scoring.
-                </p>
-              )
             )}
           </div>
           <Button
@@ -88,9 +104,14 @@ export function QuestionPlayer({ set, questions }: { set: PlayerSet; questions: 
 
       {!result && (
         <div className="flex justify-end">
-          <Button size="lg" onClick={onSubmit} disabled={pending} className="btn-lift">
-            {pending && <Loader2 className="h-4 w-4 animate-spin" />}
-            {pending ? "Submitting…" : "Submit answers"}
+          <Button
+            size="lg"
+            onClick={onSubmit}
+            disabled={pending || savingRecording}
+            className="btn-lift"
+          >
+            {(pending || savingRecording) && <Loader2 className="h-4 w-4 animate-spin" />}
+            {savingRecording ? "Saving recording…" : pending ? "Submitting…" : "Submit answers"}
           </Button>
         </div>
       )}

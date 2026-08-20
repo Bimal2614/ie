@@ -290,7 +290,7 @@ function Writing({ question, value, disabled, onChange }: InputProps) {
  * Speaking
  * ------------------------------------------------------------------ */
 
-function Speaking({ question, disabled, onChange }: InputProps) {
+function Speaking({ question, value, disabled, onChange }: InputProps) {
   const cue = question.content?.cueCard as { topic: string; bullets: string[] } | undefined;
   const [recording, setRecording] = useState(false);
   const [recorded, setRecorded] = useState(false);
@@ -307,28 +307,75 @@ function Speaking({ question, disabled, onChange }: InputProps) {
   const elapsedRef = useRef(0);
   elapsedRef.current = elapsed;
 
-  const prep = question.prepSeconds ?? 0;
-  const limit = question.speakSeconds ?? 0;
+  /**
+   * ONE INSTANCE SERVES EVERY QUESTION, so nothing here may be left over.
+   *
+   * Speaking is asked one question at a time — SpeakingInterview renders only
+   * the current one, and section practice narrows to the focused number — which
+   * puts each successive question at the SAME position in the tree. React
+   * therefore reuses this component instead of remounting it, and every piece of
+   * state below survives the change. Left alone, opening question 2 showed
+   * question 1's recording, offered "Re-record" instead of "Record answer", and
+   * played back an answer to a question no longer on screen.
+   *
+   * That persistence is worth keeping rather than defeating with a remount: it
+   * is what lets each question's own take stay playable while the candidate
+   * moves around the interview. So takes are cached BY QUESTION ID, and the view
+   * is re-seeded from that cache whenever the question changes.
+   */
+  const blobs = useRef<Map<string, string>>(new Map());
+  // Read inside effects/callbacks that must not re-run on every render.
+  const valueRef = useRef(value);
+  valueRef.current = value;
+  const currentIdRef = useRef(question.id);
+  currentIdRef.current = question.id;
+  /** Which question the in-flight take belongs to, fixed when recording starts. */
+  const takeForRef = useRef<string | null>(null);
+  /** That question's onChange, likewise fixed at start. */
+  const sinkRef = useRef(onChange);
 
-  useEffect(
-    () => () => {
-      if (timer.current) clearInterval(timer.current);
-      if (prepTimer.current) clearInterval(prepTimer.current);
-      if (url) URL.revokeObjectURL(url);
-    },
-    [url],
-  );
+  // Show THIS question's take, or a clean slate when it has none.
+  useEffect(() => {
+    const cached = blobs.current.get(question.id) ?? null;
+    const answered = (valueRef.current?.recorded as boolean | undefined) === true;
+    setUrl(cached);
+    // An answer recorded on an earlier visit still counts as recorded once its
+    // blob is gone (a reload drops object URLs), so the button offers
+    // "Re-record" rather than pretending nothing was said.
+    setRecorded(answered || cached !== null);
+    setRecording(false);
+    setUploading(false);
+    setElapsed(0);
+    setPrepLeft(null);
+    setError(null);
+  }, [question.id]);
 
-  // Leaving mid-recording must not lose the take or leave the microphone open.
-  // Stopping here fires `onstop`, which uploads and reports the answer to the
-  // parent — still mounted — exactly as pressing Stop would. Empty deps so it
-  // runs on unmount only, never when `url` changes.
+  // Leaving a question — by navigating or by unmounting — must not lose the take
+  // or leave the microphone open. Stopping fires `onstop`, which uploads and
+  // reports the answer against the question it was recorded FOR, not whatever
+  // happens to be on screen by the time it finishes.
   useEffect(
     () => () => {
       if (recRef.current?.state === "recording") recRef.current.stop();
+      if (timer.current) clearInterval(timer.current);
+      if (prepTimer.current) clearInterval(prepTimer.current);
+    },
+    [question.id],
+  );
+
+  // Object URLs are revoked only when the whole recorder goes away. Revoking on
+  // every `url` change would destroy the cache the moment another question was
+  // opened, which is the exact thing the cache exists to prevent.
+  useEffect(
+    () => () => {
+      for (const u of blobs.current.values()) URL.revokeObjectURL(u);
+      blobs.current.clear();
     },
     [],
   );
+
+  const prep = question.prepSeconds ?? 0;
+  const limit = question.speakSeconds ?? 0;
 
   // Stop automatically at the speaking limit — the real test cuts you off.
   useEffect(() => {
@@ -368,30 +415,63 @@ function Speaking({ question, disabled, onChange }: InputProps) {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const rec = new MediaRecorder(stream);
+      // Bind the take to this question NOW. A recording stopped by navigating
+      // away finishes after the question has already changed, and `onChange` by
+      // then belongs to the next question — reporting through it would file the
+      // take under the wrong number.
+      const forQuestion = question.id;
+      takeForRef.current = forQuestion;
+      sinkRef.current = onChange;
+
       chunks.current = [];
       rec.ondataavailable = (e) => chunks.current.push(e.data);
       rec.onstop = async () => {
         const blob = new Blob(chunks.current, { type: "audio/webm" });
-        setUrl(URL.createObjectURL(blob));
+        const objectUrl = URL.createObjectURL(blob);
+        // Re-recording replaces this question's take; drop the old object URL.
+        const previous = blobs.current.get(forQuestion);
+        if (previous) URL.revokeObjectURL(previous);
+        blobs.current.set(forQuestion, objectUrl);
         stream.getTracks().forEach((t) => t.stop());
-        setRecorded(true);
+
+        // Only touch the view while this take's question is the one displayed.
+        const onScreen = () => currentIdRef.current === forQuestion;
+        if (onScreen()) {
+          setUrl(objectUrl);
+          setRecorded(true);
+          setUploading(true);
+        }
 
         // Upload immediately: the answer must carry a durable audio location,
         // not a blob URL that dies with the page. The score is computed on the
         // server after submit — never sent from here.
-        setUploading(true);
         const durationSec = elapsedRef.current;
-        onChange({ recorded: true, durationSec });
+        const report = sinkRef.current;
+        // Reported immediately so the interview can move on, but FLAGGED: the
+        // answer has no storage location yet, and submitting in this state would
+        // save a recording that cannot be scored. `anyUploadPending` keeps the
+        // submit button shut until the flag clears.
+        report({ recorded: true, durationSec, pendingUpload: true });
         try {
           const fd = new FormData();
           fd.append("audio", blob, "answer.webm");
           const res = await storeSpeakingRecording(fd);
-          if ("error" in res) setError(`Couldn't save the recording: ${res.error}`);
-          else onChange({ recorded: true, durationSec, audioUrl: res.audioUrl });
+          if ("error" in res) {
+            // Clear the flag either way — a failed upload must not wedge submit
+            // shut forever. The answer stays without a URL, which the report
+            // screen shows as "Not scored" rather than waiting on it.
+            report({ recorded: true, durationSec, uploadFailed: true });
+            if (onScreen()) setError(`Couldn't save the recording: ${res.error}`);
+          } else {
+            report({ recorded: true, durationSec, audioUrl: res.audioUrl });
+          }
         } catch {
-          setError("Couldn't save the recording. Check your connection and re-record.");
+          report({ recorded: true, durationSec, uploadFailed: true });
+          if (onScreen()) {
+            setError("Couldn't save the recording. Check your connection and re-record.");
+          }
         } finally {
-          setUploading(false);
+          if (onScreen()) setUploading(false);
         }
       };
       rec.start();

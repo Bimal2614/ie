@@ -1,13 +1,10 @@
 "use server";
 
-import { eq, and, isNull, isNotNull } from "drizzle-orm";
-import { db } from "@/db";
-import { userResponses } from "@/db/schema";
 import { requireUser } from "@/lib/dal";
-import { QUESTION_TYPES, type QuestionTypeKey } from "@/lib/ielts";
-import { uploadSpeakingAudio, downloadSpeakingAudio, keyFromUrl } from "@/lib/speech/s3";
-import { toWav16kMono } from "@/lib/speech/transcode";
-import { scoreSpeaking, taskTypeFor } from "@/lib/speech/speechsuper";
+import { uploadSpeakingAudio } from "@/lib/speech/s3";
+import { toWav16kMono, wavDurationSeconds } from "@/lib/speech/transcode";
+import { MAX_AUDIO_SECONDS } from "@/lib/speech/speechsuper";
+import { scoreAttemptSpeakingFor } from "@/lib/scoring/score-attempt";
 import { guardAi, RateLimitError } from "@/lib/security/rate-guard";
 
 /**
@@ -19,8 +16,8 @@ import { guardAi, RateLimitError } from "@/lib/security/rate-guard";
  */
 
 /**
- * Called when a recording stops. Returns only the stored audio location — the
- * answer payload carries the URL, never a score.
+ * Called when a recording stops. Normalises the audio, stores it, and returns
+ * only its location — the answer payload carries the URL, never a score.
  */
 export async function storeSpeakingRecording(form: FormData): Promise<{ audioUrl: string } | { error: string }> {
   const user = await requireUser();
@@ -33,10 +30,44 @@ export async function storeSpeakingRecording(form: FormData): Promise<{ audioUrl
   if (file.size === 0) return { error: "Recording was empty." };
 
   const bytes = Buffer.from(await file.arrayBuffer());
-  const res = await uploadSpeakingAudio(bytes, {
+
+  // NORMALISE HERE, NOT AT SCORING TIME.
+  //
+  // Browsers record WebM/Opus and SpeechSuper accepts neither, so a conversion
+  // has to happen somewhere. Doing it once on the way in — and storing the
+  // RESULT — means the bytes in the bucket are exactly the bytes that were
+  // scored: a re-score months later cannot drift because ffmpeg changed, review
+  // plays back precisely what the scorer heard, and a long attempt doesn't
+  // re-encode every recording each time scoring is retried.
+  //
+  // The cost is storage: 16 kHz mono 16-bit is ~32 KB/s, so a 2-minute long turn
+  // is ~3.8 MB against ~1 MB of Opus. Cheap next to re-deriving the artefact.
+  const wav = await toWav16kMono(bytes);
+  if (!wav.ok) {
+    // The candidate gets a plain message, but the cause is almost never their
+    // recording — it's the environment (a missing/unbundled ffmpeg, an
+    // unexpected container). Swallowing the reason turned a config error into a
+    // mystery about the microphone, so it goes to the server log.
+    console.error("[speaking] transcode failed", {
+      userId: user.id,
+      bytes: bytes.length,
+      type: file.type || "unknown",
+      reason: wav.reason,
+    });
+    return { error: "That recording couldn't be processed. Please record your answer again." };
+  }
+
+  // The documented ceiling is 120s. The recorder stops itself at the task limit,
+  // so this only catches a payload that didn't come from it — with a little
+  // grace, since an auto-stop lands a fraction over the mark.
+  if (wavDurationSeconds(wav.wav) > MAX_AUDIO_SECONDS + 5) {
+    return { error: `Recordings are limited to ${MAX_AUDIO_SECONDS} seconds.` };
+  }
+
+  const res = await uploadSpeakingAudio(wav.wav, {
     userId: user.id,
-    ext: "webm",
-    contentType: file.type || "audio/webm",
+    ext: "wav",
+    contentType: "audio/wav",
   });
   if (!res.ok) return { error: res.reason };
 
@@ -44,12 +75,13 @@ export async function storeSpeakingRecording(form: FormData): Promise<{ audioUrl
 }
 
 /**
- * Score every unscored speaking answer in one attempt.
+ * Retry scoring for one attempt.
  *
- * Runs after submit rather than inline: a SpeechSuper call takes ~9s, so a
- * seven-question Part 1 would block a submit for a minute. Rows land with
- * band=null and are filled in here; the UI already renders "awaiting score"
- * until then.
+ * The authoritative run happens in the background at submit (see
+ * scheduleAttemptScoring). This exists for the case that run couldn't finish —
+ * a throttle, an outage, or a batch that outlived the route's duration — so a
+ * candidate looking at an unscored answer has a way to ask again. It is safe to
+ * call repeatedly: the underlying scorer only touches rows with no band.
  */
 export async function scoreAttemptSpeaking(
   attemptId: string,
@@ -63,63 +95,6 @@ export async function scoreAttemptSpeaking(
     throw e;
   }
 
-  const rows = await db
-    .select()
-    .from(userResponses)
-    .where(
-      and(
-        eq(userResponses.attemptId, attemptId),
-        eq(userResponses.userId, user.id),
-        eq(userResponses.section, "speaking"),
-        isNull(userResponses.band),
-        isNotNull(userResponses.audioUrl),
-      ),
-    );
-
-  let scored = 0;
-  for (const row of rows) {
-    const key = row.audioUrl ? keyFromUrl(row.audioUrl) : null;
-    if (!key) continue;
-
-    const raw = await downloadSpeakingAudio(key);
-    if (!raw) continue;
-
-    // Always normalise — the browser records WebM, which SpeechSuper rejects.
-    const wav = await toWav16kMono(raw);
-    if (!wav.ok) continue;
-
-    const meta = QUESTION_TYPES[row.questionType as QuestionTypeKey];
-    const result = await scoreSpeaking({
-      audio: wav.wav,
-      audioType: "wav",
-      sampleRate: 16000,
-      userId: user.id,
-      taskType: taskTypeFor(row.questionType as QuestionTypeKey),
-      questionPrompt: meta?.instruction,
-    });
-    if (!result.ok) continue;
-
-    const s = result.score;
-    await db
-      .update(userResponses)
-      .set({
-        band: s.overall.toFixed(1),
-        transcript: s.transcription,
-        aiFeedback: {
-          criteria: {
-            fluencyCoherence: s.fluencyCoherence,
-            lexicalResource: s.lexicalResource,
-            grammar: s.grammar,
-            pronunciation: s.pronunciation,
-          },
-          relevance: s.relevance,
-          speed: s.speed,
-          provider: "speechsuper:speak.eval.pro",
-        },
-      })
-      .where(eq(userResponses.id, row.id));
-    scored++;
-  }
-
+  const { scored } = await scoreAttemptSpeakingFor(user.id, attemptId);
   return { scored };
 }

@@ -19,7 +19,35 @@ type SpeakingFeedback = {
   };
   relevance?: number | null;
   speed?: number | null;
+  /** The scorer's caveat on this take, when it gave one. Shape is undocumented. */
+  warning?: unknown;
+  /** False when we couldn't tell the scorer what was asked, so relevance is a default. */
+  promptKnown?: boolean;
 };
+
+/**
+ * Turn SpeechSuper's warning into something a candidate can act on.
+ *
+ * A flagged take still comes back with a numeric band attached, so without this
+ * a silent or off-topic recording is reported as a confident low score and the
+ * candidate has no way to tell a bad answer from a bad microphone.
+ *
+ * The payload's shape isn't documented (the docs list it as an object with no
+ * example), so this matches on the two documented CODES inside the serialised
+ * value rather than assuming a field layout that may not hold.
+ */
+function warningNote(warning: unknown): string | null {
+  if (warning === null || warning === undefined) return null;
+  const raw = typeof warning === "string" ? warning : JSON.stringify(warning) ?? "";
+  if (!raw || raw === "{}" || raw === "[]" || raw === '""') return null;
+  if (raw.includes("2001")) {
+    return "We could barely hear a response in this recording — check your microphone, then record the answer again.";
+  }
+  if (raw.includes("2002")) {
+    return "This answer may not have addressed the question that was asked.";
+  }
+  return "The scorer flagged this recording, so treat the band below as approximate.";
+}
 
 /** What scoreWriting stores in `aiFeedback` for a writing answer. */
 type WritingCriterionFB = { band?: number; summary?: string; strengths?: string[]; improvements?: string[] };
@@ -92,6 +120,7 @@ export function AttemptAnswers({
   if (family === "speaking") {
     const fb = (aiFeedback ?? null) as SpeakingFeedback | null;
     const criteria = fb?.criteria;
+    const caveat = warningNote(fb?.warning);
     return (
       <Block title="Your response">
         {ans.recorded ? (
@@ -114,6 +143,12 @@ export function AttemptAnswers({
               {transcript}
             </p>
           </div>
+        )}
+
+        {caveat && (
+          <p className="mt-3 rounded-lg bg-warning-soft px-3 py-2 text-xs text-warning">
+            {caveat}
+          </p>
         )}
 
         {criteria && (

@@ -8,6 +8,7 @@ import { openSection } from "@/lib/practice-sections";
 import { QUESTION_TYPES, isObjective, type QuestionTypeKey } from "@/lib/ielts";
 import { grade } from "@/lib/grading";
 import { guardGeneral } from "@/lib/security/rate-guard";
+import { scheduleAttemptScoring } from "@/lib/scoring/background";
 
 /** Answers arrive keyed by exam number — the only id a jsonb item has. */
 type AnswerMap = Record<string, Record<string, unknown>>;
@@ -104,6 +105,11 @@ export async function submitSectionPractice(
 
   if (rows.length > 0) {
     await db.insert(userResponses).values(rows);
+    // Writing and Speaking sections had NO scoring path at all: rows were
+    // written with band=null and nothing ever filled them in, while the result
+    // card claimed the answers had been "AI-scored". Same background run the
+    // question-practice path uses; a no-op for reading and listening.
+    scheduleAttemptScoring(user.id, attemptId);
   }
 
   const answered = results.filter((r) => answers[String(r.n)]);

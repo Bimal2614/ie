@@ -187,6 +187,28 @@ export type CueCardContent = { cueCard: { topic: string; bullets: string[] } };
 export type Answer = Record<string, unknown>;
 
 /**
+ * Is this answer's recording still being stored?
+ *
+ * A speaking answer is reported to the player the instant recording stops, so
+ * the interview can move on while the upload runs. But the answer is only USABLE
+ * once it carries an `audioUrl` — submit before then and the row is written with
+ * no recording to score, which is silent data loss: the candidate is told the
+ * answer was submitted and it can never produce a band.
+ *
+ * That is not hypothetical. A seven-question Part 1 lost its last answer exactly
+ * this way, because the final question is the one you submit immediately after
+ * speaking, with no further question to cover the upload.
+ */
+export function isUploadPending(a: Answer | undefined): boolean {
+  return a?.pendingUpload === true;
+}
+
+/** True while ANY answer in the set is still uploading. Gates submit. */
+export function anyUploadPending(answers: Record<string, Answer | undefined>): boolean {
+  return Object.values(answers).some(isUploadPending);
+}
+
+/**
  * Accepted answers. `any` lists equally-valid variants — IELTS marks
  * "four"/"4" and "car park"/"carpark" alike, so spelling variants are data,
  * not a grader special case.

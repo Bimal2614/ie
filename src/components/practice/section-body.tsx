@@ -320,9 +320,19 @@ function GroupBlock({
               number: item.n,
               questionType: group.questionType as QuestionTypeKey,
               prompt: item.prompt ?? null,
-              content: item.options
-                ? { options: item.options, selectCount: item.selectCount }
-                : null,
+              // Two different shapes travel in `content`: the options for a
+              // choice item, and the CUE CARD for Speaking Part 2. Only options
+              // were passed, so a Part 2 section rendered a record button with
+              // no question above it — the cue card IS the question there.
+              content:
+                item.options || item.cueCard
+                  ? {
+                      ...(item.options
+                        ? { options: item.options, selectCount: item.selectCount }
+                        : {}),
+                      ...(item.cueCard ? { cueCard: item.cueCard } : {}),
+                    }
+                  : null,
               wordLimitMin: item.wordLimitMin ?? null,
               prepSeconds: item.prepSeconds ?? null,
               speakSeconds: item.speakSeconds ?? null,

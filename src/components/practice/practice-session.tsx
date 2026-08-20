@@ -1,17 +1,17 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, RotateCcw, X, AlertCircle, Loader2, LayoutGrid, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, RotateCcw, X, AlertCircle, Loader2, LayoutGrid, Check, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SECTIONS, QUESTION_TYPES, SET_NOUN, type SectionKey, type QuestionTypeKey } from "@/lib/ielts";
-import type { Answer, SetLayout } from "@/lib/question-content";
+import { anyUploadPending, type Answer, type SetLayout } from "@/lib/question-content";
 import { getSetPaginated, type PaginatedSetResult } from "@/app/actions/questions";
 import { submitPractice, type SetSubmissionResult } from "@/app/actions/practice";
-import { scoreAttemptSpeaking } from "@/app/actions/speaking";
-import { scoreAttemptWriting } from "@/app/actions/writing";
 import { SetBody, type PlayerSet } from "./set-body";
+import { AttemptFeedback } from "./attempt-feedback";
 
 /**
  * Set-based practice player.
@@ -46,7 +46,6 @@ export function PracticeSession({
   const [flagged, setFlagged] = useState<Set<string>>(new Set());
   const [result, setResult] = useState<SetSubmissionResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [scoring, setScoring] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
   const toggleFlag = useCallback((id: string) => {
@@ -173,17 +172,12 @@ export function PracticeSession({
       setAttemptedSets((prev) => new Set([...prev, currentSetIndex]));
       topRef.current?.scrollIntoView({ behavior: "smooth" });
 
-      // Writing & Speaking bands are computed server-side after the fact — an
-      // AI call takes a few seconds each, so blocking submit on several would
-      // stall the UI. Rows show "awaiting score" until this fills them in.
-      if (section === "speaking" || section === "writing") {
-        setScoring(true);
-        const scoreFn = section === "speaking" ? scoreAttemptSpeaking : scoreAttemptWriting;
-        scoreFn(res.attemptId)
-          .then((r) => { if (r?.limited && r.message) setNotice(r.message); })
-          .catch(() => {}) // a scoring outage must not break the attempt
-          .finally(() => setScoring(false));
-      }
+      // Writing & Speaking bands are filled in server-side after the response
+      // (see scheduleAttemptScoring) — an AI call takes a few seconds each, so
+      // blocking submit on several would stall the UI. Rows show "awaiting
+      // score" until they land. Deliberately NOT triggered from here any more:
+      // the submit already started it, and asking again would score the same
+      // answers a second time and bill for both.
     } catch {
       // Most likely a rate-limit throttle (server messages are redacted in prod).
       setNotice("You're going too fast — please wait a moment and try again.");
@@ -245,7 +239,12 @@ export function PracticeSession({
   // Exam-style continuous numbering, e.g. "Questions 14–20". Speaking is a
   // spoken interview with no numbered answer sheet, so a range there would be
   // an invention — it shows the topic name instead.
-  const isNumbered = section !== "speaking" && section !== "writing";
+  // The two AI-scored sections: no marks to report, so the report is the result.
+  const aiScored = section === "speaking" || section === "writing";
+  // A recording still on its way to storage would be submitted with no audio
+  // and could never be scored, so submit waits for it.
+  const savingRecording = anyUploadPending(answers);
+  const isNumbered = !aiScored;
   const range =
     isNumbered && currentSet && totalQsInSet > 0
       ? totalQsInSet === 1
@@ -292,6 +291,17 @@ export function PracticeSession({
             <span className="font-mono text-xs tabular-nums text-ink-muted">{progress}%</span>
           </div>
 
+          {/* Past attempts and their bands. A band arrives after the response is
+              sent, so the candidate needs a way to the record of it from inside
+              the player rather than having to find History from the nav. */}
+          <Link
+            href="/history"
+            title="Your previous attempts and bands"
+            aria-label="Previous attempts and bands"
+            className="inline-flex size-9 items-center justify-center rounded-md text-ink-soft transition-colors hover:bg-paper-sunken hover:text-ink"
+          >
+            <History className="h-4 w-4" />
+          </Link>
           <Button
             variant="ghost"
             size="icon"
@@ -343,13 +353,38 @@ export function PracticeSession({
                   <Button
                     size="lg"
                     onClick={handleSubmit}
-                    disabled={submitting || answeredCount === 0}
+                    disabled={submitting || savingRecording || answeredCount === 0}
                     className="btn-lift"
                   >
-                    {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {submitting ? "Submitting…" : `Submit ${totalQsInSet > 1 ? "all answers" : "answer"}`}
+                    {(submitting || savingRecording) && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    {savingRecording
+                      ? "Saving recording…"
+                      : submitting
+                        ? "Submitting…"
+                        : `Submit ${totalQsInSet > 1 ? "all answers" : "answer"}`}
                   </Button>
                 </div>
+              ) : (
+                aiScored ? (
+                /* Writing and Speaking have no right/wrong to report — the AI
+                   report IS the result, so it replaces the score card rather
+                   than sitting under it. */
+                <AttemptFeedback
+                  attemptId={result.attemptId}
+                  section={section}
+                  footer={
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      <Button variant="outline" size="sm" onClick={handleRestart}>
+                        <RotateCcw className="mr-1 h-3.5 w-3.5" /> Try again
+                      </Button>
+                      <Button size="sm" onClick={handleNextAfterFeedback}>
+                        {data.hasNextSet ? `Next ${noun.toLowerCase()}` : "Finish"}
+                      </Button>
+                    </div>
+                  }
+                />
               ) : (
                 <div
                   className={cn(
@@ -369,19 +404,10 @@ export function PracticeSession({
                           : "Response submitted"}
                       </p>
                       <p className="text-sm text-ink-muted">
-                        {scoring ? (
-                          <span className="inline-flex items-center gap-1.5">
-                            <Loader2 className="size-3.5 animate-spin" />
-                            Scoring your speaking — this takes a few seconds per answer.
-                          </span>
-                        ) : (
-                          <>
-                            {result.subjective > 0 &&
-                              `${result.subjective} response${result.subjective > 1 ? "s" : ""} sent for AI band scoring. `}
-                            {result.total > 0 &&
-                              `Accuracy ${Math.round((result.correct / result.total) * 100)}%`}
-                          </>
-                        )}
+                        {result.subjective > 0 &&
+                          `${result.subjective} response${result.subjective > 1 ? "s" : ""} sent for AI band scoring. `}
+                        {result.total > 0 &&
+                          `Accuracy ${Math.round((result.correct / result.total) * 100)}%`}
                       </p>
                     </div>
                     <div className="flex gap-2">
@@ -394,6 +420,7 @@ export function PracticeSession({
                     </div>
                   </div>
                 </div>
+              )
               )}
             </div>
           ) : (
