@@ -2,7 +2,6 @@ import "server-only";
 
 import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { existsSync } from "node:fs";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -93,18 +92,7 @@ export function wavDurationSeconds(input: Buffer | Uint8Array): number {
 }
 
 export async function toWav16kMono(input: Buffer | Uint8Array): Promise<TranscodeResult> {
-  // Resolved path, not just presence: ffmpeg-static derives it from `__dirname`,
-  // so a bundler that inlines the package yields a path to nothing. Checking it
-  // here names the real problem instead of letting execFile report a bare ENOENT
-  // that reads like a broken recording. (See serverExternalPackages in
-  // next.config.ts, which is what keeps this resolvable.)
-  if (!ffmpegPath) return { ok: false, reason: "ffmpeg binary unavailable for this platform" };
-  if (!existsSync(ffmpegPath as unknown as string)) {
-    return {
-      ok: false,
-      reason: `ffmpeg binary not found at ${String(ffmpegPath)} — ffmpeg-static was likely bundled instead of externalised`,
-    };
-  }
+  if (!ffmpegPath) return { ok: false, reason: "ffmpeg binary unavailable" };
 
   const dir = await mkdtemp(join(tmpdir(), "ielts-audio-"));
   const inPath = join(dir, `${randomUUID()}.in`);

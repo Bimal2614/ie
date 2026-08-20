@@ -83,7 +83,9 @@ export async function scoreAttemptSpeakingFor(
     // rows written before that changed, whose objects are still WebM — and
     // SpeechSuper rejects those by returning band 0 with an empty transcript
     // rather than erroring, so guessing is not an option.
-    const wav = isWav16kMono(raw) ? ({ ok: true, wav: Buffer.from(raw) } as const) : await toWav16kMono(raw);
+    const wav = isWav16kMono(raw)
+      ? ({ ok: true, wav: Buffer.from(raw) } as const)
+      : await toWav16kMono(raw);
     if (!wav.ok) return false;
 
     // Deliberately NOT falling back to the question type's generic instruction.
@@ -118,6 +120,9 @@ export async function scoreAttemptSpeakingFor(
           },
           relevance: s.relevance,
           speed: s.speed,
+          // The measurements behind the bands — what makes a low score
+          // explainable rather than just a number.
+          stats: s.stats,
           // Null unless the scorer flagged the take (empty / off-topic). Review
           // needs it to explain a low band the candidate won't recognise.
           warning: s.warning,

@@ -21,7 +21,7 @@ import {
   type SectionKey,
 } from "@/lib/ielts";
 import type { SetLayout } from "@/lib/question-content";
-import { grade } from "@/lib/grading";
+import { gradeMarks } from "@/lib/grading";
 import { downloadSpeakingAudio, keyFromUrl } from "@/lib/speech/s3";
 import { isWav16kMono, toWav16kMono } from "@/lib/speech/transcode";
 import { scoreSpeaking, taskTypeFor } from "@/lib/speech/speechsuper";
@@ -181,15 +181,19 @@ export async function finishMock(
     const ans = answers[it.questionId];
     const ca = (it.correctAnswer as Record<string, unknown>) ?? null;
     let isCorrect: boolean | null = null;
+    let earned = 0;
     if (meta && isObjective(meta.family) && ca) {
-      isCorrect = grade(meta.family, ans, ca);
+      // Marks earned: each letter of a paired "choose TWO" is marked on its own,
+      // so one right of two earns 1. `isCorrect` means fully correct.
+      earned = gradeMarks(meta.family, ans, ca, it.marks);
+      isCorrect = earned === it.marks;
       const sec = it.section as SectionKey;
       // Marks, not rows. A "Choose TWO letters" item is ONE question worth two
       // of the paper's 40 marks, so counting rows scores a listening paper out
       // of 38 — and `bandFromRatio` below turns that straight into a band from
-      // the wrong denominator.
+      // the wrong denominator. Half-earned marks count for the same reason.
       tally[sec].total += it.marks;
-      if (isCorrect) tally[sec].correct += it.marks;
+      tally[sec].correct += earned;
     }
     answerRows.push({
       sessionId,
@@ -200,7 +204,7 @@ export async function finishMock(
       // from the client — it's computed server-side by scoreMockSpeaking.
       audioUrl: typeof ans?.audioUrl === "string" ? ans.audioUrl : null,
       isCorrect,
-      rawScore: isCorrect === null ? null : isCorrect ? it.marks : 0,
+      rawScore: isCorrect === null ? null : earned,
       timeSpentSec: timings[it.questionId] ?? null,
     });
   }
@@ -322,7 +326,9 @@ export async function getMockSession(sessionId: string): Promise<MockSessionData
           section: sec,
           questionType: row.s.questionType as QuestionTypeKey,
           passageText: row.s.passageText,
-          audioUrl: row.s.audioUrl,
+          // OUR gated media path, never the stored s3:// value — the player only
+          // needs to know a recording exists and to play it.
+          audioUrl: row.s.audioUrl ? `/api/media/${row.s.id}` : null,
           imageUrl: row.s.imageUrl,
           layout: (row.s.layout as SetLayout | null) ?? null,
           startNumber: row.s.startNumber,
@@ -525,6 +531,9 @@ export async function scoreMockSpeaking(sessionId: string): Promise<{ scored: nu
           },
           relevance: s.relevance,
           speed: s.speed,
+          // The measurements behind the bands — what makes a low score
+          // explainable rather than just a number.
+          stats: s.stats,
           // The scorer's caveat on this take (empty / off-topic), when given.
           warning: s.warning,
           // Whether relevance is a measurement or the no-prompt default of 100.
@@ -699,6 +708,14 @@ export type MockReviewItem = {
   band: string | null;
   aiFeedback: unknown;
   timeSpentSec: number | null;
+  /**
+   * The candidate's own recording, as an app-relative playback path — never the
+   * `s3://` location. Review of a speaking answer without the audio is a band
+   * with nothing behind it.
+   */
+  audioUrl: string | null;
+  /** What the scorer heard. Explains a band the candidate won't recognise. */
+  transcript: string | null;
 };
 
 export type MockSectionReview = {
@@ -751,7 +768,10 @@ export async function getMockSectionReview(
         title: s.title,
         instructions: s.instructions,
         passageText: s.passageText,
-        audioUrl: s.audioUrl,
+        // OUR media path, never the stored s3:// value. Consumers only need this
+        // to know a recording exists and to play it, and both are true of the
+        // gated route — while the raw value would publish the bucket and key.
+        audioUrl: s.audioUrl ? `/api/media/${s.id}` : null,
         imageUrl: s.imageUrl,
         layout: (s.layout as SetLayout | null) ?? null,
         startNumber: s.startNumber,
@@ -774,6 +794,10 @@ export async function getMockSectionReview(
       band: r.a.band,
       aiFeedback: r.a.aiFeedback,
       timeSpentSec: r.a.timeSpentSec,
+      // Keyed by the ANSWER row, not the question: the route re-checks that this
+      // recording belongs to the caller before presigning it.
+      audioUrl: r.a.audioUrl ? `/api/practice/recording/${r.a.id}` : null,
+      transcript: r.a.transcript,
     })),
   };
 }

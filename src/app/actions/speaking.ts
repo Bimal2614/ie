@@ -44,16 +44,6 @@ export async function storeSpeakingRecording(form: FormData): Promise<{ audioUrl
   // is ~3.8 MB against ~1 MB of Opus. Cheap next to re-deriving the artefact.
   const wav = await toWav16kMono(bytes);
   if (!wav.ok) {
-    // The candidate gets a plain message, but the cause is almost never their
-    // recording — it's the environment (a missing/unbundled ffmpeg, an
-    // unexpected container). Swallowing the reason turned a config error into a
-    // mystery about the microphone, so it goes to the server log.
-    console.error("[speaking] transcode failed", {
-      userId: user.id,
-      bytes: bytes.length,
-      type: file.type || "unknown",
-      reason: wav.reason,
-    });
     return { error: "That recording couldn't be processed. Please record your answer again." };
   }
 

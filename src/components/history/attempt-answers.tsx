@@ -23,6 +23,23 @@ type SpeakingFeedback = {
   warning?: unknown;
   /** False when we couldn't tell the scorer what was asked, so relevance is a default. */
   promptKnown?: boolean;
+  /** The measurements behind the bands. Absent on answers scored before this existed. */
+  stats?: {
+    pronunciation?: { good?: number | null; fair?: number | null; poor?: number | null };
+    grammar?: { accurateSentencePct?: number | null; errorCount?: number | null };
+    vocabulary?: {
+      words?: number | null;
+      uniqueWords?: number | null;
+      academicWords?: string[];
+      cefr?: Record<string, number>;
+    };
+    fluency?: { pauses?: number | null; liaisons?: number | null; lossOfPlosion?: number | null };
+    pauseFillers?: Record<string, number>;
+    effectiveSpeechSec?: number | null;
+    durationSec?: number | null;
+    rhythm?: number | null;
+    weakWords?: { word: string; score: number }[];
+  };
 };
 
 /**
@@ -124,12 +141,20 @@ export function AttemptAnswers({
     return (
       <Block title="Your response">
         {ans.recorded ? (
-          <p className="inline-flex items-center gap-2 text-sm text-ink-muted">
-            <Mic className="size-4" />
-            Recorded {String(ans.durationSec ?? "?")}s
-            {/* Recordings live in a private bucket; playback needs a signed URL. */}
-            {!audioUrl && " — recording not stored."}
-          </p>
+          <div className="space-y-2">
+            <p className="inline-flex items-center gap-2 text-sm text-ink-muted">
+              <Mic className="size-4" />
+              Recorded {String(ans.durationSec ?? "?")}s
+              {!audioUrl && " — recording not stored."}
+            </p>
+            {audioUrl && (
+              // `audioUrl` is our own gated path, never the bucket location: the
+              // route re-checks that this recording belongs to the caller and
+              // redirects to a presigned URL that expires. preload="none" keeps
+              // a page of answers from fetching every recording at once.
+              <audio controls preload="none" src={audioUrl} className="h-9 w-full max-w-sm" />
+            )}
+          </div>
         ) : (
           <p className="text-sm italic text-ink-muted">No recording captured.</p>
         )}
@@ -150,6 +175,8 @@ export function AttemptAnswers({
             {caveat}
           </p>
         )}
+
+        {fb?.stats && <DeliveryDetail stats={fb.stats} />}
 
         {criteria && (
           <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -335,6 +362,122 @@ function WritingAnalysis({ fb, isTask2 }: { fb: WritingFeedback; isTask2: boolea
               <li key={s} className="flex gap-2 text-sm text-ink-soft"><Check className="mt-0.5 size-3.5 shrink-0 text-green" />{s}</li>
             ))}
           </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * The numbers behind the four bands.
+ *
+ * A band on its own is not feedback — "pronunciation 4" gives a candidate
+ * nothing to practise. The scorer already measures which words were poorly
+ * spoken, how many sentences were grammatical, how wide the vocabulary was and
+ * how much of the recording was actually speech, so showing that turns a score
+ * into something actionable.
+ *
+ * Every field is optional: answers scored before these were captured have none
+ * of them, and a section with nothing in it is omitted rather than drawn empty.
+ */
+function DeliveryDetail({ stats }: { stats: NonNullable<SpeakingFeedback["stats"]> }) {
+  const pron = stats.pronunciation;
+  const vocab = stats.vocabulary;
+  const gram = stats.grammar;
+  const flu = stats.fluency;
+  const weak = stats.weakWords ?? [];
+  const fillers = Object.entries(stats.pauseFillers ?? {});
+  const cefr = Object.entries(vocab?.cefr ?? {}).sort(([a], [b]) => a.localeCompare(b));
+
+  const rows: { label: string; value: string }[] = [];
+  if (pron && (pron.good ?? pron.fair ?? pron.poor) !== null && (pron.good ?? pron.fair ?? pron.poor) !== undefined) {
+    rows.push({
+      label: "Words spoken clearly",
+      value: `${pron.good ?? 0}% good · ${pron.fair ?? 0}% fair · ${pron.poor ?? 0}% poor`,
+    });
+  }
+  if (gram?.accurateSentencePct !== null && gram?.accurateSentencePct !== undefined) {
+    rows.push({
+      label: "Grammatical sentences",
+      value: `${gram.accurateSentencePct}%${gram.errorCount != null ? ` · ${gram.errorCount} error${gram.errorCount === 1 ? "" : "s"}` : ""}`,
+    });
+  }
+  if (vocab?.words != null) {
+    rows.push({
+      label: "Vocabulary",
+      value: `${vocab.words} words, ${vocab.uniqueWords ?? "?"} unique`,
+    });
+  }
+  if (flu?.pauses != null) {
+    rows.push({
+      label: "Pauses",
+      value: `${flu.pauses}${fillers.length > 0 ? ` · ${fillers.map(([k, n]) => `"${k}" ×${n}`).join(", ")}` : ""}`,
+    });
+  }
+  if (stats.effectiveSpeechSec != null && stats.durationSec != null) {
+    rows.push({
+      label: "Speaking time",
+      value: `${stats.effectiveSpeechSec.toFixed(1)}s of ${stats.durationSec.toFixed(1)}s`,
+    });
+  }
+
+  if (rows.length === 0 && weak.length === 0 && cefr.length === 0) return null;
+
+  return (
+    <div className="mt-3 rounded-lg border border-line bg-paper-sunken p-3">
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-ink-muted">
+        Why this band
+      </p>
+
+      {rows.length > 0 && (
+        <dl className="mt-2 grid gap-x-4 gap-y-1 sm:grid-cols-2">
+          {rows.map((r) => (
+            <div key={r.label} className="flex flex-wrap items-baseline justify-between gap-2">
+              <dt className="text-xs text-ink-muted">{r.label}</dt>
+              <dd className="font-mono text-xs tabular-nums text-ink-soft">{r.value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+
+      {cefr.length > 0 && (
+        <div className="mt-2">
+          <p className="text-[10px] uppercase tracking-wider text-ink-muted">Word difficulty (CEFR)</p>
+          <div className="mt-1 flex flex-wrap gap-1.5">
+            {cefr
+              .filter(([, pct]) => pct > 0)
+              .map(([level, pct]) => (
+                <span
+                  key={level}
+                  className="rounded bg-paper-elev px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-ink-soft"
+                >
+                  {level} {pct}%
+                </span>
+              ))}
+          </div>
+        </div>
+      )}
+
+      {(vocab?.academicWords ?? []).length > 0 && (
+        <p className="mt-2 text-xs text-ink-soft">
+          <span className="text-ink-muted">Academic words used: </span>
+          {(vocab?.academicWords ?? []).join(", ")}
+        </p>
+      )}
+
+      {weak.length > 0 && (
+        <div className="mt-2">
+          <p className="text-[10px] uppercase tracking-wider text-ink-muted">Practise these words</p>
+          <div className="mt-1 flex flex-wrap gap-1.5">
+            {weak.map((w, i) => (
+              <span
+                key={`${w.word}-${i}`}
+                className="rounded bg-danger-soft px-1.5 py-0.5 font-mono text-[10px] text-danger"
+              >
+                {w.word} {w.score}
+              </span>
+            ))}
+          </div>
         </div>
       )}
     </div>

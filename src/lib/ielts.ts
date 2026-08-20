@@ -120,8 +120,14 @@ export interface QuestionTypeMeta {
    *    allows.
    */
   presentation?: "stacked" | "sequential";
-  /** Default IELTS instruction line shown above the question. */
-  instruction: string;
+  /**
+   * Default IELTS instruction line shown above the question.
+   *
+   * Whether it is DISPLAYED is a separate question — see showsInstruction().
+   * Some types keep an instruction for scoring purposes while suppressing it on
+   * screen, so this stays populated regardless.
+   */
+  instruction?: string;
   modules: "academic" | "general" | "both";
   /** One-liner shown on the task card. */
   shortDescription: string;
@@ -209,6 +215,31 @@ export const SET_NOUN: Record<SectionKey, string> = {
   writing: "Task",
   speaking: "Topic",
 };
+
+/**
+ * Types whose instruction line is HIDDEN in the player.
+ *
+ * Speaking Parts 1 and 3 are already introduced by their topic and by the
+ * question on screen, so a generic "answer questions about familiar topics"
+ * above them is noise the real test doesn't have either.
+ *
+ * WHY A DISPLAY RULE RATHER THAN DELETING THE TEXT. The same line is stored in
+ * three places — `question_sets.instructions`, `practice_sections.instructions`,
+ * and each group inside `practice_sections.questions` — and every render site
+ * prefers stored text over this default. Scrubbing the data therefore has to be
+ * repeated for every table, and comes back the moment a book is re-imported or
+ * new content is authored. Suppressing it at the point of display is one rule
+ * that cannot be out-run by data.
+ *
+ * Part 2 is not listed: "You have 1 minute to prepare, then talk for 1–2
+ * minutes" is timing the cue card does not carry.
+ */
+const INSTRUCTION_HIDDEN: QuestionTypeKey[] = ["speaking_part1", "speaking_part3"];
+
+/** Should this type's instruction line be drawn at all? */
+export function showsInstruction(questionType: QuestionTypeKey): boolean {
+  return !INSTRUCTION_HIDDEN.includes(questionType);
+}
 
 export const OBJECTIVE_FAMILIES: InputFamily[] = ["single", "multi", "tfng", "ynng", "matching", "completion", "labelling"];
 

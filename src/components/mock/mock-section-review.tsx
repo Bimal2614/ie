@@ -156,8 +156,8 @@ function QuestionRow({
             layout={layout}
             gapNumber={item.number}
             isCorrect={item.isCorrect}
-            transcript={null}
-            audioUrl={null}
+            transcript={item.transcript}
+            audioUrl={item.audioUrl}
             aiFeedback={item.aiFeedback}
           />
           {item.explanation && (

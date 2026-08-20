@@ -13,6 +13,7 @@ import type {
   OptionsLayout,
 } from "@/lib/question-content";
 import { GapField, GapText, type GapResolver } from "./gap-field";
+import { ChoiceBank, ChoiceBankProvider, ChoiceSlot } from "./choice-bank";
 
 /** Heading used above every structured layout — matches the printed paper. */
 function LayoutHeading({ children }: { children?: string }) {
@@ -187,65 +188,87 @@ function FormCompletion({ layout, resolve }: { layout: FormLayout; resolve: GapR
  * Flow-chart completion — boxes joined by arrows
  * ------------------------------------------------------------------ */
 
+/**
+ * Whether this chart's gaps are graded, read off the first one that exists.
+ *
+ * Every gap in a group shares the same disabled state, so one is enough — but it
+ * has to be a number the group actually defines, since the resolver returns null
+ * for anything else.
+ */
+function firstGapDisabled(layout: FlowchartLayout, resolve: GapResolver): boolean {
+  const m = layout.steps.join(" ").match(/\[\[(\d+)\]\]/);
+  return m ? (resolve(Number(m[1]))?.disabled ?? false) : false;
+}
+
 function Flowchart({ layout, resolve }: { layout: FlowchartLayout; resolve: GapResolver }) {
+  const chart = (
+    <ol className="mx-auto flex w-full max-w-md flex-col items-stretch">
+      {layout.steps.map((step, i) => (
+        <li key={i}>
+          <div className="rounded-lg border border-line bg-paper px-4 py-3 text-center text-sm text-ink-soft">
+            <GapText
+              text={step}
+              resolve={resolve}
+              renderGap={layout.choices ? (binding) => <ChoiceSlot binding={binding} /> : undefined}
+            />
+          </div>
+          {i < layout.steps.length - 1 && (
+            <div className="flex justify-center py-1.5" aria-hidden>
+              <svg width="14" height="20" viewBox="0 0 14 20" className="text-ink-muted">
+                <path
+                  d="M7 0v14M2 10l5 5 5-5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+          )}
+        </li>
+      ))}
+    </ol>
+  );
+
+  // A typed flow-chart ("Write ONE WORD") has no box; GapText renders its own
+  // text fields and there is nothing to place.
+  if (!layout.choices) {
+    return (
+      <Sheet>
+        <LayoutHeading>{layout.heading}</LayoutHeading>
+        {chart}
+      </Sheet>
+    );
+  }
+
+  /**
+   * "Choose FOUR answers from the box" — a placement task.
+   *
+   * The box sits BESIDE the chart, as the computer-delivered test shows it: the
+   * candidate reads every option before placing any, so it has to stay on screen
+   * while they work down the steps. Below the chart on a narrow screen, where
+   * side-by-side would squeeze both to nothing.
+   *
+   * Answers are still stored as gap text, so the grader, the answer sheet and the
+   * review screens needed no change — only the way the blank is filled.
+   */
   return (
     <Sheet>
       <LayoutHeading>{layout.heading}</LayoutHeading>
-      <ol className="mx-auto flex max-w-md flex-col items-stretch">
-        {layout.steps.map((step, i) => (
-          <li key={i}>
-            <div className="rounded-lg border border-line bg-paper px-4 py-3 text-center text-sm text-ink-soft">
-              <GapText
-                text={step}
-                resolve={resolve}
-                renderGap={
-                  layout.choices
-                    ? (binding) => <LetterSelect binding={binding} choices={layout.choices!} />
-                    : undefined
-                }
-              />
-            </div>
-            {i < layout.steps.length - 1 && (
-              <div className="flex justify-center py-1.5" aria-hidden>
-                <svg width="14" height="20" viewBox="0 0 14 20" className="text-ink-muted">
-                  <path
-                    d="M7 0v14M2 10l5 5 5-5"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-            )}
-          </li>
-        ))}
-      </ol>
-      {/* The box is part of the stimulus: the candidate reads every option
-          before placing any, so it stays visible beside the chart. */}
-      {layout.choices && (
-        <div className="mt-5 rounded-lg border border-line bg-paper-sunken p-4">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-strong">
-            Options
-          </p>
-          <ul className="grid gap-1 sm:grid-cols-2">
-            {layout.choices.map((c) => (
-              <li key={c.key} className="text-sm text-ink-soft">
-                <span className="mr-2 font-mono text-xs font-semibold text-ink-strong">{c.key}</span>
-                {c.text}
-              </li>
-            ))}
-          </ul>
+      {/* Read the graded state off a REAL gap. Resolving a made-up number
+          returns null, which would leave the box draggable after submission. */}
+      <ChoiceBankProvider choices={layout.choices} disabled={firstGapDisabled(layout, resolve)}>
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:items-start">
+          {chart}
+          <div className="lg:sticky lg:top-4">
+            <ChoiceBank />
+          </div>
         </div>
-      )}
+      </ChoiceBankProvider>
     </Sheet>
   );
 }
-
-/* ------------------------------------------------------------------ *
- * Diagram / plan / map labelling — pins on the image
- * ------------------------------------------------------------------ */
 
 function Diagram({
   layout,

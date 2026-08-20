@@ -6,7 +6,7 @@ import { userResponses } from "@/db/schema";
 import { requireUser } from "@/lib/dal";
 import { openSection } from "@/lib/practice-sections";
 import { QUESTION_TYPES, isObjective, type QuestionTypeKey } from "@/lib/ielts";
-import { grade } from "@/lib/grading";
+import { gradeMarks } from "@/lib/grading";
 import { guardGeneral } from "@/lib/security/rate-guard";
 import { scheduleAttemptScoring } from "@/lib/scoring/background";
 
@@ -19,6 +19,11 @@ export type SectionItemResult = {
   marks: number;
   questionType: string;
   isCorrect: boolean | null; // null = AI-scored (writing / speaking)
+  /**
+   * Marks actually earned. Differs from `isCorrect` for a paired "choose TWO"
+   * item, where one right letter of two earns 1 of 2 and `isCorrect` is false.
+   */
+  earned: number;
   correctAnswer: unknown;
   your: unknown;
   explanation: string | null;
@@ -64,8 +69,11 @@ export async function submitSectionPractice(
       const marks = item.marks ?? 1;
 
       let isCorrect: boolean | null = null;
+      let earned = 0;
       if (meta && isObjective(meta.family) && ca) {
-        isCorrect = grade(meta.family, ans, ca);
+        earned = gradeMarks(meta.family, ans, ca, marks);
+        // "Correct" means fully correct; a half-marked pair is not.
+        isCorrect = earned === marks;
       }
 
       // Only what was actually attempted is persisted. Writing a row for every
@@ -86,7 +94,7 @@ export async function submitSectionPractice(
           response: ans,
           audioUrl: typeof ans.audioUrl === "string" ? ans.audioUrl : null,
           isCorrect,
-          rawScore: isCorrect === null ? null : isCorrect ? marks : 0,
+          rawScore: isCorrect === null ? null : earned,
           band: null,
         });
       }
@@ -96,6 +104,7 @@ export async function submitSectionPractice(
         marks,
         questionType: group.questionType,
         isCorrect,
+        earned,
         correctAnswer: ca,
         your: ans ?? null,
         explanation: item.explanation ?? null,
@@ -119,8 +128,10 @@ export async function submitSectionPractice(
     attemptId,
     results,
     // Marks, not items: a paired MCQ is one input but two marks, so counting
-    // rows would report a full listening paper as 38 rather than 40.
-    correct: sum(objective.filter((r) => r.isCorrect)),
+    // rows would report a full listening paper as 38 rather than 40. Summing
+    // EARNED marks rather than fully-correct items is what credits a half-right
+    // pair with its one mark.
+    correct: objective.reduce((t, r) => t + r.earned, 0),
     total: sum(objective),
     subjective: sum(answered) - sum(objective),
   };

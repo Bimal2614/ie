@@ -7,7 +7,7 @@ import { questions as questionsT, questionSets, userResponses } from "@/db/schem
 import { requireUser } from "@/lib/dal";
 import { scheduleAttemptScoring } from "@/lib/scoring/background";
 import { QUESTION_TYPES, isObjective, type QuestionTypeKey } from "@/lib/ielts";
-import { grade } from "@/lib/grading";
+import { gradeMarks } from "@/lib/grading";
 import { guardGeneral } from "@/lib/security/rate-guard";
 
 /**
@@ -121,11 +121,16 @@ export async function submitPractice(
 
     // Graded whether or not it was answered: an unanswered gap is wrong, not
     // excluded. Only ANSWERED rows are persisted, though — see below.
-    const isCorrect = objective ? grade(meta!.family, ans, ca!) : null;
+    //
+    // Marks earned, not right/wrong: a paired "choose TWO letters" is one input
+    // worth two marks and each letter is marked separately, so one right of two
+    // earns 1. `isCorrect` stays reserved for FULLY correct.
+    const earned = objective ? gradeMarks(meta!.family, ans, ca!, q.marks) : 0;
+    const isCorrect = objective ? earned === q.marks : null;
 
     if (objective) {
       total += q.marks;
-      if (isCorrect) correct += q.marks;
+      correct += earned;
     }
     if (ans) {
       attempted += q.marks;
@@ -144,7 +149,7 @@ export async function submitPractice(
         // from the client — it's computed server-side by the background scorer.
         audioUrl: typeof ans.audioUrl === "string" ? ans.audioUrl : null,
         isCorrect,
-        rawScore: isCorrect === null ? null : isCorrect ? q.marks : 0,
+        rawScore: isCorrect === null ? null : earned,
         timeSpentSec: timeSpentSec ? Math.round(timeSpentSec / qs.length) : null,
         band: null, // filled in by scheduleAttemptScoring, after the response
       });

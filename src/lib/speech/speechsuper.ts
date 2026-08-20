@@ -44,6 +44,44 @@ export type SpeechAudioType = "wav" | "mp3" | "ogg" | "opus" | "amr";
  */
 export const MAX_AUDIO_SECONDS = 120;
 
+/**
+ * The measurements behind the four bands.
+ *
+ * SpeechSuper returns roughly twenty result fields and we were keeping four, so
+ * a candidate saw "pronunciation 4" with no way to know whether that meant a few
+ * awkward words or almost none understood. These are the numbers that answer
+ * "why", and they are already paid for in the same call.
+ *
+ * Deliberately a SUMMARY. The raw payload also carries per-word timings for
+ * every sentence — ~50 KB for a one-minute answer — which would bloat every
+ * response row for detail no screen shows. The worst-scored words are kept
+ * because that is the actionable part of it; the rest is not.
+ */
+export type SpeakingStats = {
+  /** Share of words spoken well / acceptably / poorly. */
+  pronunciation: { good: number | null; fair: number | null; poor: number | null };
+  /** Sentence-level accuracy and a raw error count. */
+  grammar: { accurateSentencePct: number | null; errorCount: number | null };
+  /** Range measures, plus the CEFR spread of the words actually used. */
+  vocabulary: {
+    words: number | null;
+    uniqueWords: number | null;
+    academicWords: string[];
+    cefr: Record<string, number>;
+  };
+  /** Pauses, and the linking/plosion techniques the scorer detected. */
+  fluency: { pauses: number | null; liaisons: number | null; lossOfPlosion: number | null };
+  /** "um" / "uh" counts, keyed by filler. */
+  pauseFillers: Record<string, number>;
+  /** Seconds of actual speech, versus the length of the recording. */
+  effectiveSpeechSec: number | null;
+  durationSec: number | null;
+  /** Intonation similarity to a native speaker, 0–100. */
+  rhythm: number | null;
+  /** Lowest-scoring words, worst first — what to practise. */
+  weakWords: { word: string; score: number }[];
+};
+
 export type SpeakingScore = {
   /** IELTS overall band, 0–9 (half-band). */
   overall: number;
@@ -67,6 +105,8 @@ export type SpeakingScore = {
    * the candidate can say whether they actually spoke.
    */
   warning: unknown | null;
+  /** The measurements behind the bands. See SpeakingStats. */
+  stats: SpeakingStats;
   /** Full raw payload, stored in aiFeedback for later UI without a re-call. */
   raw: unknown;
 };
@@ -170,6 +210,8 @@ export async function scoreSpeaking(params: {
     return { ok: false, reason: "bad_response", detail: json.error ?? "no result" };
   }
 
+  const stats = extractStats(r);
+
   return {
     ok: true,
     score: {
@@ -182,6 +224,7 @@ export async function scoreSpeaking(params: {
       transcription: r.transcription ?? "",
       speed: r.speed ?? null,
       warning: r.Warning ?? r.warning ?? null,
+      stats,
       raw: json,
     },
   };
@@ -203,5 +246,83 @@ type SpeechSuperResponse = {
        a real payload, so both are accepted rather than guessing one. */
     Warning?: unknown;
     warning?: unknown;
+    rhythm?: number;
+    effective_speech_length?: number;
+    numeric_duration?: number;
+    pronunciation_stats?: { good_word_pct?: number; fair_word_pct?: number; poor_word_pct?: number };
+    grammar_stats?: { accurate_sent_pct?: number; grammar_error_cnt?: number };
+    fluency_stats?: { pause_cnt?: number; liaison_cnt?: number; loss_of_plosion_cnt?: number };
+    vocabulary_stats?: {
+      word_cnt?: number;
+      unique_word_cnt?: number;
+      academic_words?: string[];
+      [cefrOrOther: string]: unknown;
+    };
+    pause_filler?: Record<string, number>;
+    sentences?: { details?: { word?: string; pronunciation?: number }[] }[];
   };
 };
+
+/** How many mispronounced words to keep. Enough to practise, not a word list. */
+const WEAK_WORD_LIMIT = 8;
+
+/** Pull the summary numbers out of one result, tolerating every absent field. */
+function extractStats(r: NonNullable<SpeechSuperResponse["result"]>): SpeakingStats {
+  const num = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) ? v : null);
+
+  // CEFR percentages arrive as sibling keys of the vocabulary counts
+  // (`CEFR_A1_pct`, …), so they are collected by pattern rather than named
+  // one by one — a new level would otherwise be silently dropped.
+  const cefr: Record<string, number> = {};
+  for (const [k, v] of Object.entries(r.vocabulary_stats ?? {})) {
+    const m = /^CEFR_([A-C][12])_pct$/.exec(k);
+    if (m && typeof v === "number") cefr[m[1]] = v;
+  }
+
+  // Flatten every scored word, keep the worst. Silent words score 0 and are the
+  // ones worth showing, so ties are broken by document order.
+  const words: { word: string; score: number }[] = [];
+  for (const sentence of r.sentences ?? []) {
+    for (const d of sentence.details ?? []) {
+      if (typeof d.word === "string" && typeof d.pronunciation === "number") {
+        words.push({ word: d.word.replace(/[.,!?;:]+$/, ""), score: d.pronunciation });
+      }
+    }
+  }
+  words.sort((a, b) => a.score - b.score);
+
+  const fillers: Record<string, number> = {};
+  for (const [k, v] of Object.entries(r.pause_filler ?? {})) {
+    if (typeof v === "number" && v > 0) fillers[k] = v;
+  }
+
+  return {
+    pronunciation: {
+      good: num(r.pronunciation_stats?.good_word_pct),
+      fair: num(r.pronunciation_stats?.fair_word_pct),
+      poor: num(r.pronunciation_stats?.poor_word_pct),
+    },
+    grammar: {
+      accurateSentencePct: num(r.grammar_stats?.accurate_sent_pct),
+      errorCount: num(r.grammar_stats?.grammar_error_cnt),
+    },
+    vocabulary: {
+      words: num(r.vocabulary_stats?.word_cnt),
+      uniqueWords: num(r.vocabulary_stats?.unique_word_cnt),
+      academicWords: Array.isArray(r.vocabulary_stats?.academic_words)
+        ? (r.vocabulary_stats!.academic_words as string[]).filter((w) => typeof w === "string")
+        : [],
+      cefr,
+    },
+    fluency: {
+      pauses: num(r.fluency_stats?.pause_cnt),
+      liaisons: num(r.fluency_stats?.liaison_cnt),
+      lossOfPlosion: num(r.fluency_stats?.loss_of_plosion_cnt),
+    },
+    pauseFillers: fillers,
+    effectiveSpeechSec: num(r.effective_speech_length),
+    durationSec: num(r.numeric_duration),
+    rhythm: num(r.rhythm),
+    weakWords: words.slice(0, WEAK_WORD_LIMIT),
+  };
+}

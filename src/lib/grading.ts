@@ -45,3 +45,42 @@ export function grade(
       return false;
   }
 }
+
+/**
+ * Marks EARNED by an answer, which is not the same question as "is it right".
+ *
+ * "Questions 11 and 12 — choose TWO letters" is one input worth two marks, and
+ * on the real answer sheet each letter is marked on its own: name one of the two
+ * correctly and you score 1 of 2. Treating the item as a single all-or-nothing
+ * unit — which is what `grade()` does, since it can only say true or false —
+ * silently threw that mark away, so a candidate who was half right was told they
+ * scored nothing and the paper total came out under.
+ *
+ * Over-selection still scores zero. Choosing three letters when two were asked
+ * for is not a partially correct answer, it is an invalid one, and marking it
+ * generously would let someone select every option and collect both marks.
+ *
+ * Every other family is one gap, one mark, so for those this is just `grade()`
+ * expressed in marks.
+ */
+export function gradeMarks(
+  family: InputFamily,
+  ans: Record<string, unknown> | undefined,
+  ca: Record<string, unknown> | null,
+  marks: number,
+): number {
+  if (!ans || !ca) return 0;
+
+  if (family === "multi") {
+    // De-duplicated: the same letter twice is one selection, not two marks.
+    const given = [...new Set((ans.indices as number[]) ?? [])];
+    const want = new Set((ca.indices as number[]) ?? []);
+    if (want.size === 0) return 0;
+    if (given.length > want.size) return 0;
+    const hits = given.filter((i) => want.has(i)).length;
+    // Never award more than the item carries, whatever the authored data says.
+    return Math.min(hits, marks);
+  }
+
+  return grade(family, ans, ca) ? marks : 0;
+}

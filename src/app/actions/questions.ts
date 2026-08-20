@@ -100,6 +100,8 @@ export async function getSetPaginated(
       questionType: questionSets.questionType,
       module: questionSets.module,
       passageText: questionSets.passageText,
+      // Selected so the mapper below can turn it into our own media path; the
+      // raw s3:// value must not reach a client.
       audioUrl: questionSets.audioUrl,
       imageUrl: questionSets.imageUrl,
       layout: questionSets.layout,
@@ -144,7 +146,10 @@ export async function getSetPaginated(
       questionType: currentSet.questionType as QuestionTypeKey,
       module: currentSet.module,
       passageText: currentSet.passageText,
-      audioUrl: currentSet.audioUrl,
+      // OUR media path, never the stored s3:// value. Consumers only need this
+      // to know a recording exists and to play it, and both are true of the
+      // gated route — while the raw value would publish the bucket and key.
+      audioUrl: currentSet.audioUrl ? `/api/media/${currentSet.id}` : null,
       imageUrl: currentSet.imageUrl,
       layout: (currentSet.layout as SetLayout | null) ?? null,
       startNumber: currentSet.startNumber,

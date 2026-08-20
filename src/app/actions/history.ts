@@ -216,6 +216,10 @@ export type AttemptItem = {
   band: string | null;
   rawScore: number | null;
   response: unknown;
+  /**
+   * App-relative playback path (`/api/practice/recording/<id>`), or null when
+   * there is no recording. NEVER the `s3://` location — see the mapping below.
+   */
   audioUrl: string | null;
   transcript: string | null;
   aiFeedback: unknown;
@@ -305,7 +309,12 @@ export async function getAttemptDetail(attemptId: string): Promise<AttemptDetail
       band: row.r.band,
       rawScore: row.r.rawScore,
       response: row.r.response,
-      audioUrl: row.r.audioUrl,
+      // OUR path, not the stored s3:// location. The raw value is
+      // `s3://bucket/<prefix>/<userId>/<uuid>.wav`, so returning it would
+      // publish the bucket, the folder layout and a user id to the browser.
+      // The route behind this re-checks ownership and mints a presigned URL per
+      // request, so the client never holds anything durable.
+      audioUrl: row.r.audioUrl ? `/api/practice/recording/${row.r.id}` : null,
       transcript: row.r.transcript,
       aiFeedback: row.r.aiFeedback,
       question: row.q
@@ -359,7 +368,10 @@ export async function getAttemptDetail(attemptId: string): Promise<AttemptDetail
           title: s.title,
           instructions: s.instructions,
           passageText: s.passageText,
-          audioUrl: s.audioUrl,
+      // OUR media path, never the stored s3:// value. Consumers only need this
+      // to know a recording exists and to play it, and both are true of the
+      // gated route — while the raw value would publish the bucket and key.
+          audioUrl: s.audioUrl ? `/api/media/${s.id}` : null,
           imageUrl: s.imageUrl,
           layout: (s.layout as SetLayout | null) ?? null,
           startNumber: s.startNumber,
@@ -370,7 +382,8 @@ export async function getAttemptDetail(attemptId: string): Promise<AttemptDetail
             title: ps.title,
             instructions: ps.instructions,
             passageText: ps.passageText,
-            audioUrl: ps.audioUrl,
+            // Section parts have their own gated resolver.
+            audioUrl: ps.audioUrl ? `/api/practice/audio/${ps.id}` : null,
             imageUrl: ps.imageUrl,
             layout: (soleGroup?.layout as SetLayout | null) ?? null,
             startNumber: ps.startNumber,
