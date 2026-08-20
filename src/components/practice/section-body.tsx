@@ -9,6 +9,7 @@ import type { Answer, CorrectAnswer, OptionsLayout, SetLayout } from "@/lib/ques
 import { SetLayoutRenderer, layoutOwnsAnswers } from "./renderers/layouts";
 import { QuestionInput, type RenderQuestion, type QuestionState } from "./renderers/question-input";
 import { ReportQuestionButton } from "./report-question";
+import { LabelMatrix } from "./renderers/label-matrix";
 import { MatchingBoard } from "./renderers/matching-board";
 import type { GapBinding, GapResolver } from "./renderers/gap-field";
 import type { SectionItemResult } from "@/app/actions/section-practice";
@@ -142,7 +143,26 @@ export function SectionBody({
     return binding;
   };
 
-  if (slot === "stimulus") return <Stimulus section={section} />;
+  /**
+   * A map answers exactly one task, so it is drawn inside that group rather
+   * than above the part.
+   *
+   * Ownership only moves to a group that will actually DRAW it — labelling with
+   * a letter box. A typed diagram ("Label the diagram, ONE WORD") prints its
+   * numbers on the picture and lists the blanks beneath, so the figure stays
+   * the part's stimulus; claiming it there dropped the image altogether. A
+   * Writing Task 1 chart is the part's stimulus for the same reason.
+   */
+  const figureOwner = section.imageUrl
+    ? section.questions.groups.findIndex(
+        (g) =>
+          QUESTION_TYPES[g.questionType as QuestionTypeKey]?.family === "labelling" &&
+          g.layout?.kind === "options",
+      )
+    : -1;
+  const figureUrl = `/api/practice/image/${section.id}`;
+
+  if (slot === "stimulus") return <Stimulus section={section} showImage={figureOwner < 0} />;
 
   // Narrowed to the focused item, keeping its group so the instruction and any
   // shared layout still frame it.
@@ -155,7 +175,7 @@ export function SectionBody({
 
   return (
     <div className="space-y-6">
-      {slot === "all" && <Stimulus section={section} />}
+      {slot === "all" && <Stimulus section={section} showImage={figureOwner < 0} />}
 
       {groups.map((group, gi) => (
         <GroupBlock
@@ -168,6 +188,9 @@ export function SectionBody({
           onAnswer={onAnswer}
           onClearAnswer={onClearAnswer}
           showHeader={groupHeaders}
+          figureUrl={
+            section.questions.groups.indexOf(group) === figureOwner ? figureUrl : null
+          }
         />
       ))}
     </div>
@@ -187,6 +210,7 @@ function GroupBlock({
   onAnswer,
   onClearAnswer,
   showHeader,
+  figureUrl,
 }: {
   group: ClientGroup;
   answers: Record<string, Answer>;
@@ -196,18 +220,21 @@ function GroupBlock({
   onAnswer: (n: number, value: Answer) => void;
   onClearAnswer?: (n: number) => void;
   showHeader: boolean;
+  /** Set only on the group the part's figure belongs to. */
+  figureUrl?: string | null;
 }) {
   const meta = QUESTION_TYPES[group.questionType as QuestionTypeKey];
   const optionsLayout = group.layout?.kind === "options" ? (group.layout as OptionsLayout) : null;
   // Gap-backed layouts collect every answer inline; listing the items again
   // below would put a second set of inputs on screen for the same marks.
   const showItemRows = !layoutOwnsAnswers(group.layout ?? null);
-  // Every matching type (features / headings / information / sentence endings)
-  // answers against a shared option bank, so they all get the board. Map and
-  // diagram labelling is the same interaction — drag a letter from a box onto a
-  // stem — so it joins them whenever it supplies that box.
-  const isMatching =
-    meta?.family === "matching" || (meta?.family === "labelling" && !!optionsLayout);
+  // Two interactions, split by what the options ARE. Matching options are
+  // phrases, so they are dragged from a bank onto a stem. Labelling options are
+  // single letters printed on a picture, so they get the answer grid the real
+  // sheet uses — nine columns of phrases would be unreadable, and nine columns
+  // of letters read faster than any drag.
+  const isMatching = meta?.family === "matching" && !!optionsLayout;
+  const isLabelMatrix = meta?.family === "labelling" && !!optionsLayout;
   const answered = group.items.filter((i) => answers[String(i.n)] !== undefined).length;
 
   const range =
@@ -241,7 +268,25 @@ function GroupBlock({
       {/* Matching is a board, not a list of inputs: the stems and the option
           bank are one interaction, so it replaces both the options layout and
           the per-item rows the generic path would render. */}
-      {isMatching && optionsLayout ? (
+      {isLabelMatrix && optionsLayout ? (
+        <LabelMatrix
+          layout={optionsLayout}
+          items={group.items.map((i) => ({ n: i.n, prompt: i.prompt }))}
+          imageUrl={figureUrl}
+          heading={group.instruction ?? undefined}
+          disabled={disabled}
+          bindingFor={(n) => {
+            const r = resultFor(n);
+            return {
+              key: answers[String(n)]?.key as string | undefined,
+              state: stateFor(r),
+              expected: r && r.isCorrect === false ? expectedText(r.correctAnswer) : undefined,
+            };
+          }}
+          onAssign={(n, key) => onAnswer(n, { key })}
+          onClear={(n) => onClearAnswer?.(n)}
+        />
+      ) : isMatching && optionsLayout ? (
         <MatchingBoard
           layout={optionsLayout}
           items={group.items.map((i) => ({ id: String(i.n), n: i.n, prompt: i.prompt }))}
@@ -441,10 +486,18 @@ function ResultNote({ result, inline }: { result: SectionItemResult; inline?: bo
  * The one stimulus the whole section shares
  * ------------------------------------------------------------------ */
 
-function Stimulus({ section }: { section: ClientSectionView }) {
+function Stimulus({
+  section,
+  showImage = true,
+}: {
+  section: ClientSectionView;
+  /** False when a question group owns the figure and draws it itself. */
+  showImage?: boolean;
+}) {
   const sec = SECTIONS[section.sectionType];
   const hasAudio = Boolean(section.audioUrl);
-  if (!hasAudio && !section.imageUrl && !section.passageText) return null;
+  const image = showImage ? section.imageUrl : null;
+  if (!hasAudio && !image && !section.passageText) return null;
 
   return (
     <div className="space-y-4">
@@ -470,7 +523,7 @@ function Stimulus({ section }: { section: ClientSectionView }) {
         </div>
       )}
 
-      {section.imageUrl && (
+      {image && (
         <div className="overflow-hidden rounded-xl border border-line">
           <Image
             // Same auth-gated indirection as the audio: the stored value may be
