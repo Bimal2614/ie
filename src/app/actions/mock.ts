@@ -329,7 +329,7 @@ export async function getMockSession(sessionId: string): Promise<MockSessionData
           // OUR gated media path, never the stored s3:// value — the player only
           // needs to know a recording exists and to play it.
           audioUrl: row.s.audioUrl ? `/api/media/${row.s.id}` : null,
-          imageUrl: row.s.imageUrl,
+          imageUrl: row.s.imageUrl ? `/api/media/${row.s.id}/image` : null,
           layout: (row.s.layout as SetLayout | null) ?? null,
           startNumber: row.s.startNumber,
         },
@@ -772,7 +772,7 @@ export async function getMockSectionReview(
         // to know a recording exists and to play it, and both are true of the
         // gated route — while the raw value would publish the bucket and key.
         audioUrl: s.audioUrl ? `/api/media/${s.id}` : null,
-        imageUrl: s.imageUrl,
+        imageUrl: s.imageUrl ? `/api/media/${s.id}/image` : null,
         layout: (s.layout as SetLayout | null) ?? null,
         startNumber: s.startNumber,
       }

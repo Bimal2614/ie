@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import { Check, X, Flag, Headphones, ListChecks, Sparkles, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -239,15 +239,32 @@ export function QuestionBody({
   config: BodyConfig;
 }) {
   const disabled = results !== null;
-  const resultFor = useCallback(
-    (key: string) => results?.find((r) => r.key === key),
-    [results],
-  );
+
+  /**
+   * Indexed, not scanned.
+   *
+   * A result is looked up once per question row, once per gap in the layout, and
+   * again for every matching or labelling binding — so a linear `find` over the
+   * results turned a 40-mark reading paper into ~1,600 comparisons on every
+   * keystroke. Building the map once makes each lookup constant.
+   */
+  const resultByKey = useMemo(() => {
+    const m = new Map<string, BodyResult>();
+    for (const r of results ?? []) m.set(r.key, r);
+    return m;
+  }, [results]);
+  const resultFor = useCallback((key: string) => resultByKey.get(key), [resultByKey]);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const playClip = useAudioClip(audioRef);
 
-  const allItems = doc.groups.flatMap((g) => g.items);
+  const allItems = useMemo(() => doc.groups.flatMap((g) => g.items), [doc.groups]);
+  /** Gaps bind by exam number, and every gap resolves through this. */
+  const itemByNumber = useMemo(() => {
+    const m = new Map<number, BodyItem>();
+    for (const i of allItems) m.set(i.n, i);
+    return m;
+  }, [allItems]);
   const clipFor = useCallback(
     (item: BodyItem) => (config.clips && doc.audioSrc ? windowOf(item.content) : null),
     [config.clips, doc.audioSrc],
@@ -255,7 +272,7 @@ export function QuestionBody({
 
   /** Gaps resolve by exam number across every group in the document. */
   const resolve: GapResolver = (number) => {
-    const item = allItems.find((i) => i.n === number);
+    const item = itemByNumber.get(number);
     if (!item) return null;
     const result = resultFor(item.key);
     const clip = clipFor(item);
@@ -370,6 +387,13 @@ function toRenderQuestion(item: BodyItem): RenderQuestion {
  * One group — its own instruction, its own layout
  * ------------------------------------------------------------------ */
 
+/** One lookup table per group, for the labelling grid's number-keyed callbacks. */
+function itemsByNumber(group: BodyGroup): Map<number, BodyItem> {
+  const m = new Map<number, BodyItem>();
+  for (const i of group.items) m.set(i.n, i);
+  return m;
+}
+
 function GroupBlock({
   group,
   answers,
@@ -406,6 +430,7 @@ function GroupBlock({
   const isMatching = meta?.family === "matching" && !!optionsLayout;
   const isLabelMatrix = Boolean(config.labelMatrix) && meta?.family === "labelling" && !!optionsLayout;
   const answered = group.items.filter((i) => answers[i.key] !== undefined).length;
+  const byNumber = itemsByNumber(group);
 
   const range =
     group.from === group.to ? `Question ${group.from}` : `Questions ${group.from}–${group.to}`;
@@ -442,7 +467,7 @@ function GroupBlock({
           heading={group.instruction ?? undefined}
           disabled={disabled}
           bindingFor={(n) => {
-            const item = group.items.find((i) => i.n === n);
+            const item = byNumber.get(n);
             const r = item ? resultFor(item.key) : undefined;
             return {
               key: item ? (answers[item.key]?.key as string | undefined) : undefined,
@@ -451,11 +476,11 @@ function GroupBlock({
             };
           }}
           onAssign={(n, key) => {
-            const item = group.items.find((i) => i.n === n);
+            const item = byNumber.get(n);
             if (item) onAnswer(item.key, { key });
           }}
           onClear={(n) => {
-            const item = group.items.find((i) => i.n === n);
+            const item = byNumber.get(n);
             if (item) onClearAnswer?.(item.key);
           }}
         />

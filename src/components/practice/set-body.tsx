@@ -80,9 +80,10 @@ export function SetBody({
       sectionType: set.section,
       title: set.title,
       passageText: set.passageText,
-      // Auth-gated media routes, never the stored s3:// value.
-      audioSrc: set.audioUrl ? `/api/media/${set.id}` : null,
-      imageSrc: set.imageUrl ? `/api/media/${set.id}/image` : null,
+      // Already app-relative paths — the actions convert them so the stored
+      // s3:// location never reaches the browser.
+      audioSrc: set.audioUrl,
+      imageSrc: set.imageUrl,
       groups: [
         {
           questionType: set.questionType,
@@ -147,7 +148,7 @@ export function SetBody({
         reportOn: "row",
         // A diagram layout draws the figure itself, with pins on it — so the
         // layout gets the image, and the stimulus block then must not repeat it.
-        layoutFallbackImage: set.imageUrl ? `/api/media/${set.id}/image` : null,
+        layoutFallbackImage: set.imageUrl,
         stimulusImage: Boolean(set.imageUrl) && set.layout?.kind !== "diagram",
         flagged,
         onToggleFlag,

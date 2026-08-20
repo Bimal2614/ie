@@ -150,7 +150,7 @@ export async function getSetPaginated(
       // to know a recording exists and to play it, and both are true of the
       // gated route — while the raw value would publish the bucket and key.
       audioUrl: currentSet.audioUrl ? `/api/media/${currentSet.id}` : null,
-      imageUrl: currentSet.imageUrl,
+      imageUrl: currentSet.imageUrl ? `/api/media/${currentSet.id}/image` : null,
       layout: (currentSet.layout as SetLayout | null) ?? null,
       startNumber: currentSet.startNumber,
       estimatedMinutes: currentSet.estimatedMinutes,

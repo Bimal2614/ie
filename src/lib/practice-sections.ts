@@ -267,6 +267,17 @@ function toOpenSection(row: SectionRow): OpenSection {
 export function toClientSection(s: OpenSection) {
   return {
     ...s,
+    /**
+     * MEDIA CROSSES AS OUR OWN PATHS, never as the stored location.
+     *
+     * The spread above is deliberate for the harmless columns, but it was also
+     * carrying `s3://bucket/<key>` for the recording and the figure straight
+     * into the RSC payload — readable in devtools, and publishing the bucket and
+     * its layout for nothing. Both routes re-check the session and mint a
+     * short-lived presigned URL, so the client only ever needs these.
+     */
+    audioUrl: s.audioUrl ? `/api/practice/audio/${s.id}` : null,
+    imageUrl: s.imageUrl ? `/api/practice/image/${s.id}` : null,
     questions: {
       groups: s.questions.groups.map((g) => ({
         ...g,

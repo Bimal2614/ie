@@ -113,9 +113,10 @@ export function SectionBody({
       sectionType: section.sectionType,
       title: section.title,
       passageText: section.passageText,
-      // Auth-gated media routes, never the stored s3:// value.
-      audioSrc: section.audioUrl ? `/api/practice/audio/${section.id}` : null,
-      imageSrc: section.imageUrl ? `/api/practice/image/${section.id}` : null,
+      // Already app-relative paths — toClientSection converts them so the
+      // stored s3:// location never reaches the browser.
+      audioSrc: section.audioUrl,
+      imageSrc: section.imageUrl,
       groups: section.questions.groups.map((g) => ({
         questionType: g.questionType as QuestionTypeKey,
         instruction: g.instruction,
@@ -190,7 +191,7 @@ export function SectionBody({
         layoutFallbackImage: null,
         // Only a lettered labelling group draws the figure itself, and only then
         // does the stimulus block stand down.
-        matrixImage: figureOwner >= 0 ? `/api/practice/image/${section.id}` : null,
+        matrixImage: figureOwner >= 0 ? section.imageUrl : null,
         stimulusImage: figureOwner < 0,
       }}
     />

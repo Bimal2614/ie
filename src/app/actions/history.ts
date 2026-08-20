@@ -372,7 +372,7 @@ export async function getAttemptDetail(attemptId: string): Promise<AttemptDetail
       // to know a recording exists and to play it, and both are true of the
       // gated route — while the raw value would publish the bucket and key.
           audioUrl: s.audioUrl ? `/api/media/${s.id}` : null,
-          imageUrl: s.imageUrl,
+          imageUrl: s.imageUrl ? `/api/media/${s.id}/image` : null,
           layout: (s.layout as SetLayout | null) ?? null,
           startNumber: s.startNumber,
         }
@@ -384,7 +384,7 @@ export async function getAttemptDetail(attemptId: string): Promise<AttemptDetail
             passageText: ps.passageText,
             // Section parts have their own gated resolver.
             audioUrl: ps.audioUrl ? `/api/practice/audio/${ps.id}` : null,
-            imageUrl: ps.imageUrl,
+            imageUrl: ps.imageUrl ? `/api/practice/image/${ps.id}` : null,
             layout: (soleGroup?.layout as SetLayout | null) ?? null,
             startNumber: ps.startNumber,
           }

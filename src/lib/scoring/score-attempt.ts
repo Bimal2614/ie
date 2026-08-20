@@ -71,7 +71,19 @@ export async function scoreAttemptSpeakingFor(
   // a minute; in parallel the whole set lands in roughly the slowest single call.
   // Each row is also written to the database the moment its own score arrives,
   // rather than after the batch, so the report fills in as results come back.
-  const outcomes = await mapWithConcurrency(rows, SCORING_CONCURRENCY, async (row) => {
+  const outcomes = await mapWithConcurrency(rows, SCORING_CONCURRENCY, (row) =>
+    // ISOLATED PER ANSWER. mapWithConcurrency propagates a throw, as a
+    // general-purpose primitive should — but here that would abandon every
+    // answer still queued behind the one that failed. A database blip on
+    // question 3 must not cost questions 4 to 7 their bands, so each is
+    // contained and simply reported as unscored.
+    scoreOne(row).catch(() => false),
+  );
+
+  const scored = outcomes.filter(Boolean).length;
+  return { scored, failed: outcomes.length - scored };
+
+  async function scoreOne(row: (typeof rows)[number]): Promise<boolean> {
     const key = row.audioUrl ? keyFromUrl(row.audioUrl) : null;
     if (!key) return false;
 
@@ -134,10 +146,7 @@ export async function scoreAttemptSpeakingFor(
       })
       .where(eq(userResponses.id, row.id));
     return true;
-  });
-
-  const scored = outcomes.filter(Boolean).length;
-  return { scored, failed: outcomes.length - scored };
+  }
 }
 
 export async function scoreAttemptWritingFor(
@@ -161,7 +170,17 @@ export async function scoreAttemptWritingFor(
 
   // Graded together, and each task written as soon as its own grade arrives —
   // a two-task Writing paper shouldn't wait for Task 2 to show Task 1's band.
-  const outcomes = await mapWithConcurrency(rows, SCORING_CONCURRENCY, async (row) => {
+  // Contained per task, for the same reason as speaking above.
+  const outcomes = await mapWithConcurrency(rows, SCORING_CONCURRENCY, (row) =>
+    gradeOne(row).catch(() => false),
+  );
+
+  const scored = outcomes.filter((o) => o === true).length;
+  // `null` means there was nothing to grade — not a failure.
+  const failed = outcomes.filter((o) => o === false).length;
+  return { scored, failed };
+
+  async function gradeOne(row: (typeof rows)[number]): Promise<boolean | null> {
     const r = row.response as Record<string, unknown> | null;
     const text = typeof r?.text === "string" ? r.text.trim() : "";
     // Nothing written is not a failure to score — there is nothing to grade.
@@ -206,10 +225,5 @@ export async function scoreAttemptWritingFor(
       })
       .where(eq(userResponses.id, row.id));
     return true;
-  });
-
-  const scored = outcomes.filter((o) => o === true).length;
-  // `null` means there was nothing to grade — not a failure.
-  const failed = outcomes.filter((o) => o === false).length;
-  return { scored, failed };
+  }
 }
