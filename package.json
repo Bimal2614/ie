@@ -17,7 +17,10 @@
     "db:studio:staging": "drizzle-kit studio --config=drizzle.staging.config.ts",
     "db:seed": "tsx src/db/seed.ts",
     "db:seed:questions": "tsx src/db/seed-questions.ts",
-    "db:seed:responses": "tsx src/db/seed-responses.ts"
+    "db:seed:responses": "tsx src/db/seed-responses.ts",
+    "db:import": "tsx src/db/import-content.ts",
+    "db:verify": "tsx src/db/verify-content.ts",
+    "db:build:questions": "tsx src/db/build-questions.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1089.0",

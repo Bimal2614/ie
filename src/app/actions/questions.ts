@@ -1,13 +1,10 @@
 "use server";
 
-import { randomUUID } from "node:crypto";
 import { and, asc, eq, count, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { questionSets, questions, userResponses } from "@/db/schema";
 import { requireUser } from "@/lib/dal";
-import { QUESTION_TYPES, isObjective, type SectionKey, type QuestionTypeKey } from "@/lib/ielts";
-import { grade } from "@/lib/grading";
-import { guardGeneral } from "@/lib/security/rate-guard";
+import type { SectionKey, QuestionTypeKey } from "@/lib/ielts";
 import type { SetLayout } from "@/lib/question-content";
 
 /* ------------------------------------------------------------------ *
@@ -173,99 +170,13 @@ export async function getSetPaginated(
 }
 
 /* ------------------------------------------------------------------ *
- * submitSetAnswers — submit ALL answers for one set at once
+ * Submitting a set lives in ./practice.ts
+ *
+ * There used to be a `submitSetAnswers` here doing the same job as
+ * `submitPractice` there, and the pair drifted: one counted a paired "Choose
+ * TWO letters" as one mark, the other as two. Both set routes now call the one
+ * action.
  * ------------------------------------------------------------------ */
-
-export type SetQuestionResult = {
-  questionId: string;
-  isCorrect: boolean | null;
-  correctAnswer: unknown;
-  explanation: string | null;
-};
-
-export type SetSubmissionResult = {
-  setId: string;
-  /** Groups this submit's rows — lets the caller kick off AI scoring for it. */
-  attemptId: string;
-  results: SetQuestionResult[];
-  correct: number;
-  total: number;
-  subjective: number; // writing/speaking — AI-graded later
-};
-
-export async function submitSetAnswers(
-  setId: string,
-  answers: Record<string, Record<string, unknown>>, // questionId → answer
-  timeSpentSec?: number,
-): Promise<SetSubmissionResult> {
-  const user = await requireUser();
-  await guardGeneral(user.id);
-
-  // Fetch all questions for this set
-  const qs = await db.select().from(questions).where(eq(questions.setId, setId)).orderBy(questions.orderIndex);
-  if (qs.length === 0) throw new Error("Set not found");
-
-  const results: SetQuestionResult[] = [];
-  const rows: (typeof userResponses.$inferInsert)[] = [];
-  // One id for the whole submit — the column defaults to a fresh uuid per row,
-  // which would scatter the set's marks across N one-question "attempts".
-  const attemptId = randomUUID();
-  let correct = 0;
-  let total = 0;
-  let subjective = 0;
-
-  for (const q of qs) {
-    const meta = QUESTION_TYPES[q.questionType as QuestionTypeKey];
-    const ca = (q.correctAnswer as Record<string, unknown>) ?? null;
-    const userAns = answers[q.id];
-
-    let isCorrect: boolean | null = null;
-
-    if (meta && isObjective(meta.family) && ca) {
-      isCorrect = grade(meta.family, userAns, ca);
-      total++;
-      if (isCorrect) correct++;
-    } else if (userAns) {
-      subjective++;
-    }
-
-    if (userAns) {
-      rows.push({
-        userId: user.id,
-        questionId: q.id,
-        setId: q.setId,
-        attemptId,
-        section: q.section,
-        questionType: q.questionType,
-        module: user.targetModule,
-        response: userAns,
-        // Where the recording was stored at record time. The band is NOT taken
-        // from the client — it's computed server-side by scoreAttemptSpeaking.
-        audioUrl: typeof userAns.audioUrl === "string" ? userAns.audioUrl : null,
-        isCorrect,
-        rawScore: isCorrect === null ? null : isCorrect ? q.marks : 0,
-        timeSpentSec: timeSpentSec ? Math.round(timeSpentSec / qs.length) : null,
-        band: null,
-      });
-    }
-
-    results.push({
-      questionId: q.id,
-      isCorrect,
-      correctAnswer: ca,
-      explanation: q.explanation ?? null,
-    });
-  }
-
-  // One multi-row insert instead of a round trip per question. A 10-question
-  // set was 10 sequential awaits; it is now a single statement, and either the
-  // whole set is recorded or none of it is.
-  if (rows.length > 0) {
-    await db.insert(userResponses).values(rows);
-  }
-
-  return { setId, attemptId, results, correct, total, subjective };
-}
 
 /* ------------------------------------------------------------------ *
  * getAttemptedSets — which set indices the user has already completed

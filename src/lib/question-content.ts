@@ -47,7 +47,12 @@ export function gapsInLayout(layout: SetLayout | null): number[] {
       layout.blocks.forEach(scan);
       break;
     case "notes":
-      layout.groups.forEach((g) => g.items.forEach(scan));
+      // Headings can carry a gap too — "Excavations of rock shelters inside
+      // [[8]] near the village of Kelo revealed:" is a real Cambridge layout.
+      layout.groups.forEach((g) => {
+        if (g.title) scan(g.title);
+        g.items.forEach(scan);
+      });
       break;
     case "table":
       layout.rows.forEach((r) => r.forEach((c) => scan(c.text)));
@@ -83,6 +88,13 @@ export type InlineBlanksLayout = {
 export type NotesLayout = {
   kind: "notes";
   heading?: string;
+  /**
+   * The worked answer the paper gives away before the questions start ("the
+   * Main Hall - seats ....200...."). It is shown, never answered, so it needs
+   * to look unlike the notes around it — printed as a bullet it read as the
+   * first thing to fill in.
+   */
+  example?: string;
   groups: { title?: string; items: string[] }[];
 };
 
@@ -112,6 +124,8 @@ export type FlowchartLayout = {
   kind: "flowchart";
   heading?: string;
   steps: string[];
+  /** When set, steps are answered by choosing a letter from a shared box. */
+  choices?: { key: string; text: string }[];
 };
 
 /** An image with numbered pins — diagram / plan / map labelling. */
@@ -183,3 +197,71 @@ export type CorrectAnswer =
   | { value: string }
   | { key: string }
   | { any: string[] };
+
+/* ------------------------------------------------------------------ *
+ * Practice sections — one stimulus, several question groups
+ *
+ * A Cambridge part is ONE recording (or passage) that candidates answer 2–3
+ * different task types against: Listening Part 1 of C21 Test 1 is a table
+ * completion for 1–6 and a note completion for 7–10, off a single 7-minute
+ * audio. The old one-set-one-type shape could not express that without
+ * duplicating the audio and handing the candidate two players, so the group
+ * — not the section — is what owns a task type, its instruction and its layout.
+ *
+ * Numbering stays continuous across the paper: a group declares the exam
+ * numbers it covers, and `[[n]]` gaps inside its layout bind to those numbers.
+ */
+
+/** One numbered item — a single mark on the answer sheet. */
+export type QuestionItem = {
+  /** Exam number. What `[[n]]` in the group's layout binds to. */
+  n: number;
+  /** Shown above the input. Gap-backed types carry their text in the layout. */
+  prompt?: string;
+  /** Multiple choice / matching options, when the item owns them. */
+  options?: string[];
+  /** How many options a "Choose TWO letters" item expects. */
+  selectCount?: number;
+  /**
+   * Marks this one input is worth; defaults to 1.
+   *
+   * "Questions 21 and 22 — choose TWO letters" is ONE selection scored out of
+   * two on the answer sheet. Modelling it as two items would put two identical
+   * multi-selects on screen; modelling it as one 1-mark item would silently
+   * lose a mark and break the numbering of everything after it.
+   */
+  marks?: number;
+  /** Omitted for Writing & Speaking, which are AI-scored rather than keyed. */
+  answer?: CorrectAnswer;
+  /** Why that answer is right — shown in review. */
+  explanation?: string;
+  /** Writing. */
+  wordLimitMin?: number;
+  wordLimitMax?: number;
+  /** Speaking. */
+  prepSeconds?: number;
+  speakSeconds?: number;
+  cueCard?: { topic: string; bullets: string[] };
+};
+
+/** A run of consecutive questions sharing one task type and one layout. */
+export type QuestionGroup = {
+  questionType: string;
+  /** Verbatim exam wording, e.g. "Write ONE WORD AND/OR A NUMBER". */
+  instruction?: string;
+  /** Inclusive exam-number range this group covers. */
+  from: number;
+  to: number;
+  /** The structure the gaps live in. Null for self-contained items (MCQ). */
+  layout?: SetLayout | null;
+  items: QuestionItem[];
+};
+
+/** The whole `questions` jsonb column of one practice section. */
+export type SectionQuestions = { groups: QuestionGroup[] };
+
+/** Every exam number a section actually defines, in document order. */
+export function numbersInSection(q: SectionQuestions | null): number[] {
+  if (!q) return [];
+  return q.groups.flatMap((g) => g.items.map((i) => i.n));
+}

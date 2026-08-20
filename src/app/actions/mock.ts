@@ -160,6 +160,7 @@ export async function finishMock(
       section: questionsT.section,
       questionType: questionsT.questionType,
       correctAnswer: questionsT.correctAnswer,
+      marks: questionsT.marks,
     })
     .from(mockTestQuestions)
     .innerJoin(questionsT, eq(mockTestQuestions.questionId, questionsT.id))
@@ -182,8 +183,12 @@ export async function finishMock(
     if (meta && isObjective(meta.family) && ca) {
       isCorrect = grade(meta.family, ans, ca);
       const sec = it.section as SectionKey;
-      tally[sec].total++;
-      if (isCorrect) tally[sec].correct++;
+      // Marks, not rows. A "Choose TWO letters" item is ONE question worth two
+      // of the paper's 40 marks, so counting rows scores a listening paper out
+      // of 38 — and `bandFromRatio` below turns that straight into a band from
+      // the wrong denominator.
+      tally[sec].total += it.marks;
+      if (isCorrect) tally[sec].correct += it.marks;
     }
     answerRows.push({
       sessionId,
@@ -194,7 +199,7 @@ export async function finishMock(
       // from the client — it's computed server-side by scoreMockSpeaking.
       audioUrl: typeof ans?.audioUrl === "string" ? ans.audioUrl : null,
       isCorrect,
-      rawScore: isCorrect === null ? null : isCorrect ? 1 : 0,
+      rawScore: isCorrect === null ? null : isCorrect ? it.marks : 0,
       timeSpentSec: timings[it.questionId] ?? null,
     });
   }

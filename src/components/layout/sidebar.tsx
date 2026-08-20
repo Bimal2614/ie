@@ -19,6 +19,7 @@ import {
   CreditCard,
   HelpCircle,
   History,
+  Library,
   Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -61,6 +62,14 @@ const GROUPS: Group[] = [
           { href: "/practice/writing", label: "Writing", icon: PenLine },
           { href: "/practice/speaking", label: "Speaking", icon: Mic },
         ],
+      },
+      {
+        // A second way in, by SOURCE rather than task type: a whole exam part
+        // as the book prints it. Its own area, so the flow has an address and
+        // the player's way out is a route rather than an anchor.
+        href: "/section-practice",
+        label: "Section-wise",
+        icon: Library,
       },
     ],
   },

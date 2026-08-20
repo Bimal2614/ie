@@ -132,6 +132,7 @@ export default async function PracticePage() {
           <span className="text-xs text-ink-muted">Listening + Reading + Writing + Speaking</span>
         </div>
       </div>
+
     </div>
   );
 }

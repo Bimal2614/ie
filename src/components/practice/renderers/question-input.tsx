@@ -197,27 +197,42 @@ function Matching({ question, value, disabled, state, options, onChange }: Input
     options?.options ?? ((question.content?.options as { key: string; text: string }[]) ?? []);
   const selected = (value?.key as string | undefined) ?? "";
 
+  // Fallback only. A matching group that has a shared option box renders as a
+  // drag-and-drop board (MatchingBoard) — this path covers the odd item that
+  // carries its own options. Either way it is never a dropdown: IELTS has no
+  // dropdowns, and one would hide the choices behind a click.
   return (
-    <select
+    <div
+      role="radiogroup"
       aria-label={`Question ${question.number}`}
-      value={selected}
-      disabled={disabled}
-      onChange={(e) => onChange({ key: e.target.value })}
-      className={cn(
-        "h-9 w-full max-w-sm rounded-md border bg-paper-elev px-2 text-sm text-ink outline-none",
-        "focus:border-brand focus:ring-2 focus:ring-brand/20",
-        state === "idle" && "border-line",
-        state === "correct" && "border-success/50 bg-success-soft",
-        state === "incorrect" && "border-danger/50 bg-danger-soft",
-      )}
+      className="flex flex-wrap gap-1.5"
     >
-      <option value="">Select…</option>
-      {list.map((o) => (
-        <option key={o.key} value={o.key}>
-          {o.key} — {o.text}
-        </option>
-      ))}
-    </select>
+      {list.map((o) => {
+        const isOn = selected === o.key;
+        return (
+          <button
+            key={o.key}
+            type="button"
+            role="radio"
+            aria-checked={isOn}
+            disabled={disabled}
+            title={o.text}
+            onClick={() => onChange({ key: isOn ? "" : o.key })}
+            className={cn(
+              "inline-flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-sm transition-colors",
+              isOn && state === "idle" && "border-brand bg-brand-soft text-brand",
+              isOn && state === "correct" && "border-success/60 bg-success-soft text-success",
+              isOn && state === "incorrect" && "border-danger/60 bg-danger-soft text-danger",
+              !isOn && "border-line bg-paper-elev text-ink-soft hover:border-brand/50",
+              disabled && "cursor-default",
+            )}
+          >
+            <span className="font-mono text-[11px] font-semibold">{o.key}</span>
+            <span className="max-w-[16rem] truncate">{o.text}</span>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -302,6 +317,17 @@ function Speaking({ question, disabled, onChange }: InputProps) {
       if (url) URL.revokeObjectURL(url);
     },
     [url],
+  );
+
+  // Leaving mid-recording must not lose the take or leave the microphone open.
+  // Stopping here fires `onstop`, which uploads and reports the answer to the
+  // parent — still mounted — exactly as pressing Stop would. Empty deps so it
+  // runs on unmount only, never when `url` changes.
+  useEffect(
+    () => () => {
+      if (recRef.current?.state === "recording") recRef.current.stop();
+    },
+    [],
   );
 
   // Stop automatically at the speaking limit — the real test cuts you off.

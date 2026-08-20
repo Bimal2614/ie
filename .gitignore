@@ -3,6 +3,9 @@
 # See https://git-scm.com/docs/gitignore
 # ---------------------------------------------------------------------------
 
+content/
+tools/
+
 # Dependencies
 /node_modules
 /.pnp
@@ -39,7 +42,7 @@ next-env.d.ts
 !.env.template
 *.pem
 *.key
-
+*.pyc
 # ---------------------------------------------------------------------------
 # Database (Drizzle)
 # Migrations in src/db/migrations ARE committed — they are source of truth.

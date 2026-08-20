@@ -2,10 +2,10 @@
 
 import { and, eq, gte, lt, count, sql, desc, asc } from "drizzle-orm";
 import { db } from "@/db";
-import { userResponses, questions, questionSets } from "@/db/schema";
+import { userResponses, questions, questionSets, practiceSections } from "@/db/schema";
 import { requireUser } from "@/lib/dal";
 import type { SectionKey, QuestionTypeKey } from "@/lib/ielts";
-import type { SetLayout } from "@/lib/question-content";
+import type { SetLayout, QuestionGroup, QuestionItem } from "@/lib/question-content";
 
 /* ------------------------------------------------------------------ *
  * Day boundaries
@@ -211,6 +211,8 @@ export type AttemptItem = {
   /** Exam number, so a table's marks read Q23–Q26 as they did on screen. */
   number: number | null;
   isCorrect: boolean | null;
+  /** A paired "Choose TWO letters" is one row worth two marks. */
+  marks: number;
   band: string | null;
   rawScore: number | null;
   response: unknown;
@@ -256,45 +258,88 @@ export async function getAttemptDetail(attemptId: string): Promise<AttemptDetail
   const user = await requireUser();
 
   const rows = await db
-    .select({ r: userResponses, q: questions, s: questionSets })
+    .select({ r: userResponses, q: questions, s: questionSets, ps: practiceSections })
     .from(userResponses)
     // Left joins: questionId is set null when content is deleted; the attempt
     // and its score must survive that.
     .leftJoin(questions, eq(userResponses.questionId, questions.id))
     .leftJoin(questionSets, eq(userResponses.setId, questionSets.id))
+    // Section-wise practice has no question row to point at: its items live in
+    // the section's jsonb, so `set_id` is a practice_sections id and the item is
+    // found by its exam number. Without this join a section attempt renders as
+    // rows with no number, no prompt and no correct answer.
+    .leftJoin(practiceSections, eq(userResponses.setId, practiceSections.id))
     // Scoped to the owner — an attempt id must never read across users.
     .where(and(eq(userResponses.attemptId, attemptId), eq(userResponses.userId, user.id)))
-    .orderBy(asc(questions.orderIndex), asc(userResponses.createdAt));
+    .orderBy(
+      asc(questions.orderIndex),
+      asc(userResponses.questionNumber),
+      asc(userResponses.createdAt),
+    );
 
   if (rows.length === 0) return null;
 
   const first = rows[0];
   const s = first.s;
+  const ps = first.ps;
 
-  const items: AttemptItem[] = rows.map((row) => ({
-    responseId: row.r.id,
-    questionId: row.q?.id ?? null,
-    number: s && row.q ? s.startNumber + row.q.orderIndex : null,
-    isCorrect: row.r.isCorrect,
-    band: row.r.band,
-    rawScore: row.r.rawScore,
-    response: row.r.response,
-    audioUrl: row.r.audioUrl,
-    transcript: row.r.transcript,
-    aiFeedback: row.r.aiFeedback,
-    question: row.q
-      ? {
-          prompt: row.q.prompt,
-          content: row.q.content,
-          correctAnswer: row.q.correctAnswer,
-          explanation: row.q.explanation,
-          orderIndex: row.q.orderIndex,
-          wordLimitMin: row.q.wordLimitMin,
-          prepSeconds: row.q.prepSeconds,
-          speakSeconds: row.q.speakSeconds,
-        }
-      : null,
-  }));
+  /** The jsonb item a section-practice row answered, plus the group holding it. */
+  const sectionItem = (n: number | null) => {
+    if (n === null || !ps?.questions?.groups) return null;
+    for (const g of ps.questions.groups as QuestionGroup[]) {
+      const item = g.items.find((i: QuestionItem) => i.n === n);
+      if (item) return { group: g, item };
+    }
+    return null;
+  };
+
+  const items: AttemptItem[] = rows.map((row) => {
+    const found = row.q ? null : sectionItem(row.r.questionNumber);
+    const item = found?.item;
+    return {
+      responseId: row.r.id,
+      questionId: row.q?.id ?? null,
+      number: row.q && s ? s.startNumber + row.q.orderIndex : row.r.questionNumber,
+      isCorrect: row.r.isCorrect,
+      marks: row.q?.marks ?? item?.marks ?? 1,
+      band: row.r.band,
+      rawScore: row.r.rawScore,
+      response: row.r.response,
+      audioUrl: row.r.audioUrl,
+      transcript: row.r.transcript,
+      aiFeedback: row.r.aiFeedback,
+      question: row.q
+        ? {
+            prompt: row.q.prompt,
+            content: row.q.content,
+            correctAnswer: row.q.correctAnswer,
+            explanation: row.q.explanation,
+            orderIndex: row.q.orderIndex,
+            wordLimitMin: row.q.wordLimitMin,
+            prepSeconds: row.q.prepSeconds,
+            speakSeconds: row.q.speakSeconds,
+          }
+        : item
+          ? {
+              prompt: item.prompt ?? null,
+              content: { n: item.n, options: item.options, selectCount: item.selectCount },
+              correctAnswer: item.answer ?? null,
+              explanation: item.explanation ?? null,
+              orderIndex: item.n,
+              wordLimitMin: item.wordLimitMin ?? null,
+              prepSeconds: item.prepSeconds ?? null,
+              speakSeconds: item.speakSeconds ?? null,
+            }
+          : null,
+    };
+  });
+
+  // A section attempt spans the whole part, so it only has one layout to show
+  // when every answered item came from the same group.
+  const groups = new Set(
+    rows.map((row) => sectionItem(row.q ? null : row.r.questionNumber)?.group),
+  );
+  const soleGroup = groups.size === 1 ? [...groups][0] : undefined;
 
   return {
     attemptId,
@@ -304,8 +349,9 @@ export async function getAttemptDetail(attemptId: string): Promise<AttemptDetail
       (min, row) => (row.r.createdAt < min ? row.r.createdAt : min),
       first.r.createdAt,
     ),
-    correct: items.filter((i) => i.isCorrect === true).length,
-    graded: items.filter((i) => i.isCorrect !== null).length,
+    // Marks, not rows — a paired MCQ is one row worth two of the paper's 40.
+    correct: items.filter((i) => i.isCorrect === true).reduce((t, i) => t + i.marks, 0),
+    graded: items.filter((i) => i.isCorrect !== null).reduce((t, i) => t + i.marks, 0),
     items,
     set: s
       ? {
@@ -318,7 +364,18 @@ export async function getAttemptDetail(attemptId: string): Promise<AttemptDetail
           layout: (s.layout as SetLayout | null) ?? null,
           startNumber: s.startNumber,
         }
-      : null,
+      : ps
+        ? {
+            id: ps.id,
+            title: ps.title,
+            instructions: ps.instructions,
+            passageText: ps.passageText,
+            audioUrl: ps.audioUrl,
+            imageUrl: ps.imageUrl,
+            layout: (soleGroup?.layout as SetLayout | null) ?? null,
+            startNumber: ps.startNumber,
+          }
+        : null,
   };
 }
 

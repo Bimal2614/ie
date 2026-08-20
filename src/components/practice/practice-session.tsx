@@ -7,12 +7,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SECTIONS, QUESTION_TYPES, SET_NOUN, type SectionKey, type QuestionTypeKey } from "@/lib/ielts";
 import type { Answer, SetLayout } from "@/lib/question-content";
-import {
-  getSetPaginated,
-  submitSetAnswers,
-  type PaginatedSetResult,
-  type SetSubmissionResult,
-} from "@/app/actions/questions";
+import { getSetPaginated, type PaginatedSetResult } from "@/app/actions/questions";
+import { submitPractice, type SetSubmissionResult } from "@/app/actions/practice";
 import { scoreAttemptSpeaking } from "@/app/actions/speaking";
 import { scoreAttemptWriting } from "@/app/actions/writing";
 import { SetBody, type PlayerSet } from "./set-body";
@@ -171,7 +167,7 @@ export function PracticeSession({
     setSubmitting(true);
     setNotice(null);
     try {
-      const res = await submitSetAnswers(currentSet.id, answers);
+      const res = await submitPractice(currentSet.id, answers);
       setResult(res);
       try { localStorage.removeItem(`ielts:draft:${currentSet.id}`); } catch {}
       setAttemptedSets((prev) => new Set([...prev, currentSetIndex]));

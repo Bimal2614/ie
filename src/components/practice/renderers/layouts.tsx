@@ -57,16 +57,44 @@ function InlineBlanks({ layout, resolve }: { layout: InlineBlanksLayout; resolve
 function Notes({ layout, resolve }: { layout: NotesLayout; resolve: GapResolver }) {
   return (
     <Sheet>
-      <LayoutHeading>{layout.heading}</LayoutHeading>
-      <div className="space-y-5">
+      {/* The paper's own hierarchy, in the paper's own order: a title, the
+          worked answer it gives away, then sections of notes. Rendered flat
+          — every line an identical bullet — the title and the example read as
+          the first two things to fill in. */}
+      {layout.heading && (
+        <p className="mb-4 border-b border-line pb-2.5 text-[15px] font-bold tracking-wide text-ink-strong">
+          {layout.heading}
+        </p>
+      )}
+
+      {layout.example && (
+        // Given, not asked. Dashed and set apart so it can never be mistaken
+        // for a note with a blank in it.
+        <div className="mb-6 rounded-lg border border-dashed border-line bg-paper-sunken px-4 py-3">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-muted">
+            Example
+          </p>
+          <p className="mt-1 text-sm italic leading-relaxed text-ink-muted">{layout.example}</p>
+        </div>
+      )}
+
+      <div className="space-y-6">
         {layout.groups.map((group, gi) => (
           <div key={gi}>
             {group.title && (
-              <p className="mb-2 text-sm font-semibold text-ink-strong">{group.title}</p>
+              // A left rule rather than a bare bold line: it ties the heading
+              // to the notes beneath it, which a long page of sections needs.
+              <p className="mb-2.5 border-l-2 border-brand/60 pl-2.5 text-sm font-bold text-ink-strong">
+                {/* A heading can hold a gap, so it renders through GapText too. */}
+                <GapText text={group.title} resolve={resolve} />
+              </p>
             )}
-            <ul className="space-y-2 pl-5">
+            <ul className={cn("space-y-2.5", group.title && "pl-3")}>
               {group.items.map((item, ii) => (
-                <li key={ii} className="list-disc text-sm text-ink-soft marker:text-ink-muted">
+                <li
+                  key={ii}
+                  className="relative pl-4 text-sm leading-relaxed text-ink before:absolute before:left-0 before:top-[0.6em] before:size-1.5 before:rounded-full before:bg-ink-muted/50"
+                >
                   <GapText text={item} resolve={resolve} />
                 </li>
               ))}
@@ -167,7 +195,15 @@ function Flowchart({ layout, resolve }: { layout: FlowchartLayout; resolve: GapR
         {layout.steps.map((step, i) => (
           <li key={i}>
             <div className="rounded-lg border border-line bg-paper px-4 py-3 text-center text-sm text-ink-soft">
-              <GapText text={step} resolve={resolve} />
+              <GapText
+                text={step}
+                resolve={resolve}
+                renderGap={
+                  layout.choices
+                    ? (binding) => <LetterSelect binding={binding} choices={layout.choices!} />
+                    : undefined
+                }
+              />
             </div>
             {i < layout.steps.length - 1 && (
               <div className="flex justify-center py-1.5" aria-hidden>
@@ -186,6 +222,23 @@ function Flowchart({ layout, resolve }: { layout: FlowchartLayout; resolve: GapR
           </li>
         ))}
       </ol>
+      {/* The box is part of the stimulus: the candidate reads every option
+          before placing any, so it stays visible beside the chart. */}
+      {layout.choices && (
+        <div className="mt-5 rounded-lg border border-line bg-paper-sunken p-4">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-strong">
+            Options
+          </p>
+          <ul className="grid gap-1 sm:grid-cols-2">
+            {layout.choices.map((c) => (
+              <li key={c.key} className="text-sm text-ink-soft">
+                <span className="mr-2 font-mono text-xs font-semibold text-ink-strong">{c.key}</span>
+                {c.text}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </Sheet>
   );
 }
@@ -274,26 +327,48 @@ function LetterSelect({
       >
         {binding.number}
       </span>
-      <select
-        aria-label={`Question ${binding.number}`}
-        value={binding.value}
-        disabled={binding.disabled}
-        onChange={(e) => binding.onChange(e.target.value)}
-        className={cn(
-          "h-9 w-full rounded-md border bg-paper-elev px-2 text-sm text-ink outline-none",
-          "focus:border-brand focus:ring-2 focus:ring-brand/20",
-          binding.state === "idle" && "border-line",
-          binding.state === "correct" && "border-success/50 bg-success-soft",
-          binding.state === "incorrect" && "border-danger/50 bg-danger-soft",
-        )}
-      >
-        <option value="">Select…</option>
-        {choices.map((c) => (
-          <option key={c.key} value={c.key}>
-            {c.key} — {c.text}
-          </option>
-        ))}
-      </select>
+      {/* Letter buttons, not a dropdown: the exam shows every option at once,
+          and on a map the candidate is comparing letters against the image. */}
+      {binding.playClip && (
+        <button
+          type="button"
+          onClick={binding.playClip}
+          title="Play the part of the recording that answers this"
+          aria-label={`Play the recording for question ${binding.number}`}
+          className="grid size-6 shrink-0 place-items-center rounded text-ink-muted transition-colors hover:bg-brand-soft hover:text-brand"
+        >
+          <svg viewBox="0 0 16 16" className="size-3.5" fill="currentColor" aria-hidden>
+            <path d="M8 2.5v11a.5.5 0 0 1-.83.37L3.9 11H2a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h1.9l3.27-2.87A.5.5 0 0 1 8 2.5Zm3.3 1.8a.75.75 0 0 1 1.02.28A6.5 6.5 0 0 1 13 8c0 1.23-.34 2.4-.94 3.42a.75.75 0 1 1-1.3-.76A5 5 0 0 0 11.5 8c0-.96-.27-1.86-.74-2.62a.75.75 0 0 1 .28-1.02Z" />
+          </svg>
+        </button>
+      )}
+      <span role="radiogroup" aria-label={`Question ${binding.number}`} className="flex flex-wrap gap-1">
+        {choices.map((c) => {
+          const isOn = binding.value === c.key;
+          return (
+            <button
+              key={c.key}
+              type="button"
+              role="radio"
+              aria-checked={isOn}
+              aria-label={`${c.key} — ${c.text}`}
+              title={c.text}
+              disabled={binding.disabled}
+              onClick={() => binding.onChange(isOn ? "" : c.key)}
+              className={cn(
+                "grid size-8 place-items-center rounded-md border font-mono text-xs font-semibold transition-colors",
+                isOn && binding.state === "idle" && "border-brand bg-brand text-white",
+                isOn && binding.state === "correct" && "border-success bg-success text-white",
+                isOn && binding.state === "incorrect" && "border-danger bg-danger text-white",
+                !isOn && "border-line bg-paper-elev text-ink-soft hover:border-brand/50",
+                binding.disabled && "cursor-default",
+              )}
+            >
+              {c.key}
+            </button>
+          );
+        })}
+      </span>
     </label>
   );
 }

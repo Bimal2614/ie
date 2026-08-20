@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { parseGaps, isGap } from "@/lib/question-content";
 
@@ -17,6 +18,12 @@ export type GapBinding = {
   /** Shown under the gap once graded and wrong. */
   expected?: string;
   onChange: (text: string) => void;
+  /**
+   * Plays just the stretch of the recording where this gap is answered. Set
+   * only for listening, where hunting one blank through six minutes of audio is
+   * not practice.
+   */
+  playClip?: () => void;
 };
 
 export type GapResolver = (number: number) => GapBinding | null;
@@ -48,7 +55,7 @@ export function GapField({
     );
   }
 
-  const { number, value, disabled, state, expected, onChange } = binding;
+  const { number, value, disabled, state, expected, onChange, playClip } = binding;
 
   return (
     // Anchor + focus scroll target so the mock's question palette can jump to
@@ -89,6 +96,19 @@ export function GapField({
             WIDTH[width],
           )}
         />
+        {playClip && (
+          <button
+            type="button"
+            onClick={playClip}
+            title="Play the part of the recording that answers this"
+            aria-label={`Play the recording for question ${number}`}
+            className="grid size-5 shrink-0 place-items-center rounded text-ink-muted transition-colors hover:bg-brand-soft hover:text-brand"
+          >
+            <svg viewBox="0 0 16 16" className="size-3.5" fill="currentColor" aria-hidden>
+              <path d="M8 2.5v11a.5.5 0 0 1-.83.37L3.9 11H2a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h1.9l3.27-2.87A.5.5 0 0 1 8 2.5Zm3.3 1.8a.75.75 0 0 1 1.02.28A6.5 6.5 0 0 1 13 8c0 1.23-.34 2.4-.94 3.42a.75.75 0 1 1-1.3-.76A5 5 0 0 0 11.5 8c0-.96-.27-1.86-.74-2.62a.75.75 0 0 1 .28-1.02Z" />
+            </svg>
+          </button>
+        )}
       </span>
       {state === "incorrect" && expected && (
         <span className="mt-0.5 pl-1 text-[11px] text-success">{expected}</span>
@@ -106,18 +126,30 @@ export function GapText({
   resolve,
   width = "md",
   className,
+  renderGap,
 }: {
   text: string;
   resolve: GapResolver;
   width?: keyof typeof WIDTH;
   className?: string;
+  /** Substitutes the text box — a flow-chart answered from a lettered box
+   *  needs the same buttons a map does, not a free-text field. */
+  renderGap?: (binding: ReturnType<GapResolver>) => ReactNode;
 }) {
   const segments = parseGaps(text);
   return (
-    <span className={cn("leading-loose", className)}>
+    // pre-line: a real exam table cell stacks several lines against one gap
+    // ("basic theory e.g. understanding the ___ / and tides"). Authoring that
+    // as `\n` keeps the content readable; without this the browser would
+    // collapse it onto one line.
+    <span className={cn("whitespace-pre-line leading-loose", className)}>
       {segments.map((seg, i) =>
         isGap(seg) ? (
-          <GapField key={i} binding={resolve(seg.gap)} width={width} />
+          renderGap ? (
+            <span key={i}>{renderGap(resolve(seg.gap))}</span>
+          ) : (
+            <GapField key={i} binding={resolve(seg.gap)} width={width} />
+          )
         ) : (
           <span key={i}>{seg}</span>
         ),

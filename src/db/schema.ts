@@ -12,6 +12,8 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
+import type { SectionQuestions } from "../lib/question-content";
+
 /* ------------------------------------------------------------------ *
  * Enums
  * ------------------------------------------------------------------ */
@@ -273,12 +275,21 @@ export const questionSets = pgTable(
     estimatedMinutes: integer(),
     tags: jsonb().$type<string[]>(),
     source: text(),
+    /**
+     * Stable identity for a set built from other content, e.g.
+     * `cambridge:11:listening:1:2:11` (book:module:test:part:first question).
+     * It is what makes the per-question build idempotent: a re-run after a
+     * content fix updates the same rows, so a user's answer history keeps
+     * pointing at the question it was given. Null for hand-seeded sets.
+     */
+    externalKey: text(),
 
     isActive: boolean().notNull().default(true),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
+    uniqueIndex("question_sets_external_key_uq").on(t.externalKey),
     index("question_sets_section_idx").on(t.section),
     index("question_sets_module_idx").on(t.module),
     index("question_sets_type_idx").on(t.questionType),
@@ -334,6 +345,10 @@ export const questions = pgTable(
     index("questions_set_idx").on(t.setId),
     index("questions_section_idx").on(t.section),
     index("questions_type_idx").on(t.questionType),
+    // The item's position in its set is its identity, so a rebuild can upsert
+    // rather than delete and reinsert — which would blank the question_id on
+    // every response already recorded against it.
+    uniqueIndex("questions_set_order_uq").on(t.setId, t.orderIndex),
   ],
 );
 
@@ -354,6 +369,14 @@ export const userResponses = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     questionId: uuid().references(() => questions.id, { onDelete: "set null" }),
     setId: uuid(),
+    /**
+     * Exam number of the item answered, for content that numbers its questions
+     * inside a document rather than giving each one a row — `practice_sections`
+     * holds its items as jsonb, so there is no uuid to point at. `set_id` then
+     * carries the practice_sections id and this carries the number, which is
+     * what review needs to say "Question 7" rather than "an answer".
+     */
+    questionNumber: integer(),
     /**
      * Groups every row written by ONE submit of a set.
      *
@@ -547,3 +570,103 @@ export type UserResponse = typeof userResponses.$inferSelect;
 export type MockTest = typeof mockTests.$inferSelect;
 export type MockTestSession = typeof mockTestSessions.$inferSelect;
 export type MockTestResult = typeof mockTestResults.$inferSelect;
+
+/* ================================================================== *
+ * PRACTICE SECTIONS
+ *
+ * One row = one exam part: Listening Part 1, Reading Passage 2, Writing
+ * Task 1, Speaking Part 2. It carries the single stimulus that part shares
+ * (one recording, one passage, one visual) as real columns, and the questions
+ * asked against it — grouped by task type, with their answer key — as one
+ * jsonb document.
+ *
+ * WHY THE QUESTIONS ARE JSON. A part is authored, reviewed and published as a
+ * unit: you never edit question 7 of Cambridge 21 Test 1 without the table it
+ * sits in. Splitting it across rows meant a 10-statement insert to add a part
+ * and a join to render one. As a document it is one insert, one read, and the
+ * file on disk looks like the page in the book.
+ *
+ * WHY EVERYTHING ELSE IS COLUMNS. Anything the app filters, counts, or orders
+ * by — section, type, book, active — stays a real column so the practice
+ * library and mock builder use indexes rather than jsonb probes.
+ * ================================================================== */
+
+export const practiceSections = pgTable(
+  "practice_sections",
+  {
+    id: uuid().defaultRandom().primaryKey(),
+
+    /* --- What this is --- */
+    module: moduleScope().notNull().default("both"),
+    sectionType: section().notNull(),
+    /**
+     * The type this part is filed under in the practice library. A part mixing
+     * table + note completion has to appear somewhere, so one type leads.
+     */
+    questionType: questionType().notNull(),
+    /**
+     * Every type present. Filed under table_completion but also containing
+     * note completion, this part must still surface when a candidate drills
+     * note completion — the primary type alone would hide it.
+     */
+    questionTypes: jsonb().$type<string[]>().notNull().default([]),
+
+    /* --- Where it came from --- */
+    book: text(), // "Cambridge 21"
+    testNumber: integer(), // 1
+    partNumber: integer(), // Listening Part 1 / Reading Passage 2 / Task 1
+    source: text().notNull().default("original"), // cambridge | seed | original
+
+    /* --- Presentation --- */
+    title: text().notNull(),
+    /** Section-level instruction. Groups carry their own, which take priority. */
+    instructions: text(),
+    difficulty: difficulty().notNull().default("medium"),
+    estimatedMinutes: integer(),
+
+    /* --- The stimulus: at most one of these per row --- */
+    audioUrl: text(), // listening — ONE file for the part; plays once
+    transcript: text(), // listening — review only, never during the attempt
+    passageText: text(), // reading
+    imageUrl: text(), // writing task 1 visual / map / diagram
+
+    /* --- Numbering: continuous across the paper, as on the answer sheet --- */
+    startNumber: integer().notNull().default(1),
+    endNumber: integer().notNull().default(1),
+    totalQuestions: integer().notNull().default(0),
+
+    /* --- The questions + answer key --- */
+    questions: jsonb().$type<SectionQuestions>().notNull(),
+
+    tags: jsonb().$type<string[]>(),
+    isActive: boolean().notNull().default(true),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("practice_sections_section_idx").on(t.sectionType),
+    index("practice_sections_type_idx").on(t.questionType),
+    // The practice library pages by (section, type, active) ordered by
+    // (createdAt, id); covering all five lets Postgres satisfy LIMIT/OFFSET
+    // from the index without sorting the whole match set.
+    index("practice_sections_paging_idx").on(
+      t.sectionType,
+      t.questionType,
+      t.isActive,
+      t.createdAt,
+      t.id,
+    ),
+    // Re-importing a book updates its parts instead of duplicating them, so an
+    // import can be re-run after a typo fix. NULLs don't conflict in PG, so
+    // original (non-book) content is unaffected.
+    uniqueIndex("practice_sections_source_uq").on(
+      t.book,
+      t.testNumber,
+      t.sectionType,
+      t.partNumber,
+    ),
+  ],
+);
+
+export type PracticeSection = typeof practiceSections.$inferSelect;
+export type NewPracticeSection = typeof practiceSections.$inferInsert;
