@@ -6,6 +6,7 @@ import { questionSets, questions, userResponses } from "@/db/schema";
 import { requireUser } from "@/lib/dal";
 import type { SectionKey, QuestionTypeKey } from "@/lib/ielts";
 import type { SetLayout } from "@/lib/question-content";
+import { mediaUrl } from "@/lib/media-urls";
 
 /* ------------------------------------------------------------------ *
  * IELTS Set-Based Loading
@@ -149,8 +150,8 @@ export async function getSetPaginated(
       // OUR media path, never the stored s3:// value. Consumers only need this
       // to know a recording exists and to play it, and both are true of the
       // gated route — while the raw value would publish the bucket and key.
-      audioUrl: currentSet.audioUrl ? `/api/media/${currentSet.id}` : null,
-      imageUrl: currentSet.imageUrl ? `/api/media/${currentSet.id}/image` : null,
+      audioUrl: mediaUrl.setAudio(currentSet.id, currentSet.audioUrl),
+      imageUrl: mediaUrl.setImage(currentSet.id, currentSet.imageUrl),
       layout: (currentSet.layout as SetLayout | null) ?? null,
       startNumber: currentSet.startNumber,
       estimatedMinutes: currentSet.estimatedMinutes,

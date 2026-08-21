@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { practiceSections } from "@/db/schema";
 import type { SectionQuestions } from "@/lib/question-content";
 import { SECTION_ORDER, type SectionKey } from "@/lib/ielts";
+import { mediaUrl } from "@/lib/media-urls";
 
 /**
  * Read layer for the section-wise practice browser.
@@ -226,7 +227,29 @@ export type OpenSection = {
  */
 export async function openSection(id: string): Promise<OpenSection | null> {
   const [row] = await db
-    .select()
+    // Named columns, not `select()`. The whole row is ~9.8 KB for a listening
+    // part and 7.2 KB of that is the TRANSCRIPT — which is review-only material
+    // this read then threw away, so the player was paying four times over for
+    // the answer key in prose. The other omissions (tags, difficulty, source,
+    // timestamps) are simply unused here.
+    .select({
+      id: practiceSections.id,
+      sectionType: practiceSections.sectionType,
+      book: practiceSections.book,
+      testNumber: practiceSections.testNumber,
+      partNumber: practiceSections.partNumber,
+      title: practiceSections.title,
+      instructions: practiceSections.instructions,
+      module: practiceSections.module,
+      estimatedMinutes: practiceSections.estimatedMinutes,
+      audioUrl: practiceSections.audioUrl,
+      passageText: practiceSections.passageText,
+      imageUrl: practiceSections.imageUrl,
+      startNumber: practiceSections.startNumber,
+      endNumber: practiceSections.endNumber,
+      totalQuestions: practiceSections.totalQuestions,
+      questions: practiceSections.questions,
+    })
     .from(practiceSections)
     .where(and(eq(practiceSections.id, id), LIVE))
     .limit(1);
@@ -234,7 +257,30 @@ export async function openSection(id: string): Promise<OpenSection | null> {
   return toOpenSection(row);
 }
 
-type SectionRow = typeof practiceSections.$inferSelect;
+/**
+ * Exactly what openSection selects — deliberately NOT `$inferSelect`, so adding
+ * a column to the table cannot silently widen this read, and dropping one from
+ * the query fails to compile here instead of at runtime.
+ */
+type SectionRow = Pick<
+  typeof practiceSections.$inferSelect,
+  | "id"
+  | "sectionType"
+  | "book"
+  | "testNumber"
+  | "partNumber"
+  | "title"
+  | "instructions"
+  | "module"
+  | "estimatedMinutes"
+  | "audioUrl"
+  | "passageText"
+  | "imageUrl"
+  | "startNumber"
+  | "endNumber"
+  | "totalQuestions"
+  | "questions"
+>;
 
 function toOpenSection(row: SectionRow): OpenSection {
   return {
@@ -276,8 +322,8 @@ export function toClientSection(s: OpenSection) {
      * its layout for nothing. Both routes re-check the session and mint a
      * short-lived presigned URL, so the client only ever needs these.
      */
-    audioUrl: s.audioUrl ? `/api/practice/audio/${s.id}` : null,
-    imageUrl: s.imageUrl ? `/api/practice/image/${s.id}` : null,
+    audioUrl: mediaUrl.sectionAudio(s.id, s.audioUrl),
+    imageUrl: mediaUrl.sectionImage(s.id, s.imageUrl),
     questions: {
       groups: s.questions.groups.map((g) => ({
         ...g,

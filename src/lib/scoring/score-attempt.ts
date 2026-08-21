@@ -49,7 +49,17 @@ export async function scoreAttemptSpeakingFor(
   attemptId: string,
 ): Promise<ScoreRunResult> {
   const rows = await db
-    .select()
+    // Only what scoring needs. `select()` also pulled `response`, `transcript`
+    // and the previous `aiFeedback` jsonb for every row, none of which is read
+    // on the way in.
+    .select({
+      id: userResponses.id,
+      questionId: userResponses.questionId,
+      setId: userResponses.setId,
+      questionNumber: userResponses.questionNumber,
+      questionType: userResponses.questionType,
+      audioUrl: userResponses.audioUrl,
+    })
     .from(userResponses)
     .where(
       and(
@@ -154,7 +164,16 @@ export async function scoreAttemptWritingFor(
   attemptId: string,
 ): Promise<ScoreRunResult> {
   const rows = await db
-    .select()
+    // Only what grading needs; `aiFeedback` and `transcript` are write-only here.
+    .select({
+      id: userResponses.id,
+      questionId: userResponses.questionId,
+      setId: userResponses.setId,
+      questionNumber: userResponses.questionNumber,
+      questionType: userResponses.questionType,
+      module: userResponses.module,
+      response: userResponses.response,
+    })
     .from(userResponses)
     .where(
       and(

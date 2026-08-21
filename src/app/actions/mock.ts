@@ -27,7 +27,9 @@ import { isWav16kMono, toWav16kMono } from "@/lib/speech/transcode";
 import { scoreSpeaking, taskTypeFor } from "@/lib/speech/speechsuper";
 import { scoreWriting, type WritingTaskType } from "@/lib/writing/gemini";
 import { resolvePrompts } from "@/lib/scoring/prompts";
+import { mapWithConcurrency } from "@/lib/scoring/concurrency";
 import { guardAi, guardGeneral, RateLimitError } from "@/lib/security/rate-guard";
+import { mediaUrl } from "@/lib/media-urls";
 
 type AnswerMap = Record<string, Record<string, unknown>>;
 
@@ -41,6 +43,15 @@ function sectionSeconds(section: SectionKey): number {
  * question set. startMock picks one set per section, so this is the exam order
  * filtered to sections that have content.
  */
+/**
+ * How many mock answers are scored at once.
+ *
+ * Matches the practice path. A mock's speaking section is longer than a practice
+ * set, so sequential scoring hurt most here — but the ceiling still keeps
+ * parallel calls well short of being throttled by the scoring APIs.
+ */
+const MOCK_SCORING_CONCURRENCY = 6;
+
 async function sessionSectionOrder(sessionId: string): Promise<SectionKey[]> {
   const rows = await db
     .selectDistinct({ section: mockTestQuestions.section })
@@ -328,8 +339,8 @@ export async function getMockSession(sessionId: string): Promise<MockSessionData
           passageText: row.s.passageText,
           // OUR gated media path, never the stored s3:// value — the player only
           // needs to know a recording exists and to play it.
-          audioUrl: row.s.audioUrl ? `/api/media/${row.s.id}` : null,
-          imageUrl: row.s.imageUrl ? `/api/media/${row.s.id}/image` : null,
+          audioUrl: mediaUrl.setAudio(row.s.id, row.s.audioUrl),
+          imageUrl: mediaUrl.setImage(row.s.id, row.s.imageUrl),
           layout: (row.s.layout as SetLayout | null) ?? null,
           startNumber: row.s.startNumber,
         },
@@ -486,19 +497,27 @@ export async function scoreMockSpeaking(sessionId: string): Promise<{ scored: nu
     rows.map((row) => ({ id: row.a.id, questionId: row.a.questionId, setId: null, questionNumber: null })),
   );
 
-  let scored = 0;
-  const bands: number[] = [];
+  // Scored TOGETHER, not one after another. Each call is a ~9s round trip, so a
+  // mock's speaking section done in sequence kept a candidate waiting minutes for
+  // the first band. Each answer is contained: a failure on one must not abandon
+  // the rest of the batch.
+  const results = await mapWithConcurrency(rows, MOCK_SCORING_CONCURRENCY, (row) =>
+    scoreOne(row).catch(() => null),
+  );
 
-  for (const row of rows) {
+  const bands = results.filter((b): b is number => b !== null);
+  const scored = bands.length;
+
+  async function scoreOne(row: (typeof rows)[number]): Promise<number | null> {
     const key = row.a.audioUrl ? keyFromUrl(row.a.audioUrl) : null;
-    if (!key) continue;
+    if (!key) return null;
     const raw = await downloadSpeakingAudio(key);
-    if (!raw) continue;
+    if (!raw) return null;
 
     // Stored recordings are already WAV 16k mono (normalised at upload); the
     // transcode is only for rows whose objects predate that.
     const wav = isWav16kMono(raw) ? ({ ok: true, wav: Buffer.from(raw) } as const) : await toWav16kMono(raw);
-    if (!wav.ok) continue;
+    if (!wav.ok) return null;
 
     // NOT falling back to the type's generic instruction: relevance is scored
     // against whatever we send, so "Answer questions about yourself" would mark
@@ -513,10 +532,9 @@ export async function scoreMockSpeaking(sessionId: string): Promise<{ scored: nu
       taskType: taskTypeFor(row.q.questionType as QuestionTypeKey),
       questionPrompt,
     });
-    if (!res.ok) continue;
+    if (!res.ok) return null;
 
     const s = res.score;
-    bands.push(s.overall);
     await db
       .update(mockTestAnswers)
       .set({
@@ -542,7 +560,7 @@ export async function scoreMockSpeaking(sessionId: string): Promise<{ scored: nu
         },
       })
       .where(eq(mockTestAnswers.id, row.a.id));
-    scored++;
+    return s.overall;
   }
 
   if (bands.length > 0) {
@@ -594,19 +612,24 @@ export async function scoreMockWriting(sessionId: string): Promise<{ scored: num
     rows.map((row) => ({ id: row.a.id, questionId: row.a.questionId, setId: null, questionNumber: null })),
   );
 
-  let scored = 0;
   // Kept apart so we can apply the official IELTS weighting (Task 2 ×2, Task 1 ×1).
   const task1Bands: number[] = [];
   const task2Bands: number[] = [];
 
-  for (const row of rows) {
+  // Graded together; a two-task paper shouldn't wait for Task 2 to record Task 1.
+  const graded = await mapWithConcurrency(rows, MOCK_SCORING_CONCURRENCY, (row) =>
+    gradeOne(row).catch(() => false),
+  );
+  const scored = graded.filter(Boolean).length;
+
+  async function gradeOne(row: (typeof rows)[number]): Promise<boolean> {
     const r = row.a.response as Record<string, unknown> | null;
     const text = typeof r?.text === "string" ? r.text.trim() : "";
-    if (!text) continue;
+    if (!text) return false;
 
     const qt = row.q.questionType as QuestionTypeKey;
     const meta = QUESTION_TYPES[qt];
-    if (!meta || meta.family !== "writing") continue;
+    if (!meta || meta.family !== "writing") return false;
 
     const resolved = prompts.get(row.a.id);
     const res = await scoreWriting({
@@ -619,7 +642,7 @@ export async function scoreMockWriting(sessionId: string): Promise<{ scored: num
       // The minimum authored for THIS task wins over the type default.
       wordMin: resolved?.wordLimitMin ?? meta.wordLimitMin ?? (qt === "writing_task2" ? 250 : 150),
     });
-    if (!res.ok) continue;
+    if (!res.ok) return false;
 
     const s = res.score;
     (qt === "writing_task2" ? task2Bands : task1Bands).push(s.overall);
@@ -639,7 +662,7 @@ export async function scoreMockWriting(sessionId: string): Promise<{ scored: num
         },
       })
       .where(eq(mockTestAnswers.id, row.a.id));
-    scored++;
+    return true;
   }
 
   if (task1Bands.length > 0 || task2Bands.length > 0) {
@@ -771,8 +794,8 @@ export async function getMockSectionReview(
         // OUR media path, never the stored s3:// value. Consumers only need this
         // to know a recording exists and to play it, and both are true of the
         // gated route — while the raw value would publish the bucket and key.
-        audioUrl: s.audioUrl ? `/api/media/${s.id}` : null,
-        imageUrl: s.imageUrl ? `/api/media/${s.id}/image` : null,
+        audioUrl: mediaUrl.setAudio(s.id, s.audioUrl),
+        imageUrl: mediaUrl.setImage(s.id, s.imageUrl),
         layout: (s.layout as SetLayout | null) ?? null,
         startNumber: s.startNumber,
       }
@@ -796,7 +819,7 @@ export async function getMockSectionReview(
       timeSpentSec: r.a.timeSpentSec,
       // Keyed by the ANSWER row, not the question: the route re-checks that this
       // recording belongs to the caller before presigning it.
-      audioUrl: r.a.audioUrl ? `/api/practice/recording/${r.a.id}` : null,
+      audioUrl: mediaUrl.recording(r.a.id, r.a.audioUrl),
       transcript: r.a.transcript,
     })),
   };
