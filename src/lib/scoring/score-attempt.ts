@@ -4,9 +4,9 @@ import { and, eq, isNotNull, isNull } from "drizzle-orm";
 import { db } from "@/db";
 import { userResponses } from "@/db/schema";
 import { QUESTION_TYPES, type QuestionTypeKey } from "@/lib/ielts";
-import { downloadSpeakingAudio, keyFromUrl } from "@/lib/speech/s3";
-import { isWav16kMono, toWav16kMono } from "@/lib/speech/transcode";
-import { scoreSpeaking, taskTypeFor } from "@/lib/speech/speechsuper";
+import { keyFromUrl, presignGetUrl } from "@/lib/speech/s3";
+import { analyzeSpeaking, partFor } from "@/lib/speech/ielts-speaking";
+import { speakingFeedback, unscorableFeedback } from "./speaking-feedback";
 import { scoreWriting, type WritingTaskType } from "@/lib/writing/gemini";
 import { resolvePrompts } from "./prompts";
 import { mapWithConcurrency } from "./concurrency";
@@ -37,9 +37,20 @@ import { mapWithConcurrency } from "./concurrency";
  *
  * Six covers a full Part 1 (seven questions) in two waves and a Writing paper in
  * one, while staying well short of the point where parallel calls to the scoring
- * APIs start being throttled or the S3 downloads crowd each other out.
+ * APIs start being throttled.
  */
 const SCORING_CONCURRENCY = 6;
+
+/**
+ * How long a recording's signed URL stays valid.
+ *
+ * It must outlive the whole call, not just the grading: the service holds the
+ * connection for 15-40s, and anything queued ahead of it waits on top of that.
+ * An expired URL fails as "couldn't fetch the audio", which is indistinguishable
+ * from a genuinely broken recording — so this is set with room to spare rather
+ * than trimmed to the expected duration.
+ */
+const SIGNED_URL_TTL_SEC = 3600;
 
 /** Shape both scorers report back, so callers can tell the user what happened. */
 export type ScoreRunResult = { scored: number; failed: number };
@@ -70,15 +81,19 @@ export async function scoreAttemptSpeakingFor(
         // No recording, nothing to score — and audioUrl is what carries it,
         // whether the row came from a question set or a section document.
         isNotNull(userResponses.audioUrl),
+        // Bandless but WITH feedback means we already established this recording
+        // can never be scored (no speech in it). Re-calling the API on every
+        // retry would spend a real request to be told the same thing again.
+        isNull(userResponses.aiFeedback),
       ),
     );
   if (rows.length === 0) return { scored: 0, failed: 0 };
 
   const prompts = await resolvePrompts(rows);
 
-  // Answers are scored TOGETHER, not one after another. Each call is a ~9s round
+  // Answers are scored TOGETHER, not one after another. Each call is a ~15s round
   // trip, so a seven-question Part 1 done in sequence made a candidate wait over
-  // a minute; in parallel the whole set lands in roughly the slowest single call.
+  // two minutes; in parallel the whole set lands in roughly the slowest single call.
   // Each row is also written to the database the moment its own score arrives,
   // rather than after the batch, so the report fills in as results come back.
   const outcomes = await mapWithConcurrency(rows, SCORING_CONCURRENCY, (row) =>
@@ -86,73 +101,85 @@ export async function scoreAttemptSpeakingFor(
     // general-purpose primitive should — but here that would abandon every
     // answer still queued behind the one that failed. A database blip on
     // question 3 must not cost questions 4 to 7 their bands, so each is
-    // contained and simply reported as unscored.
-    scoreOne(row).catch(() => false),
+    // contained and reported as unscored — but never swallowed silently, or a
+    // whole batch can fail with nothing anywhere to say why.
+    scoreOne(row).catch((e) => {
+      console.error("[scoring] speaking: threw", { responseId: row.id, error: e });
+      return false;
+    }),
   );
 
   const scored = outcomes.filter(Boolean).length;
-  return { scored, failed: outcomes.length - scored };
+  const failed = outcomes.length - scored;
+  // One line per run, always. "0 of 7 scored" in the log is the difference
+  // between a reported bug and a silently broken integration.
+  console.info("[scoring] speaking run", { attemptId, scored, failed });
+  return { scored, failed };
 
   async function scoreOne(row: (typeof rows)[number]): Promise<boolean> {
     const key = row.audioUrl ? keyFromUrl(row.audioUrl) : null;
-    if (!key) return false;
+    if (!key) {
+      console.warn("[scoring] speaking: unreadable audioUrl", { responseId: row.id });
+      return false;
+    }
 
-    const raw = await downloadSpeakingAudio(key);
-    if (!raw) return false;
+    // The scorer fetches the recording itself, so the bytes never pass through
+    // this process — no download, no re-encode, no multi-megabyte buffer held
+    // for the length of a 40-second call. Signing is a local HMAC (~0.5ms).
+    const audioUrl = await presignGetUrl(key, SIGNED_URL_TTL_SEC);
+    if (!audioUrl) {
+      console.warn("[scoring] speaking: could not presign audio", { responseId: row.id, key });
+      return false;
+    }
 
-    // Recordings are normalised on the way IN and stored as 16 kHz mono WAV, so
-    // the stored bytes go straight to the scorer. The transcode path remains for
-    // rows written before that changed, whose objects are still WebM — and
-    // SpeechSuper rejects those by returning band 0 with an empty transcript
-    // rather than erroring, so guessing is not an option.
-    const wav = isWav16kMono(raw)
-      ? ({ ok: true, wav: Buffer.from(raw) } as const)
-      : await toWav16kMono(raw);
-    if (!wav.ok) return false;
+    // Deliberately NOT falling back to the question type's generic instruction:
+    // relevance is judged against whatever we send, so a blurb like "Answer
+    // questions about yourself" marks an on-topic answer as off-topic. Omitting
+    // it is the honest option when we can't say what was asked.
+    //
+    // A cue card goes over STRUCTURED — topic as the question, bullets as the
+    // points — because the API assesses whether the long turn covered each
+    // bullet, which a single flattened string cannot express.
+    const resolved = prompts.get(row.id);
+    const cueCard = resolved?.cueCard ?? null;
+    const question = cueCard ? cueCard.topic || undefined : (resolved?.prompt ?? undefined);
 
-    // Deliberately NOT falling back to the question type's generic instruction.
-    // relevance is scored against whatever we send, so a blurb like "Answer
-    // questions about yourself" marks an on-topic answer as off-topic. Omitted,
-    // SpeechSuper defaults relevance to 100 — the honest result when we can't
-    // tell the scorer what was asked.
-    const questionPrompt = prompts.get(row.id)?.prompt ?? undefined;
-
-    const result = await scoreSpeaking({
-      audio: wav.wav,
-      audioType: "wav",
-      sampleRate: 16000,
-      userId,
-      taskType: taskTypeFor(row.questionType as QuestionTypeKey),
-      questionPrompt,
+    const result = await analyzeSpeaking({
+      audioUrl,
+      part: partFor(row.questionType as QuestionTypeKey),
+      question,
+      cueCardPoints: cueCard?.bullets,
     });
-    if (!result.ok) return false;
 
-    const s = result.score;
+    if (!result.ok) {
+      // LOUD, not silent. Every one of these leaves the candidate looking at an
+      // unscored answer, and without a line in the log there is nothing to tell
+      // a missing key apart from a provider outage apart from a recording with
+      // nothing in it.
+      console.error("[scoring] speaking: not scored", {
+        responseId: row.id,
+        reason: result.reason,
+        detail: result.detail,
+      });
+      // No speech in the recording is a permanent fact about it, not an outage.
+      // Recording that stops the report screen waiting for a band that is never
+      // coming, and tells the candidate what to do instead.
+      if (result.reason === "no_speech" || result.reason === "bad_audio") {
+        await db
+          .update(userResponses)
+          .set({ aiFeedback: unscorableFeedback(result.reason, result.detail) })
+          .where(eq(userResponses.id, row.id));
+      }
+      return false;
+    }
+
+    const a = result.assessment;
     await db
       .update(userResponses)
       .set({
-        band: s.overall.toFixed(1),
-        transcript: s.transcription,
-        aiFeedback: {
-          criteria: {
-            fluencyCoherence: s.fluencyCoherence,
-            lexicalResource: s.lexicalResource,
-            grammar: s.grammar,
-            pronunciation: s.pronunciation,
-          },
-          relevance: s.relevance,
-          speed: s.speed,
-          // The measurements behind the bands — what makes a low score
-          // explainable rather than just a number.
-          stats: s.stats,
-          // Null unless the scorer flagged the take (empty / off-topic). Review
-          // needs it to explain a low band the candidate won't recognise.
-          warning: s.warning,
-          // Records whether relevance is meaningful: with no prompt it is a
-          // default 100, not a measurement.
-          promptKnown: Boolean(questionPrompt),
-          provider: "speechsuper:speak.eval.pro",
-        },
+        band: a.overall.band.toFixed(1),
+        transcript: a.transcript.text,
+        aiFeedback: speakingFeedback(a, Boolean(question)),
       })
       .where(eq(userResponses.id, row.id));
     return true;

@@ -303,6 +303,8 @@ function Speaking({ question, value, disabled, onChange }: InputProps) {
   const chunks = useRef<Blob[]>([]);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   const prepTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  /** Guards against two overlapping start() calls. See start(). */
+  const startingRef = useRef(false);
   // `elapsed` is stale inside MediaRecorder's onstop closure.
   const elapsedRef = useRef(0);
   elapsedRef.current = elapsed;
@@ -391,17 +393,37 @@ function Speaking({ question, value, disabled, onChange }: InputProps) {
     }
     setPrepLeft(prep);
     prepTimer.current = setInterval(() => {
-      setPrepLeft((s) => {
-        if (s === null) return null;
-        if (s <= 1) {
-          if (prepTimer.current) clearInterval(prepTimer.current);
-          start();
-          return null;
-        }
-        return s - 1;
-      });
+      // PURE. This updater only computes the next number.
+      //
+      // It used to call start() from in here when the count reached zero, which
+      // is a side effect inside a state updater — and React may run an updater
+      // more than once for a single tick (StrictMode does it deliberately, in
+      // development, to surface exactly this). So the recording started TWICE:
+      // two MediaRecorders, and two `elapsed` intervals, the first of each
+      // orphaned the moment its ref was overwritten and therefore beyond the
+      // reach of stop(). `elapsed` then climbed at two per second, so the
+      // speaking clock ran to 2:00 in one real minute and cut the candidate off
+      // halfway through their long turn.
+      //
+      // Reaching zero is handled by the effect below instead.
+      setPrepLeft((s) => (s === null ? null : Math.max(0, s - 1)));
     }, 1000);
   };
+
+  // Preparation running out starts the recording — as its own effect, never as a
+  // side effect of the countdown above. `start` is idempotent, so a re-run
+  // cannot open a second recorder.
+  useEffect(() => {
+    if (prepLeft !== 0) return;
+    if (prepTimer.current) {
+      clearInterval(prepTimer.current);
+      prepTimer.current = null;
+    }
+    start();
+    // `start` is re-created every render; listing it would re-run this on each
+    // one. Only the countdown reaching zero should trigger it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prepLeft]);
 
   const skipPrep = () => {
     if (prepTimer.current) clearInterval(prepTimer.current);
@@ -410,6 +432,15 @@ function Speaking({ question, value, disabled, onChange }: InputProps) {
   };
 
   const start = async () => {
+    // IDEMPOTENT, and it has to be. Two overlapping starts leave two open
+    // microphone streams and two interval timers, and stop() can only ever
+    // reach the last of each — the rest keep running, keep the mic light on,
+    // and keep incrementing the clock. The flag is set synchronously, before
+    // the first await, so a second synchronous call cannot slip past it; the
+    // recorder-state check covers a later one.
+    if (startingRef.current || recRef.current?.state === "recording") return;
+    startingRef.current = true;
+
     setPrepLeft(null);
     setError(null);
     try {
@@ -478,16 +509,24 @@ function Speaking({ question, value, disabled, onChange }: InputProps) {
       recRef.current = rec;
       setRecording(true);
       setElapsed(0);
+      // Clear before replacing: an interval whose ref has been overwritten can
+      // never be stopped again, and it goes on incrementing `elapsed`.
+      if (timer.current) clearInterval(timer.current);
       timer.current = setInterval(() => setElapsed((s) => s + 1), 1000);
     } catch {
       setError("Microphone access is required to record your answer.");
+    } finally {
+      startingRef.current = false;
     }
   };
 
   const stop = () => {
     recRef.current?.stop();
     setRecording(false);
-    if (timer.current) clearInterval(timer.current);
+    if (timer.current) {
+      clearInterval(timer.current);
+      timer.current = null;
+    }
   };
 
   const preparing = prepLeft !== null;

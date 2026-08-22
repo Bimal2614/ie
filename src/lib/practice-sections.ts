@@ -1,10 +1,13 @@
 import "server-only";
 
-import { and, asc, count, eq, sql } from "drizzle-orm";
+import { and, asc, count, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { practiceSections } from "@/db/schema";
 import type { SectionQuestions } from "@/lib/question-content";
 import { SECTION_ORDER, type SectionKey } from "@/lib/ielts";
+
+/** What the candidate actually sits — their profile's target module. */
+export type ModuleKind = "academic" | "general";
 import { mediaUrl } from "@/lib/media-urls";
 
 /**
@@ -21,9 +24,20 @@ import { mediaUrl } from "@/lib/media-urls";
 /** Only published material is browsable; drafts stay out of the library. */
 const LIVE = eq(practiceSections.isActive, true);
 
-/** Optional section filter shared by every step of the drill-down. */
-function sectionFilter(section?: SectionKey | null) {
-  return section ? and(LIVE, eq(practiceSections.sectionType, section)) : LIVE;
+/**
+ * The scope every step of the drill-down shares: live material, optionally one
+ * section, and the candidate's module.
+ *
+ * A module filter is `module IN (theirs, 'both')`, not equality. Listening and
+ * Speaking are the SAME paper in both modules and are stored once as "both";
+ * only Reading and Writing exist twice. Equality would hide three quarters of
+ * the library from everyone.
+ */
+function scopeFilter(section?: SectionKey | null, module?: ModuleKind | null) {
+  const parts = [LIVE];
+  if (section) parts.push(eq(practiceSections.sectionType, section));
+  if (module) parts.push(inArray(practiceSections.module, [module, "both"]));
+  return and(...parts);
 }
 
 export function isSectionKey(v: string | null | undefined): v is SectionKey {
@@ -54,7 +68,10 @@ function titleCase(s: string): string {
   return s.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export async function listSources(section?: SectionKey | null): Promise<SourceSummary[]> {
+export async function listSources(
+  section?: SectionKey | null,
+  module?: ModuleKind | null,
+): Promise<SourceSummary[]> {
   const rows = await db
     .select({
       source: practiceSections.source,
@@ -63,7 +80,7 @@ export async function listSources(section?: SectionKey | null): Promise<SourceSu
       sections: sql<string[]>`array_agg(distinct ${practiceSections.sectionType}::text)`,
     })
     .from(practiceSections)
-    .where(sectionFilter(section))
+    .where(scopeFilter(section, module))
     .groupBy(practiceSections.source)
     .orderBy(practiceSections.source);
 
@@ -99,6 +116,7 @@ export type BookSummary = {
 export async function listBooks(
   source: string,
   section?: SectionKey | null,
+  module?: ModuleKind | null,
 ): Promise<BookSummary[]> {
   const rows = await db
     .select({
@@ -109,7 +127,7 @@ export async function listBooks(
       sections: sql<string[]>`array_agg(distinct ${practiceSections.sectionType}::text)`,
     })
     .from(practiceSections)
-    .where(and(sectionFilter(section), eq(practiceSections.source, source)))
+    .where(and(scopeFilter(section, module), eq(practiceSections.source, source)))
     .groupBy(practiceSections.book, practiceSections.testNumber)
     .orderBy(asc(practiceSections.book), asc(practiceSections.testNumber));
 
@@ -148,6 +166,7 @@ export async function listParts(
   book: string,
   testNumber: number | null,
   section?: SectionKey | null,
+  module?: ModuleKind | null,
 ): Promise<PartSummary[]> {
   const rows = await db
     .select({
@@ -167,7 +186,7 @@ export async function listParts(
     .from(practiceSections)
     .where(
       and(
-        sectionFilter(section),
+        scopeFilter(section, module),
         eq(practiceSections.book, book),
         testNumber === null
           ? sql`${practiceSections.testNumber} is null`

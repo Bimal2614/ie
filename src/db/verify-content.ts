@@ -62,18 +62,23 @@ async function main() {
   const sql = postgres(url, { max: 1 });
   const rows = await sql<
     {
-      book: string; test_number: number; section_type: string; part_number: number;
+      book: string; test_number: number; section_type: string; part_number: number; module: string;
       total_questions: number; questions: SectionQuestions;
     }[]
-  >`SELECT book, test_number, section_type, part_number, total_questions, questions
+  >`SELECT book, test_number, section_type, part_number, module, total_questions, questions
       FROM practice_sections
      ${bookFilter ? sql`WHERE book = ${bookFilter}` : sql``}
-     ORDER BY book, test_number, section_type, part_number`;
+     ORDER BY book, test_number, section_type, module, part_number`;
 
-  // A "paper" is one book+test+section: 40 marks spread over its parts.
+  // A "paper" is one book+test+section+MODULE: 40 marks spread over its parts.
+  // Academic and General Reading are different 40-mark papers under the same
+  // book and test, so without the module they merge and every number looks
+  // duplicated. Listening and Speaking are stored once as "both".
   const papers = new Map<string, typeof rows>();
   for (const r of rows) {
-    const key = `${r.book} · Test ${r.test_number} · ${r.section_type}`;
+    const key =
+      `${r.book} · Test ${r.test_number} · ${r.section_type}` +
+      (r.module === "both" ? "" : ` (${r.module})`);
     if (!papers.has(key)) papers.set(key, [] as unknown as typeof rows);
     papers.get(key)!.push(r);
   }

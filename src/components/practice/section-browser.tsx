@@ -80,10 +80,17 @@ const ACCENT_ICON_BG: Record<SectionKey, string> = {
  * a list of collection names rather than every transcript in the library.
  * ------------------------------------------------------------------ */
 
-export function SectionBrowser() {
+export function SectionBrowser({
+  initialModule = "academic",
+}: {
+  /** From the profile. The server re-resolves it anyway — this only picks
+   *  which way the toggle starts. */
+  initialModule?: "academic" | "general";
+}) {
   const router = useRouter();
 
   const [section, setSection] = useState<SectionKey | null>(null);
+  const [module, setModule] = useState<"academic" | "general">(initialModule);
   const [sources, setSources] = useState<SourceSummary[] | null>(null);
   const [openSource, setOpenSource] = useState<string | null>(null);
   const [books, setBooks] = useState<BookSummary[] | null>(null);
@@ -100,13 +107,13 @@ export function SectionBrowser() {
   useEffect(() => {
     let alive = true;
     setSources(null);
-    getSources(section)
+    getSources(section, module)
       .then((d) => alive && setSources(d))
       .catch(() => alive && setSources([]));
     return () => {
       alive = false;
     };
-  }, [section]);
+  }, [section, module]);
 
   /* -- Step 2: books under the open source. -- */
   useEffect(() => {
@@ -119,20 +126,20 @@ export function SectionBrowser() {
     // A different source or filter is a different list; page 3 of the old one
     // would open on nothing.
     setBookPage(1);
-    getBooks(openSource, section)
+    getBooks(openSource, section, module)
       .then((d) => alive && setBooks(d))
       .catch(() => alive && setBooks([]))
       .finally(() => alive && setBooksLoading(false));
     return () => {
       alive = false;
     };
-  }, [openSource, section]);
+  }, [openSource, section, module]);
 
   /* -- Step 3: parts for the picked test, loaded when the dialog opens. -- */
   const openPicker = async (book: BookSummary) => {
     setPicker({ book, parts: null });
     try {
-      const parts = await getParts(book.book, book.testNumber, section);
+      const parts = await getParts(book.book, book.testNumber, section, module);
       setPicker((cur) => (cur && cur.book.key === book.key ? { ...cur, parts } : cur));
     } catch {
       setPicker((cur) => (cur && cur.book.key === book.key ? { ...cur, parts: [] } : cur));
@@ -148,6 +155,16 @@ export function SectionBrowser() {
         <FilterChip active={section === null} onClick={() => setSection(null)}>
           All sections
         </FilterChip>
+        {/* Academic and General share Listening and Speaking; only Reading and
+            Writing differ, so switching modules changes part of the library
+            rather than all of it. */}
+        <span className="mx-1 h-5 w-px shrink-0 bg-line" aria-hidden />
+        {(["academic", "general"] as const).map((m) => (
+          <FilterChip key={m} active={module === m} onClick={() => setModule(m)}>
+            {m === "academic" ? "Academic" : "General Training"}
+          </FilterChip>
+        ))}
+        <span className="mx-1 h-5 w-px shrink-0 bg-line" aria-hidden />
         {SECTION_ORDER.map((key) => {
           const Icon = SECTION_ICON[key];
           return (

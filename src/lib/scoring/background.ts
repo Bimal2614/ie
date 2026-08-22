@@ -18,8 +18,9 @@ import { scoreAttemptSpeakingFor, scoreAttemptWritingFor } from "./score-attempt
  * the submit still returns immediately, and the scoring no longer depends on a
  * browser staying alive to ask for it.
  *
- * WHY IT CAN'T JUST RUN INLINE. A SpeechSuper call is ~9s and a Gemini grade a
- * few seconds; a seven-question Part 1 would hold the submit open for a minute.
+ * WHY IT CAN'T JUST RUN INLINE. A speaking call is ~15s (a full long turn ~40s)
+ * and a Gemini grade a few seconds; a seven-question Part 1 would hold the submit
+ * open for minutes.
  * Rows land with band=null and the UI renders "awaiting score" until this fills
  * them in.
  *

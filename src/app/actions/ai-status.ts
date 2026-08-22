@@ -1,7 +1,7 @@
 "use server";
 
 import { requireUser } from "@/lib/dal";
-import { isSpeechSuperConfigured, isWritingAiConfigured } from "@/lib/env";
+import { isSpeakingAiConfigured, isWritingAiConfigured } from "@/lib/env";
 
 /**
  * Which AI scorers this deployment can actually use.
@@ -18,7 +18,7 @@ import { isSpeechSuperConfigured, isWritingAiConfigured } from "@/lib/env";
 export async function aiScoringStatus(): Promise<{ speaking: boolean; writing: boolean }> {
   await requireUser();
   return {
-    speaking: isSpeechSuperConfigured(),
+    speaking: isSpeakingAiConfigured(),
     writing: isWritingAiConfigured(),
   };
 }

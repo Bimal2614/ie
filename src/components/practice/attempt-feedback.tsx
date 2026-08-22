@@ -9,13 +9,14 @@ import { AttemptAnswers } from "@/components/history/attempt-answers";
 import { scoreAttemptSpeaking } from "@/app/actions/speaking";
 import { scoreAttemptWriting } from "@/app/actions/writing";
 import { aiScoringStatus } from "@/app/actions/ai-status";
+import { isCurrentSpeakingFeedback } from "@/lib/scoring/speaking-feedback";
 import { QUESTION_TYPES, type SectionKey } from "@/lib/ielts";
 
 /**
  * The AI examiner's report for a just-submitted Writing or Speaking attempt.
  *
  * WHY THIS SCREEN EXISTS. Bands are computed server-side AFTER the response is
- * sent (a SpeechSuper call is ~9s, a Gemini grade a few seconds), so submit can
+ * sent (a speaking call is ~15s, a Gemini grade a few seconds), so submit can
  * only ever say "sent for scoring". Until now that was the end of the flow: the
  * transcript, the band and the criteria all landed in the database and the
  * candidate was never shown them — they had to find their way to History and
@@ -39,7 +40,7 @@ import { QUESTION_TYPES, type SectionKey } from "@/lib/ielts";
  *
  * Tight at the start and loose at the end, because that is the shape of the
  * work: answers are scored in parallel, so a set's bands land together within
- * about the time of one call (~9s) — the early polls are what make them appear
+ * about the time of one call (~15s) — the early polls are what make them appear
  * as soon as they are written. The long tail exists only for a batch big enough
  * to need a second wave.
  */
@@ -56,7 +57,16 @@ const POLL_SCHEDULE_MS = [
  */
 function awaitsBand(item: AttemptItem, section: SectionKey): boolean {
   if (item.band !== null) return false;
-  if (section === "speaking") return Boolean(item.audioUrl);
+  if (section === "speaking") {
+    // Bandless but already carrying feedback means the scorer heard no speech in
+    // this recording — a settled answer, not one still on its way. Without this
+    // the screen polls its whole schedule and then offers a retry that cannot
+    // possibly succeed.
+    if (isCurrentSpeakingFeedback(item.aiFeedback) && "unscorable" in item.aiFeedback) {
+      return false;
+    }
+    return Boolean(item.audioUrl);
+  }
   if (section === "writing") {
     const r = item.response as Record<string, unknown> | null;
     return typeof r?.text === "string" && r.text.trim().length > 0;

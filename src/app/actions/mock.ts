@@ -22,11 +22,11 @@ import {
 } from "@/lib/ielts";
 import type { SetLayout } from "@/lib/question-content";
 import { gradeMarks } from "@/lib/grading";
-import { downloadSpeakingAudio, keyFromUrl } from "@/lib/speech/s3";
-import { isWav16kMono, toWav16kMono } from "@/lib/speech/transcode";
-import { scoreSpeaking, taskTypeFor } from "@/lib/speech/speechsuper";
+import { keyFromUrl, presignGetUrl } from "@/lib/speech/s3";
+import { analyzeSpeaking, partFor } from "@/lib/speech/ielts-speaking";
 import { scoreWriting, type WritingTaskType } from "@/lib/writing/gemini";
 import { resolvePrompts } from "@/lib/scoring/prompts";
+import { speakingFeedback, unscorableFeedback } from "@/lib/scoring/speaking-feedback";
 import { mapWithConcurrency } from "@/lib/scoring/concurrency";
 import { guardAi, guardGeneral, RateLimitError } from "@/lib/security/rate-guard";
 import { mediaUrl } from "@/lib/media-urls";
@@ -51,6 +51,9 @@ function sectionSeconds(section: SectionKey): number {
  * parallel calls well short of being throttled by the scoring APIs.
  */
 const MOCK_SCORING_CONCURRENCY = 6;
+
+/** Signed-URL lifetime for a recording handed to the scorer. See score-attempt. */
+const MOCK_SIGNED_URL_TTL_SEC = 3600;
 
 async function sessionSectionOrder(sessionId: string): Promise<SectionKey[]> {
   const rows = await db
@@ -454,8 +457,8 @@ export type MockResultData = {
 /**
  * Score a finished mock's speaking answers and fold the result into the report.
  *
- * Runs after the mock is submitted, not inline: each SpeechSuper call takes
- * several seconds, so scoring a whole speaking section would stall the submit.
+ * Runs after the mock is submitted, not inline: each scoring call takes tens of
+ * seconds, so scoring a whole speaking section would stall the submit.
  * The report shows "awaiting AI band score" until this fills it in.
  *
  * Idempotent — only rows with a recording and no band are scored, so a retry or
@@ -488,6 +491,9 @@ export async function scoreMockSpeaking(sessionId: string): Promise<{ scored: nu
         eq(mockTestAnswers.section, "speaking"),
         isNull(mockTestAnswers.band),
         isNotNull(mockTestAnswers.audioUrl),
+        // Bandless but WITH feedback means this recording was already found to
+        // hold no speech — re-calling the API would buy the same answer twice.
+        isNull(mockTestAnswers.aiFeedback),
       ),
     );
 
@@ -497,70 +503,82 @@ export async function scoreMockSpeaking(sessionId: string): Promise<{ scored: nu
     rows.map((row) => ({ id: row.a.id, questionId: row.a.questionId, setId: null, questionNumber: null })),
   );
 
-  // Scored TOGETHER, not one after another. Each call is a ~9s round trip, so a
+  // Scored TOGETHER, not one after another. Each call is a ~15s round trip, so a
   // mock's speaking section done in sequence kept a candidate waiting minutes for
   // the first band. Each answer is contained: a failure on one must not abandon
   // the rest of the batch.
   const results = await mapWithConcurrency(rows, MOCK_SCORING_CONCURRENCY, (row) =>
-    scoreOne(row).catch(() => null),
+    // Contained, but never swallowed silently — a whole speaking section can
+    // otherwise fail with nothing anywhere to say why.
+    scoreOne(row).catch((e) => {
+      console.error("[scoring] mock speaking: threw", { answerId: row.a.id, error: e });
+      return null;
+    }),
   );
 
   const bands = results.filter((b): b is number => b !== null);
   const scored = bands.length;
+  // One line per run, always. "0 of 5 scored" is the difference between a
+  // reported bug and a silently broken integration.
+  console.info("[scoring] mock speaking run", { sessionId, scored, failed: rows.length - scored });
 
   async function scoreOne(row: (typeof rows)[number]): Promise<number | null> {
     const key = row.a.audioUrl ? keyFromUrl(row.a.audioUrl) : null;
-    if (!key) return null;
-    const raw = await downloadSpeakingAudio(key);
-    if (!raw) return null;
+    if (!key) {
+      console.warn("[scoring] mock speaking: unreadable audioUrl", { answerId: row.a.id });
+      return null;
+    }
+    // The scorer fetches the recording straight from S3, so no audio passes
+    // through this process at all.
+    const audioUrl = await presignGetUrl(key, MOCK_SIGNED_URL_TTL_SEC);
+    if (!audioUrl) {
+      console.warn("[scoring] mock speaking: could not presign audio", { answerId: row.a.id, key });
+      return null;
+    }
 
-    // Stored recordings are already WAV 16k mono (normalised at upload); the
-    // transcode is only for rows whose objects predate that.
-    const wav = isWav16kMono(raw) ? ({ ok: true, wav: Buffer.from(raw) } as const) : await toWav16kMono(raw);
-    if (!wav.ok) return null;
-
-    // NOT falling back to the type's generic instruction: relevance is scored
+    // NOT falling back to the type's generic instruction: relevance is judged
     // against whatever we send, so "Answer questions about yourself" would mark
-    // an on-topic answer as off-topic. Omitted, SpeechSuper defaults relevance
-    // to 100 — the honest result when we can't say what was asked.
-    const questionPrompt = prompts.get(row.a.id)?.prompt ?? undefined;
-    const res = await scoreSpeaking({
-      audio: wav.wav,
-      audioType: "wav",
-      sampleRate: 16000,
-      userId: user.id,
-      taskType: taskTypeFor(row.q.questionType as QuestionTypeKey),
-      questionPrompt,
-    });
-    if (!res.ok) return null;
+    // an on-topic answer as off-topic. Omitting it is the honest option when we
+    // can't say what was asked. A cue card goes over structured, so the long
+    // turn can be assessed against each bullet it was meant to cover.
+    const resolved = prompts.get(row.a.id);
+    const cueCard = resolved?.cueCard ?? null;
+    const question = cueCard ? cueCard.topic || undefined : (resolved?.prompt ?? undefined);
 
-    const s = res.score;
+    const res = await analyzeSpeaking({
+      audioUrl,
+      part: partFor(row.q.questionType as QuestionTypeKey),
+      question,
+      cueCardPoints: cueCard?.bullets,
+    });
+
+    if (!res.ok) {
+      console.error("[scoring] mock speaking: not scored", {
+        answerId: row.a.id,
+        reason: res.reason,
+        detail: res.detail,
+      });
+      // A recording with no speech in it can never be scored, so it is recorded
+      // as such rather than left looking like a band still on its way.
+      if (res.reason === "no_speech" || res.reason === "bad_audio") {
+        await db
+          .update(mockTestAnswers)
+          .set({ aiFeedback: unscorableFeedback(res.reason, res.detail) })
+          .where(eq(mockTestAnswers.id, row.a.id));
+      }
+      return null;
+    }
+
+    const a = res.assessment;
     await db
       .update(mockTestAnswers)
       .set({
-        band: s.overall.toFixed(1),
-        transcript: s.transcription,
-        aiFeedback: {
-          criteria: {
-            fluencyCoherence: s.fluencyCoherence,
-            lexicalResource: s.lexicalResource,
-            grammar: s.grammar,
-            pronunciation: s.pronunciation,
-          },
-          relevance: s.relevance,
-          speed: s.speed,
-          // The measurements behind the bands — what makes a low score
-          // explainable rather than just a number.
-          stats: s.stats,
-          // The scorer's caveat on this take (empty / off-topic), when given.
-          warning: s.warning,
-          // Whether relevance is a measurement or the no-prompt default of 100.
-          promptKnown: Boolean(questionPrompt),
-          provider: "speechsuper:speak.eval.pro",
-        },
+        band: a.overall.band.toFixed(1),
+        transcript: a.transcript.text,
+        aiFeedback: speakingFeedback(a, Boolean(question)),
       })
       .where(eq(mockTestAnswers.id, row.a.id));
-    return s.overall;
+    return a.overall.band;
   }
 
   if (bands.length > 0) {

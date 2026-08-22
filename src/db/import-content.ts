@@ -217,6 +217,10 @@ async function main() {
           practiceSections.testNumber,
           practiceSections.sectionType,
           practiceSections.partNumber,
+          // Academic and General are different papers under the same book,
+          // test and part, so the module is part of the identity. Listening and
+          // Speaking are one paper stored as "both" and never collide.
+          practiceSections.module,
         ],
         set: values,
       });

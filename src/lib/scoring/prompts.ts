@@ -7,13 +7,12 @@ import { practiceSections, questions } from "@/db/schema";
 /**
  * What the candidate was actually ASKED, for a batch of `user_responses` rows.
  *
- * Both scorers depend on this and neither degrades gracefully without it.
- * SpeechSuper scores `relevance` against the `question_prompt` we send, and
- * Gemini's entire grade turns on the task that was set. Passing the question
- * TYPE's generic blurb instead — "Answer questions about yourself and familiar
- * topics." — is worse than passing nothing: it makes a perfectly on-topic answer
- * read as off-topic. (SpeechSuper defaults relevance to 100 when the prompt is
- * omitted, so an honest omission beats a wrong prompt.)
+ * Both scorers depend on this and neither degrades gracefully without it. The
+ * speaking service judges relevance and topic development against the `question`
+ * we send, and Gemini's entire grade turns on the task that was set. Passing the
+ * question TYPE's generic blurb instead — "Answer questions about yourself and
+ * familiar topics." — is worse than passing nothing: it makes a perfectly
+ * on-topic answer read as off-topic, so an honest omission beats a wrong prompt.
  *
  * A response points at its question in one of two ways, because our content
  * lives in two shapes. This resolves both:
@@ -34,27 +33,51 @@ export type PromptLookupRow = {
   questionNumber: number | null;
 };
 
+/** A Speaking Part 2 cue card: the topic, and the "You should say" bullets. */
+export type CueCard = { topic: string; bullets: string[] };
+
 export type ResolvedPrompt = {
-  /** The real question text, or null when the content genuinely has none. */
+  /**
+   * The real question text, or null when the content genuinely has none. For a
+   * cue card this is the topic and bullets flattened into one string — the form
+   * Gemini takes, and the fallback for any caller that wants a single prompt.
+   */
   prompt: string | null;
+  /**
+   * The cue card kept STRUCTURED, for callers that can use it that way. The
+   * speaking API takes the topic as `question` and the bullets as
+   * `cue_card_points`, and assesses topic development against the bullets
+   * individually — flattening them into the question loses that.
+   */
+  cueCard: CueCard | null;
   /** Authored minimum for a Writing task, when the content specifies one. */
   wordLimitMin: number | null;
 };
 
 /**
- * Flatten a cue card into the single prompt string the scorers take.
+ * Read a cue card off authored content, discarding an empty one.
  *
  * Speaking Part 2 asks its question as a topic plus bullet points, and the
  * bullets are the part that makes an answer relevant — "Describe a book you
  * enjoyed" alone loses "why you liked it", so an answer covering the bullets
  * would score as partly off-topic.
  */
-function cueCardToPrompt(cue: { topic?: string; bullets?: string[] } | null | undefined): string | null {
+function normaliseCueCard(
+  cue: { topic?: string; bullets?: string[] } | null | undefined,
+): CueCard | null {
   if (!cue) return null;
   const topic = typeof cue.topic === "string" ? cue.topic.trim() : "";
-  const bullets = Array.isArray(cue.bullets) ? cue.bullets.filter((b) => typeof b === "string") : [];
+  const bullets = Array.isArray(cue.bullets)
+    ? cue.bullets.filter((b): b is string => typeof b === "string" && b.trim().length > 0)
+    : [];
   if (!topic && bullets.length === 0) return null;
-  return [topic, ...bullets.map((b) => `- ${b}`)].filter(Boolean).join("\n");
+  return { topic, bullets };
+}
+
+/** The flattened single-string form, for callers that take one prompt. */
+function cueCardToPrompt(cue: CueCard | null): string | null {
+  if (!cue) return null;
+  return [cue.topic, ...cue.bullets.map((b) => `- ${b}`)].filter(Boolean).join("\n");
 }
 
 /** Keyed by response row id. Rows with no resolvable question are absent. */
@@ -114,10 +137,13 @@ export async function resolvePrompts(
     if (row.questionId) {
       const q = byQuestion.get(row.questionId);
       if (!q) continue;
-      const cue = (q.content as { cueCard?: { topic: string; bullets: string[] } } | null)?.cueCard;
+      const cue = normaliseCueCard(
+        (q.content as { cueCard?: { topic: string; bullets: string[] } } | null)?.cueCard,
+      );
       // A cue card IS the question for Part 2, so prefer it over a bare prompt.
       out.set(row.id, {
         prompt: cueCardToPrompt(cue) ?? (q.prompt?.trim() || null),
+        cueCard: cue,
         wordLimitMin: q.wordLimitMin ?? null,
       });
       continue;
@@ -126,8 +152,10 @@ export async function resolvePrompts(
     if (!row.setId || row.questionNumber === null) continue;
     const item = bySection.get(row.setId)?.get(row.questionNumber);
     if (!item) continue;
+    const cue = normaliseCueCard(item.cueCard);
     out.set(row.id, {
-      prompt: cueCardToPrompt(item.cueCard) ?? (item.prompt?.trim() || null),
+      prompt: cueCardToPrompt(cue) ?? (item.prompt?.trim() || null),
+      cueCard: cue,
       wordLimitMin: item.wordLimitMin ?? null,
     });
   }

@@ -211,6 +211,10 @@ async function main() {
         const last = items[items.length - 1];
         const from = items[0].n;
         const to = last.n + ((last.marks ?? 1) - 1);
+        // The module is part of the key: Academic and General Reading are
+        // different papers under the same book, test and part, so without it
+        // one silently overwrites the other. "both" is carried explicitly so
+        // the key stays stable rather than depending on a default.
         const externalKey = [
           SOURCE,
           bookNo,
@@ -218,6 +222,7 @@ async function main() {
           part.testNumber,
           part.partNumber,
           from,
+          part.module,
         ].join(":");
         seenKeys.push(externalKey);
 

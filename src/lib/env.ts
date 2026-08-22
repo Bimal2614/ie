@@ -13,13 +13,15 @@ const EnvSchema = z.object({
   // Canonical app origin, used for cookie/CSRF hardening in production.
   APP_URL: z.string().url().optional(),
 
-  // --- Speaking AI scoring (SpeechSuper). All optional: the app boots and
-  //     runs without them; speaking simply stays unscored until they're set.
-  //     Names match the PTE app so the same credentials drop straight in.
-  //     NO code-baked fallbacks — every value comes from the environment. ---
-  SPEECHSUPER_API_KEY: z.string().optional(),
-  SPEECHSUPER_SECRET_KEY: z.string().optional(),
-  SPEECHSUPER_BASE_URL: z.string().url().optional(),
+  // --- Speaking AI band scoring (IELTS Speaking Evaluation service). Optional:
+  //     the app boots and runs without them; speaking simply stays unscored
+  //     until both are set. NO code-baked fallbacks: a missing URL is a config
+  //     error, not a silent default pointing at somebody else's deployment. ---
+  SPEAKING_API_URL: z.string().url().optional(),
+  //     Shared secret, sent as the `X-API-Key` header. Without it every call
+  //     comes back 401, so it counts towards "configured" just as much as the
+  //     URL does.
+  SPEAKING_API_KEY: z.string().optional(),
 
   // --- Writing AI band scoring (Google Gemini). Optional: the app boots and
   //     runs without it; Writing simply stays unscored until the key is set. ---
@@ -65,9 +67,8 @@ export const env = EnvSchema.parse({
   DATABASE_SSL: process.env.DATABASE_SSL,
   NODE_ENV: process.env.NODE_ENV,
   APP_URL: process.env.APP_URL,
-  SPEECHSUPER_API_KEY: process.env.SPEECHSUPER_API_KEY,
-  SPEECHSUPER_SECRET_KEY: process.env.SPEECHSUPER_SECRET_KEY,
-  SPEECHSUPER_BASE_URL: process.env.SPEECHSUPER_BASE_URL,
+  SPEAKING_API_URL: process.env.SPEAKING_API_URL,
+  SPEAKING_API_KEY: process.env.SPEAKING_API_KEY,
   GEMINI_API_KEY: process.env.GEMINI_API_KEY,
   GEMINI_MODEL: process.env.GEMINI_MODEL,
   SMTP_HOST: process.env.SMTP_HOST,
@@ -94,12 +95,14 @@ export const env = EnvSchema.parse({
 export const isProd = env.NODE_ENV === "production";
 
 /**
- * True only when SpeechSuper is fully configured — both keys AND the base URL.
- * The URL is required (no code default), so a missing one is a config error,
- * not a silent hardcoded fallback.
+ * True when the Speaking evaluation service is configured for band scoring.
+ *
+ * BOTH values, not just the URL: the service authenticates every request, so a
+ * URL with no key is not a working configuration — it is a deployment that 401s
+ * on every answer while looking configured.
  */
-export function isSpeechSuperConfigured(): boolean {
-  return Boolean(env.SPEECHSUPER_API_KEY && env.SPEECHSUPER_SECRET_KEY && env.SPEECHSUPER_BASE_URL);
+export function isSpeakingAiConfigured(): boolean {
+  return Boolean(env.SPEAKING_API_URL && env.SPEAKING_API_KEY);
 }
 
 /** True when Gemini is configured for Writing band scoring. */

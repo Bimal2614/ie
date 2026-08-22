@@ -3,7 +3,6 @@
 import { requireUser } from "@/lib/dal";
 import { uploadSpeakingAudio } from "@/lib/speech/s3";
 import { toWav16kMono, wavDurationSeconds } from "@/lib/speech/transcode";
-import { MAX_AUDIO_SECONDS } from "@/lib/speech/speechsuper";
 import { scoreAttemptSpeakingFor } from "@/lib/scoring/score-attempt";
 import { guardAi, RateLimitError } from "@/lib/security/rate-guard";
 
@@ -14,6 +13,14 @@ import { guardAi, RateLimitError } from "@/lib/security/rate-guard";
  * audio URL; the score is computed here and written straight to the row. If the
  * client supplied its own band, any candidate could award themselves a 9.
  */
+
+/**
+ * The longest recording we will accept, in seconds.
+ *
+ * Sized to the longest authored task — the 120-second Part 2 long turn — plus a
+ * few seconds of grace for the recorder's auto-stop.
+ */
+const MAX_RECORDING_SECONDS = 125;
 
 /**
  * Called when a recording stops. Normalises the audio, stores it, and returns
@@ -33,12 +40,13 @@ export async function storeSpeakingRecording(form: FormData): Promise<{ audioUrl
 
   // NORMALISE HERE, NOT AT SCORING TIME.
   //
-  // Browsers record WebM/Opus and SpeechSuper accepts neither, so a conversion
-  // has to happen somewhere. Doing it once on the way in — and storing the
+  // The scoring API would accept the browser's WebM/Opus as it is, so this is
+  // not about what it takes. Converting once on the way in — and storing the
   // RESULT — means the bytes in the bucket are exactly the bytes that were
   // scored: a re-score months later cannot drift because ffmpeg changed, review
   // plays back precisely what the scorer heard, and a long attempt doesn't
-  // re-encode every recording each time scoring is retried.
+  // re-encode every recording each time scoring is retried. It also gives every
+  // browser's recording one predictable format for playback.
   //
   // The cost is storage: 16 kHz mono 16-bit is ~32 KB/s, so a 2-minute long turn
   // is ~3.8 MB against ~1 MB of Opus. Cheap next to re-deriving the artefact.
@@ -47,11 +55,13 @@ export async function storeSpeakingRecording(form: FormData): Promise<{ audioUrl
     return { error: "That recording couldn't be processed. Please record your answer again." };
   }
 
-  // The documented ceiling is 120s. The recorder stops itself at the task limit,
-  // so this only catches a payload that didn't come from it — with a little
-  // grace, since an auto-stop lands a fraction over the mark.
-  if (wavDurationSeconds(wav.wav) > MAX_AUDIO_SECONDS + 5) {
-    return { error: `Recordings are limited to ${MAX_AUDIO_SECONDS} seconds.` };
+  // OUR ceiling, not the scoring API's — that one imposes none, and happily
+  // grades answers well past this. The longest authored task is the 120-second
+  // Part 2 long turn and the recorder stops itself there, so this only catches a
+  // payload that didn't come from it, with grace for an auto-stop landing a
+  // fraction over the mark.
+  if (wavDurationSeconds(wav.wav) > MAX_RECORDING_SECONDS) {
+    return { error: `Recordings are limited to ${MAX_RECORDING_SECONDS} seconds.` };
   }
 
   const res = await uploadSpeakingAudio(wav.wav, {

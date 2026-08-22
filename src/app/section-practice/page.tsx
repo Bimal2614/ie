@@ -19,7 +19,7 @@ export const metadata: Metadata = {
  * of its own and the player's way out pointed at an anchor.
  */
 export default async function SectionPracticePage() {
-  await requireUser();
+  const user = await requireUser();
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6">
@@ -40,7 +40,8 @@ export default async function SectionPracticePage() {
         </span>
       </div>
 
-      <SectionBrowser />
+      {/* The candidate sits one module; the library opens on theirs. */}
+      <SectionBrowser initialModule={user.targetModule === "general" ? "general" : "academic"} />
     </div>
   );
 }

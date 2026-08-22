@@ -1,0 +1,2 @@
+DROP INDEX "practice_sections_source_uq";--> statement-breakpoint
+CREATE UNIQUE INDEX "practice_sections_source_uq" ON "practice_sections" USING btree ("book","test_number","section_type","part_number","module");

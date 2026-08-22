@@ -71,6 +71,13 @@
       "when": 1787193122384,
       "tag": "0009_clever_the_enforcers",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1787288840283,
+      "tag": "0010_aromatic_stephen_strange",
+      "breakpoints": true
     }
   ]
 }

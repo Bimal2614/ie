@@ -659,11 +659,17 @@ export const practiceSections = pgTable(
     // Re-importing a book updates its parts instead of duplicating them, so an
     // import can be re-run after a typo fix. NULLs don't conflict in PG, so
     // original (non-book) content is unaffected.
+    //
+    // `module` is part of the key because Academic and General Training are
+    // different papers under the same book, test and part: Cambridge 11 Test 1
+    // Reading Part 1 exists twice. Listening and Speaking are the SAME paper in
+    // both modules and are stored once as "both", so they never collide.
     uniqueIndex("practice_sections_source_uq").on(
       t.book,
       t.testNumber,
       t.sectionType,
       t.partNumber,
+      t.module,
     ),
   ],
 );
