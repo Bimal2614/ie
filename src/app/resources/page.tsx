@@ -8,7 +8,7 @@ import { STUDY } from "@/lib/study-content";
 import { BlogStrip } from "@/components/marketing/blog-strip";
 
 export const metadata: Metadata = {
-  title: "IELTS Study Materials — Strategies, Templates & Tips (2026) | IELTSAce",
+  title: "IELTS Study Materials — Strategies, Templates & Tips (2026) | IELTSVega",
   description:
     "Free IELTS study materials for 2026: exam-accurate strategies, dos and don'ts, essay and letter templates, and tips for every Listening, Reading, Writing and Speaking task type.",
   alternates: { canonical: "/resources" },

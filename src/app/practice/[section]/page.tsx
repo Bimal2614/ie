@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 export async function generateMetadata({ params }: { params: Promise<{ section: string }> }): Promise<Metadata> {
   const { section } = await params;
   const sec = SECTIONS[section as SectionKey];
-  return { title: `${sec ? sec.label : "Practice"} · IELTSAce`, robots: { index: false } };
+  return { title: `${sec ? sec.label : "Practice"} · IELTSVega`, robots: { index: false } };
 }
 
 const SECTION_ICON: Record<SectionKey, typeof Headphones> = {

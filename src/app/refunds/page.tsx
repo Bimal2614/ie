@@ -4,8 +4,8 @@ import { LegalDocView } from "@/components/marketing/legal-doc";
 import { REFUNDS } from "@/lib/legal-content";
 
 export const metadata: Metadata = {
-  title: "Refund Policy | IELTSAce",
-  description: "When refunds are available for IELTSAce subscriptions and how to request one.",
+  title: "Refund Policy | IELTSVega",
+  description: "When refunds are available for IELTSVega subscriptions and how to request one.",
   alternates: { canonical: "/refunds" },
 };
 

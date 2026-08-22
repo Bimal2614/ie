@@ -111,7 +111,7 @@ export async function signup(
   // try MUST NOT wrap the redirect below, which throws NEXT_REDIRECT).
   try {
     const raw = await createAuthToken(userId, "email_verify");
-    const link = `${env.APP_URL ?? "https://ieltsace.com"}/verify-email?token=${raw}`;
+    const link = `${env.APP_URL ?? "https://ieltsvega.com"}/verify-email?token=${raw}`;
     const t = verifyEmailTemplate(name, link);
     await sendEmail({ to: email, subject: t.subject, html: t.html, text: t.text });
   } catch {

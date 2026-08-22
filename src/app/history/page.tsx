@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { HistoryView } from "@/components/history/history-view";
 
-export const metadata: Metadata = { title: "History · IELTSAce", robots: { index: false } };
+export const metadata: Metadata = { title: "History · IELTSVega", robots: { index: false } };
 
 export default async function HistoryPage({
   searchParams,

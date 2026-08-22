@@ -23,12 +23,12 @@ export const metadata: Metadata = {
   title: {
     // Pages set their own full title; this default (used when a page doesn't)
     // still leads with the query people search, not the brand name.
-    default: "IELTS Practice Online — AI Band Scoring & Mock Tests | IELTSAce",
+    default: "IELTS Practice Online — AI Band Scoring & Mock Tests | IELTSVega",
     template: "%s",
   },
   description:
     "Practise IELTS online with instant AI band scores for Writing & Speaking, full-length mock tests, and 15,000+ Academic and General Training questions.",
-  applicationName: "IELTSAce",
+  applicationName: "IELTSVega",
 };
 
 export default function RootLayout({

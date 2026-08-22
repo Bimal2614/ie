@@ -18,15 +18,15 @@ export type LegalDoc = {
 const UPDATED = "Last updated: 21 July 2026";
 const COMPANY = "[Company Legal Name]";
 const JURISDICTION = "[Jurisdiction / country of incorporation]";
-const CONTACT = "support@ieltsace.com";
+const CONTACT = "support@ieltsvega.com";
 
 export const TERMS: LegalDoc = {
   key: "terms",
   title: "Terms of Use",
   updated: UPDATED,
-  intro: `These Terms of Use govern your access to and use of IELTSAce (the "Service"), operated by ${COMPANY} ("we", "us"). By creating an account or using the Service, you agree to these terms.`,
+  intro: `These Terms of Use govern your access to and use of IELTSVega (the "Service"), operated by ${COMPANY} ("we", "us"). By creating an account or using the Service, you agree to these terms.`,
   sections: [
-    { heading: "1. Acceptance of terms", paragraphs: ["By accessing or using IELTSAce, you confirm that you have read, understood and agree to be bound by these Terms and our Privacy Policy. If you do not agree, do not use the Service."] },
+    { heading: "1. Acceptance of terms", paragraphs: ["By accessing or using IELTSVega, you confirm that you have read, understood and agree to be bound by these Terms and our Privacy Policy. If you do not agree, do not use the Service."] },
     { heading: "2. Eligibility", paragraphs: ["You must be at least 16 years old, or the age of digital consent in your country, to use the Service. If you are under 18, you confirm you have permission from a parent or guardian."] },
     { heading: "3. Your account", bullets: ["Provide accurate information and keep it up to date.", "You are responsible for keeping your password secure and for all activity under your account.", "Accounts are for a single individual and may not be shared or transferred.", "Notify us promptly of any unauthorised use."] },
     { heading: "4. Acceptable use", paragraphs: ["You agree not to misuse the Service. In particular, you must not:"], bullets: ["Copy, scrape, resell, or redistribute practice content, questions or model answers.", "Share your account or provide access to others.", "Attempt to disrupt, reverse-engineer, or gain unauthorised access to the Service.", "Use the Service for any unlawful purpose."] },
@@ -46,7 +46,7 @@ export const PRIVACY: LegalDoc = {
   key: "privacy",
   title: "Privacy Policy",
   updated: UPDATED,
-  intro: `This Privacy Policy explains how ${COMPANY} ("we") collects, uses and protects your personal data when you use IELTSAce.`,
+  intro: `This Privacy Policy explains how ${COMPANY} ("we") collects, uses and protects your personal data when you use IELTSVega.`,
   sections: [
     { heading: "1. Data we collect", bullets: ["Account data: your name, email address, and a securely hashed password.", "Study profile: target module, target band, exam date and country (optional).", "Practice data: your answers, including written responses and audio recordings, and the scores/feedback generated.", "Usage data: pages viewed and features used, to operate and improve the Service.", "Payment data: processed by our payment provider — we do not store your full card details."] },
     { heading: "2. How we use your data", bullets: ["To provide practice, mock tests and AI band scoring.", "To maintain your account, history and progress tracking.", "To process payments and manage subscriptions.", "To improve the Service and provide support.", "To send essential service emails (and, only with consent, product updates)."] },
@@ -65,9 +65,9 @@ export const REFUNDS: LegalDoc = {
   key: "refunds",
   title: "Refund Policy",
   updated: UPDATED,
-  intro: "We want you to be confident in IELTSAce. This policy explains when refunds are available and how to request one.",
+  intro: "We want you to be confident in IELTSVega. This policy explains when refunds are available and how to request one.",
   sections: [
-    { heading: "1. Free plan", paragraphs: ["Our free plan lets you try core features before paying, so you can decide whether IELTSAce is right for you at no cost."] },
+    { heading: "1. Free plan", paragraphs: ["Our free plan lets you try core features before paying, so you can decide whether IELTSVega is right for you at no cost."] },
     { heading: "2. Subscription refunds", paragraphs: ["If you are not satisfied with a paid subscription, you may request a full refund within 7 days of your initial purchase, provided you have made only limited use of the paid features (as a guide, fewer than 3 AI-scored evaluations or 1 mock test). Refunds are issued to your original payment method."] },
     { heading: "3. How to request a refund", paragraphs: [`Email ${CONTACT} from your account email address within the eligibility window, stating your reason. We aim to process eligible refunds within 5–10 business days.`] },
     { heading: "4. Non-refundable items", bullets: ["Subscriptions after the 7-day window or after substantial use of paid features.", "Renewal charges (cancel before renewal to avoid these — see below).", "Any one-off items explicitly marked non-refundable at purchase."] },

@@ -6,7 +6,7 @@ import { SECTIONS, SECTION_ORDER, type SectionKey } from "@/lib/ielts";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Mock Tests · IELTSAce", robots: { index: false } };
+export const metadata: Metadata = { title: "Mock Tests · IELTSVega", robots: { index: false } };
 
 const SECTION_ICON: Record<SectionKey, typeof Headphones> = {
   listening: Headphones,

@@ -6,7 +6,7 @@ import { SECTIONS, type SectionKey } from "@/lib/ielts";
 import { SectionPlayer } from "@/components/practice/section-player";
 
 export const metadata: Metadata = {
-  title: "Section practice · IELTSAce",
+  title: "Section practice · IELTSVega",
   robots: { index: false },
 };
 

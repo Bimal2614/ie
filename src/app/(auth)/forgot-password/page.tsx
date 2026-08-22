@@ -3,7 +3,7 @@ import Link from "next/link";
 import { AuthHeader } from "@/components/auth/auth-ui";
 import { ForgotPasswordForm } from "@/components/auth/recovery-forms";
 
-export const metadata: Metadata = { title: "Forgot password · IELTSAce", robots: { index: false } };
+export const metadata: Metadata = { title: "Forgot password · IELTSVega", robots: { index: false } };
 
 export default function ForgotPasswordPage() {
   return (

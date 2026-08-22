@@ -4,7 +4,7 @@ import { AuthHeader } from "@/components/auth/auth-ui";
 import { GoogleButton } from "@/components/auth/google-button";
 
 export const metadata: Metadata = {
-  title: "Create account · IELTS Ace",
+  title: "Create account · IELTSVega",
   robots: { index: false },
 };
 

@@ -11,7 +11,7 @@ import { SectionPerformance } from "@/components/dashboard/section-performance";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { MockResults } from "@/components/dashboard/mock-results";
 
-export const metadata: Metadata = { title: "Dashboard · IELTSAce", robots: { index: false } };
+export const metadata: Metadata = { title: "Dashboard · IELTSVega", robots: { index: false } };
 
 export default async function DashboardPage() {
   const user = await requireUser();

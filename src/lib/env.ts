@@ -34,7 +34,7 @@ const EnvSchema = z.object({
   SMTP_PORT: z.coerce.number().int().positive().optional(),
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
-  EMAIL_FROM: z.string().optional(), // e.g. "IELTSAce <no-reply@ieltsace.com>"
+  EMAIL_FROM: z.string().optional(), // e.g. "IELTSVega <no-reply@ieltsvega.com>"
 
   // --- Google sign-in (OAuth 2.0). Optional: the button degrades gracefully
   //     when unset. Redirect URI = `${APP_URL}/api/auth/google/callback`. ---

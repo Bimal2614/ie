@@ -12,7 +12,7 @@ function layout(opts: { heading: string; body: string; ctaLabel: string; ctaUrl:
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
     <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="background:#fff;border:1px solid #e7e5e4;border-radius:16px;overflow:hidden">
       <tr><td style="padding:28px 32px 8px">
-        <div style="font-size:18px;font-weight:700;color:${BRAND}">IELTSAce</div>
+        <div style="font-size:18px;font-weight:700;color:${BRAND}">IELTSVega</div>
       </td></tr>
       <tr><td style="padding:8px 32px 0">
         <h1 style="font-size:20px;margin:0 0 12px">${opts.heading}</h1>
@@ -25,28 +25,28 @@ function layout(opts: { heading: string; body: string; ctaLabel: string; ctaUrl:
         <p style="font-size:12px;color:#a0aec0;margin:0">${opts.footer}</p>
       </td></tr>
     </table>
-    <p style="font-size:11px;color:#a0aec0;margin:16px 0 0">© IELTSAce · Practise IELTS online</p>
+    <p style="font-size:11px;color:#a0aec0;margin:16px 0 0">© IELTSVega · Practise IELTS online</p>
   </td></tr></table>
 </body></html>`;
 }
 
 export function verifyEmailTemplate(name: string, link: string) {
   return {
-    subject: "Verify your IELTSAce email",
+    subject: "Verify your IELTSVega email",
     html: layout({
       heading: `Welcome, ${name} 👋`,
-      body: "Confirm your email address to secure your account and unlock everything on IELTSAce. This link expires in 24 hours.",
+      body: "Confirm your email address to secure your account and unlock everything on IELTSVega. This link expires in 24 hours.",
       ctaLabel: "Verify my email",
       ctaUrl: link,
       footer: "You received this because an account was created with this email. If it wasn't you, you can ignore this message.",
     }),
-    text: `Welcome to IELTSAce, ${name}!\n\nVerify your email (link expires in 24 hours):\n${link}\n\nIf this wasn't you, ignore this email.`,
+    text: `Welcome to IELTSVega, ${name}!\n\nVerify your email (link expires in 24 hours):\n${link}\n\nIf this wasn't you, ignore this email.`,
   };
 }
 
 export function resetPasswordTemplate(link: string) {
   return {
-    subject: "Reset your IELTSAce password",
+    subject: "Reset your IELTSVega password",
     html: layout({
       heading: "Reset your password",
       body: "We received a request to reset your password. Click below to choose a new one. This link expires in 1 hour. If you didn't request this, no action is needed.",
@@ -54,6 +54,6 @@ export function resetPasswordTemplate(link: string) {
       ctaUrl: link,
       footer: "For your security, this link can be used once and expires in 1 hour.",
     }),
-    text: `Reset your IELTSAce password (link expires in 1 hour):\n${link}\n\nIf you didn't request this, ignore this email.`,
+    text: `Reset your IELTSVega password (link expires in 1 hour):\n${link}\n\nIf you didn't request this, ignore this email.`,
   };
 }

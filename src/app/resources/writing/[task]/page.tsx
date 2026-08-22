@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const g = get(task);
   if (!g) return {};
   return {
-    title: `IELTS ${g.title} — All Question Types, Templates & Band 9 Model Answers (2026) | IELTSAce`,
+    title: `IELTS ${g.title} — All Question Types, Templates & Band 9 Model Answers (2026) | IELTSVega`,
     description: `${g.tagline} Every ${g.title} question type with how to answer, a plan, structure, useful language, common mistakes and a full Band 9 sample answer.`,
     alternates: { canonical: `/resources/writing/${g.task}` },
   };
@@ -184,7 +184,7 @@ export default async function WritingTaskGuide({ params }: { params: Promise<Par
             ))}
           </ul>
           <p className="mt-4 text-xs text-ink-muted">
-            IELTS is jointly owned by the British Council, IDP: IELTS Australia and Cambridge University Press &amp; Assessment. IELTSAce is an independent practice platform.
+            IELTS is jointly owned by the British Council, IDP: IELTS Australia and Cambridge University Press &amp; Assessment. IELTSVega is an independent practice platform.
           </p>
         </section>
 

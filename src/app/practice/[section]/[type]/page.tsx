@@ -13,7 +13,7 @@ export async function generateMetadata({
   const sec = SECTIONS[section as SectionKey];
   const meta = QUESTION_TYPES[type as QuestionTypeKey];
   return {
-    title: `${meta?.label ?? "Practice"} — ${sec?.label ?? "IELTS"} · IELTSAce`,
+    title: `${meta?.label ?? "Practice"} — ${sec?.label ?? "IELTS"} · IELTSVega`,
     robots: { index: false },
   };
 }

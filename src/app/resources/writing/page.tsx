@@ -7,7 +7,7 @@ import { Reveal } from "@/components/marketing/motion";
 import { WRITING_TASK1, WRITING_TASK2 } from "@/lib/study-writing";
 
 export const metadata: Metadata = {
-  title: "IELTS Writing — Task 1 & Task 2 Guides, Templates & Band 9 Answers (2026) | IELTSAce",
+  title: "IELTS Writing — Task 1 & Task 2 Guides, Templates & Band 9 Answers (2026) | IELTSVega",
   description:
     "Complete IELTS Writing study guide for 2026: every Task 1 and Task 2 question type, how to answer, planning, structure, useful language, common mistakes and full Band 9 model answers.",
   alternates: { canonical: "/resources/writing" },

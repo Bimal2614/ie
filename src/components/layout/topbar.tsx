@@ -58,7 +58,7 @@ export function Topbar({ user, onOpenSidebar, logoutAction }: TopbarProps) {
           <Link href="/dashboard" className="flex items-center gap-1.5 hover:text-ink-soft">
             <GraduationCap className="h-5 w-5 text-brand" />
             <span className="font-semibold text-ink-strong" style={{ fontFamily: "var(--font-heading)" }}>
-              IELTSAce
+              IELTSVega
             </span>
           </Link>
           {pageLabel && (

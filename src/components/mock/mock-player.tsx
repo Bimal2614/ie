@@ -158,7 +158,7 @@ export function MockPlayer({
         <div className="flex min-w-0 items-center gap-2 font-semibold">
           <GraduationCap className="h-5 w-5 shrink-0 text-brand" />
           <span className="truncate" style={{ fontFamily: "var(--font-heading)" }}>
-            IELTSAce
+            IELTSVega
           </span>
           <span className="chip ml-1 hidden sm:inline-flex">Full Mock</span>
         </div>

@@ -7,7 +7,7 @@ import { questionSets, questions } from "@/db/schema";
 import { SECTIONS, SECTION_ORDER, SECTION_TYPES, QUESTION_TYPES, type SectionKey, type QuestionTypeKey } from "@/lib/ielts";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Practice · IELTSAce", robots: { index: false } };
+export const metadata: Metadata = { title: "Practice · IELTSVega", robots: { index: false } };
 
 const SECTION_ICON = { listening: Headphones, reading: BookOpen, writing: PenLine, speaking: Mic } as const;
 

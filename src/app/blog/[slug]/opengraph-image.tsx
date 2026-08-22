@@ -7,7 +7,7 @@ import { POST_BY_SLUG } from "@/lib/blog";
  * thumbnail on social and in some Google layouts. Generated at request time and
  * cached by Next; no design assets needed.
  */
-export const alt = "IELTSAce — IELTS practice article";
+export const alt = "IELTSVega — IELTS practice article";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -49,7 +49,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
           >
             IA
           </div>
-          IELTSAce
+          IELTSVega
         </div>
 
         {/* Category + title */}
@@ -64,7 +64,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
 
         {/* Footer */}
         <div style={{ display: "flex", color: "#93a4bd", fontSize: 26 }}>
-          ieltsace.com · AI band scoring · Full mock tests
+          ieltsvega.com · AI band scoring · Full mock tests
         </div>
       </div>
     ),

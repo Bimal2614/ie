@@ -82,7 +82,7 @@ export function LandingFooter() {
         <div className="md:col-span-1">
           <span className="flex items-center gap-2 font-semibold">
             <span className="grid size-8 place-items-center rounded-lg bg-white/10"><GraduationCap className="size-5" /></span>
-            IELTSAce
+            IELTSVega
           </span>
           <p className="mt-3 max-w-xs text-sm text-white/45">
             The complete IELTS preparation platform — AI band scoring, mock tests, and 15,000+
@@ -105,13 +105,13 @@ export function LandingFooter() {
 
       {/* Oversized wordmark */}
       <div className="overflow-hidden border-t border-white/10 px-4 pb-8 pt-10">
-        <p className="font-serif select-none text-center leading-none tracking-tight text-white/[0.05]" style={{ fontSize: "clamp(3rem, 18vw, 16rem)" }}>IELTSAce</p>
+        <p className="font-serif select-none text-center leading-none tracking-tight text-white/[0.05]" style={{ fontSize: "clamp(3rem, 18vw, 16rem)" }}>IELTSVega</p>
         <p className="-mt-1 text-center text-[10px] uppercase tracking-[0.3em] text-white/30 sm:text-sm">The best way to practise IELTS online</p>
       </div>
 
       <div className="border-t border-white/10">
         <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-2 px-5 py-6 text-xs text-white/35 sm:flex-row">
-          <p>© {new Date().getFullYear()} IELTSAce · Practise IELTS online, smarter.</p>
+          <p>© {new Date().getFullYear()} IELTSVega · Practise IELTS online, smarter.</p>
           <p>IELTS is a trademark of its respective owners. This is an independent practice platform.</p>
         </div>
       </div>

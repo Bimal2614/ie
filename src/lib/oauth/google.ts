@@ -10,7 +10,7 @@ const TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
 const USERINFO_ENDPOINT = "https://openidconnect.googleapis.com/v1/userinfo";
 
 export function googleRedirectUri(): string {
-  const base = env.APP_URL ?? "https://ieltsace.com";
+  const base = env.APP_URL ?? "https://ieltsvega.com";
   return `${base}/api/auth/google/callback`;
 }
 

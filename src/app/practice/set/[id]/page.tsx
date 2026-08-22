@@ -9,7 +9,7 @@ import { QUESTION_TYPES, SECTIONS, type QuestionTypeKey, type SectionKey } from 
 import type { SetLayout } from "@/lib/question-content";
 import { QuestionPlayer, type PlayerSet, type PlayerQuestion } from "@/components/practice/question-player";
 
-export const metadata: Metadata = { title: "Practice task · IELTSAce", robots: { index: false } };
+export const metadata: Metadata = { title: "Practice task · IELTSVega", robots: { index: false } };
 
 export default async function PracticeSetPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

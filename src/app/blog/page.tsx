@@ -6,7 +6,7 @@ import { Reveal } from "@/components/marketing/motion";
 import { POSTS } from "@/lib/blog";
 
 export const metadata: Metadata = {
-  title: "IELTS Blog — Tips, Strategies & Score Guides | IELTSAce",
+  title: "IELTS Blog — Tips, Strategies & Score Guides | IELTSVega",
   description: "Practical IELTS advice: how the band score works, common Writing mistakes, study plans, and skill-by-skill strategies to reach your target band.",
   alternates: { canonical: "/blog" },
 };

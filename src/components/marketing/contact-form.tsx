@@ -20,7 +20,7 @@ export function ContactForm({ to }: { to: string }) {
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const body = `Name: ${name}\nEmail: ${email}\n\n${message}`;
-    window.location.href = `mailto:${to}?subject=${encodeURIComponent(subject || "IELTSAce enquiry")}&body=${encodeURIComponent(body)}`;
+    window.location.href = `mailto:${to}?subject=${encodeURIComponent(subject || "IELTSVega enquiry")}&body=${encodeURIComponent(body)}`;
   };
 
   return (

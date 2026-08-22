@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const post = POST_BY_SLUG[slug];
   if (!post) return {};
   return {
-    title: `${post.title} | IELTSAce Blog`,
+    title: `${post.title} | IELTSVega Blog`,
     description: post.excerpt,
     keywords: post.keywords,
     alternates: { canonical: `/blog/${post.slug}` },
@@ -39,8 +39,8 @@ function ArticleJsonLd({ post }: { post: (typeof POSTS)[number] }) {
     articleSection: post.category,
     url: `${base}/blog/${post.slug}`,
     mainEntityOfPage: { "@type": "WebPage", "@id": `${base}/blog/${post.slug}` },
-    author: { "@type": "Organization", name: "IELTSAce", url: base },
-    publisher: { "@type": "Organization", name: "IELTSAce", url: base },
+    author: { "@type": "Organization", name: "IELTSVega", url: base },
+    publisher: { "@type": "Organization", name: "IELTSVega", url: base },
     ...(post.publishedAt
       ? { datePublished: post.publishedAt, dateModified: post.publishedAt }
       : {}),

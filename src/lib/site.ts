@@ -6,7 +6,7 @@
  *
  * Resolution order:
  *   1. APP_URL — explicit override, always wins (set this in prod for a custom
- *      domain). Must be the full public origin, e.g. https://ieltsace.com.
+ *      domain). Must be the full public origin, e.g. https://ieltsvega.com.
  *   2. VERCEL_PROJECT_PRODUCTION_URL — Vercel's STABLE production domain (the
  *      custom domain if attached, else the *.vercel.app one). Auto-set on every
  *      deploy, so canonicals match the live URL even if APP_URL is forgotten.

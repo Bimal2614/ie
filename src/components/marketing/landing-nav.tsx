@@ -61,7 +61,7 @@ export function LandingNav({ alwaysSolid = false }: { alwaysSolid?: boolean }) {
           <span className="grid size-8 place-items-center rounded-lg bg-brand text-white">
             <GraduationCap className="size-5" />
           </span>
-          IELTSAce
+          IELTSVega
         </Link>
 
         <nav className="hidden items-center gap-8 text-[13px] font-medium md:flex">

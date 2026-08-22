@@ -7,7 +7,7 @@ import { TEMPLATE_SECTIONS, type TemplateSet, type TemplateSection } from "@/lib
 import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "IELTS Writing & Speaking Templates & Sentence Banks | IELTSAce",
+  title: "IELTS Writing & Speaking Templates & Sentence Banks | IELTSVega",
   description:
     "Free IELTS templates and sentence banks for Writing (Task 1 & 2) and Speaking (Parts 1–3) — examiner-friendly Band 7–9 patterns, structures and formulas you can adapt to any topic.",
   keywords: [
@@ -35,8 +35,8 @@ function TemplatesJsonLd() {
       articleSection: "Templates",
       url: `${base}/templates`,
       mainEntityOfPage: { "@type": "WebPage", "@id": `${base}/templates` },
-      author: { "@type": "Organization", name: "IELTSAce", url: base },
-      publisher: { "@type": "Organization", name: "IELTSAce", url: base },
+      author: { "@type": "Organization", name: "IELTSVega", url: base },
+      publisher: { "@type": "Organization", name: "IELTSVega", url: base },
     },
     {
       "@type": "BreadcrumbList",

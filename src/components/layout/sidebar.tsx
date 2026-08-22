@@ -111,7 +111,7 @@ export function Sidebar({ onNavigate, showCloseButton, onClose }: SidebarProps) 
           </span>
           <span className="flex flex-col leading-tight">
             <span className="text-lg font-semibold tracking-tight" style={{ fontFamily: "var(--font-heading)" }}>
-              IELTSAce
+              IELTSVega
             </span>
             <span className="text-[10px] uppercase tracking-[0.18em] text-white/40">
               Academic &amp; General

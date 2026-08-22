@@ -19,7 +19,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             <span className="grid size-9 place-items-center rounded-xl bg-brand text-white">
               <GraduationCap className="size-5" strokeWidth={1.75} />
             </span>
-            <span className="text-lg font-semibold tracking-tight">IELTSAce</span>
+            <span className="text-lg font-semibold tracking-tight">IELTSVega</span>
           </Link>
           <Link href="/" className="text-xs font-medium text-ink-muted transition-colors hover:text-ink">
             ← Back to site

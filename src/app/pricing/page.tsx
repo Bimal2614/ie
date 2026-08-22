@@ -7,7 +7,7 @@ import { Reveal } from "@/components/marketing/motion";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Pricing — IELTS Practice Plans | IELTSAce",
+  title: "Pricing — IELTS Practice Plans | IELTSVega",
   description:
     "Simple IELTS practice pricing. Start free, or unlock unlimited AI band scoring for Writing & Speaking, full mock tests, and 15,000+ Academic and General Training questions.",
   alternates: { canonical: "/pricing" },
@@ -19,7 +19,7 @@ const PLANS = [
     name: "Free",
     price: "$0",
     cadence: "forever",
-    tagline: "Get a feel for how IELTSAce marks.",
+    tagline: "Get a feel for how IELTSVega marks.",
     cta: "Start free",
     href: "/signup",
     featured: false,

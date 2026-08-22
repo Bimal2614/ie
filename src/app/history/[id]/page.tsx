@@ -9,7 +9,7 @@ import { AttemptReview } from "@/components/history/attempt-review";
 import { AttemptAnswers } from "@/components/history/attempt-answers";
 import { LocalTime, HistoryDayLink } from "@/components/history/local-time";
 
-export const metadata: Metadata = { title: "Attempt · IELTSAce", robots: { index: false } };
+export const metadata: Metadata = { title: "Attempt · IELTSVega", robots: { index: false } };
 
 export default async function AttemptPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

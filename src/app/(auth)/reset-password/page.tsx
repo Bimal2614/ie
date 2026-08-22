@@ -3,7 +3,7 @@ import Link from "next/link";
 import { AuthHeader } from "@/components/auth/auth-ui";
 import { ResetPasswordForm } from "@/components/auth/recovery-forms";
 
-export const metadata: Metadata = { title: "Reset password · IELTSAce", robots: { index: false } };
+export const metadata: Metadata = { title: "Reset password · IELTSVega", robots: { index: false } };
 
 export default async function ResetPasswordPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const { token } = await searchParams;

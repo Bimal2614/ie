@@ -10,7 +10,7 @@ const OAUTH_ERROR: Record<string, string> = {
 };
 
 export const metadata: Metadata = {
-  title: "Sign in · IELTS Ace",
+  title: "Sign in · IELTSVega",
   robots: { index: false },
 };
 

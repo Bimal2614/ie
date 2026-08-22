@@ -5,7 +5,7 @@ import { MarketingShell, PageHead } from "@/components/marketing/marketing-shell
 import { BANDS, BAND_SLUGS } from "@/lib/band-content";
 
 export const metadata: Metadata = {
-  title: "IELTS Band Scores Explained — How IELTS Scoring Works (2026) | IELTSAce",
+  title: "IELTS Band Scores Explained — How IELTS Scoring Works (2026) | IELTSVega",
   description:
     "How IELTS band scores work: the 9-band scale, how Listening, Reading, Writing and Speaking are scored, how the overall band is calculated and rounded, and how to reach Band 7, 8 or 9.",
   alternates: { canonical: "/ielts-band-scores" },

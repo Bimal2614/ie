@@ -9,7 +9,7 @@ import { cardClass } from "@/components/dashboard/ui";
 import { cn } from "@/lib/utils";
 import { ProfileForm, PasswordForm, DangerZone } from "@/components/settings/settings-forms";
 
-export const metadata: Metadata = { title: "Settings · IELTSAce", robots: { index: false } };
+export const metadata: Metadata = { title: "Settings · IELTSVega", robots: { index: false } };
 
 function Card({ title, desc, children }: { title: string; desc?: string; children: React.ReactNode }) {
   return (

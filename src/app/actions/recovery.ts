@@ -12,7 +12,7 @@ import { sendEmail } from "@/lib/email/mailer";
 import { resetPasswordTemplate } from "@/lib/email/templates";
 import { env } from "@/lib/env";
 
-const APP_URL = env.APP_URL ?? "https://ieltsace.com";
+const APP_URL = env.APP_URL ?? "https://ieltsvega.com";
 
 /**
  * Start a password reset. Always returns ok (never reveals whether an account

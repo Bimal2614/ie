@@ -5,9 +5,9 @@ import { MarketingShell, PageHead } from "@/components/marketing/marketing-shell
 import { Reveal } from "@/components/marketing/motion";
 
 export const metadata: Metadata = {
-  title: "About IELTSAce — Our Mission & Method for IELTS Success",
+  title: "About IELTSVega — Our Mission & Method for IELTS Success",
   description:
-    "IELTSAce is an independent IELTS practice platform combining AI band scoring for Writing & Speaking, full mock tests, and 15,000+ Academic and General Training questions built around how examiners actually mark.",
+    "IELTSVega is an independent IELTS practice platform combining AI band scoring for Writing & Speaking, full mock tests, and 15,000+ Academic and General Training questions built around how examiners actually mark.",
   alternates: { canonical: "/about" },
 };
 
@@ -30,16 +30,16 @@ export default function AboutPage() {
     <MarketingShell>
       <Reveal>
         <PageHead
-          eyebrow="About IELTSAce"
+          eyebrow="About IELTSVega"
           title="We help capable people prove it — in band form."
-          lead="Fluent, hard-working candidates miss their target band every day. Not because their English is weak, but because IELTS rewards specific, criteria-driven answers that no one shows them how to produce. IELTSAce exists to close that gap."
+          lead="Fluent, hard-working candidates miss their target band every day. Not because their English is weak, but because IELTS rewards specific, criteria-driven answers that no one shows them how to produce. IELTSVega exists to close that gap."
         />
       </Reveal>
 
       {/* Mission */}
       <Reveal delay={0.05} className="mt-10 space-y-4 text-ink-soft">
         <p>
-          IELTSAce is an independent IELTS preparation platform. We combine a large bank of
+          IELTSVega is an independent IELTS preparation platform. We combine a large bank of
           exam-accurate practice, full-length mock tests timed to the real exam, and AI band scoring
           for Writing and Speaking that grades every answer against the four official criteria.
         </p>
@@ -84,7 +84,7 @@ export default function AboutPage() {
       </Reveal>
 
       <p className="mt-10 text-center text-xs text-ink-muted">
-        IELTS is jointly owned by the British Council, IDP: IELTS Australia and Cambridge University Press &amp; Assessment. IELTSAce is an independent platform and is not affiliated with or endorsed by these organisations.
+        IELTS is jointly owned by the British Council, IDP: IELTS Australia and Cambridge University Press &amp; Assessment. IELTSVega is an independent platform and is not affiliated with or endorsed by these organisations.
       </p>
     </MarketingShell>
   );

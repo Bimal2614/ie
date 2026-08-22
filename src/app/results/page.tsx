@@ -5,7 +5,7 @@ import { getMockResults } from "@/app/actions/mock";
 import { buttonVariants } from "@/components/ui/button";
 import { LocalTime } from "@/components/history/local-time";
 
-export const metadata: Metadata = { title: "Results · IELTSAce", robots: { index: false } };
+export const metadata: Metadata = { title: "Results · IELTSVega", robots: { index: false } };
 
 export default async function ResultsPage() {
   const results = await getMockResults();

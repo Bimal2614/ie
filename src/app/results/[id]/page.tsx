@@ -9,7 +9,7 @@ import { LocalTime } from "@/components/history/local-time";
 import { MockSectionReviewBlock } from "@/components/mock/mock-section-review";
 import { SpeakingScoreTrigger } from "@/components/mock/speaking-score-trigger";
 
-export const metadata: Metadata = { title: "Mock result · IELTSAce", robots: { index: false } };
+export const metadata: Metadata = { title: "Mock result · IELTSVega", robots: { index: false } };
 
 export default async function ResultPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

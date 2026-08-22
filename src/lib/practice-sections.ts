@@ -60,7 +60,7 @@ export type SourceSummary = {
 
 const SOURCE_LABELS: Record<string, string> = {
   cambridge: "Cambridge",
-  original: "IELTSAce original",
+  original: "IELTSVega original",
   seed: "Sample content",
 };
 

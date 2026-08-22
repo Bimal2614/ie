@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const b = get(band);
   if (!b) return {};
   return {
-    title: `How to Get Band ${b.band} in IELTS — Tips for Every Section (2026) | IELTSAce`,
+    title: `How to Get Band ${b.band} in IELTS — Tips for Every Section (2026) | IELTSVega`,
     description: `A practical guide to reaching IELTS Band ${b.band}: the scores you need, what each of Listening, Reading, Writing and Speaking requires, and the top tips to get there.`,
     alternates: { canonical: `/ielts-band/${b.slug}` },
     keywords: [`ielts band ${b.band}`, `how to get band ${b.band} in ielts`, `band ${b.band} ielts`, "ielts tips", "ielts band score"],

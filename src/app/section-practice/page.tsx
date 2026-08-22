@@ -4,7 +4,7 @@ import { requireUser } from "@/lib/dal";
 import { SectionBrowser } from "@/components/practice/section-browser";
 
 export const metadata: Metadata = {
-  title: "Section-wise practice · IELTSAce",
+  title: "Section-wise practice · IELTSVega",
   description:
     "Sit a real IELTS exam part end to end — one recording or passage, every question type it asks, numbered exactly as the paper does.",
 };

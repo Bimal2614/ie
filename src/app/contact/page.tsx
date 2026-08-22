@@ -5,12 +5,12 @@ import { MarketingShell, PageHead } from "@/components/marketing/marketing-shell
 import { ContactForm } from "@/components/marketing/contact-form";
 
 export const metadata: Metadata = {
-  title: "Contact IELTSAce — Support & Enquiries",
-  description: "Get in touch with the IELTSAce team for support, billing questions, or feedback. We typically reply within one business day.",
+  title: "Contact IELTSVega — Support & Enquiries",
+  description: "Get in touch with the IELTSVega team for support, billing questions, or feedback. We typically reply within one business day.",
   alternates: { canonical: "/contact" },
 };
 
-const SUPPORT_EMAIL = "support@ieltsace.com";
+const SUPPORT_EMAIL = "support@ieltsvega.com";
 
 const CHANNELS = [
   { Icon: Mail, title: "Email us", body: SUPPORT_EMAIL, href: `mailto:${SUPPORT_EMAIL}` },

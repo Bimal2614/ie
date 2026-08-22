@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   if (!s) return {};
   const n = s.name.toLowerCase();
   return {
-    title: `IELTS ${s.name} — Strategies, Worked Examples & Tips (2026) | IELTSAce`,
+    title: `IELTS ${s.name} — Strategies, Worked Examples & Tips (2026) | IELTSVega`,
     description: `Master IELTS ${s.name}: ${s.tagline} How to answer every question type, dos and don'ts, worked examples with answers explained, and band-boosting tips.`,
     alternates: { canonical: `/resources/${s.key}` },
     keywords: [`IELTS ${n}`, `${n} IELTS`, `IELTS ${n} practice`, `IELTS ${n} tips`, `IELTS ${n} test`, `how to improve IELTS ${n}`],
@@ -183,7 +183,7 @@ export default async function SectionGuide({ params }: { params: Promise<Params>
             ))}
           </ul>
           <p className="mt-4 text-xs text-ink-muted">
-            IELTS is jointly owned by the British Council, IDP: IELTS Australia and Cambridge University Press &amp; Assessment. IELTSAce is an independent practice platform.
+            IELTS is jointly owned by the British Council, IDP: IELTS Australia and Cambridge University Press &amp; Assessment. IELTSVega is an independent practice platform.
           </p>
         </section>
       </main>

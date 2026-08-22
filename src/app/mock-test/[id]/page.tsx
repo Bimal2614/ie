@@ -4,7 +4,7 @@ import { getMockSession } from "@/app/actions/mock";
 import { MockPlayer, type MockSection } from "@/components/mock/mock-player";
 import type { Answer } from "@/lib/question-content";
 
-export const metadata: Metadata = { title: "Full Mock · IELTSAce", robots: { index: false } };
+export const metadata: Metadata = { title: "Full Mock · IELTSVega", robots: { index: false } };
 
 export default async function MockTestPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

@@ -19,7 +19,7 @@ import { SITE_URL } from "@/lib/site";
 import { FAQS } from "@/lib/faqs";
 
 export const metadata: Metadata = {
-  title: "IELTS Practice Online — AI Band Scoring & Mock Tests | IELTSAce",
+  title: "IELTS Practice Online — AI Band Scoring & Mock Tests | IELTSVega",
   description:
     "Practise IELTS online with instant AI band scores for Writing & Speaking, full-length mock tests, and 15,000+ Academic and General Training questions. Real band jumps, scored the way examiners mark.",
   keywords: [
@@ -32,9 +32,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
-    title: "IELTS Practice Online with AI Band Scoring — IELTSAce",
+    title: "IELTS Practice Online with AI Band Scoring — IELTSVega",
     description: "Real IELTS band jumps, instant AI scoring for Writing & Speaking, and full mock tests across Academic & General Training.",
-    siteName: "IELTSAce",
+    siteName: "IELTSVega",
   },
   twitter: { card: "summary_large_image", title: "IELTS Practice Online with AI Band Scoring", description: "AI-scored Writing & Speaking, full mock tests, and 15,000+ IELTS questions." },
   robots: { index: true, follow: true },
@@ -52,7 +52,7 @@ const STATS = [
   { to: 94, suffix: "%", label: "reach their target band within 6 weeks" },
   { to: 1.2, decimals: 1, prefix: "+", label: "average band gain, first to latest mock" },
   { to: 15000, suffix: "+", label: "exam-style questions, every task type" },
-  { to: 120, suffix: "+", label: "countries preparing with IELTSAce" },
+  { to: 120, suffix: "+", label: "countries preparing with IELTSVega" },
 ];
 
 const METHOD = [
@@ -133,7 +133,7 @@ export default async function Home() {
 
           {/* Method */}
           <div className="pt-16">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-green">The IELTSAce Method</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-green">The IELTSVega Method</p>
             <h2 className="font-serif mt-3 max-w-2xl text-3xl tracking-tight sm:text-4xl">
               Four steps between you and your target band.
             </h2>
@@ -163,7 +163,7 @@ export default async function Home() {
       <section id="features" className="scroll-mt-20 border-y border-line bg-paper-elev">
         <div className="mx-auto grid w-full max-w-6xl gap-12 px-5 py-20 lg:grid-cols-2 lg:items-center">
           <Reveal x={-30} y={0} className="order-2 overflow-hidden rounded-2xl border border-line shadow-xl lg:order-1">
-            <Image src="/test-6.png" alt="AI band scoring in the IELTSAce app" width={1280} height={720} className="h-auto w-full" />
+            <Image src="/test-6.png" alt="AI band scoring in the IELTSVega app" width={1280} height={720} className="h-auto w-full" />
           </Reveal>
           <Reveal x={30} y={0} delay={0.1} className="order-1 lg:order-2">
             <Header align="left" eyebrow="Scored like the real thing" title="AI band scoring on every criterion." lead="" />
@@ -269,7 +269,7 @@ function StructuredData() {
       {
         "@type": "Organization",
         "@id": orgId,
-        name: "IELTSAce",
+        name: "IELTSVega",
         url: SITE_URL,
         logo: `${SITE_URL}/favicon.ico`,
         description:
@@ -280,7 +280,7 @@ function StructuredData() {
       {
         "@type": "WebSite",
         "@id": `${SITE_URL}/#website`,
-        name: "IELTSAce — IELTS Practice Online",
+        name: "IELTSVega — IELTS Practice Online",
         url: SITE_URL,
         description: "Practise IELTS online with AI band scoring and full mock tests.",
         publisher: { "@id": orgId },
