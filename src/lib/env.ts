@@ -23,10 +23,10 @@ const EnvSchema = z.object({
   //     URL does.
   SPEAKING_API_KEY: z.string().optional(),
 
-  // --- Writing AI band scoring (Google Gemini). Optional: the app boots and
+  // --- Writing AI band scoring (OpenAI). Optional: the app boots and
   //     runs without it; Writing simply stays unscored until the key is set. ---
-  GEMINI_API_KEY: z.string().optional(),
-  GEMINI_MODEL: z.string().default("gemini-2.5-flash"),
+  OPENAI_API_KEY: z.string().optional(),
+  OPENAI_MODEL: z.string().default("gpt-5.4-mini"),
 
   // --- Transactional email (SMTP — any provider). Optional: without it,
   //     verification/reset emails are skipped (link is logged in dev). ---
@@ -69,8 +69,8 @@ export const env = EnvSchema.parse({
   APP_URL: process.env.APP_URL,
   SPEAKING_API_URL: process.env.SPEAKING_API_URL,
   SPEAKING_API_KEY: process.env.SPEAKING_API_KEY,
-  GEMINI_API_KEY: process.env.GEMINI_API_KEY,
-  GEMINI_MODEL: process.env.GEMINI_MODEL,
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+  OPENAI_MODEL: process.env.OPENAI_MODEL,
   SMTP_HOST: process.env.SMTP_HOST,
   SMTP_PORT: process.env.SMTP_PORT,
   SMTP_USER: process.env.SMTP_USER,
@@ -105,9 +105,9 @@ export function isSpeakingAiConfigured(): boolean {
   return Boolean(env.SPEAKING_API_URL && env.SPEAKING_API_KEY);
 }
 
-/** True when Gemini is configured for Writing band scoring. */
+/** True when OpenAI is configured for Writing band scoring. */
 export function isWritingAiConfigured(): boolean {
-  return Boolean(env.GEMINI_API_KEY);
+  return Boolean(env.OPENAI_API_KEY);
 }
 
 /** True when SMTP is configured to actually send email. */

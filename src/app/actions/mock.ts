@@ -24,7 +24,7 @@ import type { SetLayout } from "@/lib/question-content";
 import { gradeMarks } from "@/lib/grading";
 import { keyFromUrl, presignGetUrl } from "@/lib/speech/s3";
 import { analyzeSpeaking, partFor } from "@/lib/speech/ielts-speaking";
-import { scoreWriting, type WritingTaskType } from "@/lib/writing/gemini";
+import { scoreWriting, type WritingTaskType } from "@/lib/writing/openai";
 import { resolvePrompts } from "@/lib/scoring/prompts";
 import { speakingFeedback, unscorableFeedback } from "@/lib/scoring/speaking-feedback";
 import { mapWithConcurrency } from "@/lib/scoring/concurrency";
@@ -593,7 +593,7 @@ export async function scoreMockSpeaking(sessionId: string): Promise<{ scored: nu
 }
 
 /**
- * Score a finished mock's Writing answers with Gemini and fold the writing band
+ * Score a finished mock's Writing answers with OpenAI and fold the writing band
  * into the report. Mirrors scoreMockSpeaking: post-submit, idempotent (only rows
  * with no band), degrades to "unscored" on an outage.
  */
@@ -655,7 +655,7 @@ export async function scoreMockWriting(sessionId: string): Promise<{ scored: num
       taskType: qt as WritingTaskType,
       module: user.targetModule,
       // Unlike speaking, a missing prompt does fall back to the type's
-      // instruction: Gemini cannot grade at all without some statement of task.
+      // instruction: the grader cannot grade at all without some statement of task.
       questionPrompt: resolved?.prompt ?? meta.instruction ?? "",
       // The minimum authored for THIS task wins over the type default.
       wordMin: resolved?.wordLimitMin ?? meta.wordLimitMin ?? (qt === "writing_task2" ? 250 : 150),
@@ -676,7 +676,8 @@ export async function scoreMockWriting(sessionId: string): Promise<{ scored: num
           corrections: s.corrections,
           improvedExamples: s.improvedExamples,
           nextSteps: s.nextSteps,
-          provider: "gemini",
+          taskCompliance: s.taskCompliance,
+          provider: "openai",
         },
       })
       .where(eq(mockTestAnswers.id, row.a.id));

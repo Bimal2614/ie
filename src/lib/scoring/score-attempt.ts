@@ -7,7 +7,7 @@ import { QUESTION_TYPES, type QuestionTypeKey } from "@/lib/ielts";
 import { keyFromUrl, presignGetUrl } from "@/lib/speech/s3";
 import { analyzeSpeaking, partFor } from "@/lib/speech/ielts-speaking";
 import { speakingFeedback, unscorableFeedback } from "./speaking-feedback";
-import { scoreWriting, type WritingTaskType } from "@/lib/writing/gemini";
+import { scoreWriting, type WritingTaskType } from "@/lib/writing/openai";
 import { resolvePrompts } from "./prompts";
 import { mapWithConcurrency } from "./concurrency";
 
@@ -238,7 +238,7 @@ export async function scoreAttemptWritingFor(
 
     const resolved = prompts.get(row.id);
     // Unlike speaking, a missing prompt here does fall back to the type's
-    // instruction: Gemini is told what task it is grading and cannot produce a
+    // instruction: the grader is told what task it is grading and cannot produce a
     // grade at all without some statement of it.
     const questionPrompt = resolved?.prompt ?? meta.instruction ?? "";
 
@@ -266,7 +266,8 @@ export async function scoreAttemptWritingFor(
           corrections: s.corrections,
           improvedExamples: s.improvedExamples,
           nextSteps: s.nextSteps,
-          provider: "gemini",
+          taskCompliance: s.taskCompliance,
+          provider: "openai",
         },
       })
       .where(eq(userResponses.id, row.id));

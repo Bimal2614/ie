@@ -9,7 +9,7 @@ import { practiceSections, questions } from "@/db/schema";
  *
  * Both scorers depend on this and neither degrades gracefully without it. The
  * speaking service judges relevance and topic development against the `question`
- * we send, and Gemini's entire grade turns on the task that was set. Passing the
+ * we send, and the entire grade turns on the task that was set. Passing the
  * question TYPE's generic blurb instead — "Answer questions about yourself and
  * familiar topics." — is worse than passing nothing: it makes a perfectly
  * on-topic answer read as off-topic, so an honest omission beats a wrong prompt.
@@ -40,7 +40,7 @@ export type ResolvedPrompt = {
   /**
    * The real question text, or null when the content genuinely has none. For a
    * cue card this is the topic and bullets flattened into one string — the form
-   * Gemini takes, and the fallback for any caller that wants a single prompt.
+   * the grader takes, and the fallback for any caller that wants a single prompt.
    */
   prompt: string | null;
   /**

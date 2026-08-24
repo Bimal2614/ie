@@ -19,7 +19,7 @@ import { scoreAttemptSpeakingFor, scoreAttemptWritingFor } from "./score-attempt
  * browser staying alive to ask for it.
  *
  * WHY IT CAN'T JUST RUN INLINE. A speaking call is ~15s (a full long turn ~40s)
- * and a Gemini grade a few seconds; a seven-question Part 1 would hold the submit
+ * and a writing grade a few seconds; a seven-question Part 1 would hold the submit
  * open for minutes.
  * Rows land with band=null and the UI renders "awaiting score" until this fills
  * them in.

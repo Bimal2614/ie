@@ -16,7 +16,7 @@ import { QUESTION_TYPES, type SectionKey } from "@/lib/ielts";
  * The AI examiner's report for a just-submitted Writing or Speaking attempt.
  *
  * WHY THIS SCREEN EXISTS. Bands are computed server-side AFTER the response is
- * sent (a speaking call is ~15s, a Gemini grade a few seconds), so submit can
+ * sent (a speaking call is ~15s, a writing grade a few seconds), so submit can
  * only ever say "sent for scoring". Until now that was the end of the flow: the
  * transcript, the band and the criteria all landed in the database and the
  * candidate was never shown them — they had to find their way to History and
