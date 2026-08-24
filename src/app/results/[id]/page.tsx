@@ -41,11 +41,10 @@ export default async function ResultPage({ params }: { params: Promise<{ id: str
         <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
           {indicative ? "Indicative overall band" : "Overall band"}
         </p>
-        <p className="display text-6xl tabular-nums text-brand">{result.overallBand ?? "—"}</p>
+        <p className="display text-6xl tabular-nums text-brand">{result.overallBand ?? ""}</p>
         {indicative && (
           <p className="max-w-sm px-4 text-center text-xs text-ink-muted">
-            Based on Listening and Reading only. Writing and Speaking need AI scoring, which is
-            switched on in a later phase — your full band will update then.
+            Based on Listening and Reading only. Writing and Speaking need AI scoring, which is switched on in a later phase. Your full band will update then.
           </p>
         )}
       </div>
@@ -76,8 +75,7 @@ export default async function ResultPage({ params }: { params: Promise<{ id: str
 
       {/* Honesty note on raw→band, given the small seeded content */}
       <p className="rounded-lg bg-paper-sunken px-3 py-2 text-xs text-ink-muted">
-        Band estimates come from your correct ratio. A real IELTS uses fixed raw-score
-        (/40) conversion tables — those apply once a mock draws a full-length section.
+        Band estimates come from your correct ratio. A real IELTS uses fixed raw-score (/40) conversion tables. Those apply once a mock draws a full-length section.
       </p>
 
       <div className="flex flex-wrap gap-3">

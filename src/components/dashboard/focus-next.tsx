@@ -49,14 +49,14 @@ function FocusCard({ focus }: { focus: FocusRecommendation }) {
                   <>
                     {weakestSection.accuracy}% accuracy across {weakestSection.attempted} question
                     {weakestSection.attempted === 1 ? "" : "s"}
-                    {atTarget ? " — on track for" : " — short of"} your target of band {targetBand}.
+                    {atTarget ? "on track for" : "short of"} your target of band {targetBand}.
                   </>
                 ) : (
                   <>
                     Averaging band {weakestSection.band?.toFixed(1)}
                     {atTarget
-                      ? ` — at or above your target of ${targetBand}. Keep it up.`
-                      : ` — ${weakestSection.gap.toFixed(1)} below your target of ${targetBand}.`}
+                      ? `at or above your target of ${targetBand}. Keep it up.`
+                      : `${weakestSection.gap.toFixed(1)} below your target of ${targetBand}.`}
                   </>
                 )}
               </p>
@@ -82,7 +82,7 @@ function FocusCard({ focus }: { focus: FocusRecommendation }) {
                         ? `${t.right} / ${t.graded}`
                         : t.avgBand != null
                           ? `band ${t.avgBand.toFixed(1)}`
-                          : "—"}
+                          : ""}
                     </span>
                     <ArrowUpRight className="size-4 text-ink-muted" />
                   </span>

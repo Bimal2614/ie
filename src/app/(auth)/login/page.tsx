@@ -28,12 +28,12 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           common cause by far is a sign-in elsewhere (one device at a time). */}
       {signedout && (
         <p className="rounded-lg border border-info/25 bg-info-soft px-3 py-2 text-sm text-info">
-          You&apos;ve been signed out. Signing in on another device ends the session here — only one device can be signed in at a time.
+          You&apos;ve been signed out. Signing in on another device ends the session here. Only one device can be signed in at a time.
         </p>
       )}
       {verified === "1" && (
         <p className="rounded-lg border border-green/30 bg-green-soft px-3 py-2 text-sm text-green-ink">
-          Email verified — you can sign in now.
+          Email verified: you can sign in now.
         </p>
       )}
       {verify === "invalid" && (

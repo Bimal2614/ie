@@ -335,7 +335,7 @@ async function readError(res: Response): Promise<SpeakingScoreResult> {
       ok: false,
       reason: "unauthorized",
       detail:
-        "blocked by Vercel Deployment Protection before reaching the service — " +
+        "blocked by Vercel Deployment Protection before reaching the service. " +
         "disable it for this project, or send a protection-bypass token",
     };
   }

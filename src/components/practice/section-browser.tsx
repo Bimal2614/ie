@@ -421,7 +421,7 @@ function PartPicker({
                             {part.partNumber ? ` · Part ${part.partNumber}` : ""}
                           </span>
                           <span className={`chip chip-${sec.accent}`}>
-                            Q{part.startNumber}–{part.endNumber}
+                            Q{part.startNumber}-{part.endNumber}
                           </span>
                         </span>
                         <span className="mt-1 block truncate text-sm text-ink-muted">
@@ -542,7 +542,7 @@ function Pager({
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 px-1">
       <p className="text-xs tabular-nums text-ink-muted">
-        {from}–{to} of {total}
+        {from}-{to} of {total}
       </p>
 
       <nav aria-label="Book list pages" className="flex items-center gap-1">

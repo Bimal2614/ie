@@ -244,7 +244,7 @@ export function SectionPlayer({
         <>
           <span className={cn("chip", `chip-${sec.accent}`)}>{sec.label}</span>
           <span className="chip">
-            Q{section.startNumber}–{section.endNumber}
+            Q{section.startNumber}-{section.endNumber}
           </span>
         </>
       }

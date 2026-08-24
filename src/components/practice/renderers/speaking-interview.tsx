@@ -112,7 +112,7 @@ export function SpeakingInterview({
             </Button>
           ) : (
             <p className="text-xs text-ink-muted">
-              Last question — submit below when you&apos;re done.
+              Last question: submit below when you&apos;re done.
             </p>
           )}
         </div>

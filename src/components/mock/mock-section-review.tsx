@@ -63,7 +63,7 @@ export function MockSectionReviewBlock({
           </span>
         </span>
         <span className="display shrink-0 text-xl tabular-nums text-ink">
-          {band ?? <span className="text-sm text-ink-muted">—</span>}
+          {band ?? <span className="text-sm text-ink-muted">-</span>}
         </span>
         <ChevronRight className={cn("size-4 shrink-0 text-ink-muted transition-transform", open && "rotate-90")} />
       </button>

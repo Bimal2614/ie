@@ -27,7 +27,7 @@ export async function sendEmail(opts: {
   text: string;
 }): Promise<{ ok: boolean; skipped?: boolean; error?: string }> {
   if (!isEmailConfigured()) {
-    console.warn(`[email] SMTP not configured — skipped "${opts.subject}" to ${opts.to}`);
+    console.warn(`[email] SMTP not configured: skipped "${opts.subject}" to ${opts.to}`);
     return { ok: true, skipped: true };
   }
   try {

@@ -47,13 +47,12 @@ export function SpeakingScoreTrigger({ sessionId }: { sessionId: string }) {
       {state === "scoring" ? (
         <>
           <Loader2 className="size-3.5 animate-spin" />
-          Scoring your writing &amp; speaking answers with AI — this takes a few seconds each. The
-          report will update automatically.
+          Scoring your writing &amp; speaking answers with AI. This takes a few seconds each. The report will update automatically.
         </>
       ) : (
         <>
           <Sparkles className="size-3.5" />
-          Some answers couldn&apos;t be scored right now. Your answers are saved — reload to retry.
+          Some answers couldn&apos;t be scored right now. Your answers are saved, reload to retry.
         </>
       )}
     </p>

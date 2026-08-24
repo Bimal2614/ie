@@ -15,7 +15,7 @@ export function ForgotPasswordForm() {
     return (
       <div className="flex gap-3 rounded-xl border border-line bg-paper-elev p-4 text-sm text-ink-soft">
         <MailCheck className="mt-0.5 size-5 shrink-0 text-green" />
-        <p>If an account exists for that email, we&apos;ve sent a password-reset link. Check your inbox (and spam) — the link expires in 1 hour.</p>
+        <p>If an account exists for that email, we&apos;ve sent a password-reset link. Check your inbox (and spam). The link expires in 1 hour.</p>
       </div>
     );
   }

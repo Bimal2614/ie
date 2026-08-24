@@ -196,7 +196,7 @@ function StatTiles({ data }: { data: DaySummary }) {
     // thing in a scale the exam never reports.
     {
       label: "Correct",
-      value: data.graded > 0 ? `${data.correct} / ${data.graded}` : "—",
+      value: data.graded > 0 ? `${data.correct} / ${data.graded}` : "",
       icon: Check,
     },
   ];

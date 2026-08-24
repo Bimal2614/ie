@@ -27,7 +27,7 @@ export async function reportQuestion(input: {
   const note = String(input.note ?? "").trim().slice(0, 1000);
 
   const limit = await rateLimit(`report:${user.id}`, 20, 60 * 60);
-  if (!limit.allowed) return { ok: false, error: "You've reported a lot recently — please try again later." };
+  if (!limit.allowed) return { ok: false, error: "You've reported a lot recently: please try again later." };
 
   const { ip, userAgent } = await getRequestContext();
   await db.insert(auditLog).values({

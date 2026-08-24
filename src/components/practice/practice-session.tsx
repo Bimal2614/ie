@@ -180,7 +180,7 @@ export function PracticeSession({
       // answers a second time and bill for both.
     } catch {
       // Most likely a rate-limit throttle (server messages are redacted in prod).
-      setNotice("You're going too fast — please wait a moment and try again.");
+      setNotice("You're going too fast: please wait a moment and try again.");
     } finally {
       setSubmitting(false);
     }
@@ -249,7 +249,7 @@ export function PracticeSession({
     isNumbered && currentSet && totalQsInSet > 0
       ? totalQsInSet === 1
         ? `Question ${currentSet.startNumber}`
-        : `Questions ${currentSet.startNumber}–${currentSet.startNumber + totalQsInSet - 1}`
+        : `Questions ${currentSet.startNumber}-${currentSet.startNumber + totalQsInSet - 1}`
       : "";
   const noun = SET_NOUN[section];
 
@@ -451,7 +451,7 @@ export function PracticeSession({
             type="button"
             onClick={() => setPaletteOpen(true)}
             title="Jump to a passage"
-            aria-label={`Passage ${currentSetIndex + 1} of ${totalSets} — open list`}
+            aria-label={`Passage ${currentSetIndex + 1} of ${totalSets}: open list`}
             className="inline-flex items-center gap-1.5 rounded-md border border-line bg-paper-elev px-2.5 py-1 text-xs text-ink-soft transition-colors hover:border-brand/50 hover:bg-brand-soft"
           >
             <LayoutGrid className="size-3.5 text-ink-muted" />

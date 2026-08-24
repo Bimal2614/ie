@@ -6,9 +6,9 @@ import { Reveal } from "@/components/marketing/motion";
 import { FAQS } from "@/lib/faqs";
 
 export const metadata: Metadata = {
-  title: "IELTS Practice FAQ — AI Band Scoring & Mock Tests | IELTSVega",
+  title: "IELTS Practice FAQ: AI Band Scoring & Mock Tests | IELTSVega",
   description:
-    "Answers to common questions about practising IELTS online with IELTSVega — AI band scoring for Writing and Speaking, mock tests, Academic vs General Training, and how to raise your band.",
+    "Answers to common questions about practising IELTS online with IELTSVega: AI band scoring for Writing and Speaking, mock tests, Academic vs General Training, and how to raise your band.",
   keywords: [
     "ielts practice faq",
     "ielts online",
@@ -72,7 +72,7 @@ export default function FaqPage() {
       {/* CTA */}
       <div className="mt-14 flex flex-col items-center gap-4 rounded-2xl border border-line bg-paper-elev p-8 text-center">
         <h2 className="font-serif text-2xl tracking-tight">Still have questions?</h2>
-        <p className="max-w-md text-sm text-ink-soft">The fastest way to see how IELTSVega marks is to try it — free to start.</p>
+        <p className="max-w-md text-sm text-ink-soft">The fastest way to see how IELTSVega marks is to try it, free to start.</p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link href="/signup" className="inline-flex items-center gap-2 rounded-lg bg-green px-6 py-3 text-sm font-semibold text-green-ink transition-[filter] hover:brightness-105">
             Start practising free <ArrowRight className="size-4" />

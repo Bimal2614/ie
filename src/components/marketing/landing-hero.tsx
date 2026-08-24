@@ -29,6 +29,12 @@ export function LandingHero() {
         aria-hidden
         fill
         priority
+        // A `fill` image with no `sizes` makes Next assume 100vw at every
+        // breakpoint and serve the largest variant to phones too. This IS a
+        // full-bleed background, so 100vw is right — declaring it silences the
+        // warning and lets the browser pick the smallest sufficient variant.
+        // The hero is the LCP element, so this is the page's biggest CWV lever.
+        sizes="100vw"
         className="object-cover"
       />
       {/* Legibility wash — light enough that the WHOLE image reads; slightly
@@ -57,8 +63,7 @@ export function LandingHero() {
           {...rise(0.18)}
           className="mt-6 max-w-xl text-lg text-white/65"
         >
-          Instant AI band scores for Writing &amp; Speaking, full mock tests,
-          and 15,000+ questions — practise the way examiners actually mark.
+          Instant AI band scores for Writing &amp; Speaking, full mock tests, and 15,000+ questions. Practise the way examiners actually mark.
         </motion.p>
 
         <motion.div

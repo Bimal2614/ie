@@ -61,7 +61,7 @@ export function SectionPerformance({ sectionStats }: { sectionStats: DashboardSt
                     <>
                       band{" "}
                       <span className="font-semibold tabular-nums text-ink">
-                        {s.avgBand?.toFixed(1) ?? "—"}
+                        {s.avgBand?.toFixed(1) ?? ""}
                       </span>{" "}
                       average
                     </>

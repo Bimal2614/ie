@@ -1,21 +1,22 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { Target, Sparkles, ShieldCheck, Globe, ArrowRight } from "lucide-react";
 import { MarketingShell, PageHead } from "@/components/marketing/marketing-shell";
 import { Reveal } from "@/components/marketing/motion";
+import { KEYWORDS, pageMeta } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "About IELTSVega — Our Mission & Method for IELTS Success",
+export const metadata = pageMeta({
+  title: "About IELTSVega: our Mission & Method for IELTS Success",
   description:
     "IELTSVega is an independent IELTS practice platform combining AI band scoring for Writing & Speaking, full mock tests, and 15,000+ Academic and General Training questions built around how examiners actually mark.",
-  alternates: { canonical: "/about" },
-};
+  path: "/about",
+  keywords: [...KEYWORDS.ai, "IELTS practice platform", "online IELTS course", "IELTS preparation website"],
+});
 
 const VALUES = [
-  { Icon: Target, title: "Built around the marking", body: "Every question, mock and score is designed around the official band descriptors — the exact criteria examiners use — not generic English practice." },
+  { Icon: Target, title: "Built around the marking", body: "Every question, mock and score is designed around the official band descriptors, the exact criteria examiners use, not generic English practice." },
   { Icon: Sparkles, title: "AI where it genuinely helps", body: "Instant, criteria-based band scores for Writing and Speaking mean you learn from every answer in seconds, not days." },
   { Icon: ShieldCheck, title: "Honest about your level", body: "Calibrated scoring that tells you the truth, plus specific, actionable feedback on exactly how to reach your next half-band." },
-  { Icon: Globe, title: "For Academic & General", body: "Full, separate content for both modules — including General letters and Academic Task 1 visuals — so your practice matches your real exam." },
+  { Icon: Globe, title: "For Academic & General", body: "Full, separate content for both modules, including General letters and Academic Task 1 visuals, so your practice matches your real exam." },
 ];
 
 const STATS = [
@@ -31,7 +32,7 @@ export default function AboutPage() {
       <Reveal>
         <PageHead
           eyebrow="About IELTSVega"
-          title="We help capable people prove it — in band form."
+          title="We help capable people prove it: in band form."
           lead="Fluent, hard-working candidates miss their target band every day. Not because their English is weak, but because IELTS rewards specific, criteria-driven answers that no one shows them how to produce. IELTSVega exists to close that gap."
         />
       </Reveal>
@@ -44,9 +45,7 @@ export default function AboutPage() {
           for Writing and Speaking that grades every answer against the four official criteria.
         </p>
         <p>
-          Our belief is simple: preparation should mirror the exam. That means practising the exact
-          question types you&apos;ll face, under real conditions, with feedback that speaks the
-          language of the band descriptors — so improvement is measurable, not hopeful.
+          Our belief is simple: preparation should mirror the exam. That means practising the exact question types you&apos;ll face, under real conditions, with feedback that speaks the language of the band descriptors, so improvement is measurable, not hopeful.
         </p>
       </Reveal>
 
@@ -77,7 +76,7 @@ export default function AboutPage() {
       {/* CTA */}
       <Reveal delay={0.1} className="mt-14 rounded-2xl border border-line bg-paper-elev p-8 text-center">
         <h2 className="font-serif text-2xl tracking-tight sm:text-3xl">Practise the way it&apos;s marked.</h2>
-        <p className="mx-auto mt-2 max-w-md text-sm text-ink-soft">Start free — get scored on your first answer today.</p>
+        <p className="mx-auto mt-2 max-w-md text-sm text-ink-soft">Start free: get scored on your first answer today.</p>
         <Link href="/signup" className="mt-5 inline-flex items-center gap-2 rounded-lg bg-green px-6 py-3 text-sm font-semibold text-green-ink transition-[filter] hover:brightness-105">
           Start practising free <ArrowRight className="size-4" />
         </Link>

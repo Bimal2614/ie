@@ -1,14 +1,15 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { Mail, LifeBuoy, BookOpen, Clock } from "lucide-react";
 import { MarketingShell, PageHead } from "@/components/marketing/marketing-shell";
 import { ContactForm } from "@/components/marketing/contact-form";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Contact IELTSVega — Support & Enquiries",
+export const metadata = pageMeta({
+  title: "Contact IELTSVega: Support & Enquiries",
   description: "Get in touch with the IELTSVega team for support, billing questions, or feedback. We typically reply within one business day.",
-  alternates: { canonical: "/contact" },
-};
+  path: "/contact",
+  keywords: ["IELTSVega support", "IELTS practice support", "contact IELTS platform"],
+});
 
 const SUPPORT_EMAIL = "support@ieltsvega.com";
 
@@ -25,7 +26,7 @@ export default function ContactPage() {
       <PageHead
         eyebrow="Contact"
         title="We're here to help."
-        lead="Questions about practice, mock tests, billing, or feedback on the platform — send us a message and we'll get back to you, usually within one business day."
+        lead="Questions about practice, mock tests, billing, or feedback on the platform. Send us a message and we'll get back to you, usually within one business day."
       />
 
       <div className="mt-10 grid gap-8 lg:grid-cols-[1.4fr_1fr]">

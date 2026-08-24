@@ -1,22 +1,18 @@
 import { ImageResponse } from "next/og";
-import { POST_BY_SLUG } from "@/lib/blog";
 
 /**
- * Per-post social share image (1200×630). Colocating this file auto-populates
- * og:image and twitter:image for each article — so links show a branded
- * thumbnail on social and in some Google layouts. Generated at request time and
- * cached by Next; no design assets needed.
+ * The site-wide social share image (1200×630).
+ *
+ * Sitting at the app root, this becomes the og:image and twitter:image for EVERY
+ * page that does not colocate its own — previously only blog posts had one, so
+ * every other link shared as a bare URL with no thumbnail. Blog posts still
+ * override this with their per-article version.
  */
-export const alt = "IELTSVega: IELTS practice article";
+export const alt = "IELTSVega: practise IELTS online with AI band scoring";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const post = POST_BY_SLUG[slug];
-  const title = post?.title ?? "IELTS practice with AI band scoring";
-  const category = (post?.category ?? "IELTS").toUpperCase();
-
+export default function Image() {
   return new ImageResponse(
     (
       <div
@@ -52,19 +48,17 @@ export default async function Image({ params }: { params: Promise<{ slug: string
           IELTSVega
         </div>
 
-        {/* Category + title */}
         <div style={{ display: "flex", flexDirection: "column" }}>
           <div style={{ display: "flex", color: "#4ade80", fontSize: 24, fontWeight: 600, letterSpacing: 2, marginBottom: 20 }}>
-            {category}
+            ACADEMIC &amp; GENERAL TRAINING
           </div>
-          <div style={{ display: "flex", fontSize: 60, fontWeight: 700, lineHeight: 1.15, maxWidth: 1000 }}>
-            {title}
+          <div style={{ display: "flex", fontSize: 64, fontWeight: 700, lineHeight: 1.12, maxWidth: 1000 }}>
+            Practise IELTS online with instant AI band scores
           </div>
         </div>
 
-        {/* Footer */}
         <div style={{ display: "flex", color: "#93a4bd", fontSize: 26 }}>
-          ieltsvega.com · AI band scoring · Full mock tests
+          ieltsvega.com · AI Writing &amp; Speaking scores · Full mock tests
         </div>
       </div>
     ),

@@ -62,7 +62,7 @@ export function ReportQuestionButton({ questionId }: { questionId: string }) {
 
             {state === "done" ? (
               <p className="mt-4 flex items-center gap-2 text-sm text-ink-soft">
-                <CheckCircle2 className="size-5 text-green" /> Thanks — we&apos;ll review this question.
+                <CheckCircle2 className="size-5 text-green" /> Thanks: we&apos;ll review this question.
               </p>
             ) : (
               <>

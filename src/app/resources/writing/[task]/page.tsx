@@ -5,6 +5,8 @@ import { ArrowLeft, Check, X, ListOrdered, PenLine, MessageSquareQuote, BookMark
 import { LandingNav } from "@/components/marketing/landing-nav";
 import { LandingFooter } from "@/components/marketing/landing-footer";
 import { WRITING_GUIDES, type WritingGuide } from "@/lib/study-writing";
+import { JsonLd } from "@/components/seo/json-ld";
+import { KEYWORDS, breadcrumbJsonLd, courseJsonLd, pageMeta } from "@/lib/seo";
 
 type Params = { task: string };
 
@@ -20,11 +22,18 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const { task } = await params;
   const g = get(task);
   if (!g) return {};
-  return {
-    title: `IELTS ${g.title} — All Question Types, Templates & Band 9 Model Answers (2026) | IELTSVega`,
+  return pageMeta({
+    title: `IELTS ${g.title}. All Question Types, Templates & Band 9 Model Answers (2026) | IELTSVega`,
     description: `${g.tagline} Every ${g.title} question type with how to answer, a plan, structure, useful language, common mistakes and a full Band 9 sample answer.`,
-    alternates: { canonical: `/resources/writing/${g.task}` },
-  };
+    path: `/resources/writing/${g.task}`,
+    keywords: [
+      `IELTS writing ${g.task.replace("-", " ")}`,
+      `IELTS ${g.task.replace("-", " ")} samples`,
+      `IELTS ${g.task.replace("-", " ")} structure`,
+      `IELTS ${g.task.replace("-", " ")} band 9`,
+      ...KEYWORDS.writing,
+    ],
+  });
 }
 
 export default async function WritingTaskGuide({ params }: { params: Promise<Params> }) {
@@ -36,6 +45,21 @@ export default async function WritingTaskGuide({ params }: { params: Promise<Par
 
   return (
     <div className="min-h-svh bg-paper text-ink">
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Study materials", path: "/resources" },
+          { name: "IELTS Writing", path: "/resources/writing" },
+          { name: `Writing ${g.task === "task-1" ? "Task 1" : "Task 2"}`, path: `/resources/writing/${g.task}` },
+        ])}
+      />
+      <JsonLd
+        data={courseJsonLd({
+          name: `IELTS Writing ${g.task === "task-1" ? "Task 1" : "Task 2"}`,
+          description: g.tagline,
+          path: `/resources/writing/${g.task}`,
+        })}
+      />
       <LandingNav alwaysSolid />
 
       <main className="mx-auto w-full max-w-4xl px-5 pb-20 pt-28 sm:pt-32">
@@ -91,7 +115,13 @@ export default async function WritingTaskGuide({ params }: { params: Promise<Par
         <div className="mt-6 space-y-8">
           {g.types.map((t) => (
             <article key={t.slug} id={t.slug} className="scroll-mt-24 rounded-2xl border border-line bg-paper-elev p-6 sm:p-7">
-              <h3 className="text-xl font-semibold text-ink">{t.name}</h3>
+              <h3 className="text-xl font-semibold text-ink">
+                {/* Each type also has its own indexable page — link it so crawlers
+                    and readers can both reach it, not just the #anchor. */}
+                <Link href={`/resources/writing/${g.task}/${t.slug}`} className="hover:text-brand hover:underline">
+                  {t.name}
+                </Link>
+              </h3>
               <p className="mt-1.5 text-sm text-ink-soft">{t.what}</p>
 
               {/* How to answer */}

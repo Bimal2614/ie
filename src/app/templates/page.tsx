@@ -9,7 +9,7 @@ import { SITE_URL } from "@/lib/site";
 export const metadata: Metadata = {
   title: "IELTS Writing & Speaking Templates & Sentence Banks | IELTSVega",
   description:
-    "Free IELTS templates and sentence banks for Writing (Task 1 & 2) and Speaking (Parts 1–3) — examiner-friendly Band 7–9 patterns, structures and formulas you can adapt to any topic.",
+    "Free IELTS templates and sentence banks for Writing (Task 1 & 2) and Speaking (Parts 1-3). Examiner-friendly Band 7-9 patterns, structures and formulas you can adapt to any topic.",
   keywords: [
     "ielts writing template",
     "ielts writing task 2 template",
@@ -31,7 +31,7 @@ function TemplatesJsonLd() {
       "@type": "Article",
       headline: "IELTS Writing & Speaking Templates & Sentence Banks",
       description:
-        "Examiner-friendly Band 7–9 sentence patterns and structures for IELTS Writing (Task 1 & 2) and Speaking (Parts 1–3).",
+        "Examiner-friendly Band 7-9 sentence patterns and structures for IELTS Writing (Task 1 & 2) and Speaking (Parts 1-3).",
       articleSection: "Templates",
       url: `${base}/templates`,
       mainEntityOfPage: { "@type": "WebPage", "@id": `${base}/templates` },
@@ -69,7 +69,7 @@ export default function TemplatesPage() {
           <PageHead
             eyebrow="Templates"
             title="IELTS templates & sentence banks."
-            lead="Ready-made, examiner-friendly sentences you can adapt to almost any topic. Learn a few from each group, practise them until they're automatic — and follow the links to full worked examples in the study guides."
+            lead="Ready-made, examiner-friendly sentences you can adapt to almost any topic. Learn a few from each group, practise them until they're automatic, and follow the links to full worked examples in the study guides."
           />
         </div>
       </Reveal>
@@ -103,7 +103,7 @@ export default function TemplatesPage() {
       <div className="mt-16 flex flex-col items-center gap-4 rounded-2xl border border-line bg-paper-elev p-8 text-center">
         <h2 className="font-serif text-2xl tracking-tight">Templates only work if you use them.</h2>
         <p className="max-w-md text-sm text-ink-soft">
-          Practise with these patterns and get instant AI band scoring — or read the full guides with Band 9 model answers.
+          Practise with these patterns and get instant AI band scoring, or read the full guides with Band 9 model answers.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link href="/signup" className="inline-flex items-center gap-2 rounded-lg bg-green px-6 py-3 text-sm font-semibold text-green-ink transition-[filter] hover:brightness-105">
@@ -193,7 +193,7 @@ function TemplateSetBlock({ set }: { set: TemplateSet }) {
                   {i + 1}
                 </span>
                 <span className="text-ink-soft">
-                  <span className="font-medium text-ink">{st.label} — </span>
+                  <span className="font-medium text-ink">{st.label}: </span>
                   {st.text}
                 </span>
               </li>

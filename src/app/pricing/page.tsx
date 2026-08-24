@@ -1,17 +1,18 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { Check, ArrowRight } from "lucide-react";
 import { LandingNav } from "@/components/marketing/landing-nav";
 import { LandingFooter } from "@/components/marketing/landing-footer";
 import { Reveal } from "@/components/marketing/motion";
 import { cn } from "@/lib/utils";
+import { KEYWORDS, pageMeta } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Pricing — IELTS Practice Plans | IELTSVega",
+export const metadata = pageMeta({
+  title: "Pricing: IELTS Practice Plans | IELTSVega",
   description:
     "Simple IELTS practice pricing. Start free, or unlock unlimited AI band scoring for Writing & Speaking, full mock tests, and 15,000+ Academic and General Training questions.",
-  alternates: { canonical: "/pricing" },
-};
+  path: "/pricing",
+  keywords: [...KEYWORDS.core, "IELTS practice price", "IELTS course cost", "IELTS preparation online cost", "IELTS practice subscription"],
+});
 
 /* ---- Placeholder pricing — swap prices/features for the real plan before launch. ---- */
 const PLANS = [
@@ -84,8 +85,7 @@ export default function PricingPage() {
             One plan to your target band.
           </h1>
           <p className="mt-4 text-ink-soft">
-            Start free and upgrade when you&apos;re ready. Every plan is built around the way IELTS
-            examiners actually mark — no filler.
+            Start free and upgrade when you&apos;re ready. Every plan is built around the way IELTS examiners actually mark, no filler.
           </p>
         </Reveal>
 

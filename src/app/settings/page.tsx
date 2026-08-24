@@ -24,7 +24,7 @@ function Card({ title, desc, children }: { title: string; desc?: string; childre
 const NOTIFS = [
   { label: "Study reminders", desc: "Nudges to keep your streak going." },
   { label: "Score-ready alerts", desc: "When an AI band report is ready." },
-  { label: "Product updates", desc: "Occasional news — no spam." },
+  { label: "Product updates", desc: "Occasional news: no spam." },
 ];
 
 export default async function SettingsPage() {

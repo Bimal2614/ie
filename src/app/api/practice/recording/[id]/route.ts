@@ -58,7 +58,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     await guardGeneral(user.id);
   } catch (e) {
     if (e instanceof RateLimitError) {
-      return new NextResponse("Too many requests — slow down.", { status: 429 });
+      return new NextResponse("Too many requests: slow down.", { status: 429 });
     }
     throw e;
   }

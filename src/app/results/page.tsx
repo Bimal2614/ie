@@ -55,7 +55,7 @@ export default async function ResultsPage() {
                 </p>
               </div>
               <div className="text-right">
-                <p className="display text-xl tabular-nums text-brand">{r.overallBand ?? "—"}</p>
+                <p className="display text-xl tabular-nums text-brand">{r.overallBand ?? ""}</p>
                 <p className="text-[10px] uppercase tracking-wider text-ink-muted">band</p>
               </div>
               <ChevronRight className="size-4 shrink-0 text-ink-muted" />

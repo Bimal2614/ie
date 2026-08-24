@@ -229,7 +229,7 @@ export function ChoiceBank({ title }: { title?: string }) {
         {bank.disabled
           ? (title ?? "Options")
           : bank.held
-            ? `Option ${bank.held} picked up — choose a blank, or press Escape to cancel.`
+            ? `Option ${bank.held} picked up. Choose a blank, or press Escape to cancel.`
             : "Drag and drop an option to fill in each blank."}
       </p>
 

@@ -236,8 +236,8 @@ export function AttemptFeedback({
                 <span className="inline-flex items-center gap-1.5">
                   <Loader2 className="size-3.5 animate-spin" />
                   {scored > 0
-                    ? `${scored} of ${scored + pending} scored — this takes a few seconds each.`
-                    : "Grading your answers — this takes a few seconds each."}
+                    ? `${scored} of ${scored + pending} scored: this takes a few seconds each.`
+                    : "Grading your answers: this takes a few seconds each."}
                 </span>
               )}
               {!waiting && scored > 0 && (
@@ -249,7 +249,7 @@ export function AttemptFeedback({
               {!waiting && scored === 0 && !failed && configured !== false && "No answer could be scored."}
               {configured === false &&
                 `AI ${section} scoring is not configured on this server, so no band can be produced. Your answers are saved.`}
-              {failed && "Scoring is unavailable right now — your answers are saved."}
+              {failed && "Scoring is unavailable right now: your answers are saved."}
             </p>
           </div>
         </div>

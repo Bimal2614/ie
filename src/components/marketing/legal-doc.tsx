@@ -12,7 +12,7 @@ export function LegalDocView({ doc }: { doc: LegalDoc }) {
       {/* Template disclaimer — remove once finalised with counsel. */}
       <div className="mt-6 flex gap-3 rounded-xl border border-warning/40 bg-warning-soft p-4 text-sm text-ink-soft">
         <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" />
-        <p>This is a starting template with placeholders (e.g. company name, jurisdiction). Have it reviewed by a qualified lawyer and complete your details before launch — it is not legal advice.</p>
+        <p>This is a starting template with placeholders (e.g. company name, jurisdiction). Have it reviewed by a qualified lawyer and complete your details before launch. It is not legal advice.</p>
       </div>
 
       <p className="mt-6 text-ink-soft">{doc.intro}</p>

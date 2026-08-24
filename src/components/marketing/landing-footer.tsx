@@ -40,9 +40,13 @@ const COLS: { title: string; links: { label: string; href: string }[] }[] = [
     ],
   },
   {
-    title: "Popular guides",
+    // Sitewide footer links are how the newer SEO pages get discovered and how
+    // link equity reaches them — without a link on every page they are orphans.
+    title: "Guides & tools",
     links: [
+      { label: "Band score calculator", href: "/ielts-band-score-calculator" },
       { label: "IELTS band scores", href: "/ielts-band-scores" },
+      { label: "IELTS 2026 changes", href: "/ielts-2026-changes" },
       { label: "How to get Band 7", href: "/ielts-band/7" },
       { label: "How to get Band 8", href: "/ielts-band/8" },
       { label: "How to get Band 9", href: "/ielts-band/9" },
@@ -69,7 +73,7 @@ export function LandingFooter() {
         <h2 className="font-serif max-w-2xl text-3xl tracking-tight sm:text-5xl">
           Your target band is closer than the last attempt made it feel.
         </h2>
-        <p className="max-w-xl text-white/55">Start free today — practise, get scored, and watch your band climb.</p>
+        <p className="max-w-xl text-white/55">Start free today: practise, get scored, and watch your band climb.</p>
         <Magnetic>
           <Link href="/signup" className="inline-flex items-center gap-2 rounded-lg bg-green px-6 py-3.5 text-sm font-semibold text-green-ink transition-colors hover:brightness-105">
             Start practising free <ArrowRight className="size-4" />
@@ -85,8 +89,7 @@ export function LandingFooter() {
             IELTSVega
           </span>
           <p className="mt-3 max-w-xs text-sm text-white/45">
-            The complete IELTS preparation platform — AI band scoring, mock tests, and 15,000+
-            questions for Academic &amp; General Training.
+            The complete IELTS preparation platform: AI band scoring, mock tests, and 15,000+ questions for Academic &amp; General Training.
           </p>
         </div>
         {COLS.map((c) => (

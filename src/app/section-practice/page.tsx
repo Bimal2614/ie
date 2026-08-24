@@ -6,7 +6,7 @@ import { SectionBrowser } from "@/components/practice/section-browser";
 export const metadata: Metadata = {
   title: "Section-wise practice · IELTSVega",
   description:
-    "Sit a real IELTS exam part end to end — one recording or passage, every question type it asks, numbered exactly as the paper does.",
+    "Sit a real IELTS exam part end to end: one recording or passage, every question type it asks, numbered exactly as the paper does.",
 };
 
 /**
@@ -30,8 +30,7 @@ export default async function SectionPracticePage() {
           </p>
           <h1 className="display mt-1 text-2xl md:text-3xl">Section-wise practice</h1>
           <p className="mt-2 max-w-2xl text-base text-ink-soft">
-            Sit a real exam part end to end — one recording or passage, every question type
-            it asks, numbered exactly as the paper does.
+            Sit a real exam part end to end: one recording or passage, every question type it asks, numbered exactly as the paper does.
           </p>
         </div>
         <span className="chip">

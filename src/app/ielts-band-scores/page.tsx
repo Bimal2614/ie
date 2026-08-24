@@ -5,7 +5,7 @@ import { MarketingShell, PageHead } from "@/components/marketing/marketing-shell
 import { BANDS, BAND_SLUGS } from "@/lib/band-content";
 
 export const metadata: Metadata = {
-  title: "IELTS Band Scores Explained — How IELTS Scoring Works (2026) | IELTSVega",
+  title: "IELTS Band Scores Explained: how IELTS Scoring Works (2026) | IELTSVega",
   description:
     "How IELTS band scores work: the 9-band scale, how Listening, Reading, Writing and Speaking are scored, how the overall band is calculated and rounded, and how to reach Band 7, 8 or 9.",
   alternates: { canonical: "/ielts-band-scores" },
@@ -26,8 +26,23 @@ export default function BandScoresPage() {
       <PageHead
         eyebrow="IELTS scoring"
         title="IELTS band scores, explained."
-        lead="IELTS reports a score for each skill and an overall band on a 9-band scale. Here's exactly how those numbers are produced — and where the easiest half-bands hide."
+        lead="IELTS reports a score for each skill and an overall band on a 9-band scale. Here's exactly how those numbers are produced, and where the easiest half-bands hide."
       />
+
+      {/* Straight to the tool. People searching "how is IELTS scored" overwhelmingly
+          want to convert a number, so surface the calculator above the explainer. */}
+      <Link
+        href="/ielts-band-score-calculator"
+        className="mt-8 flex items-center justify-between gap-4 rounded-2xl border-2 border-brand bg-brand-soft/30 p-5 transition-shadow hover:shadow-lg"
+      >
+        <span>
+          <span className="block text-sm font-semibold text-ink">IELTS band score calculator</span>
+          <span className="mt-0.5 block text-sm text-ink-soft">
+            Convert a raw /40 score to a band, or four skill bands to your overall band.
+          </span>
+        </span>
+        <ArrowRight className="size-5 shrink-0 text-brand" />
+      </Link>
 
       {/* 9-band scale */}
       <h2 className="mt-10 text-xl font-semibold text-ink">The 9-band scale</h2>
@@ -43,8 +58,8 @@ export default function BandScoresPage() {
       {/* How each part is scored */}
       <h2 className="mt-12 text-xl font-semibold text-ink">How each skill is scored</h2>
       <div className="mt-4 space-y-3 text-sm leading-relaxed text-ink-soft">
-        <p><span className="font-semibold text-ink">Listening &amp; Reading</span> are marked out of 40. Your raw score converts to a band with a fixed table — roughly 30/40 is Band 7 and 35/40 is Band 8. Every mark counts, and spelling must be correct.</p>
-        <p><span className="font-semibold text-ink">Writing &amp; Speaking</span> are marked on four equally-weighted criteria (Task Response, Coherence &amp; Cohesion, Lexical Resource, Grammatical Range &amp; Accuracy — plus Pronunciation in Speaking).</p>
+        <p><span className="font-semibold text-ink">Listening &amp; Reading</span> are marked out of 40. Your raw score converts to a band with a fixed table. Roughly 30/40 is Band 7 and 35/40 is Band 8. Every mark counts, and spelling must be correct.</p>
+        <p><span className="font-semibold text-ink">Writing &amp; Speaking</span> are marked on four equally-weighted criteria (Task Response, Coherence &amp; Cohesion, Lexical Resource, Grammatical Range &amp; Accuracy, plus Pronunciation in Speaking).</p>
       </div>
 
       {/* Overall band */}
@@ -79,7 +94,7 @@ export default function BandScoresPage() {
 
       <div className="mt-12 flex flex-col items-center gap-4 rounded-2xl border border-line bg-paper-elev p-8 text-center">
         <h2 className="font-serif text-2xl tracking-tight">See your band before exam day.</h2>
-        <p className="max-w-md text-sm text-ink-soft">Practise with instant AI band scoring on Writing and Speaking — free to start.</p>
+        <p className="max-w-md text-sm text-ink-soft">Practise with instant AI band scoring on Writing and Speaking, free to start.</p>
         <Link href="/signup" className="inline-flex items-center gap-2 rounded-lg bg-green px-6 py-3 text-sm font-semibold text-green-ink transition-[filter] hover:brightness-105">
           Start practising free <ArrowRight className="size-4" />
         </Link>

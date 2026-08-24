@@ -73,7 +73,7 @@ function Showcase() {
           <div>
             <h3 className="text-2xl font-semibold leading-tight">AI Band Scoring</h3>
             <p className="mt-2 max-w-[22rem] text-sm leading-relaxed text-green-ink/75">
-              Writing &amp; Speaking graded on all four IELTS criteria — in seconds, not days.
+              Writing &amp; Speaking graded on all four IELTS criteria, in seconds, not days.
             </p>
           </div>
           <span className="grid size-10 shrink-0 place-items-center rounded-full bg-green-ink/12">

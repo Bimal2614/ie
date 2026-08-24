@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { Check, X, ArrowRight, Headphones, BookOpen, PenLine, Mic, type LucideIcon } from "lucide-react";
 import { MarketingShell, PageHead } from "@/components/marketing/marketing-shell";
 import { BANDS, BAND_SLUGS, type BandGuide } from "@/lib/band-content";
+import { JsonLd } from "@/components/seo/json-ld";
+import { KEYWORDS, breadcrumbJsonLd, courseJsonLd, pageMeta } from "@/lib/seo";
 
 type Params = { band: string };
 
@@ -21,12 +23,19 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const { band } = await params;
   const b = get(band);
   if (!b) return {};
-  return {
-    title: `How to Get Band ${b.band} in IELTS — Tips for Every Section (2026) | IELTSVega`,
+  return pageMeta({
+    title: `How to Get Band ${b.band} in IELTS. Tips for Every Section (2026) | IELTSVega`,
     description: `A practical guide to reaching IELTS Band ${b.band}: the scores you need, what each of Listening, Reading, Writing and Speaking requires, and the top tips to get there.`,
-    alternates: { canonical: `/ielts-band/${b.slug}` },
-    keywords: [`ielts band ${b.band}`, `how to get band ${b.band} in ielts`, `band ${b.band} ielts`, "ielts tips", "ielts band score"],
-  };
+    path: `/ielts-band/${b.slug}`,
+    keywords: [
+      `IELTS band ${b.band}`,
+      `how to get band ${b.band} in IELTS`,
+      `band ${b.band} IELTS`,
+      `IELTS band ${b.band} requirements`,
+      `is band ${b.band} good IELTS`,
+      ...KEYWORDS.bands,
+    ],
+  });
 }
 
 export default async function BandPage({ params }: { params: Promise<Params> }) {
@@ -36,6 +45,21 @@ export default async function BandPage({ params }: { params: Promise<Params> }) 
 
   return (
     <MarketingShell>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "IELTS band scores", path: "/ielts-band-scores" },
+          { name: `Band ${b.band}`, path: `/ielts-band/${b.slug}` },
+        ])}
+      />
+      <JsonLd
+        data={courseJsonLd({
+          name: `How to get IELTS Band ${b.band}`,
+          description: `The raw scores, skill-by-skill requirements and tactics needed to reach IELTS Band ${b.band}.`,
+          path: `/ielts-band/${b.slug}`,
+        })}
+      />
+
       <Link href="/ielts-band-scores" className="text-sm font-medium text-brand hover:underline">← IELTS band scores explained</Link>
 
       <div className="mt-4">
@@ -109,7 +133,7 @@ export default async function BandPage({ params }: { params: Promise<Params> }) 
 
       <div className="mt-12 flex flex-col items-center gap-4 rounded-2xl border border-line bg-paper-elev p-8 text-center">
         <h2 className="font-serif text-2xl tracking-tight">Practise your way to Band {b.band}.</h2>
-        <p className="max-w-md text-sm text-ink-soft">AI band scoring, full mock tests, and 15,000+ questions — free to start.</p>
+        <p className="max-w-md text-sm text-ink-soft">AI band scoring, full mock tests, and 15,000+ questions, free to start.</p>
         <Link href="/signup" className="inline-flex items-center gap-2 rounded-lg bg-green px-6 py-3 text-sm font-semibold text-green-ink transition-[filter] hover:brightness-105">
           Start practising free <ArrowRight className="size-4" />
         </Link>

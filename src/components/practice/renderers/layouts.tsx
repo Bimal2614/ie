@@ -374,7 +374,7 @@ function LetterSelect({
               type="button"
               role="radio"
               aria-checked={isOn}
-              aria-label={`${c.key} — ${c.text}`}
+              aria-label={`${c.key}, ${c.text}`}
               title={c.text}
               disabled={binding.disabled}
               onClick={() => binding.onChange(isOn ? "" : c.key)}

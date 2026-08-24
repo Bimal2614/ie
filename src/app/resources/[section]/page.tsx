@@ -5,6 +5,8 @@ import { Check, X, ArrowLeft, ListOrdered, MessageSquareQuote, BookMarked, Exter
 import { LandingNav } from "@/components/marketing/landing-nav";
 import { LandingFooter } from "@/components/marketing/landing-footer";
 import { STUDY, STUDY_BY_KEY, type StudySection } from "@/lib/study-content";
+import { JsonLd } from "@/components/seo/json-ld";
+import { KEYWORDS, breadcrumbJsonLd, courseJsonLd, pageMeta } from "@/lib/seo";
 
 type Params = { section: string };
 
@@ -24,12 +26,20 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const s = get(section);
   if (!s) return {};
   const n = s.name.toLowerCase();
-  return {
-    title: `IELTS ${s.name} — Strategies, Worked Examples & Tips (2026) | IELTSVega`,
+  return pageMeta({
+    title: `IELTS ${s.name}. Strategies, Worked Examples & Tips (2026) | IELTSVega`,
     description: `Master IELTS ${s.name}: ${s.tagline} How to answer every question type, dos and don'ts, worked examples with answers explained, and band-boosting tips.`,
-    alternates: { canonical: `/resources/${s.key}` },
-    keywords: [`IELTS ${n}`, `${n} IELTS`, `IELTS ${n} practice`, `IELTS ${n} tips`, `IELTS ${n} test`, `how to improve IELTS ${n}`],
-  };
+    path: `/resources/${s.key}`,
+    keywords: [
+      `IELTS ${n}`,
+      `${n} IELTS`,
+      `IELTS ${n} practice`,
+      `IELTS ${n} tips`,
+      `IELTS ${n} test`,
+      `how to improve IELTS ${n}`,
+      ...(KEYWORDS[s.key as keyof typeof KEYWORDS] as readonly string[]),
+    ],
+  });
 }
 
 export default async function SectionGuide({ params }: { params: Promise<Params> }) {
@@ -41,6 +51,20 @@ export default async function SectionGuide({ params }: { params: Promise<Params>
 
   return (
     <div className="min-h-svh bg-paper text-ink">
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Study materials", path: "/resources" },
+          { name: `IELTS ${s.name}`, path: `/resources/${s.key}` },
+        ])}
+      />
+      <JsonLd
+        data={courseJsonLd({
+          name: `IELTS ${s.name}, strategies and worked examples`,
+          description: s.tagline,
+          path: `/resources/${s.key}`,
+        })}
+      />
       <LandingNav alwaysSolid />
 
       <main className="mx-auto w-full max-w-4xl px-5 pb-20 pt-28 sm:pt-32">

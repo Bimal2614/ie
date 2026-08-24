@@ -19,7 +19,7 @@ import { rateLimit } from "./rate-limit";
  * thresholds are read from the environment, so they are fully configurable.
  */
 
-export const SLOW_DOWN = "You're going too fast — please slow down and try again shortly.";
+export const SLOW_DOWN = "You're going too fast: please slow down and try again shortly.";
 
 export class RateLimitError extends Error {
   readonly retryAfterSec: number;

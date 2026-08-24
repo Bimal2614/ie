@@ -250,7 +250,7 @@ export function MockPlayer({
       {/* Footer: advance / finish */}
       <footer className="sticky bottom-0 z-20 flex items-center justify-between gap-3 border-t border-line bg-paper-elev/95 px-4 py-2.5 backdrop-blur">
         <span className="hidden text-sm text-ink-muted sm:inline">
-          {isLast ? "Last section — finish to see your band report." : "Finished this section?"}
+          {isLast ? "Last section: finish to see your band report." : "Finished this section?"}
         </span>
         <Button
           size="lg"

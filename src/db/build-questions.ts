@@ -234,7 +234,7 @@ async function main() {
             `${part.book} · Test ${part.testNumber} · ` +
             `${LABEL[part.sectionType]} Part ${part.partNumber}` +
             (part.sectionType === "listening" || part.sectionType === "reading"
-              ? ` · Q${from}${to > from ? `–${to}` : ""}`
+              ? ` · Q${from}${to > from ? `-${to}` : ""}`
               : ""),
           instructions: group.instruction ?? part.instructions ?? null,
           difficulty: part.difficulty,

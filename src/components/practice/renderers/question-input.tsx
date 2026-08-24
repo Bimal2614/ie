@@ -131,7 +131,7 @@ function MultiChoice({ question, value, disabled, state, onChange }: InputProps)
   return (
     <div className="space-y-2">
       <p className="text-xs font-medium text-ink-muted">
-        Choose {selectCount} — {chosen.length} of {selectCount} selected
+        Choose {selectCount}: {chosen.length} of {selectCount} selected
       </p>
       {options.map((opt, i) => (
         <ChoiceRow
@@ -555,7 +555,7 @@ function Speaking({ question, value, disabled, onChange }: InputProps) {
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-brand">Preparation time</p>
             <p className="mt-0.5 text-sm text-ink-soft">
-              Make notes — recording starts automatically when the timer ends.
+              Make notes: recording starts automatically when the timer ends.
             </p>
           </div>
           <div className="flex items-center gap-3">

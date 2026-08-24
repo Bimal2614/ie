@@ -433,7 +433,7 @@ function GroupBlock({
   const byNumber = itemsByNumber(group);
 
   const range =
-    group.from === group.to ? `Question ${group.from}` : `Questions ${group.from}–${group.to}`;
+    group.from === group.to ? `Question ${group.from}` : `Questions ${group.from}-${group.to}`;
 
   return (
     <section className="space-y-4">
@@ -770,14 +770,14 @@ function ResultNote({ result, inline }: { result: BodyResult; inline?: boolean }
     <div className="space-y-1">
       {partial && (
         <p className="text-xs font-medium text-warning">
-          {earned} of {marks} marks — one correct choice.
+          {earned} of {marks} marks, one correct choice.
         </p>
       )}
       {result.isCorrect === false && expected && (
         <p className="text-xs text-ink-soft">
           {inline && your ? (
             <>
-              You wrote <span className="font-medium text-danger">{your}</span> —{" "}
+              You wrote <span className="font-medium text-danger">{your}</span>.{" "}
             </>
           ) : null}
           Correct answer: <span className="font-medium text-success">{expected}</span>
@@ -850,7 +850,7 @@ function Stimulus({
               <Headphones className="size-3.5" />
             </span>
             <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
-              Audio — plays once in the real test
+              Audio: plays once in the real test
             </p>
           </div>
           {/* Auth-gated route → short-lived presigned S3 URL; bucket never exposed. */}

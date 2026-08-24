@@ -197,7 +197,7 @@ export function MatchingBoard({
           {disabled
             ? layout.title
             : held
-              ? `Option ${held} picked up — choose a blank, or press Escape to cancel.`
+              ? `Option ${held} picked up: choose a blank, or press Escape to cancel.`
               : "Drag and drop an option to fill in each blank."}
         </p>
 

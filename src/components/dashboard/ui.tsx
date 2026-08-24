@@ -103,7 +103,7 @@ export function BandCell({ label, value, highlight }: { label: string; value: st
     <div className={cn("rounded-lg py-2", highlight ? "bg-brand-soft" : "bg-paper-sunken")}>
       <p className="text-[9px] font-semibold uppercase tracking-wider text-ink-muted">{label}</p>
       <p className={cn("font-semibold text-base tabular-nums", highlight ? "text-brand" : "text-ink", !value && "text-ink-muted")}>
-        {value ?? "—"}
+        {value ?? ""}
       </p>
     </div>
   );

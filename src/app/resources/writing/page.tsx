@@ -1,17 +1,25 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, PenLine } from "lucide-react";
 import { LandingNav } from "@/components/marketing/landing-nav";
 import { LandingFooter } from "@/components/marketing/landing-footer";
 import { Reveal } from "@/components/marketing/motion";
 import { WRITING_TASK1, WRITING_TASK2 } from "@/lib/study-writing";
+import { KEYWORDS, pageMeta } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "IELTS Writing — Task 1 & Task 2 Guides, Templates & Band 9 Answers (2026) | IELTSVega",
+export const metadata = pageMeta({
+  title: "IELTS Writing: Task 1 & Task 2 Guides, Templates & Band 9 Answers (2026) | IELTSVega",
   description:
     "Complete IELTS Writing study guide for 2026: every Task 1 and Task 2 question type, how to answer, planning, structure, useful language, common mistakes and full Band 9 model answers.",
-  alternates: { canonical: "/resources/writing" },
-};
+  path: "/resources/writing",
+  keywords: [
+    ...KEYWORDS.writing,
+    "IELTS writing task 1 vocabulary",
+    "IELTS writing task 2 topics",
+    "IELTS essay structure",
+    "IELTS band 9 essay",
+    "IELTS writing templates",
+  ],
+});
 
 const CARDS = [
   { guide: WRITING_TASK1, href: "/resources/writing/task-1" },

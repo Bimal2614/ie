@@ -78,7 +78,7 @@ export function QuestionPlayer({ set, questions }: { set: PlayerSet; questions: 
             {result.subjective > 0 && (
               <p className="text-sm text-ink-muted">
                 {result.subjective} response{result.subjective > 1 ? "s" : ""} sent for AI band
-                scoring — your band appears in History once it lands.
+                scoring. Your band appears in History once it lands.
               </p>
             )}
           </div>

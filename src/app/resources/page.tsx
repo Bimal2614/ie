@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { Headphones, BookOpen, PenLine, Mic, ArrowRight, type LucideIcon } from "lucide-react";
 import { LandingNav } from "@/components/marketing/landing-nav";
@@ -6,13 +5,22 @@ import { LandingFooter } from "@/components/marketing/landing-footer";
 import { Reveal } from "@/components/marketing/motion";
 import { STUDY } from "@/lib/study-content";
 import { BlogStrip } from "@/components/marketing/blog-strip";
+import { KEYWORDS, pageMeta } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "IELTS Study Materials — Strategies, Templates & Tips (2026) | IELTSVega",
+export const metadata = pageMeta({
+  title: "IELTS Study Materials: Strategies, Templates & Tips (2026) | IELTSVega",
   description:
     "Free IELTS study materials for 2026: exam-accurate strategies, dos and don'ts, essay and letter templates, and tips for every Listening, Reading, Writing and Speaking task type.",
-  alternates: { canonical: "/resources" },
-};
+  path: "/resources",
+  keywords: [
+    "IELTS study material",
+    "free IELTS resources",
+    ...KEYWORDS.listening.slice(0, 2),
+    ...KEYWORDS.reading.slice(0, 2),
+    ...KEYWORDS.writing.slice(0, 2),
+    ...KEYWORDS.speaking.slice(0, 2),
+  ],
+});
 
 const ICONS: Record<string, LucideIcon> = {
   listening: Headphones,
@@ -33,8 +41,7 @@ export default function ResourcesPage() {
             Everything the exam rewards, in one place.
           </h1>
           <p className="mt-4 text-ink-soft">
-            Real strategies, dos and don&apos;ts, ready-to-use templates, and tips for every task
-            type across all four skills — aligned to the current 2026 IELTS format.
+            Real strategies, dos and don&apos;ts, ready-to-use templates, and tips for every task type across all four skills. Aligned to the current 2026 IELTS format.
           </p>
         </Reveal>
 
@@ -73,7 +80,7 @@ export default function ResourcesPage() {
           <div>
             <p className="text-lg font-semibold text-ink">Writing sentence banks & templates</p>
             <p className="mt-1 text-sm text-ink-soft">
-              Band 7–9 sentence patterns for Task 1 and Task 2 you can adapt to any topic — the quick reference to go with these guides.
+              Band 7-9 sentence patterns for Task 1 and Task 2 you can adapt to any topic. The quick reference to go with these guides.
             </p>
           </div>
           <span className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-brand px-5 py-2.5 text-sm font-semibold text-white">

@@ -40,13 +40,13 @@ export type TemplateSection = {
 const WRITING_TASK_1: TemplateSet = {
   id: "task-1",
   label: "Task 1",
-  title: "Writing Task 1 — describing data (Academic)",
+  title: "Writing Task 1: describing data (Academic)",
   blurb:
-    "Sentence patterns for describing graphs, charts, tables, maps and processes. Paraphrase the prompt, give a clear overview, then report the key features with accurate data — no opinions.",
+    "Sentence patterns for describing graphs, charts, tables, maps and processes. Paraphrase the prompt, give a clear overview, then report the key features with accurate data, no opinions.",
   resource: { href: "/resources/writing/task-1", label: "Task 1 guide + Band 9 examples" },
   groups: [
     {
-      heading: "Introduction — paraphrase the visual",
+      heading: "Introduction: paraphrase the visual",
       note: "Never copy the prompt word-for-word; reword it in one sentence.",
       items: [
         { pattern: "The [line graph / bar chart / table / pie chart] illustrates…", example: "The line graph illustrates coffee and tea consumption per person between 2000 and 2020." },
@@ -56,7 +56,7 @@ const WRITING_TASK_1: TemplateSet = {
       ],
     },
     {
-      heading: "Overview — the single most important line",
+      heading: "Overview: the single most important line",
       note: "Start with 'Overall,' and give the big picture with NO specific numbers. Without it you're capped at Band 5.",
       items: [
         { pattern: "Overall, it is clear that…", example: "Overall, it is clear that coffee overtook tea to become the more popular drink." },
@@ -155,24 +155,24 @@ const WRITING_TASK_1: TemplateSet = {
     title: "Task 1 four-paragraph formula",
     steps: [
       { label: "Introduction", text: "Paraphrase what the visual shows (1 sentence)." },
-      { label: "Overview", text: "'Overall, …' — the 2–3 biggest trends, no numbers." },
+      { label: "Overview", text: "'Overall, …': the 2-3 biggest trends, no numbers." },
       { label: "Body 1", text: "Describe the first group of key features with data." },
       { label: "Body 2", text: "Describe the remaining key features with data." },
     ],
-    note: "Spend ~20 minutes and write 150+ words. For General Training, Task 1 is a letter instead — see the guide.",
+    note: "Spend ~20 minutes and write 150+ words. For General Training, Task 1 is a letter instead, see the guide.",
   },
 };
 
 const WRITING_TASK_2: TemplateSet = {
   id: "task-2",
   label: "Task 2",
-  title: "Writing Task 2 — universal sentence bank (Band 7–9)",
+  title: "Writing Task 2: universal sentence bank (Band 7-9)",
   blurb:
-    "Natural, examiner-friendly patterns you can adapt to almost any essay — Opinion, Discussion, Advantages/Disadvantages, Problem/Solution, Cause/Effect and Two-part questions.",
+    "Natural, examiner-friendly patterns you can adapt to almost any essay: Opinion, Discussion, Advantages/Disadvantages, Problem/Solution, Cause/Effect and Two-part questions.",
   resource: { href: "/resources/writing/task-2", label: "Task 2 guide + Band 9 model essays" },
   groups: [
     {
-      heading: "Introduction — introduce the topic",
+      heading: "Introduction: introduce the topic",
       items: [
         { pattern: "… has become increasingly common in many parts of the world.", example: "Online learning has become increasingly common in many parts of the world." },
         { pattern: "In recent years, there has been a growing trend towards…", example: "In recent years, there has been a growing trend towards remote working." },
@@ -182,7 +182,7 @@ const WRITING_TASK_2: TemplateSet = {
       ],
     },
     {
-      heading: "Introduction — explain the reason behind the trend",
+      heading: "Introduction: explain the reason behind the trend",
       items: [
         { pattern: "This change is mainly driven by…", example: "This change is mainly driven by technological advancement and changing lifestyles." },
         { pattern: "Several factors have contributed to this trend." },
@@ -191,7 +191,7 @@ const WRITING_TASK_2: TemplateSet = {
       ],
     },
     {
-      heading: "Thesis — state your position",
+      heading: "Thesis: state your position",
       note: "Match the sentence to the question type.",
       items: [
         { pattern: "Opinion: I completely / largely agree with this view." },
@@ -335,7 +335,7 @@ const WRITING_TASK_2: TemplateSet = {
 const SPEAKING_PART_1: TemplateSet = {
   id: "speaking-part-1",
   label: "Part 1",
-  title: "Speaking Part 1 — the interview",
+  title: "Speaking Part 1: the interview",
   blurb:
     "Short questions about you. The trick is to never give one-word answers: give a direct answer, a reason, and a small detail. Adapt these frames to any topic.",
   resource: { href: "/resources/speaking", label: "Speaking guide + band descriptors" },
@@ -367,10 +367,10 @@ const SPEAKING_PART_1: TemplateSet = {
     },
     {
       heading: "Sounding natural (softeners & fillers)",
-      note: "Natural speech isn't perfect speech — small fillers keep you fluent.",
+      note: "Natural speech isn't perfect speech: small fillers keep you fluent.",
       items: [
         { pattern: "To be honest, … / Actually, … / I suppose … / I'd say …" },
-        { pattern: "That's a good question — let me think…" },
+        { pattern: "That's a good question: let me think…" },
       ],
     },
     {
@@ -389,16 +389,16 @@ const SPEAKING_PART_1: TemplateSet = {
       { label: "Reason", text: "Add 'because…' / 'The main reason is…'." },
       { label: "Detail", text: "Give an example or small extra detail." },
     ],
-    note: "Keep it to 2–3 sentences — enough to show range without rambling.",
+    note: "Keep it to 2-3 sentences: enough to show range without rambling.",
   },
 };
 
 const SPEAKING_PART_2: TemplateSet = {
   id: "speaking-part-2",
   label: "Part 2",
-  title: "Speaking Part 2 — the long turn (cue card)",
+  title: "Speaking Part 2: the long turn (cue card)",
   blurb:
-    "One minute to prepare, then 1–2 minutes to speak. Tell it as a small story so you never dry up — cover every bullet but let the reflective part run longest.",
+    "One minute to prepare, then 1-2 minutes to speak. Tell it as a small story so you never dry up. Cover every bullet but let the reflective part run longest.",
   resource: { href: "/resources/speaking", label: "Speaking guide + Part 2 tips" },
   groups: [
     {
@@ -454,14 +454,14 @@ const SPEAKING_PART_2: TemplateSet = {
       { label: "Develop the key bullet", text: "Spend most time on the 'explain/why' prompt." },
       { label: "Reflect", text: "End with how you feel / why it mattered." },
     ],
-    note: "Use your 1-minute prep to note one keyword per bullet — don't write full sentences.",
+    note: "Use your 1-minute prep to note one keyword per bullet, don't write full sentences.",
   },
 };
 
 const SPEAKING_PART_3: TemplateSet = {
   id: "speaking-part-3",
   label: "Part 3",
-  title: "Speaking Part 3 — the discussion",
+  title: "Speaking Part 3: the discussion",
   blurb:
     "Abstract questions linked to your Part 2 topic. This is where Band 7+ is decided: give an opinion, justify it, and acknowledge another view.",
   resource: { href: "/resources/speaking", label: "Speaking guide + Part 3 questions" },
@@ -530,7 +530,7 @@ export const TEMPLATE_SECTIONS: TemplateSection[] = [
     label: "Speaking",
     title: "Speaking templates & useful phrases",
     blurb:
-      "Natural frames for all three Speaking parts — how to extend Part 1 answers, structure the Part 2 long turn, and sound fluent and balanced in Part 3. Adapt, don't memorise (examiners penalise scripted answers).",
+      "Natural frames for all three Speaking parts: how to extend Part 1 answers, structure the Part 2 long turn, and sound fluent and balanced in Part 3. Adapt, don't memorise (examiners penalise scripted answers).",
     resourceHref: "/resources/speaking",
     sets: [SPEAKING_PART_1, SPEAKING_PART_2, SPEAKING_PART_3],
   },

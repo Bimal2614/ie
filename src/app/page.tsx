@@ -19,7 +19,7 @@ import { SITE_URL } from "@/lib/site";
 import { FAQS } from "@/lib/faqs";
 
 export const metadata: Metadata = {
-  title: "IELTS Practice Online — AI Band Scoring & Mock Tests | IELTSVega",
+  title: "IELTS Practice Online: AI Band Scoring & Mock Tests | IELTSVega",
   description:
     "Practise IELTS online with instant AI band scores for Writing & Speaking, full-length mock tests, and 15,000+ Academic and General Training questions. Real band jumps, scored the way examiners mark.",
   keywords: [
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
-    title: "IELTS Practice Online with AI Band Scoring — IELTSVega",
+    title: "IELTS Practice Online with AI Band Scoring: IELTSVega",
     description: "Real IELTS band jumps, instant AI scoring for Writing & Speaking, and full mock tests across Academic & General Training.",
     siteName: "IELTSVega",
   },
@@ -57,16 +57,16 @@ const STATS = [
 
 const METHOD = [
   { n: "01", title: "Diagnose", copy: "One short diagnostic places your band across all four skills and finds the exact question types costing you marks." },
-  { n: "02", title: "Target", copy: "A focused plan drills your weak types first — not a generic syllabus, the specific gaps between you and your target." },
+  { n: "02", title: "Target", copy: "A focused plan drills your weak types first: not a generic syllabus, the specific gaps between you and your target." },
   { n: "03", title: "Score with AI", copy: "Every Writing and Speaking answer is graded on the four official band criteria in seconds, with what to fix next." },
-  { n: "04", title: "Mock under pressure", copy: "Full four-section mocks on real 2026 timing, ending in a band report — so exam day is a repeat, not a shock." },
+  { n: "04", title: "Mock under pressure", copy: "Full four-section mocks on real 2026 timing, ending in a band report. So exam day is a repeat, not a shock." },
 ];
 
 const SKILLS = [
   { label: "Listening", Icon: Headphones, copy: "40-question tests; audio plays once, exactly like exam day." },
   { label: "Reading", Icon: BookOpen, copy: "Academic & General passages with every official question type." },
   { label: "Writing", Icon: PenLine, copy: "Task 1 & 2 graded by AI on all four band criteria." },
-  { label: "Speaking", Icon: Mic, copy: "Record Parts 1–3; instant band with pronunciation feedback." },
+  { label: "Speaking", Icon: Mic, copy: "Record Parts 1-3; instant band with pronunciation feedback." },
 ];
 
 
@@ -88,12 +88,12 @@ export default async function Home() {
 
       {/* ══ Results — the authority centrepiece: real band jumps ══ */}
       <section id="results" className="mx-auto w-full max-w-6xl scroll-mt-20 px-5 py-20">
-        <Reveal><Header eyebrow="Real results" title="Band jumps, not promises." lead="Students who practised the way examiners mark — and moved on with their lives." /></Reveal>
+        <Reveal><Header eyebrow="Real results" title="Band jumps, not promises." lead="Students who practised the way examiners mark, and moved on with their lives." /></Reveal>
         <div className="mt-12 grid gap-5 md:grid-cols-3">
           {RESULTS.map((r, i) => (
             <Reveal key={r.name} delay={i * 0.12} className="h-full">
             <figure className="flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-paper-elev">
-              <Image src={r.img} alt={`${r.name} — IELTS result`} width={1000} height={680} className="aspect-[3/2] w-full object-cover" />
+              <Image src={r.img} alt={`${r.name}. IELTS result`} width={1000} height={680} className="aspect-[3/2] w-full object-cover" />
               <div className="flex flex-1 flex-col p-5">
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-ink-muted line-through">{r.from.toFixed(1)}</span>
@@ -138,7 +138,7 @@ export default async function Home() {
               Four steps between you and your target band.
             </h2>
             <p className="mt-3 max-w-xl text-white/55">
-              Not more study hours — the specific gaps examiners mark you down for, closed one by one.
+              Not more study hours: the specific gaps examiners mark you down for, closed one by one.
             </p>
 
             <div className="mt-12 divide-y divide-white/10 border-y border-white/10">
@@ -168,8 +168,7 @@ export default async function Home() {
           <Reveal x={30} y={0} delay={0.1} className="order-1 lg:order-2">
             <Header align="left" eyebrow="Scored like the real thing" title="AI band scoring on every criterion." lead="" />
             <p className="mt-4 max-w-md text-ink-soft">
-              Writing and Speaking graded on Task Response, Coherence, Lexical Resource, Grammar,
-              Fluency and Pronunciation — the exact criteria an examiner uses — in seconds.
+              Writing and Speaking graded on Task Response, Coherence, Lexical Resource, Grammar, Fluency and Pronunciation, the exact criteria an examiner uses, in seconds.
             </p>
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
               {SKILLS.map(({ label, Icon, copy }) => (
@@ -191,7 +190,7 @@ export default async function Home() {
         <Reveal><p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand">Why fluent speakers still miss their band</p></Reveal>
         <ScrollWords
           className="font-serif mt-5 text-2xl leading-relaxed text-ink sm:text-[1.85rem]"
-          text="Fluent English alone rarely earns a Band 8. IELTS scores your Writing and Speaking against four precise criteria — and most test-takers never learn what examiners actually reward. Criteria-based practice, scored the way the real exam marks, is how you close that gap and reach your target band."
+          text="Fluent English alone rarely earns a Band 8. IELTS scores your Writing and Speaking against four precise criteria. And most test-takers never learn what examiners actually reward. Criteria-based practice, scored the way the real exam marks, is how you close that gap and reach your target band."
         />
       </section>
 
@@ -280,7 +279,7 @@ function StructuredData() {
       {
         "@type": "WebSite",
         "@id": `${SITE_URL}/#website`,
-        name: "IELTSVega — IELTS Practice Online",
+        name: "IELTSVega: IELTS Practice Online",
         url: SITE_URL,
         description: "Practise IELTS online with AI band scoring and full mock tests.",
         publisher: { "@id": orgId },

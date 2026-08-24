@@ -25,7 +25,7 @@ import type {
 /** Plain-English rendering of the codes for an answer that couldn't be graded. */
 const ERROR_NOTES: Record<string, string> = {
   TEMPLATE_DETECTED:
-    "This answer sounded like a memorised template rather than a response to the question. Examiners mark templates down heavily — answer in your own words, even if it is less polished.",
+    "This answer sounded like a memorised template rather than a response to the question. Examiners mark templates down heavily. Answer in your own words, even if it is less polished.",
   MEMORISED_ANSWER:
     "This sounded like a pre-learned answer. In the real test a memorised response is penalised, so practise responding to the question you are actually asked.",
   OFF_TOPIC:
@@ -34,7 +34,7 @@ const ERROR_NOTES: Record<string, string> = {
     "This answer was too short to assess properly. Aim to extend each answer with a reason and an example.",
   NOT_ENGLISH: "Parts of this answer were not in English, so it could not be assessed as IELTS speech.",
   UNINTELLIGIBLE:
-    "Too much of this recording could not be made out — check your microphone and the background noise, then record it again.",
+    "Too much of this recording could not be made out. Check your microphone and the background noise, then record it again.",
 };
 
 /**
@@ -116,7 +116,7 @@ export function SpeakingAnalysis({ fb }: { fb: StoredSpeakingFeedback }) {
         </p>
         {fb.overall.bandLabel && (
           <p className="text-xs text-ink-muted">
-            Band {fb.overall.band.toFixed(1)} — {fb.overall.bandLabel}
+            Band {fb.overall.band.toFixed(1)}: {fb.overall.bandLabel}
           </p>
         )}
       </div>
@@ -166,7 +166,7 @@ export function SpeakingAnalysis({ fb }: { fb: StoredSpeakingFeedback }) {
                     <p className="text-sm text-ink">{a.action}</p>
                     <p className="mt-0.5 text-xs text-ink-muted">
                       {a.criterionName}
-                      {a.reason ? ` — ${a.reason}` : ""}
+                      {a.reason ? `${a.reason}` : ""}
                     </p>
                     {a.drill && (
                       <p className="mt-1 text-xs italic text-ink-soft">Try: “{a.drill}”</p>
@@ -206,7 +206,7 @@ function CriterionCard({ c }: { c: StoredSpeakingFeedback["criteria"][number] })
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-semibold text-ink">{c.name}</p>
         <span className="rounded-full bg-brand-soft px-2.5 py-0.5 text-sm font-semibold tabular-nums text-brand">
-          {graded ? c.band!.toFixed(1) : "—"}
+          {graded ? c.band!.toFixed(1) : ""}
         </span>
       </div>
 
@@ -430,7 +430,7 @@ function legacyWarningNote(warning: unknown): string | null {
   const raw = typeof warning === "string" ? warning : (JSON.stringify(warning) ?? "");
   if (!raw || raw === "{}" || raw === "[]" || raw === '""') return null;
   if (raw.includes("2001")) {
-    return "We could barely hear a response in this recording — check your microphone, then record the answer again.";
+    return "We could barely hear a response in this recording. Check your microphone, then record the answer again.";
   }
   if (raw.includes("2002")) {
     return "This answer may not have addressed the question that was asked.";
@@ -458,7 +458,7 @@ export function LegacySpeakingAnalysis({ fb }: { fb: LegacySpeakingFeedback }) {
           ].map(([label, value]) => (
             <div key={String(label)} className="rounded-lg bg-paper-sunken p-2 text-center">
               <p className="text-[10px] uppercase tracking-wider text-ink-muted">{label}</p>
-              <p className="display text-lg tabular-nums text-ink">{String(value ?? "—")}</p>
+              <p className="display text-lg tabular-nums text-ink">{String(value ?? "")}</p>
             </div>
           ))}
         </div>

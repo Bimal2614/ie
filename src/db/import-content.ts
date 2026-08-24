@@ -82,14 +82,14 @@ function validate(part: PartDoc, where: string): void {
       if (seen.has(n)) throw new Error(`${label}: question ${n} defined twice`);
       seen.add(n);
       if (n < g.from || n > g.to) {
-        throw new Error(`${label}: question ${n} outside its group range ${g.from}–${g.to}`);
+        throw new Error(`${label}: question ${n} outside its group range ${g.from}-${g.to}`);
       }
     }
 
     const expected = g.to - g.from + 1;
     if (nums.length !== expected) {
       throw new Error(
-        `${label}: group ${g.questionType} covers ${g.from}–${g.to} (${expected} marks) but defines ${nums.length}`,
+        `${label}: group ${g.questionType} covers ${g.from}-${g.to} (${expected} marks) but defines ${nums.length}`,
       );
     }
 
@@ -162,7 +162,7 @@ async function main() {
     try {
       doc = JSON.parse(readFileSync(file, "utf8"));
     } catch (e) {
-      throw new Error(`${file}: invalid JSON — ${e instanceof Error ? e.message : e}`);
+      throw new Error(`${file}: invalid JSON: ${e instanceof Error ? e.message : e}`);
     }
     const rel = relative(CONTENT_DIR, file);
     for (const part of doc.parts ?? []) {
@@ -238,7 +238,7 @@ async function main() {
   // corrected answer right while per-question practice still marks it wrong,
   // and nothing errors. The rebuild is idempotent and keeps question ids
   // stable, so calling it unconditionally here is safe.
-  console.log("NEXT: npm run db:build:questions — question_sets/questions still hold the old copy.");
+  console.log("NEXT: run npm run db:build:questions, because question_sets/questions still hold the old copy.");
   await client.end();
   process.exit(0);
 }

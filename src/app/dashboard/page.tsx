@@ -59,13 +59,13 @@ export default async function DashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatTile
           label="Correct today"
-          value={stats.todayGraded > 0 ? `${stats.todayCorrect} / ${stats.todayGraded}` : "—"}
+          value={stats.todayGraded > 0 ? `${stats.todayCorrect} / ${stats.todayGraded}` : ""}
           sub={`${stats.todayAttempted} attempted`}
           icon={<Zap className="size-4 text-ink-muted" />}
         />
         <StatTile
           label="Correct all-time"
-          value={stats.totalGraded > 0 ? `${stats.totalCorrect} / ${stats.totalGraded}` : "—"}
+          value={stats.totalGraded > 0 ? `${stats.totalCorrect} / ${stats.totalGraded}` : ""}
           sub={`${stats.totalAttempted} attempted`}
           icon={<ListChecks className="size-4 text-ink-muted" />}
         />

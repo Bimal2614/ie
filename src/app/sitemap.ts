@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { STUDY } from "@/lib/study-content";
 import { POSTS } from "@/lib/blog";
 import { BAND_SLUGS } from "@/lib/band-content";
+import { WRITING_GUIDES } from "@/lib/study-writing";
 import { SITE_URL as BASE } from "@/lib/site";
 
 /**
@@ -28,14 +29,22 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/resources/writing/task-1",
     "/resources/writing/task-2",
     "/ielts-band-scores",
+    "/ielts-band-score-calculator",
+    "/ielts-2026-changes",
   ];
 
   const sectionPaths = STUDY.filter((s) => s.key !== "writing").map((s) => `/resources/${s.key}`);
   const bandPaths = BAND_SLUGS.map((b) => `/ielts-band/${b}`);
 
+  // One URL per Writing question type (line graph, discussion essay, …) — twelve
+  // pages generated from the same data the task guides render.
+  const writingTypePaths = (["task-1", "task-2"] as const).flatMap((task) =>
+    WRITING_GUIDES[task].types.map((t) => `/resources/writing/${task}/${t.slug}`),
+  );
+
   // Non-blog pages: one lastModified (now), priority by importance.
   const staticEntries: MetadataRoute.Sitemap = Array.from(
-    new Set([...staticPaths, ...sectionPaths, ...bandPaths]),
+    new Set([...staticPaths, ...sectionPaths, ...bandPaths, ...writingTypePaths]),
   ).map((path) => ({
     url: `${BASE}${path}`,
     lastModified: now,

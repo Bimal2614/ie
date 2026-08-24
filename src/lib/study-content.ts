@@ -45,10 +45,10 @@ export type StudySection = {
 };
 
 const REFERENCES: StudyReference[] = [
-  { label: "IELTS.org — how IELTS is scored", note: "Official band descriptors and score information — the exact standard examiners use.", href: "https://www.ielts.org/for-test-takers/how-ielts-is-scored" },
-  { label: "British Council — Take IELTS", note: "Official preparation, free practice tests and sample materials.", href: "https://takeielts.britishcouncil.org/take-ielts/prepare" },
-  { label: "IDP IELTS — prepare", note: "Co-owner of IELTS; free samples, webinars and on-screen familiarisation.", href: "https://ielts.idp.com/prepare" },
-  { label: "Cambridge IELTS 1–19", note: "The authentic past-paper series — the gold standard for real questions.", href: "https://www.cambridge.org/gb/cambridgeenglish/catalog/cambridge-english-exams-ielts" },
+  { label: "IELTS.org, how IELTS is scored", note: "Official band descriptors and score information. The exact standard examiners use.", href: "https://www.ielts.org/for-test-takers/how-ielts-is-scored" },
+  { label: "British Council: take IELTS", note: "Official preparation, free practice tests and sample materials.", href: "https://takeielts.britishcouncil.org/take-ielts/prepare" },
+  { label: "IDP IELTS: prepare", note: "Co-owner of IELTS; free samples, webinars and on-screen familiarisation.", href: "https://ielts.idp.com/prepare" },
+  { label: "Cambridge IELTS 1-19", note: "The authentic past-paper series: the gold standard for real questions.", href: "https://www.cambridge.org/gb/cambridgeenglish/catalog/cambridge-english-exams-ielts" },
   { label: "IELTS Liz", note: "Widely-used free lessons, model answers and tips by skill.", href: "https://ieltsliz.com" },
   { label: "IELTS Simon (ex-examiner)", note: "Method and model answers from a former IELTS examiner.", href: "https://ielts-simon.com" },
 ];
@@ -68,10 +68,10 @@ export const STUDY: StudySection[] = [
       { label: "Guide", value: "≈30/40 ≈ Band 7" },
     ],
     bandTips: [
-      "Read and predict during the pause before each section — decide the answer TYPE (number, name, place) for each gap.",
+      "Read and predict during the pause before each section: decide the answer TYPE (number, name, place) for each gap.",
       "Answers come in order; if you miss one, abandon it and lock onto the next so you don't lose two.",
-      "Obey the word limit ('NO MORE THAN TWO WORDS') — one word over scores zero.",
-      "Always practise with a SINGLE listen — replaying trains a habit the real test won't allow.",
+      "Obey the word limit ('NO MORE THAN TWO WORDS'): one word over scores zero.",
+      "Always practise with a SINGLE listen: replaying trains a habit the real test won't allow.",
     ],
     topics: [
       {
@@ -84,8 +84,8 @@ export const STUDY: StudySection[] = [
           "Write exactly what you hear; fix spelling and singular/plural at once.",
         ],
         dos: ["Check the word limit and count your words.", "Write numbers as digits to save time.", "Spell names from the spelling given aloud."],
-        donts: ["Don't add words not needed to fill the gap.", "Don't leave a blank — guess the right type.", "Don't fall for self-corrections ('sorry, 15 not 50')."],
-        tips: ["Speakers often 'correct' a number or spelling — write the FINAL value they settle on."],
+        donts: ["Don't add words not needed to fill the gap.", "Don't leave a blank: guess the right type.", "Don't fall for self-corrections ('sorry, 15 not 50')."],
+        tips: ["Speakers often 'correct' a number or spelling: write the FINAL value they settle on."],
         example: {
           context: "\"…so the deposit is normally £50, but for students it's reduced to £35. And can I take a contact number? It's 07-double 7-1, 3-0-9-4-2.\"",
           prompt: "Deposit (student): £ ______   ·   Phone: ______",
@@ -102,17 +102,17 @@ export const STUDY: StudySection[] = [
         what: "Choose one (or sometimes more) correct option from A/B/C. The correct option is paraphrased; wrong options often echo words you hear.",
         howToAnswer: [
           "Read the stem and options first; underline what makes each option different.",
-          "Listen for the meaning, not matching words — traps repeat exact words.",
+          "Listen for the meaning, not matching words: traps repeat exact words.",
           "Eliminate options as the speaker rules them out; decide only when the point is complete.",
         ],
-        dos: ["Track every option — each is usually mentioned to distract.", "Wait for the full idea before choosing."],
+        dos: ["Track every option: each is usually mentioned to distract.", "Wait for the full idea before choosing."],
         donts: ["Don't pick an option just because you heard its words.", "Don't commit to the first thing you hear."],
         example: {
-          context: "\"I was going to do the morning tour, but it was fully booked, so I've ended up on the afternoon one — which is actually better for photos.\"",
+          context: "\"I was going to do the morning tour, but it was fully booked, so I've ended up on the afternoon one, which is actually better for photos.\"",
           prompt: "Which tour did the speaker book?  A) morning  B) afternoon  C) evening",
-          answer: "B — afternoon",
+          answer: "B: afternoon",
           explanation: [
-            "'morning' is heard but rejected ('fully booked') — a classic distractor.",
+            "'morning' is heard but rejected ('fully booked'). A classic distractor.",
             "The answer is signalled by 'I've ended up on the afternoon one'.",
           ],
         },
@@ -123,16 +123,16 @@ export const STUDY: StudySection[] = [
         what: "Match a list of items (people, places) to a set of options (opinions, features). Options can repeat or go unused.",
         howToAnswer: [
           "Read both lists; note synonyms next to each option.",
-          "Follow the question order — it tracks the audio.",
+          "Follow the question order: it tracks the audio.",
           "Listen for who says or does what, not just a keyword.",
         ],
         dos: ["Keep your eyes on the current question.", "Expect options to repeat or not be used."],
         donts: ["Don't assume each option is used exactly once."],
         example: {
-          context: "\"Tom found the museum a bit dull, honestly. Priya loved it — she said the exhibits were fascinating.\"",
+          context: "\"Tom found the museum a bit dull, honestly. Priya loved it. She said the exhibits were fascinating.\"",
           prompt: "Match each person to their opinion.  Tom: ___  Priya: ___   (A fascinating  B boring  C too expensive)",
           answer: "Tom → B (boring),  Priya → A (fascinating)",
-          explanation: ["'a bit dull' paraphrases 'boring'; 'fascinating' is a direct match — listen for the opinion attached to each name."],
+          explanation: ["'a bit dull' paraphrases 'boring'; 'fascinating' is a direct match. Listen for the opinion attached to each name."],
         },
       },
       {
@@ -145,10 +145,10 @@ export const STUDY: StudySection[] = [
           "Move along the speaker's route rather than jumping around.",
         ],
         dos: ["Mark the start point and follow step by step.", "Learn prepositions of place cold."],
-        donts: ["Don't lose your place — if you do, jump to the next clearly-named landmark."],
+        donts: ["Don't lose your place: if you do, jump to the next clearly-named landmark."],
         example: {
           context: "\"From the entrance, go straight ahead. The library is the first building on your right, and the café is directly opposite it.\"",
-          prompt: "Label the café (A–E on the plan).",
+          prompt: "Label the café (A-E on the plan).",
           answer: "The building opposite the library (i.e. first on the LEFT from the entrance).",
           explanation: ["'directly opposite' the library, which is 'first on your right' → the café is first on the left. Anchor to the named building, then apply the direction."],
         },
@@ -168,7 +168,7 @@ export const STUDY: StudySection[] = [
           context: "\"The main problem the researchers faced was a lack of funding, which delayed the project by two years.\"",
           prompt: "The project was delayed by a lack of ______.",
           answer: "funding",
-          explanation: ["The gap needs a noun; 'a lack of funding' is stated directly. 'money' would be a paraphrase and risks being marked wrong — use the word heard."],
+          explanation: ["The gap needs a noun; 'a lack of funding' is stated directly. 'money' would be a paraphrase and risks being marked wrong, use the word heard."],
         },
       },
     ],
@@ -181,7 +181,7 @@ export const STUDY: StudySection[] = [
     name: "Reading",
     tagline: "60 minutes, 40 questions, no extra transfer time.",
     overview:
-      "Academic Reading has 3 long passages from books, journals and newspapers. General Training has shorter everyday and workplace texts plus one longer passage. Both are 60 minutes for 40 questions with NO extra transfer time — pacing is everything. The answer is almost never worded the same as the question; you're hunting synonyms and paraphrase.",
+      "Academic Reading has 3 long passages from books, journals and newspapers. General Training has shorter everyday and workplace texts plus one longer passage. Both are 60 minutes for 40 questions with NO extra transfer time. Pacing is everything. The answer is almost never worded the same as the question; you're hunting synonyms and paraphrase.",
     format: [
       { label: "Time", value: "60 min (no transfer time)" },
       { label: "Questions", value: "40 across 3 sections" },
@@ -190,9 +190,9 @@ export const STUDY: StudySection[] = [
     ],
     bandTips: [
       "Budget ~20 min per passage; flag a hard question and return rather than sinking time.",
-      "Most types are in passage order — use that to locate the next answer quickly.",
+      "Most types are in passage order: use that to locate the next answer quickly.",
       "Scan for keywords and their synonyms, not the exact words in the question.",
-      "Transfer answers as you go — there is no extra minute at the end.",
+      "Transfer answers as you go: there is no extra minute at the end.",
     ],
     topics: [
       {
@@ -205,13 +205,13 @@ export const STUDY: StudySection[] = [
           "TRUE = confirmed; FALSE = actively contradicted; NOT GIVEN = neither confirmed nor denied.",
         ],
         dos: ["Answer only from the passage, never your own knowledge.", "Treat FALSE as a genuine contradiction."],
-        donts: ["Don't confuse FALSE with NOT GIVEN — the No.1 band-killer.", "Don't over-infer: if it isn't stated either way, it's NOT GIVEN."],
+        donts: ["Don't confuse FALSE with NOT GIVEN: the No.1 band-killer.", "Don't over-infer: if it isn't stated either way, it's NOT GIVEN."],
         example: {
           context: "Passage: \"The 1959 expedition was the first to reach the summit in winter. Earlier attempts had all been made in summer.\"",
           prompt: "Statement: The 1959 expedition was the first to reach the summit at any time of year.",
           answer: "FALSE",
           explanation: [
-            "The text says it was the first to reach it IN WINTER — and mentions earlier (summer) attempts, so it was NOT the first ever.",
+            "The text says it was the first to reach it IN WINTER, and mentions earlier (summer) attempts, so it was NOT the first ever.",
             "The statement contradicts the passage → FALSE (not NOT GIVEN, because the text gives us enough to disprove it).",
           ],
         },
@@ -221,7 +221,7 @@ export const STUDY: StudySection[] = [
         name: "Matching headings",
         what: "Match a heading to each paragraph/section. Headings capture the MAIN idea, not a single detail. There are always extra headings you won't use.",
         howToAnswer: [
-          "Do this type first if it covers the whole passage — it forces gist reading.",
+          "Do this type first if it covers the whole passage. It forces gist reading.",
           "Read the first and last sentence of a paragraph, then skim the middle for the central point.",
           "Match to the main idea; reject headings that fit only one detail.",
         ],
@@ -230,7 +230,7 @@ export const STUDY: StudySection[] = [
         example: {
           context: "Paragraph: \"While early critics dismissed the technique, later studies repeatedly confirmed its accuracy, and it is now standard practice in most laboratories.\"",
           prompt: "Choose a heading:  i) Early doubts about a method  ii) From scepticism to acceptance  iii) The cost of new equipment",
-          answer: "ii — From scepticism to acceptance",
+          answer: "ii: From scepticism to acceptance",
           explanation: ["The paragraph's whole arc is doubt → confirmation → standard practice. (i) matches only the first clause; (ii) captures the main idea."],
         },
       },
@@ -239,30 +239,30 @@ export const STUDY: StudySection[] = [
         name: "Matching information / features / sentence endings",
         what: "Match statements, features or sentence-endings to paragraphs, people or categories. These are usually NOT in passage order.",
         howToAnswer: [
-          "Expect to scan the whole text — order isn't guaranteed.",
+          "Expect to scan the whole text: order isn't guaranteed.",
           "Underline the specific detail each item needs, then locate it.",
           "For matching features (e.g. researchers), map each name to its claim first.",
         ],
         dos: ["Check whether options can be used more than once (read the instruction)."],
-        donts: ["Don't assume top-to-bottom order — answers jump around."],
+        donts: ["Don't assume top-to-bottom order: answers jump around."],
         example: {
           context: "Passage names three scientists: \"Lee argued cost was the barrier; Okoro blamed poor training; Silva saw no single cause.\"",
           prompt: "Who believed there was no single reason?  A Lee  B Okoro  C Silva",
-          answer: "C — Silva",
+          answer: "C: Silva",
           explanation: ["'no single cause' paraphrases 'no single reason'. Map each name to its claim, then match the item."],
         },
       },
       {
         slug: "multiple-choice",
         name: "Multiple choice",
-        what: "Choose the correct option (A–D) on a detail or main idea. Wrong options are often true-but-irrelevant, partly wrong, or overstated.",
+        what: "Choose the correct option (A-D) on a detail or main idea. Wrong options are often true-but-irrelevant, partly wrong, or overstated.",
         howToAnswer: [
           "Read the stem first, then locate the relevant lines.",
           "Predict the answer before reading the options.",
           "Eliminate options that overstate, are irrelevant, or only half-match.",
         ],
         dos: ["Match meaning, not vocabulary."],
-        donts: ["Don't pick the option with the most words copied from the text — often the trap."],
+        donts: ["Don't pick the option with the most words copied from the text, often the trap."],
         example: {
           context: "Passage: \"The scheme reduced traffic, though critics note the improvement was smaller than the council claimed.\"",
           prompt: "The scheme…  A failed completely  B reduced traffic, but less than claimed  C had no critics  D was abandoned",
@@ -279,7 +279,7 @@ export const STUDY: StudySection[] = [
           "Find the relevant lines; lift the exact word(s).",
           "Make the completed sentence grammatical and within the limit.",
         ],
-        dos: ["Copy words exactly — spelling counts.", "Count your words."],
+        dos: ["Copy words exactly: spelling counts.", "Count your words."],
         donts: ["Don't paraphrase when told to use words from the passage."],
         example: {
           context: "Passage: \"The bridge is supported by two enormous steel cables anchored deep in the bedrock.\"",
@@ -313,39 +313,39 @@ export const STUDY: StudySection[] = [
   {
     key: "speaking",
     name: "Speaking",
-    tagline: "A 11–14 minute conversation in three parts.",
+    tagline: "A 11-14 minute conversation in three parts.",
     overview:
-      "A face-to-face (or video) interview, identical for Academic and General Training. Marked on Fluency & Coherence, Lexical Resource, Grammatical Range & Accuracy, and Pronunciation. It's a conversation — extend your answers, speak naturally, and let some personality through. There are no 'right opinions', only well-expressed English.",
+      "A face-to-face (or video) interview, identical for Academic and General Training. Marked on Fluency & Coherence, Lexical Resource, Grammatical Range & Accuracy, and Pronunciation. It's a conversation: extend your answers, speak naturally, and let some personality through. There are no 'right opinions', only well-expressed English.",
     format: [
-      { label: "Part 1", value: "Interview · 4–5 min" },
-      { label: "Part 2", value: "Long turn · 1 min prep + 1–2 min" },
-      { label: "Part 3", value: "Discussion · 4–5 min" },
+      { label: "Part 1", value: "Interview · 4-5 min" },
+      { label: "Part 2", value: "Long turn · 1 min prep + 1-2 min" },
+      { label: "Part 3", value: "Discussion · 4-5 min" },
       { label: "Criteria", value: "FC · LR · GRA · Pronunciation" },
     ],
     bandTips: [
-      "Extend every answer — a reason plus an example turns a Band 5 answer into a Band 7.",
+      "Extend every answer: a reason plus an example turns a Band 5 answer into a Band 7.",
       "Fluency beats perfection: keep going; a single self-correction is fine, freezing is not.",
-      "Show range — idioms, mixed tenses, topic vocabulary — to lift Lexical Resource and GRA.",
+      "Show range, idioms, mixed tenses, topic vocabulary, to lift Lexical Resource and GRA.",
       "Pronunciation is clarity and natural stress/intonation, not accent.",
     ],
     topics: [
       {
         slug: "part-1-interview",
-        name: "Part 1 — Introduction & interview",
-        what: "Familiar questions about you: home, work/study, hobbies, hometown, daily routine. The warm-up — keep it natural and personal.",
+        name: "Part 1: Introduction & interview",
+        what: "Familiar questions about you: home, work/study, hobbies, hometown, daily routine. The warm-up, keep it natural and personal.",
         howToAnswer: [
-          "Answer directly, then add a reason or detail (2–3 sentences).",
+          "Answer directly, then add a reason or detail (2-3 sentences).",
           "Mix tenses naturally (I usually…, last weekend I…, I'm hoping to…).",
-          "Sound relaxed — these are the easy questions.",
+          "Sound relaxed: these are the easy questions.",
         ],
         dos: ["Extend with 'because…', 'for example…', 'these days…'.", "Use contractions and natural spoken English."],
-        donts: ["Don't give one-word answers.", "Don't recite memorised speeches — they sound unnatural and lower your score."],
+        donts: ["Don't give one-word answers.", "Don't recite memorised speeches: they sound unnatural and lower your score."],
         usefulLanguage: ["To be honest…; I'd say…; I'm really into…; It depends, but usually…; I've never been a big fan of…"],
         example: {
           prompt: "Do you enjoy cooking?",
-          band: "Band 8–9",
+          band: "Band 8-9",
           answer:
-            "To be honest, I do — although I didn't used to. I've really got into it over the last couple of years, mainly because it's such a good way to unwind after a long day. Just last night I made a Thai green curry from scratch, which turned out surprisingly well!",
+            "To be honest, I do, although I didn't used to. I've really got into it over the last couple of years, mainly because it's such a good way to unwind after a long day. Just last night I made a Thai green curry from scratch, which turned out surprisingly well!",
           explanation: [
             "Direct answer → reason → specific recent example, all in natural spoken English.",
             "Range: mixed tenses (do / didn't use to / 've got into / made), phrasal verbs ('got into', 'unwind') and a natural exclamation.",
@@ -354,10 +354,10 @@ export const STUDY: StudySection[] = [
       },
       {
         slug: "part-2-cue-card",
-        name: "Part 2 — Long turn (cue card)",
-        what: "A topic card with prompts; 1 minute to prepare, then you speak for 1–2 minutes uninterrupted.",
+        name: "Part 2: Long turn (cue card)",
+        what: "A topic card with prompts; 1 minute to prepare, then you speak for 1-2 minutes uninterrupted.",
         howToAnswer: [
-          "Use the prep minute to jot keywords for each bullet — not full sentences.",
+          "Use the prep minute to jot keywords for each bullet, not full sentences.",
           "Cover all bullets, but treat them as a springboard to tell a story.",
           "Keep talking for the full two minutes; it's fine to be stopped.",
         ],
@@ -367,32 +367,32 @@ export const STUDY: StudySection[] = [
         example: {
           prompt:
             "Describe a place you visited that left a strong impression on you. You should say: where it was; when you went; what you did there; and explain why it made such an impression.",
-          band: "Band 8–9",
+          band: "Band 8-9",
           answer:
-            "I'd like to talk about a trip I took to Kyoto in Japan, about three years ago, during the autumn. What drew me there was the promise of the changing leaves, and it completely lived up to it. I spent most of my days simply wandering — visiting old temples, walking through a bamboo forest, and sitting by the river watching the maple leaves drift down. What made it so memorable, though, wasn't any single sight; it was the atmosphere — this incredible sense of calm and craftsmanship in everything, from the gardens to the food. Looking back, it was one of those rare trips that genuinely changed how I think about slowing down, and I've wanted to go back ever since.",
+            "I'd like to talk about a trip I took to Kyoto in Japan, about three years ago, during the autumn. What drew me there was the promise of the changing leaves, and it completely lived up to it. I spent most of my days simply wandering, visiting old temples, walking through a bamboo forest, and sitting by the river watching the maple leaves drift down. What made it so memorable, though, wasn't any single sight; it was the atmosphere, this incredible sense of calm and craftsmanship in everything, from the gardens to the food. Looking back, it was one of those rare trips that genuinely changed how I think about slowing down, and I've wanted to go back ever since.",
           explanation: [
             "All four bullets covered, but woven into a narrative rather than listed.",
-            "Rich descriptive vocabulary, varied structures, and a reflective 'looking back' close — sustained for the full turn.",
+            "Rich descriptive vocabulary, varied structures, and a reflective 'looking back' close, sustained for the full turn.",
           ],
         },
       },
       {
         slug: "part-3-discussion",
-        name: "Part 3 — Two-way discussion",
+        name: "Part 3: two-way discussion",
         what: "Abstract, opinion-based questions linked to the Part 2 topic. Answers should be more analytical and general than Part 1.",
         howToAnswer: [
           "Give an opinion, justify it, and consider another angle.",
-          "Speak about society, trends and the future — not just yourself.",
-          "Buy thinking time naturally ('That's a good question — I'd say…').",
+          "Speak about society, trends and the future: not just yourself.",
+          "Buy thinking time naturally ('That's a good question. I'd say…').",
         ],
         dos: ["Develop ideas: claim → reason → example → implication.", "Use hedging/speculation (it depends, arguably, it might) to show range."],
-        donts: ["Don't give short answers — Part 3 rewards developed responses.", "Don't panic about 'knowing' the answer — there's no right one."],
+        donts: ["Don't give short answers: Part 3 rewards developed responses.", "Don't panic about 'knowing' the answer: there's no right one."],
         usefulLanguage: ["Arguably…; It largely depends on…; There's a strong case that…; On the other hand…; In the long run…"],
         example: {
           prompt: "Do you think tourism always benefits local communities?",
-          band: "Band 8–9",
+          band: "Band 8-9",
           answer:
-            "Not always, no — it really depends on how it's managed. On the one hand, tourism can be a huge economic lifeline: it creates jobs and can fund the preservation of heritage sites that might otherwise fall into disrepair. On the other hand, when it's poorly managed, you get 'over-tourism' — rising rents that push out locals, and a kind of cultural dilution where a place starts performing for visitors rather than living authentically. So arguably the benefit isn't automatic; it hinges on whether the profits actually stay in the community and whether growth is kept sustainable.",
+            "Not always, no, it really depends on how it's managed. On the one hand, tourism can be a huge economic lifeline: it creates jobs and can fund the preservation of heritage sites that might otherwise fall into disrepair. On the other hand, when it's poorly managed, you get 'over-tourism', rising rents that push out locals, and a kind of cultural dilution where a place starts performing for visitors rather than living authentically. So arguably the benefit isn't automatic; it hinges on whether the profits actually stay in the community and whether growth is kept sustainable.",
           explanation: [
             "Balanced, analytical answer: both sides, a real concept ('over-tourism'), and a conditional conclusion.",
             "Hedging and sophisticated linking ('arguably', 'it hinges on') signal a high band.",

@@ -152,7 +152,7 @@ export function QuestionJumpDialog({
           {groups.map((group) => (
             <div key={group.start}>
               <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink-muted">
-                Questions {group.start}–{group.end}
+                Questions {group.start}-{group.end}
               </p>
               <div className="grid grid-cols-5 gap-2 sm:grid-cols-8 md:grid-cols-10">
                 {group.items.map((idx) => (

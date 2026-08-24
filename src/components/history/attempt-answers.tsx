@@ -99,7 +99,7 @@ export function AttemptAnswers({
             <p className="inline-flex items-center gap-2 text-sm text-ink-muted">
               <Mic className="size-4" />
               Recorded {String(ans.durationSec ?? "?")}s
-              {!audioUrl && " — recording not stored."}
+              {!audioUrl && "recording not stored."}
             </p>
             {audioUrl && (
               // `audioUrl` is our own gated path, never the bucket location: the
@@ -148,12 +148,12 @@ export function AttemptAnswers({
       case "single": {
         const i = v.index as number | undefined;
         if (i === undefined) return null;
-        return `${letter(i)}${options[i] ? ` — ${options[i]}` : ""}`;
+        return `${letter(i)}${options[i] ? `. ${options[i]}` : ""}`;
       }
       case "multi": {
         const idx = v.indices as number[] | undefined;
         if (!idx?.length) return null;
-        return idx.map((i) => `${letter(i)}${options[i] ? ` — ${options[i]}` : ""}`).join("\n");
+        return idx.map((i) => `${letter(i)}${options[i] ? `. ${options[i]}` : ""}`).join("\n");
       }
       case "tfng":
       case "ynng":
@@ -162,7 +162,7 @@ export function AttemptAnswers({
         const key = v.key as string | undefined;
         if (!key) return null;
         const hit = optionBox?.options.find((o) => o.key === key);
-        return `${key}${hit ? ` — ${hit.text}` : ""}`;
+        return `${key}${hit ? `: ${hit.text}` : ""}`;
       }
       case "completion":
       case "labelling":
@@ -240,7 +240,7 @@ function WritingAnalysis({ fb, isTask2 }: { fb: WritingFeedback; isTask2: boolea
               <div className="flex items-center justify-between gap-3">
                 <p className="text-sm font-semibold text-ink">{label}</p>
                 <span className="rounded-full bg-brand-soft px-2.5 py-0.5 text-sm font-semibold tabular-nums text-brand">
-                  {typeof cr.band === "number" ? cr.band.toFixed(1) : "—"}
+                  {typeof cr.band === "number" ? cr.band.toFixed(1) : ""}
                 </span>
               </div>
               {cr.summary && <p className="mt-1.5 text-sm text-ink-soft">{cr.summary}</p>}

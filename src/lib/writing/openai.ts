@@ -114,11 +114,11 @@ const responseSchema = {
 function taskLabel(taskType: WritingTaskType): string {
   switch (taskType) {
     case "writing_task1_academic":
-      return "IELTS Academic Writing Task 1 (describe a chart/graph/table/process/map in 150+ words; the first criterion is TASK ACHIEVEMENT — includes a clear overview and accurate data, no opinions)";
+      return "IELTS Academic Writing Task 1 (describe a chart/graph/table/process/map in 150+ words; the first criterion is TASK ACHIEVEMENT, which covers a clear overview and accurate data, no opinions)";
     case "writing_task1_general":
-      return "IELTS General Training Writing Task 1 (a letter of 150+ words; the first criterion is TASK ACHIEVEMENT — covers all bullet points with a consistent, appropriate tone)";
+      return "IELTS General Training Writing Task 1 (a letter of 150+ words; the first criterion is TASK ACHIEVEMENT, which covers all bullet points with a consistent, appropriate tone)";
     case "writing_task2":
-      return "IELTS Writing Task 2 (a 250+ word essay; the first criterion is TASK RESPONSE — fully addresses all parts of the prompt with a clear, developed position)";
+      return "IELTS Writing Task 2 (a 250+ word essay; the first criterion is TASK RESPONSE, which means fully addressing all parts of the prompt with a clear, developed position)";
   }
 }
 
@@ -131,24 +131,28 @@ function buildPrompt(p: {
   wordCount: number;
 }): string {
   return [
-    "You are a certified, experienced IELTS examiner. Grade the candidate's writing STRICTLY against the official IELTS public band descriptors (0–9, half-bands allowed).",
+    "You are a certified, experienced IELTS examiner. Grade the candidate's writing STRICTLY against the official IELTS public band descriptors (0 to 9, half-bands allowed).",
     "",
     `TASK: ${taskLabel(p.taskType)}.`,
     `MODULE: ${p.module}.`,
     `MINIMUM WORDS: ${p.wordMin}. Under-length responses are penalised on Task Achievement/Response.`,
     "",
     "THE FOUR CRITERIA (weight them equally):",
-    "1. Task Response / Task Achievement — does it fully address the task, develop ideas, and (T1) give an overview / (T2) hold a clear position?",
-    "2. Coherence & Cohesion — logical progression, paragraphing, and natural (not mechanical) linking.",
-    "3. Lexical Resource — range, precision and naturalness of vocabulary; collocation; spelling.",
-    "4. Grammatical Range & Accuracy — variety of structures and error density.",
+    "1. Task Response / Task Achievement: does it fully address the task, develop ideas, and (T1) give an overview / (T2) hold a clear position?",
+    "2. Coherence & Cohesion: logical progression, paragraphing, and natural (not mechanical) linking.",
+    "3. Lexical Resource: range, precision and naturalness of vocabulary; collocation; spelling.",
+    "4. Grammatical Range & Accuracy: variety of structures and error density.",
     "",
     "RULES:",
-    "- Be calibrated and honest — do NOT inflate. Most real candidates sit between 5.0 and 7.5.",
+    "- Be calibrated and honest. Do NOT inflate. Most real candidates sit between 5.0 and 7.5.",
     "- Quote the candidate's OWN words in corrections and improvedExamples (do not invent text they didn't write).",
     "- 'improvements' and 'nextSteps' must be specific and actionable, not generic advice.",
     "- If the response is off-topic, memorised, or far under length, set onTask=false and cap the bands accordingly.",
     "- Bands must be one of: 0,1,2,3,4,4.5,5,5.5,6,6.5,7,7.5,8,8.5,9.",
+    "- WRITING STYLE: your feedback is shown to the learner as-is. Write plainly, "
+      + "the way a teacher speaks. Never use em-dashes or en-dashes; use commas, "
+      + "colons, or separate sentences. Avoid 'not just X but Y' constructions and "
+      + "three-item flourishes. Prefer short, direct sentences.",
     "",
     `QUESTION / PROMPT GIVEN TO THE CANDIDATE:\n"""${p.questionPrompt}"""`,
     "",

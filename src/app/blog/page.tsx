@@ -1,15 +1,16 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Clock } from "lucide-react";
 import { MarketingShell, PageHead } from "@/components/marketing/marketing-shell";
 import { Reveal } from "@/components/marketing/motion";
 import { POSTS } from "@/lib/blog";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "IELTS Blog — Tips, Strategies & Score Guides | IELTSVega",
+export const metadata = pageMeta({
+  title: "IELTS Blog: Tips, Strategies & Score Guides | IELTSVega",
   description: "Practical IELTS advice: how the band score works, common Writing mistakes, study plans, and skill-by-skill strategies to reach your target band.",
-  alternates: { canonical: "/blog" },
-};
+  path: "/blog",
+  keywords: ["IELTS tips", "IELTS blog", "IELTS strategies", "IELTS study plan", "how to improve IELTS score"],
+});
 
 export default function BlogIndex() {
   return (
@@ -18,7 +19,7 @@ export default function BlogIndex() {
         <PageHead
           eyebrow="Blog"
           title="Practical IELTS advice that moves your band."
-          lead="Clear, no-fluff guides on scoring, strategy and study planning — written around how the exam is actually marked."
+          lead="Clear, no-fluff guides on scoring, strategy and study planning. Written around how the exam is actually marked."
         />
       </Reveal>
 

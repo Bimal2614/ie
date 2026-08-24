@@ -50,9 +50,9 @@ B. Yet access is uneven. Wealthier areas often enjoy mature trees and maintained
 
 C. Maintenance is the hidden cost. A park that is planted but not tended quickly loses the qualities that made it valuable, and councils that fund planting without funding upkeep often see usage fall within a decade.
 
-D. Community involvement changes outcomes. Where residents help design and care for a space, vandalism drops and reported satisfaction rises — an effect Dr Alvarez attributes to a sense of ownership rather than to the planting itself.
+D. Community involvement changes outcomes. Where residents help design and care for a space, vandalism drops and reported satisfaction rises, an effect Dr Alvarez attributes to a sense of ownership rather than to the planting itself.
 
-E. City planners increasingly argue that green infrastructure should be treated like roads or water — essential, funded and maintained, not optional. The debate is no longer whether green space matters, but who pays to keep it.`;
+E. City planners increasingly argue that green infrastructure should be treated like roads or water: essential, funded and maintained, not optional. The debate is no longer whether green space matters, but who pays to keep it.`;
 
 const LISTENING_TRANSCRIPT =
   "A short discussion about urban green spaces, park maintenance budgets and how councils schedule planting.";
@@ -374,7 +374,7 @@ const BLUEPRINTS: Record<QuestionTypeKey, Blueprint | Blueprint[]> = {
     startNumber: 30,
     layout: {
       kind: "form",
-      heading: "Community garden — membership form",
+      heading: "Community garden: membership form",
       rows: [
         { label: "Name", value: "Maria [[30]]" },
         { label: "Plot number", value: "[[31]]" },
@@ -653,7 +653,7 @@ const BLUEPRINTS: Record<QuestionTypeKey, Blueprint | Blueprint[]> = {
       startNumber: 1,
       questions: q60([
         "Why do you think green spaces are important for people living in big cities?",
-        "Who should pay to maintain public parks — councils or residents?",
+        "Who should pay to maintain public parks, councils or residents?",
         "Do you think cities are becoming better or worse places to live?",
         "How might public spaces change in the next fifty years?",
         "Should governments limit new building to protect open land?",
@@ -699,7 +699,7 @@ function checkGapNumbering(typeKey: QuestionTypeKey, bp: Blueprint) {
 
   if (missing.length || extra.length || dupes.length) {
     throw new Error(
-      `[${typeKey}] gap/question mismatch — expected ${JSON.stringify(expected)}, found ${JSON.stringify(found)}` +
+      `[${typeKey}] gap/question mismatch: expected ${JSON.stringify(expected)}, found ${JSON.stringify(found)}` +
         (missing.length ? `; no gap for ${JSON.stringify(missing)}` : "") +
         (extra.length ? `; no question for ${JSON.stringify(extra)}` : "") +
         (dupes.length ? `; duplicated ${JSON.stringify(dupes)}` : ""),
