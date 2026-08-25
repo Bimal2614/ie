@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Clock, Loader2, Maximize2, Minimize2, Send } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, ArrowRight, Clock, Loader2, Send } from "lucide-react";
+import { FullscreenButton } from "./fullscreen-button";
 import { QuestionStrip, type StripPart } from "./question-strip";
 
 /**
@@ -81,7 +82,6 @@ export function ExamShell({
   children: React.ReactNode;
 }) {
   const root = useRef<HTMLDivElement | null>(null);
-  const [isFull, setIsFull] = useState(false);
   const [elapsed, setElapsed] = useState(0);
 
   const counting = remainingSec === undefined;
@@ -90,24 +90,6 @@ export function ExamShell({
     const t = window.setInterval(() => setElapsed((e) => e + 1), 1000);
     return () => window.clearInterval(t);
   }, [counting]);
-
-  // The browser can leave fullscreen without us (Escape, or the user's own
-  // shortcut), so the button's state is read from the document, never assumed.
-  useEffect(() => {
-    const sync = () => setIsFull(Boolean(document.fullscreenElement));
-    document.addEventListener("fullscreenchange", sync);
-    return () => document.removeEventListener("fullscreenchange", sync);
-  }, []);
-
-  const toggleFull = useCallback(async () => {
-    try {
-      if (document.fullscreenElement) await document.exitFullscreen();
-      else await root.current?.requestFullscreen();
-    } catch {
-      // Denied by the browser (an iframe without the permission, say). The
-      // layout already fills the viewport, so there is nothing to fall back to.
-    }
-  }, []);
 
   const state = timerState ?? "ok";
 
@@ -122,14 +104,7 @@ export function ExamShell({
             so leaving is the one control a candidate must never hunt for. */}
         {menu ? <div className="shrink-0">{menu}</div> : null}
 
-        <button
-          type="button"
-          onClick={toggleFull}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-line bg-paper px-2.5 py-1.5 text-xs font-semibold text-ink-soft transition-colors hover:border-brand/50 hover:text-ink"
-        >
-          {isFull ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
-          {isFull ? "Exit fullscreen" : "Fullscreen"}
-        </button>
+        <FullscreenButton target={root} />
 
         <p className="min-w-0 flex-1 truncate text-xs text-ink-muted sm:text-sm">{title}</p>
 

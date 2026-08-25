@@ -236,6 +236,34 @@ export const SET_NOUN: Record<SectionKey, string> = {
  */
 const INSTRUCTION_HIDDEN: QuestionTypeKey[] = ["speaking_part1", "speaking_part3"];
 
+/**
+ * Sections whose band comes from AI marking rather than an answer key. There is
+ * no marks card for these: the examiner report IS the result.
+ */
+export function isAiScored(section: SectionKey): boolean {
+  return section === "writing" || section === "speaking";
+}
+
+/**
+ * Does this task's stimulus sit BESIDE the questions rather than above them?
+ *
+ * Reading always has a passage to read against; Writing Task 1 has a chart to
+ * describe. Task 2, Listening and Speaking have nothing that needs to stay in
+ * view while answering, so they run as one column.
+ *
+ * Lives here because all three players (question, section, paginated session)
+ * ask the same question, and three copies of the rule is how a Task 1 chart
+ * ends up stacked above the editor on one route and beside it on another.
+ */
+export function hasSideStimulus(
+  section: SectionKey,
+  stimulus: { passageText?: string | null; imageUrl?: string | null },
+): boolean {
+  if (section === "reading") return Boolean(stimulus.passageText);
+  if (section === "writing") return Boolean(stimulus.imageUrl);
+  return false;
+}
+
 /** Should this type's instruction line be drawn at all? */
 export function showsInstruction(questionType: QuestionTypeKey): boolean {
   return !INSTRUCTION_HIDDEN.includes(questionType);

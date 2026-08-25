@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
-import { Check, X, Flag, Headphones, ListChecks, Sparkles, Volume2 } from "lucide-react";
+import { Check, X, Flag, Headphones, ListChecks, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { QUESTION_TYPES, SECTIONS, showsInstruction, type QuestionTypeKey, type SectionKey } from "@/lib/ielts";
 import type { Answer, CorrectAnswer, OptionsLayout, SetLayout } from "@/lib/question-content";
@@ -133,6 +133,15 @@ export type BodyConfig = {
   stimulusImage?: boolean;
   /** Feedback lists under gap-backed and matching groups, which answer inline. */
   inlineFeedback?: boolean;
+  /**
+   * Draw the item's prompt in the row, or leave it to the surface above.
+   *
+   * A Writing task's prompt IS the question, so the exam prints it once at the
+   * top of the screen and gives the whole answer area to the editor. Repeating
+   * it inside the row put the question and the generic "write at least 150
+   * words" line on screen at the same time, in two different places.
+   */
+  itemPrompts?: boolean;
   /** Flagging is a mock-player affordance. */
   flagged?: Set<string>;
   onToggleFlag?: (key: string) => void;
@@ -466,6 +475,7 @@ function GroupBlock({
           imageUrl={config.matrixImage ?? null}
           heading={group.instruction ?? undefined}
           disabled={disabled}
+          anchorPrefix={config.anchorPrefix}
           bindingFor={(n) => {
             const item = byNumber.get(n);
             const r = item ? resultFor(item.key) : undefined;
@@ -615,6 +625,13 @@ function ItemRow({
   // would show it twice.
   const numberInGap = QUESTION_TYPES[item.questionType]?.family === "completion";
   const flagged = config.flagged?.has(item.key) ?? false;
+  /**
+   * A Writing answer is one full-width editor. "Clear" there wipes 250 words on
+   * a stray click, and there is nothing to flag for review when the task IS the
+   * whole question, so the control gutter would only reserve dead space down the
+   * right-hand side of the box. The wrapper collapses to zero width once empty.
+   */
+  const isWriting = QUESTION_TYPES[item.questionType]?.family === "writing";
 
   return (
     <li
@@ -641,7 +658,9 @@ function ItemRow({
           </span>
         )}
         <div className="min-w-0 flex-1 space-y-3">
-          {item.prompt && <p className="text-sm font-medium text-ink">{item.prompt}</p>}
+          {item.prompt && config.itemPrompts !== false && (
+            <p className="text-sm font-medium text-ink">{item.prompt}</p>
+          )}
           {clip && (
             <button
               type="button"
@@ -663,7 +682,7 @@ function ItemRow({
           {result && <ResultNote result={result} />}
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          {!disabled && onClearAnswer && value !== undefined && (
+          {!disabled && onClearAnswer && value !== undefined && !isWriting && (
             <button
               type="button"
               onClick={() => onClearAnswer(item.key)}
@@ -683,7 +702,7 @@ function ItemRow({
               {state === "correct" ? <Check className="size-4" /> : <X className="size-4" />}
             </span>
           )}
-          {config.onToggleFlag && (
+          {config.onToggleFlag && !isWriting && (
             <button
               type="button"
               onClick={() => config.onToggleFlag?.(item.key)}
@@ -804,13 +823,22 @@ function ResultNote({ result, inline }: { result: BodyResult; inline?: boolean }
  * in its own chrome (the session top bar, the set page's heading), so printing
  * it here put the same line on screen twice.
  */
-function InstructionBar({ text, section }: { text: string | null | undefined; section: SectionKey }) {
+export function InstructionBar({ text, section }: { text: string | null | undefined; section: SectionKey }) {
   if (!text) return null;
   const sec = SECTIONS[section];
   return (
     <div className="flex items-start gap-3 rounded-xl border border-line bg-paper-elev p-4">
-      <span className={cn("grid size-8 shrink-0 place-items-center rounded-lg", `chip-${sec.accent}`)}>
-        <Sparkles className="size-4" />
+      {/* "Q", not a decorative icon: this bar carries the question itself for a
+          Writing task, and a sparkle above a prompt reads as an ornament rather
+          than a label. aria-hidden because the question follows immediately. */}
+      <span
+        aria-hidden
+        className={cn(
+          "grid size-8 shrink-0 place-items-center rounded-lg text-sm font-bold",
+          `chip-${sec.accent}`,
+        )}
+      >
+        Q
       </span>
       <p className="min-w-0 text-sm text-ink-strong">{text}</p>
     </div>

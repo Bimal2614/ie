@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Clock, Loader2, GraduationCap, ArrowRight, Check } from "lucide-react";
+import { Clock, Loader2, ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LogoMark } from "@/components/ui/logo";
 import { cn } from "@/lib/utils";
 import { SECTIONS, type SectionKey } from "@/lib/ielts";
 import type { Answer } from "@/lib/question-content";
@@ -156,7 +157,7 @@ export function MockPlayer({
       {/* Exam header — brand, section, answered count, timer */}
       <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-line bg-paper-elev/95 px-4 py-2.5 backdrop-blur">
         <div className="flex min-w-0 items-center gap-2 font-semibold">
-          <GraduationCap className="h-5 w-5 shrink-0 text-brand" />
+          <LogoMark className="h-6 w-6" />
           <span className="truncate" style={{ fontFamily: "var(--font-heading)" }}>
             IELTSVega
           </span>

@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { logoDataUri } from "@/lib/og-logo";
 
 /**
  * The site-wide social share image (1200×630).
@@ -12,7 +13,9 @@ export const alt = "IELTSVega: practise IELTS online with AI band scoring";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export default function Image() {
+export default async function Image() {
+  const logo = await logoDataUri();
+
   return new ImageResponse(
     (
       <div
@@ -28,23 +31,28 @@ export default function Image() {
           fontFamily: "sans-serif",
         }}
       >
-        {/* Wordmark */}
+        {/* Wordmark — the real mark when it loaded, a lettermark tile if not. */}
         <div style={{ display: "flex", alignItems: "center", fontSize: 30, fontWeight: 700 }}>
-          <div
-            style={{
-              display: "flex",
-              width: 44,
-              height: 44,
-              borderRadius: 12,
-              background: "#2563eb",
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: 16,
-              fontSize: 26,
-            }}
-          >
-            IV
-          </div>
+          {logo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logo} width={72} height={72} alt="" style={{ marginRight: 18 }} />
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                width: 44,
+                height: 44,
+                borderRadius: 12,
+                background: "#2563eb",
+                alignItems: "center",
+                justifyContent: "center",
+                marginRight: 16,
+                fontSize: 26,
+              }}
+            >
+              IV
+            </div>
+          )}
           IELTSVega
         </div>
 

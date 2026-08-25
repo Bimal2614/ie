@@ -4,8 +4,16 @@
  * html + a plain-text fallback.
  */
 
-const BRAND = "#0e7490"; // kept simple/self-contained; not tied to the app theme tokens
+import { SITE_URL } from "@/lib/site";
+
+const BRAND = "#104094"; // = the app's --brand token, hsl(218 81% 32%)
 const GREEN = "#16a34a";
+/**
+ * Absolute URL — email clients have no origin to resolve a relative path
+ * against. The 128px asset, not the 512px one: it renders at 32px here and most
+ * clients download the full file regardless of the width attribute.
+ */
+const LOGO = `${SITE_URL}/brand/logo-128.png`;
 
 /**
  * These templates interpolate user-controlled text — the display name, which
@@ -34,7 +42,10 @@ function layout(raw: { heading: string; body: string; ctaLabel: string; ctaUrl: 
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
     <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="background:#fff;border:1px solid #e7e5e4;border-radius:16px;overflow:hidden">
       <tr><td style="padding:28px 32px 8px">
-        <div style="font-size:18px;font-weight:700;color:${BRAND}">IELTSVega</div>
+        <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+          <td style="padding-right:10px"><img src="${LOGO}" width="32" height="32" alt="" style="display:block;border:0"></td>
+          <td style="font-size:18px;font-weight:700;color:${BRAND}">IELTSVega</td>
+        </tr></table>
       </td></tr>
       <tr><td style="padding:8px 32px 0">
         <h1 style="font-size:20px;margin:0 0 12px">${opts.heading}</h1>

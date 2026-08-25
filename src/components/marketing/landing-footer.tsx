@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { GraduationCap, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { LogoMark } from "@/components/ui/logo";
 import { Reveal, Magnetic } from "./motion";
 
 /**
@@ -85,7 +86,7 @@ export function LandingFooter() {
       <div className="mx-auto grid w-full max-w-6xl gap-8 border-t border-white/10 px-5 py-14 sm:grid-cols-3 lg:grid-cols-[1.6fr_repeat(5,1fr)]">
         <div className="md:col-span-1">
           <span className="flex items-center gap-2 font-semibold">
-            <span className="grid size-8 place-items-center rounded-lg bg-white/10"><GraduationCap className="size-5" /></span>
+            <LogoMark className="size-8" />
             IELTSVega
           </span>
           <p className="mt-3 max-w-xs text-sm text-white/45">

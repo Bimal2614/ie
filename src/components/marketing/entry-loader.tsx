@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { GraduationCap } from "lucide-react";
+import { LogoMark } from "@/components/ui/logo";
 
 /**
  * A brief, premium entry overlay — dark, centred mark, a filling bar, and mono
@@ -51,9 +51,7 @@ export function EntryLoader() {
       aria-hidden
     >
       <div className="flex w-full max-w-xs flex-col items-center px-6 text-center">
-        <span className="grid size-12 animate-pulse place-items-center rounded-2xl border border-white/10 bg-white/5">
-          <GraduationCap className="size-6 text-white" strokeWidth={1.5} />
-        </span>
+        <LogoMark className="size-12 animate-pulse" priority />
 
         <p className="mt-6 text-lg font-semibold text-white" style={{ fontFamily: "var(--font-heading)" }}>
           Preparing your IELTS workspace

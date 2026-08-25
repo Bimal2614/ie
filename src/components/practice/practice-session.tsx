@@ -6,11 +6,22 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, RotateCcw, X, AlertCircle, Loader2, LayoutGrid, Check, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { SECTIONS, QUESTION_TYPES, SET_NOUN, type SectionKey, type QuestionTypeKey } from "@/lib/ielts";
+import {
+  SECTIONS,
+  QUESTION_TYPES,
+  SET_NOUN,
+  hasSideStimulus,
+  isAiScored,
+  type SectionKey,
+  type QuestionTypeKey,
+} from "@/lib/ielts";
 import { anyUploadPending, type Answer, type SetLayout } from "@/lib/question-content";
 import { getSetPaginated, type PaginatedSetResult } from "@/app/actions/questions";
 import { submitPractice, type SetSubmissionResult } from "@/app/actions/practice";
-import { SetBody, type PlayerSet } from "./set-body";
+import { FullscreenButton } from "@/components/exam/fullscreen-button";
+import { SplitPane } from "@/components/exam/split-pane";
+import { SetBody, taskHeading, type PlayerSet } from "./set-body";
+import { InstructionBar } from "./question-body";
 import { AttemptFeedback } from "./attempt-feedback";
 
 /**
@@ -240,7 +251,23 @@ export function PracticeSession({
   // spoken interview with no numbered answer sheet, so a range there would be
   // an invention — it shows the topic name instead.
   // The two AI-scored sections: no marks to report, so the report is the result.
-  const aiScored = section === "speaking" || section === "writing";
+  const aiScored = isAiScored(section);
+
+  /**
+   * Does this set's stimulus belong beside the questions? Shared rule, so a
+   * Task 1 chart cannot sit beside the editor on one route and above it here.
+   */
+  const sideStimulus = Boolean(
+    playerSet && hasSideStimulus(section, playerSet) && !(aiScored && result),
+  );
+
+  /**
+   * With the panes split, <SetBody/> is asked for the questions alone and
+   * returns them without the instruction above them, so it is drawn here. For
+   * Writing that line is the task prompt itself.
+   */
+  const instructionText =
+    playerSet && currentSet ? taskHeading(playerSet, currentSet.questions) : null;
   // A recording still on its way to storage would be submitted with no audio
   // and could never be scored, so submit waits for it.
   const savingRecording = anyUploadPending(answers);
@@ -254,7 +281,7 @@ export function PracticeSession({
   const noun = SET_NOUN[section];
 
   return (
-    <div className="mx-auto w-full max-w-6xl" ref={topRef}>
+    <div className="practice-root mx-auto w-full max-w-6xl" ref={topRef}>
       {notice && (
         <div className="mb-3 rounded-lg border border-warning/40 bg-warning-soft px-4 py-2.5 text-sm text-ink-soft">
           {notice}
@@ -290,6 +317,12 @@ export function PracticeSession({
             </div>
             <span className="font-mono text-xs tabular-nums text-ink-muted">{progress}%</span>
           </div>
+
+          {/* Writing a 250-word essay inside the sidebar and topbar wastes most
+              of the screen, so this route offers the same fullscreen control the
+              exam shell has. `topRef` is the player's own root, so the app
+              chrome is what gets left behind. */}
+          <FullscreenButton target={topRef} className="hidden sm:inline-flex" />
 
           {/* Past attempts and their bands. A band arrives after the response is
               sent, so the candidate needs a way to the record of it from inside
@@ -333,16 +366,60 @@ export function PracticeSession({
             </div>
           ) : playerSet && currentSet ? (
             <div key={`${currentSet.id}-${restartKey}`} className="space-y-6">
-              <SetBody
-                set={playerSet}
-                questions={currentSet.questions}
-                answers={answers}
-                results={result?.results ?? null}
-                onAnswer={handleAnswer}
-                onClearAnswer={clearAnswer}
-                flagged={flagged}
-                onToggleFlag={toggleFlag}
-              />
+              {/* A Task 1 chart and a Reading passage have to stay in view while
+                  the answer is written, so they take their own pane instead of
+                  pushing the questions off the screen. Same <SplitPane/> and the
+                  same <SetBody/> slots the single-set and section players use. */}
+              {sideStimulus ? (
+                <div className="space-y-4">
+                  <InstructionBar text={instructionText} section={section} />
+                  <SplitPane
+                    className="min-h-[60vh]"
+                    storageKey={`exam-split-${section}`}
+                    left={
+                      <div className="pr-1">
+                        <SetBody
+                          set={playerSet}
+                          questions={currentSet.questions}
+                          answers={answers}
+                          results={null}
+                          onAnswer={handleAnswer}
+                          slot="stimulus"
+                          exam
+                        />
+                      </div>
+                    }
+                    right={
+                      <div className="pl-1">
+                        <SetBody
+                          set={playerSet}
+                          questions={currentSet.questions}
+                          answers={answers}
+                          results={result?.results ?? null}
+                          onAnswer={handleAnswer}
+                          onClearAnswer={clearAnswer}
+                          flagged={flagged}
+                          onToggleFlag={toggleFlag}
+                          slot="questions"
+                          exam
+                        />
+                      </div>
+                    }
+                  />
+                </div>
+              ) : (
+                <SetBody
+                  set={playerSet}
+                  questions={currentSet.questions}
+                  answers={answers}
+                  results={result?.results ?? null}
+                  onAnswer={handleAnswer}
+                  onClearAnswer={clearAnswer}
+                  flagged={flagged}
+                  onToggleFlag={toggleFlag}
+                  exam
+                />
+              )}
 
               {!result ? (
                 <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper-sunken p-4">

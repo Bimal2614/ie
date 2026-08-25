@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu, ChevronRight, User as UserIcon, Settings as SettingsIcon, LogOut, GraduationCap } from "lucide-react";
+import { Menu, ChevronRight, User as UserIcon, Settings as SettingsIcon, LogOut } from "lucide-react";
+import { LogoMark } from "@/components/ui/logo";
 import { cn } from "@/lib/utils";
 
 type TopbarUser = { name: string; email: string; targetModule: "academic" | "general" };
@@ -56,7 +57,7 @@ export function Topbar({ user, onOpenSidebar, logoutAction }: TopbarProps) {
         </button>
         <div className="hidden min-w-0 items-center gap-2 text-sm text-ink-muted sm:flex">
           <Link href="/dashboard" className="flex items-center gap-1.5 hover:text-ink-soft">
-            <GraduationCap className="h-5 w-5 text-brand" />
+            <LogoMark className="h-6 w-6" priority />
             <span className="font-semibold text-ink-strong" style={{ fontFamily: "var(--font-heading)" }}>
               IELTSVega
             </span>

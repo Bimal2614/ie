@@ -413,6 +413,19 @@
   .exam-timer { font-family: var(--font-mono); font-weight: 600; font-variant-numeric: tabular-nums; color: hsl(var(--ink-strong)); }
   .exam-timer[data-state="critical"] { color: hsl(var(--danger)); }
   .exam-timer[data-state="warning"]  { color: hsl(var(--accent)); }
+
+  /* Fullscreen practice.
+     The paginated player's root is a centred `max-w-6xl` column. Expanded as-is
+     it keeps that cap and paints no background, so the browser shows a narrow
+     strip on a black field. In fullscreen it takes the whole surface, paints the
+     app background, and scrolls on its own. */
+  .practice-root:fullscreen {
+    max-width: none;
+    height: 100%;
+    overflow-y: auto;
+    background-color: hsl(var(--paper));
+    padding: 1rem;
+  }
 }
 
 /* ───────────────────────── UTILITIES ───────────────────────────────────────── */

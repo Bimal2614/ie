@@ -16,6 +16,7 @@ import { Reveal, ScrollWords } from "@/components/marketing/motion";
 import { LandingFooter } from "@/components/marketing/landing-footer";
 import { BlogStrip } from "@/components/marketing/blog-strip";
 import { SITE_URL } from "@/lib/site";
+import { LOGO_URL } from "@/lib/seo";
 import { FAQS } from "@/lib/faqs";
 
 export const metadata: Metadata = {
@@ -270,7 +271,8 @@ function StructuredData() {
         "@id": orgId,
         name: "IELTSVega",
         url: SITE_URL,
-        logo: `${SITE_URL}/favicon.ico`,
+        logo: LOGO_URL,
+        image: LOGO_URL,
         description:
           "IELTS preparation platform with AI band scoring for Writing and Speaking, full mock tests, and 15,000+ Academic and General Training questions.",
         // sameAs: add your social profile URLs here (X, Instagram, Facebook,

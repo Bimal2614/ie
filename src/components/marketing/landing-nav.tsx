@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { GraduationCap, ArrowRight, LayoutDashboard } from "lucide-react";
+import { ArrowRight, LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
+import { LogoMark } from "@/components/ui/logo";
 import { cn } from "@/lib/utils";
 
 /**
@@ -58,9 +59,7 @@ export function LandingNav({ alwaysSolid = false }: { alwaysSolid?: boolean }) {
         )}
       >
         <Link href="/" className={cn("flex items-center gap-2 font-semibold transition-colors", solid ? "text-ink" : "text-white")}>
-          <span className="grid size-8 place-items-center rounded-lg bg-brand text-white">
-            <GraduationCap className="size-5" />
-          </span>
+          <LogoMark className="size-8" priority />
           IELTSVega
         </Link>
 

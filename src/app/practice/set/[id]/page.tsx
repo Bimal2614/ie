@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Clock } from "lucide-react";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { questionSets, questions } from "@/db/schema";
@@ -44,21 +42,15 @@ export default async function PracticeSetPage({ params }: { params: Promise<{ id
     speakSeconds: q.speakSeconds,
   }));
 
+  // No page chrome: <QuestionPlayer/> renders the exam shell, which is fixed to
+  // the viewport and carries its own header, way out and answer strip. Wrapping
+  // it in a centred document column would box the exam inside the app layout.
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <Link href={`/practice/${set.section}`} className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-ink">
-        <ArrowLeft className="size-4" /> {sec.label}
-      </Link>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <h1 className="display text-xl">{meta.label}</h1>
-        <span className={`chip chip-${sec.accent}`}>{sec.label}</span>
-        {set.estimatedMinutes ? (
-          <span className="chip"><Clock className="size-3" /> ~{set.estimatedMinutes} min</span>
-        ) : null}
-      </div>
-
-      <QuestionPlayer set={playerSet} questions={playerQuestions} />
-    </div>
+    <QuestionPlayer
+      set={playerSet}
+      questions={playerQuestions}
+      paperTitle={`${sec.label} · ${meta.label}`}
+      exitHref={`/practice/${set.section}`}
+    />
   );
 }

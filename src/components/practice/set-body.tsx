@@ -53,6 +53,28 @@ export type PlayerResult = {
   explanation: string | null;
 };
 
+/**
+ * The task line the surface ABOVE the questions should print.
+ *
+ * For Writing the prompt is the question, so it belongs at the top of the
+ * screen where the exam puts it, leaving the answer area to the editor alone.
+ * Everything else keeps its instruction line, falling back to the type's
+ * default when the set does not author one.
+ *
+ * Shared so the single-set player, the paginated session and the section player
+ * cannot disagree about what the heading of a Writing task is.
+ */
+export function taskHeading(set: PlayerSet, questions: PlayerQuestion[]): string | null {
+  const meta = QUESTION_TYPES[set.questionType];
+  if (meta?.family === "writing") {
+    const prompt = questions.find((q) => q.prompt?.trim())?.prompt;
+    if (prompt) return prompt;
+  }
+  return showsInstruction(set.questionType)
+    ? (set.instructions ?? meta?.instruction ?? null)
+    : null;
+}
+
 export function SetBody({
   set,
   questions,
@@ -62,6 +84,8 @@ export function SetBody({
   onClearAnswer,
   flagged,
   onToggleFlag,
+  slot = "all",
+  exam = false,
 }: {
   set: PlayerSet;
   questions: PlayerQuestion[];
@@ -72,8 +96,38 @@ export function SetBody({
   /** Client-side "mark for review" set + toggle (optional — omitted in mock review). */
   flagged?: Set<string>;
   onToggleFlag?: (questionId: string) => void;
+  /**
+   * Which half to draw. The exam layout puts the passage or the figure in one
+   * pane and the questions in the other, so it asks for them separately; the
+   * default renders both, one after the other.
+   */
+  slot?: "all" | "stimulus" | "questions";
+  /**
+   * Render the way section practice does: sticky recording, the lettered
+   * labelling grid, inline answers after marking, and no internal passage
+   * split (the player owns the divider).
+   *
+   * Opt-in rather than the default because the mock, the paginated session and
+   * the history review all draw through here too, and flipping their layout is
+   * a separate decision from aligning /practice/set/[id].
+   */
+  exam?: boolean;
 }) {
   const meta = QUESTION_TYPES[set.questionType];
+
+  /**
+   * Does the question group draw the figure itself?
+   *
+   * Two ways that happens, and they are mutually exclusive: a diagram layout
+   * pins its answers onto the picture, and a LETTERED labelling group prints
+   * the answer grid beside it. A typed diagram ("Label the diagram, ONE WORD")
+   * does neither — it numbers the picture and lists the blanks underneath — so
+   * there the figure stays the set's stimulus. Getting this wrong drops the
+   * image off the screen entirely.
+   */
+  const layoutOwnsFigure = set.layout?.kind === "diagram";
+  const matrixOwnsFigure =
+    exam && meta?.family === "labelling" && set.layout?.kind === "options";
 
   const doc: BodyDoc = useMemo(
     () => ({
@@ -130,26 +184,45 @@ export function SetBody({
       onAnswer={onAnswer}
       onClearAnswer={onClearAnswer}
       config={{
+        slot,
         // One task, so the instruction belongs above the whole thing rather than
-        // in a per-group band.
-        instructionText: showsInstruction(set.questionType)
-          ? (set.instructions ?? meta.instruction ?? null)
-          : null,
+        // in a per-group band. In the exam layout that line is `taskHeading`,
+        // which for Writing is the prompt itself — the row no longer prints it,
+        // so resolving this any other way would drop the question off the page.
+        instructionText: exam
+          ? taskHeading(set, questions)
+          : showsInstruction(set.questionType)
+            ? (set.instructions ?? meta.instruction ?? null)
+            : null,
         groupHeaders: false,
         // `mq-` is what the mock's question palette scrolls to.
         anchorPrefix: "mq",
-        // Reading puts the passage beside the questions.
-        splitStimulus: set.section === "reading",
+        // Reading puts the passage beside the questions. In the exam layout the
+        // player draws that divider instead, and a drag-resizable SplitPane and
+        // this fixed grid would otherwise both try to split the same content.
+        splitStimulus: !exam && set.section === "reading",
         // Speaking Parts 1 and 3 are an interview, one question at a time.
         sequential: meta.presentation === "sequential",
-        // Listening sets carry a per-question window into the recording.
+        // Listening sets carry a per-question window into the recording. Kept in
+        // the exam layout too: section practice has no equivalent, so dropping
+        // it to match would remove a feature rather than align a look.
         clips: true,
         progressBar: true,
-        reportOn: "row",
-        // A diagram layout draws the figure itself, with pins on it — so the
-        // layout gets the image, and the stimulus block then must not repeat it.
+        // One recording serves the whole set, so it stays reachable while the
+        // questions scroll under it.
+        stickyAudio: exam,
+        labelMatrix: exam,
+        inlineFeedback: exam,
+        reportOn: exam ? "feedback" : "row",
+        // A Writing prompt is printed once by the surface above (see
+        // `taskHeading`), so the row would otherwise show the question twice.
+        itemPrompts: !(exam && meta?.family === "writing"),
         layoutFallbackImage: set.imageUrl,
-        stimulusImage: Boolean(set.imageUrl) && set.layout?.kind !== "diagram",
+        matrixImage: matrixOwnsFigure ? set.imageUrl : null,
+        // The stimulus block stands down only when something else draws the
+        // figure.
+        stimulusImage:
+          Boolean(set.imageUrl) && !layoutOwnsFigure && !matrixOwnsFigure,
         flagged,
         onToggleFlag,
       }}

@@ -20,8 +20,13 @@ export default function manifest(): MetadataRoute.Manifest {
     orientation: "portrait",
     categories: ["education", "productivity"],
     lang: "en",
+    // A .ico alone is not installable — Android needs a 192 and a 512 PNG, and
+    // a `maskable` variant so launchers can crop the mark to their own shape
+    // (circle, squircle, rounded square) without clipping the star's points.
     icons: [
-      { src: "/favicon.ico", sizes: "any", type: "image/x-icon" },
+      { src: "/brand/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/brand/logo-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/brand/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };
 }

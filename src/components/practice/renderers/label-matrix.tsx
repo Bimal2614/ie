@@ -27,12 +27,20 @@ export function LabelMatrix({
   imageUrl,
   heading,
   disabled,
+  anchorPrefix = "sq",
   bindingFor,
   onAssign,
   onClear,
 }: {
   layout: OptionsLayout;
   items: { n: number; prompt?: string }[];
+  /**
+   * Anchor prefix for the answer-strip jump, matching the surface this is drawn
+   * on: `sq` in section practice, `mq` in question practice and the mock. It
+   * used to be hardcoded to `sq`, so a palette on an `mq` surface looked up an
+   * id that was never rendered and the jump silently did nothing.
+   */
+  anchorPrefix?: "mq" | "sq";
   /** Auth-gated route, never the raw s3:// value. */
   imageUrl?: string | null;
   heading?: string;
@@ -92,7 +100,7 @@ export function LabelMatrix({
               return (
                 <tr
                   key={item.n}
-                  id={`sq-${item.n}`}
+                  id={`${anchorPrefix}-${item.n}`}
                   className="scroll-mt-28 border-b border-line last:border-0"
                 >
                   <th scope="row" className="px-3 py-2 text-left align-middle font-normal">

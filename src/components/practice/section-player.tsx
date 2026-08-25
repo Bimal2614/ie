@@ -6,7 +6,7 @@ import { ArrowLeft, CheckCircle2, RotateCcw, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { anyUploadPending, type Answer } from "@/lib/question-content";
-import { rawToBand, SECTIONS, type SectionKey } from "@/lib/ielts";
+import { hasSideStimulus, isAiScored, rawToBand, SECTIONS, type SectionKey } from "@/lib/ielts";
 import {
   submitSectionPractice,
   type SectionPracticeResult,
@@ -157,7 +157,7 @@ export function SectionPlayer({
 
   // Writing and Speaking are scored by band, not by right/wrong, so a marks
   // card has nothing to report for them — the AI report is the result.
-  const aiScored = section.sectionType === "speaking" || section.sectionType === "writing";
+  const aiScored = isAiScored(section.sectionType);
 
   const scoreCard = result ? (
     aiScored ? (
@@ -186,11 +186,7 @@ export function SectionPlayer({
     />
   );
 
-  // Reading always has a passage; Writing Task 1 has a chart. Task 2, Listening
-  // and Speaking have nothing to sit beside the questions.
-  const twoPane =
-    section.sectionType === "reading" ||
-    (section.sectionType === "writing" && Boolean(section.imageUrl));
+  const twoPane = hasSideStimulus(section.sectionType, section);
 
   const body = twoPane ? (
     <SplitPane

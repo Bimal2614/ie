@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { GraduationCap, Check, Loader2, Headphones, BookOpen, PenLine, Mic, ArrowUpRight } from "lucide-react";
+import { Check, Loader2, Headphones, BookOpen, PenLine, Mic, ArrowUpRight } from "lucide-react";
+import { LogoMark } from "@/components/ui/logo";
 import { cn } from "@/lib/utils";
 
 /**
@@ -16,9 +17,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="flex h-full flex-col overflow-y-auto px-6 py-6 sm:px-12">
         <div className="flex items-center justify-between">
           <Link href="/" className="inline-flex w-fit items-center gap-2.5">
-            <span className="grid size-9 place-items-center rounded-xl bg-brand text-white">
-              <GraduationCap className="size-5" strokeWidth={1.75} />
-            </span>
+            <LogoMark className="size-9" priority />
             <span className="text-lg font-semibold tracking-tight">IELTSVega</span>
           </Link>
           <Link href="/" className="text-xs font-medium text-ink-muted transition-colors hover:text-ink">

@@ -16,6 +16,12 @@ import type { Metadata } from "next";
 import { SITE_URL } from "@/lib/site";
 
 export const BRAND = "IELTSVega";
+/**
+ * Absolute URL of the brand mark. Used by the Organization JSON-LD (Google wants
+ * a real raster logo of at least 112x112 there — a favicon.ico is rejected) and
+ * by the transactional emails, which can only load images over http(s).
+ */
+export const LOGO_URL = `${SITE_URL}/brand/logo-512.png`;
 export const SITE_NAME = "IELTSVega: IELTS Practice Online";
 export const DEFAULT_DESCRIPTION =
   "Practise IELTS online with instant AI band scores for Writing & Speaking, full-length mock tests, and 15,000+ Academic and General Training questions.";

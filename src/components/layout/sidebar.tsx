@@ -22,6 +22,7 @@ import {
   Library,
   Mail,
 } from "lucide-react";
+import { LogoMark } from "@/components/ui/logo";
 import { cn } from "@/lib/utils";
 
 type NavChild = { href: string; label: string; icon?: React.ComponentType<{ className?: string }> };
@@ -106,9 +107,7 @@ export function Sidebar({ onNavigate, showCloseButton, onClose }: SidebarProps) 
     <aside className="sidebar-shell w-full">
       <div className="flex items-center justify-between px-4 pt-5 pb-4">
         <Link href="/dashboard" className="flex items-center gap-2.5 text-white" onClick={onNavigate}>
-          <span className="grid h-9 w-9 place-items-center rounded-lg bg-brand text-white">
-            <GraduationCap className="h-5 w-5" />
-          </span>
+          <LogoMark className="h-9 w-9" priority />
           <span className="flex flex-col leading-tight">
             <span className="text-lg font-semibold tracking-tight" style={{ fontFamily: "var(--font-heading)" }}>
               IELTSVega

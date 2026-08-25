@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { logoDataUri } from "@/lib/og-logo";
 import { POST_BY_SLUG } from "@/lib/blog";
 
 /**
@@ -16,6 +17,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
   const post = POST_BY_SLUG[slug];
   const title = post?.title ?? "IELTS practice with AI band scoring";
   const category = (post?.category ?? "IELTS").toUpperCase();
+  const logo = await logoDataUri();
 
   return new ImageResponse(
     (
@@ -32,23 +34,28 @@ export default async function Image({ params }: { params: Promise<{ slug: string
           fontFamily: "sans-serif",
         }}
       >
-        {/* Wordmark */}
+        {/* Wordmark — the real mark when it loaded, a lettermark tile if not. */}
         <div style={{ display: "flex", alignItems: "center", fontSize: 30, fontWeight: 700 }}>
-          <div
-            style={{
-              display: "flex",
-              width: 44,
-              height: 44,
-              borderRadius: 12,
-              background: "#2563eb",
-              alignItems: "center",
-              justifyContent: "center",
-              marginRight: 16,
-              fontSize: 26,
-            }}
-          >
-            IV
-          </div>
+          {logo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logo} width={72} height={72} alt="" style={{ marginRight: 18 }} />
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                width: 44,
+                height: 44,
+                borderRadius: 12,
+                background: "#2563eb",
+                alignItems: "center",
+                justifyContent: "center",
+                marginRight: 16,
+                fontSize: 26,
+              }}
+            >
+              IV
+            </div>
+          )}
           IELTSVega
         </div>
 
