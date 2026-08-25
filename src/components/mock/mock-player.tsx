@@ -5,7 +5,7 @@ import { AlertTriangle, Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { hasSideStimulus, SECTIONS, type SectionKey } from "@/lib/ielts";
 import { answerKey, anyUploadPending, type Answer } from "@/lib/question-content";
-import { MOCK_MODULE_NOTE } from "@/lib/mock-timing";
+import { MOCK_MODULE_NOTE, moduleSeconds } from "@/lib/mock-timing";
 import {
   advanceMockModule,
   finishMock,
@@ -151,6 +151,16 @@ export function MockPlayer({ sitting }: Props) {
    * for no reason. The recording still advances either way, because it always
    * does — this only decides whether the screen follows.
    */
+  /**
+   * Seconds already spent in this module when we entered it, from the SERVER's
+   * remaining count — what positions the recording on a resume.
+   *
+   * Captured on entry rather than read from `remaining`, which ticks every
+   * second: as a live value it would re-seek the tape continuously. Updated on
+   * every advance so a module entered later is measured from its own start.
+   */
+  const enteredAt = useRef(moduleSeconds(sitting.current.section) - sitting.remainingSeconds);
+
   const tapeAt = useRef<string | null>(null);
   const onTrackChange = useCallback((partId: string) => {
     const leaving = tapeAt.current;
@@ -196,6 +206,9 @@ export function MockPlayer({ sitting }: Props) {
     setRemaining(res.remainingSeconds);
     setLapsed(res.lapsedIndexes);
     setTapeFinished(false);
+    // A module opened by advancing starts at its beginning, minus whatever the
+    // request itself cost — which the server has already deducted.
+    enteredAt.current = moduleSeconds(res.current.section) - res.remainingSeconds;
     tapeAt.current = null;
     setActivePartId(res.current.parts[0]?.id ?? "");
     setCurrent(null);
@@ -411,6 +424,7 @@ export function MockPlayer({ sitting }: Props) {
         {isListening && tracks.length > 0 && (
           <ListeningTape
             tracks={tracks}
+            elapsedSeconds={enteredAt.current}
             onTrackChange={onTrackChange}
             onFinished={() => setTapeFinished(true)}
           />

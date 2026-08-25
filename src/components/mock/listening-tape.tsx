@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Headphones, Play, Volume2 } from "lucide-react";
+import { Headphones, Loader2, Play, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -16,6 +16,13 @@ import { cn } from "@/lib/utils";
  * four files back into one tape: it plays them back to back from a single
  * `<audio>` element and reports each hand-over so the paper can turn its own
  * page.
+ *
+ * THE TAPE IS POSITIONED BY THE CLOCK, NOT BY WHERE IT LEFT OFF. A mock's module
+ * clock keeps running while the candidate is away, so the recording has to have
+ * kept running too — resuming twelve minutes into Listening must drop them
+ * twelve minutes into the recording, with the earlier parts gone. Restarting
+ * from the top would hand back the audio they missed while the clock charged
+ * them for it, which is the one thing this whole design exists to prevent.
  *
  * WHY IT LIVES ABOVE THE PART SWITCHER. The element must survive a candidate
  * moving between parts to check an earlier answer — if the player were rendered
@@ -35,30 +42,68 @@ export type Tape = {
   src: string;
 };
 
+/**
+ * Under this many seconds elapsed, treat it as a fresh start.
+ *
+ * A brand-new sitting is already a second or two old by the time this mounts
+ * (the redirect, then the render), and measuring four files before playing a
+ * tape that belongs at 0:00 anyway would just add silence to the start of every
+ * exam.
+ */
+const FRESH_START_SEC = 10;
+
+/** Where in the tape a given elapsed time falls. */
+type Cue = { index: number; offset: number; past: boolean };
+
+export function locateInTape(durations: number[], elapsed: number): Cue {
+  let cursor = 0;
+  for (let i = 0; i < durations.length; i++) {
+    const d = durations[i];
+    // A file we could not measure (0) is stepped over rather than swallowing the
+    // whole elapsed time and stranding the candidate on it.
+    if (d > 0 && elapsed < cursor + d) return { index: i, offset: elapsed - cursor, past: false };
+    cursor += d;
+  }
+  // The recording finished while they were away; only checking time is left.
+  return { index: Math.max(0, durations.length - 1), offset: 0, past: true };
+}
+
 export function ListeningTape({
   tracks,
+  elapsedSeconds,
   onTrackChange,
   onFinished,
 }: {
   tracks: Tape[];
-  /** Fires when the recording moves on to a part, including the first. */
+  /**
+   * Seconds since this module's clock started, measured on the SERVER. Read once
+   * on mount: it is where the recording should already be, not a live counter.
+   */
+  elapsedSeconds: number;
+  /** Fires when the recording reaches a part, including the one resumed into. */
   onTrackChange: (partId: string, index: number) => void;
-  /** Fires once, when the last part's audio ends. */
+  /** Fires when the last part's audio ends, or had already ended on resume. */
   onFinished: () => void;
 }) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [index, setIndex] = useState(0);
-  const [state, setState] = useState<"idle" | "playing" | "blocked" | "finished">("idle");
+  const [state, setState] = useState<"seeking" | "idle" | "playing" | "blocked" | "finished">(
+    elapsedSeconds > FRESH_START_SEC ? "seeking" : "idle",
+  );
   const [progress, setProgress] = useState(0);
 
   const track = tracks[index];
   // Read inside handlers that must not re-subscribe on every tick.
   const indexRef = useRef(index);
   indexRef.current = index;
+  const stateRef = useRef(state);
+  stateRef.current = state;
   const notify = useRef(onTrackChange);
   notify.current = onTrackChange;
   const done = useRef(onFinished);
   done.current = onFinished;
+  /** Frozen on mount — a live value would re-seek the tape every second. */
+  const startedAtSec = useRef(elapsedSeconds);
 
   /**
    * Start, or explain that the browser refused to.
@@ -80,27 +125,76 @@ export function ListeningTape({
     }
   }, []);
 
-  // Try to start as soon as the module opens.
+  /**
+   * Put the tape where the clock says it should be, then start it.
+   *
+   * Finding that spot needs the real length of each part, and only the browser
+   * knows those — so the four files are measured first, header-only, in
+   * parallel. That measurement is why this is not simply "play from 0", and why
+   * a resumed sitting shows "finding your place" for a moment.
+   */
   useEffect(() => {
     if (tracks.length === 0) return;
-    void play();
-    notify.current(tracks[0].partId, 0);
-    // Deliberately only on mount: re-running would restart the recording.
+
+    // Fresh sitting: nothing to work out, start at the top immediately.
+    if (startedAtSec.current <= FRESH_START_SEC) {
+      notify.current(tracks[0].partId, 0);
+      void play();
+      return;
+    }
+
+    let cancelled = false;
+    const measure = (src: string) =>
+      new Promise<number>((resolve) => {
+        const probe = new Audio();
+        probe.preload = "metadata";
+        const finish = (v: number) => resolve(Number.isFinite(v) && v > 0 ? v : 0);
+        probe.addEventListener("loadedmetadata", () => finish(probe.duration), { once: true });
+        // An unreadable file must not hang the exam: count it as zero, move on.
+        probe.addEventListener("error", () => finish(0), { once: true });
+        probe.src = src;
+      });
+
+    void Promise.all(tracks.map((t) => measure(t.src))).then((durations) => {
+      if (cancelled) return;
+      const cue = locateInTape(durations, startedAtSec.current);
+
+      setIndex(cue.index);
+      notify.current(tracks[cue.index].partId, cue.index);
+
+      if (cue.past) {
+        // The whole recording played out while they were away. Land them on the
+        // last part and give them what is left of the module to check answers.
+        setState("finished");
+        done.current();
+        return;
+      }
+
+      const el = audioRef.current;
+      if (!el) return;
+      // Seeking before the source is loaded is discarded, so the offset is
+      // applied once the metadata for the RIGHT file is in.
+      const applyOffset = () => {
+        el.currentTime = cue.offset;
+        void play();
+      };
+      if (cue.index === 0) {
+        if (el.readyState >= 1) applyOffset();
+        else el.addEventListener("loadedmetadata", applyOffset, { once: true });
+      } else {
+        el.src = tracks[cue.index].src;
+        el.addEventListener("loadedmetadata", applyOffset, { once: true });
+        el.load();
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+    // Deliberately mount-only: re-running would restart or re-seek a recording
+    // that is playing perfectly well.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Load and play each new part as the tape reaches it.
-  useEffect(() => {
-    const el = audioRef.current;
-    if (!el || !track) return;
-    // First track is already loaded from the initial render; re-assigning `src`
-    // would reset a recording that is playing perfectly well.
-    if (el.currentSrc && !el.currentSrc.endsWith(track.src)) {
-      el.src = track.src;
-      el.load();
-      void play();
-    }
-  }, [track, play]);
 
   const onEnded = useCallback(() => {
     const next = indexRef.current + 1;
@@ -112,7 +206,15 @@ export function ListeningTape({
     setIndex(next);
     setProgress(0);
     notify.current(tracks[next].partId, next);
-  }, [tracks]);
+
+    // Loaded here rather than from an effect on `index`, so it cannot race with
+    // the resume seek above — that sets the index AND the source itself.
+    const el = audioRef.current;
+    if (!el) return;
+    el.src = tracks[next].src;
+    el.load();
+    void play();
+  }, [tracks, play]);
 
   /**
    * The recording does not stop because something else wanted the audio.
@@ -127,11 +229,13 @@ export function ListeningTape({
    * handler runs on every normal hand-over, and calling `play()` there would
    * rewind the part to zero and play it a second time. `ended` covers the
    * compliant case; the position check covers a browser that fires `pause` with
-   * `ended` still false.
+   * `ended` still false. The state check covers the pauses WE cause while
+   * placing the tape on a resume.
    */
   const onPause = useCallback(() => {
     const el = audioRef.current;
     if (!el || el.ended) return;
+    if (stateRef.current === "seeking" || stateRef.current === "finished") return;
     if (Number.isFinite(el.duration) && el.currentTime >= el.duration - 0.5) return;
     void el.play().catch(() => setState("blocked"));
   }, []);
@@ -139,28 +243,39 @@ export function ListeningTape({
   if (tracks.length === 0) return null;
 
   const finished = state === "finished";
+  const seeking = state === "seeking";
 
   return (
     <div className="sticky top-2 z-20 rounded-xl border border-line bg-paper-elev/95 p-4 shadow-[var(--shadow-md)] backdrop-blur">
       <div className="flex flex-wrap items-center gap-3">
         <span className="grid size-8 shrink-0 place-items-center rounded-lg chip-listening">
-          {finished ? <Headphones className="size-4" /> : <Volume2 className="size-4" />}
+          {seeking ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : finished ? (
+            <Headphones className="size-4" />
+          ) : (
+            <Volume2 className="size-4" />
+          )}
         </span>
 
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
-            {finished
-              ? "Recording finished"
-              : state === "blocked"
-                ? "Recording ready"
-                : `Recording · ${track?.label ?? ""}`}
+            {seeking
+              ? "Finding your place"
+              : finished
+                ? "Recording finished"
+                : state === "blocked"
+                  ? "Recording ready"
+                  : `Recording · ${track?.label ?? ""}`}
           </p>
           <p className="text-[11px] leading-snug text-ink-soft">
-            {finished
-              ? "Use the time left to check your answers. You can still move between parts."
-              : state === "blocked"
-                ? "Tap play to start. It runs through all four parts once, without stopping."
-                : "Plays once, straight through all four parts. It won't wait or repeat."}
+            {seeking
+              ? "The recording kept playing while you were away — picking it up where the clock is."
+              : finished
+                ? "Use the time left to check your answers. You can still move between parts."
+                : state === "blocked"
+                  ? "Tap play to start. It runs through all four parts once, without stopping."
+                  : "Plays once, straight through all four parts. It won't wait or repeat."}
           </p>
         </div>
 
