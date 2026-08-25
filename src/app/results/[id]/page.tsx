@@ -16,18 +16,20 @@ export default async function ResultPage({ params }: { params: Promise<{ id: str
   const result = await getMockResult(id);
   if (!result) notFound();
 
-  // Only Listening and Reading are auto-scored today, so the overall band is a
-  // partial estimate — labelled as such rather than presented as a real IELTS
-  // overall (which averages all four and rounds to the nearest half-band).
-  const autoScored = result.bands.filter((b) => b.band !== null).length;
-  const indicative = autoScored < 4;
-  // Speaking is scored asynchronously after submit; trigger it if still absent.
-  const speakingPending = result.bands.find((b) => b.section === "speaking")?.band === null;
+  // The overall band only means what IELTS means by it once all four are in.
+  // Until Writing and Speaking are scored it is an average of two, and is
+  // labelled as such rather than presented as a real overall.
+  const scored = result.bands.filter((b) => b.band !== null).length;
+  const indicative = scored < 4;
+  // Writing and Speaking are scored asynchronously after submit.
+  const aiPending = result.bands.some(
+    (b) => (b.section === "speaking" || b.section === "writing") && b.band === null,
+  );
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6">
       <div className="flex flex-wrap items-center gap-2">
-        <h1 className="display text-2xl">Mock result</h1>
+        <h1 className="display text-2xl">{result.title ?? "Mock result"}</h1>
         <span className="chip capitalize">{result.module}</span>
         {result.completedAt && (
           <span className="text-sm text-ink-muted">
@@ -44,15 +46,16 @@ export default async function ResultPage({ params }: { params: Promise<{ id: str
         <p className="display text-6xl tabular-nums text-brand">{result.overallBand ?? ""}</p>
         {indicative && (
           <p className="max-w-sm px-4 text-center text-xs text-ink-muted">
-            Based on Listening and Reading only. Writing and Speaking need AI scoring, which is switched on in a later phase. Your full band will update then.
+            Averaged over the modules scored so far. Writing and Speaking are marked by AI a few
+            seconds after you hand in — your full band appears here once they land.
           </p>
         )}
       </div>
 
-      {/* Speaking is scored after submit — this fires it and refreshes. */}
-      {speakingPending && <SpeakingScoreTrigger sessionId={result.sessionId} />}
+      {/* Writing + Speaking are scored after submit — this fires it and refreshes. */}
+      {aiPending && <SpeakingScoreTrigger sessionId={result.sessionId} />}
 
-      {/* Per-section bands, each expandable to review its questions */}
+      {/* Per-module bands, each expandable to review its parts and questions */}
       <div className="space-y-3">
         <p className="text-sm font-semibold uppercase tracking-wider text-ink-muted">
           By skill · tap to review
@@ -68,14 +71,18 @@ export default async function ResultPage({ params }: { params: Promise<{ id: str
               accent={sec.accent}
               band={b.band}
               pending={b.band === null}
+              raw={b.raw}
+              total={b.total}
             />
           );
         })}
       </div>
 
-      {/* Honesty note on raw→band, given the small seeded content */}
       <p className="rounded-lg bg-paper-sunken px-3 py-2 text-xs text-ink-muted">
-        Band estimates come from your correct ratio. A real IELTS uses fixed raw-score (/40) conversion tables. Those apply once a mock draws a full-length section.
+        Listening and Reading bands come from the published Cambridge raw-score (/40) conversion
+        tables — a full mock draws a complete 40-mark paper, so they apply here. General Training
+        Reading uses its own table. The real exam is equated per version, so treat a band as a close
+        guide rather than a promise.
       </p>
 
       <div className="flex flex-wrap gap-3">

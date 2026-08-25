@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, RotateCcw, X, AlertCircle, Loader2, LayoutGrid, Check, History } from "lucide-react";
+import { ArrowLeft, ArrowRight, RotateCcw, X, AlertCircle, Loader2, LayoutGrid, Check, History, Flag, Eraser } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -230,7 +230,6 @@ export function PracticeSession({
     ? currentSet.questions.filter((q) => answers[q.id] !== undefined).length
     : 0;
   const totalQsInSet = currentSet?.questions.length ?? 0;
-  const progress = totalSets > 0 ? Math.round((currentSetIndex / totalSets) * 100) : 0;
 
   const playerSet: PlayerSet | null = currentSet
     ? {
@@ -257,6 +256,20 @@ export function PracticeSession({
    * Does this set's stimulus belong beside the questions? Shared rule, so a
    * Task 1 chart cannot sit beside the editor on one route and above it here.
    */
+  /**
+   * The one question these top-bar controls act on. Only defined for a
+   * single-task set — with ten questions on screen "flag the question" has no
+   * referent, and those rows keep their own per-row controls.
+   */
+  const taskControls =
+    currentSet && currentSet.questions.length === 1 && !result
+      ? {
+          id: currentSet.questions[0].id,
+          flagged: flagged.has(currentSet.questions[0].id),
+          hasAnswer: answers[currentSet.questions[0].id] !== undefined,
+        }
+      : null;
+
   const sideStimulus = Boolean(
     playerSet && hasSideStimulus(section, playerSet) && !(aiScored && result),
   );
@@ -309,14 +322,41 @@ export function PracticeSession({
             </p>
           </div>
 
-          <div className="hidden items-center gap-2 lg:flex">
-            <div className="w-24">
-              <div className="progress-track">
-                <div className="progress-fill" style={{ width: `${progress}%` }} />
-              </div>
+          {/* Flag and Clear act on the task, not on a row.
+              They used to sit in a gutter down the right of every question card,
+              which on a Writing task is a column of dead space beside a
+              full-width editor, and put "Clear" one stray click from wiping 250
+              words. Up here they are out of the way but still reachable, and the
+              set-wide progress bar they replace only repeated the "n / m
+              answered" already printed above the Submit button. */}
+          {taskControls && (
+            <div className="hidden items-center gap-1 sm:flex">
+              <button
+                type="button"
+                onClick={() => toggleFlag(taskControls.id)}
+                title={taskControls.flagged ? "Unflag this question" : "Flag this question for review"}
+                aria-label="Flag this question for review"
+                aria-pressed={taskControls.flagged}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-md border border-line bg-paper px-2.5 py-1.5 text-xs font-semibold transition-colors hover:border-brand/50 hover:text-ink",
+                  taskControls.flagged ? "text-warning" : "text-ink-soft",
+                )}
+              >
+                <Flag className={cn("size-3.5", taskControls.flagged && "fill-warning")} />
+                <span className="hidden lg:inline">{taskControls.flagged ? "Flagged" : "Flag"}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => clearAnswer(taskControls.id)}
+                disabled={!taskControls.hasAnswer}
+                title="Clear this answer"
+                className="inline-flex items-center gap-1.5 rounded-md border border-line bg-paper px-2.5 py-1.5 text-xs font-semibold text-ink-soft transition-colors enabled:hover:border-brand/50 enabled:hover:text-ink disabled:opacity-40"
+              >
+                <Eraser className="size-3.5" />
+                <span className="hidden lg:inline">Clear</span>
+              </button>
             </div>
-            <span className="font-mono text-xs tabular-nums text-ink-muted">{progress}%</span>
-          </div>
+          )}
 
           {/* Writing a 250-word essay inside the sidebar and topbar wastes most
               of the screen, so this route offers the same fullscreen control the
@@ -373,11 +413,16 @@ export function PracticeSession({
               {sideStimulus ? (
                 <div className="space-y-4">
                   <InstructionBar text={instructionText} section={section} />
+                  {/* Both panes take the SAME height and scroll inside it, so a
+                      tall chart no longer leaves the editor beside it ending
+                      halfway down. Sized off the viewport minus this route's own
+                      chrome; in fullscreen `.practice-root:fullscreen` gives it
+                      the whole screen. */}
                   <SplitPane
-                    className="min-h-[60vh]"
+                    className="h-[calc(100dvh-19rem)] min-h-[24rem]"
                     storageKey={`exam-split-${section}`}
                     left={
-                      <div className="pr-1">
+                      <div className="h-full overflow-y-auto pr-1">
                         <SetBody
                           set={playerSet}
                           questions={currentSet.questions}
@@ -390,7 +435,7 @@ export function PracticeSession({
                       </div>
                     }
                     right={
-                      <div className="pl-1">
+                      <div className="flex h-full min-h-0 flex-col overflow-y-auto pl-1">
                         <SetBody
                           set={playerSet}
                           questions={currentSet.questions}

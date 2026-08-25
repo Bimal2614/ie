@@ -217,6 +217,12 @@ export function SetBody({
         // A Writing prompt is printed once by the surface above (see
         // `taskHeading`), so the row would otherwise show the question twice.
         itemPrompts: !(exam && meta?.family === "writing"),
+        // Only in the split layout: stacked, there is no pane height to fill and
+        // a viewport-tall editor would just push everything else off screen.
+        fillHeight: exam && slot === "questions" && meta?.family === "writing",
+        // The stimulus pane is a fixed height in the split layout, so the figure
+        // scales into it rather than scrolling.
+        fitStimulus: exam && slot === "stimulus",
         layoutFallbackImage: set.imageUrl,
         matrixImage: matrixOwnsFigure ? set.imageUrl : null,
         // The stimulus block stands down only when something else draws the

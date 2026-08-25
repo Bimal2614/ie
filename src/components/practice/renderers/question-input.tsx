@@ -31,6 +31,12 @@ type InputProps = {
   /** The set's shared option box, when the type matches against one. */
   options: OptionsLayout | null;
   onChange: (v: Answer) => void;
+  /**
+   * Grow to fill the height available instead of sizing to content. Set for a
+   * Writing task in the split layout, where a fixed 12-row box left the editor
+   * ending well short of the chart beside it.
+   */
+  fill?: boolean;
 };
 
 /* ------------------------------------------------------------------ *
@@ -256,21 +262,26 @@ function ShortAnswer({ question, value, disabled, state, onChange }: InputProps)
  * Writing
  * ------------------------------------------------------------------ */
 
-function Writing({ question, value, disabled, onChange }: InputProps) {
+function Writing({ question, value, disabled, onChange, fill }: InputProps) {
   const text = (value?.text as string) ?? "";
   const words = text.trim() ? text.trim().split(/\s+/).length : 0;
   const min = question.wordLimitMin ?? 0;
   const under = min > 0 && words < min;
 
   return (
-    <div className="space-y-2">
+    <div className={cn("space-y-2", fill && "flex h-full min-h-0 flex-col")}>
       <Textarea
-        rows={12}
+        rows={fill ? undefined : 12}
         disabled={disabled}
         value={text}
         placeholder="Write your response here…"
         onChange={(e) => onChange({ text: e.target.value, words })}
-        className="resize-y leading-relaxed"
+        className={cn(
+          "leading-relaxed",
+          // Filling the pane, the drag handle would fight the layout; sized to
+          // content, it is the only way to make a 12-row box bigger.
+          fill ? "min-h-0 flex-1 resize-none" : "resize-y",
+        )}
       />
       <div className="flex items-center justify-between text-xs">
         <span className={cn("font-mono tabular-nums", under ? "text-danger" : "text-ink-muted")}>

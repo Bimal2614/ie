@@ -57,7 +57,7 @@ export function SignupForm() {
           name="password"
           type={show ? "text" : "password"}
           autoComplete="new-password"
-          placeholder="At least 10 characters"
+          placeholder="At least 6 characters"
           required
           error={state?.fieldErrors?.password?.[0]}
           adornment={
@@ -76,11 +76,6 @@ export function SignupForm() {
             </button>
           }
         />
-        {!state?.fieldErrors?.password && (
-          <p className="mt-1 text-xs text-ink-muted">
-            Use upper &amp; lower case, a number and a symbol.
-          </p>
-        )}
       </div>
 
       <div>

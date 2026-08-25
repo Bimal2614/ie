@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { QUESTION_TYPES, type QuestionTypeKey, type SectionKey } from "@/lib/ielts";
-import type { Answer, SetLayout } from "@/lib/question-content";
+import { answerKey, numberFromKey, type Answer, type SetLayout } from "@/lib/question-content";
 import type { SectionItemResult } from "@/app/actions/section-practice";
 import { QuestionBody, type BodyDoc, type BodyResult } from "./question-body";
 
@@ -64,12 +64,26 @@ export function SectionBody({
   slot = "all",
   focusNumber,
   groupHeaders = true,
+  answerScope,
 }: {
   section: ClientSectionView;
   answers: Record<string, Answer>;
   results: SectionItemResult[] | null;
   onAnswer: (n: number, value: Answer) => void;
   onClearAnswer?: (n: number) => void;
+  /**
+   * What the caller's `answers` map is keyed by.
+   *
+   * Section practice sits ONE part, so an exam number is a unique key and this
+   * is omitted. A mock paper holds twelve parts whose numbers collide, so it
+   * keys by part id and passes it here — see `answerKey`.
+   *
+   * This is not cosmetic. The renderer indexes its inputs by these keys, so a
+   * caller storing under `"<partId>:7"` while the body reads `"7"` produces the
+   * worst possible failure: the answer sheet marks question 7 answered and the
+   * input the candidate typed into shows nothing back.
+   */
+  answerScope?: string;
   /**
    * Which half to draw. The exam layout puts the passage or recording in one
    * pane and the questions in the other, so it asks for them separately; the
@@ -125,8 +139,9 @@ export function SectionBody({
         layout: g.layout ?? null,
         items: g.items.map((i) => ({
           // Items live in the section's jsonb and have no uuid, so the exam
-          // number on the answer sheet is their identity all the way through.
-          key: String(i.n),
+          // number on the answer sheet is their identity all the way through —
+          // scoped by the part it belongs to when the caller holds more than one.
+          key: answerKey(answerScope, i.n),
           n: i.n,
           marks: i.marks ?? 1,
           questionType: g.questionType as QuestionTypeKey,
@@ -147,13 +162,13 @@ export function SectionBody({
         })),
       })),
     }),
-    [section],
+    [section, answerScope],
   );
 
   const bodyResults: BodyResult[] | null = useMemo(
     () =>
       results?.map((r) => ({
-        key: String(r.n),
+        key: answerKey(answerScope, r.n),
         isCorrect: r.isCorrect,
         correctAnswer: r.correctAnswer,
         explanation: r.explanation,
@@ -161,7 +176,7 @@ export function SectionBody({
         marks: r.marks,
         your: r.your,
       })) ?? null,
-    [results],
+    [results, answerScope],
   );
 
   return (
@@ -170,8 +185,8 @@ export function SectionBody({
       answers={answers}
       results={bodyResults}
       // The shared body speaks in answer keys; this surface speaks in numbers.
-      onAnswer={(key, value) => onAnswer(Number(key), value)}
-      onClearAnswer={onClearAnswer ? (key) => onClearAnswer(Number(key)) : undefined}
+      onAnswer={(key, value) => onAnswer(numberFromKey(key), value)}
+      onClearAnswer={onClearAnswer ? (key) => onClearAnswer(numberFromKey(key)) : undefined}
       config={{
         slot,
         focusNumber,

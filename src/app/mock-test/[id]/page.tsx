@@ -1,36 +1,30 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { getMockSession } from "@/app/actions/mock";
-import { MockPlayer, type MockSection } from "@/components/mock/mock-player";
-import type { Answer } from "@/lib/question-content";
+import { getMockSitting } from "@/app/actions/mock";
+import { MockPlayer } from "@/components/mock/mock-player";
 
-export const metadata: Metadata = { title: "Full Mock · IELTSVega", robots: { index: false } };
+export const metadata: Metadata = { title: "Full mock · IELTSVega", robots: { index: false } };
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default async function MockTestPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const session = await getMockSession(id);
+  if (!UUID.test(id)) redirect("/mock-tests");
 
-  // Not found or not this user's → back to the mock hub.
-  if (!session) redirect("/mock-tests");
-  // A completed/abandoned session has nothing to answer — show its report.
-  if (session.status !== "in_progress") redirect(`/results/${id}`);
+  const sitting = await getMockSitting(id);
 
-  const sections: MockSection[] = session.sections.map((s) => ({
-    section: s.section,
-    set: s.set,
-    questions: s.questions,
-    // Exam numbers for this section's questions, in order — drives the palette.
-    numbers: s.questions.map((_, i) => s.set.startNumber + i),
-  }));
+  // A finished sitting has a report; one that is not this candidate's has
+  // nothing. The two lead to different places, which is why the read
+  // distinguishes them rather than returning a bare null.
+  if (sitting.status === "finished") redirect(`/results/${id}`);
+  if (sitting.status === "missing") redirect("/mock-tests");
 
   return (
-    <MockPlayer
-      sessionId={id}
-      sections={sections}
-      initialIndex={session.currentSectionIndex}
-      initialRemaining={session.remainingSeconds}
-      initialAnswers={session.draftAnswers as Record<string, Answer>}
-      initialTimings={session.draftTimings}
-    />
+    // The exam takes the whole screen. A timed paper sat inside the app's
+    // sidebar and page padding is neither the real thing nor usable — the two
+    // panes need the full height to scroll independently.
+    <div className="fixed inset-0 z-50 bg-paper">
+      <MockPlayer sitting={sitting.data} />
+    </div>
   );
 }

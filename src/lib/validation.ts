@@ -7,12 +7,8 @@ import { z } from "zod";
 
 const password = z
   .string()
-  .min(10, "Use at least 10 characters")
-  .max(128, "Password is too long")
-  .regex(/[a-z]/, "Add a lowercase letter")
-  .regex(/[A-Z]/, "Add an uppercase letter")
-  .regex(/[0-9]/, "Add a number")
-  .regex(/[^A-Za-z0-9]/, "Add a symbol");
+  .min(6, "Use at least 6 characters")
+  .max(128, "Password is too long");
 
 export const signupSchema = z.object({
   name: z.string().trim().min(2, "Tell us your name").max(80),

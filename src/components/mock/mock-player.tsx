@@ -1,281 +1,628 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { Clock, Loader2, ArrowRight, Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { LogoMark } from "@/components/ui/logo";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AlertTriangle, Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { SECTIONS, type SectionKey } from "@/lib/ielts";
-import type { Answer } from "@/lib/question-content";
-import { SetBody, type PlayerSet, type PlayerQuestion } from "@/components/practice/set-body";
-import { finishMock, advanceMockSection, saveMockProgress } from "@/app/actions/mock";
+import { hasSideStimulus, SECTIONS, type SectionKey } from "@/lib/ielts";
+import { answerKey, anyUploadPending, type Answer } from "@/lib/question-content";
+import { MOCK_MODULE_NOTE } from "@/lib/mock-timing";
+import {
+  advanceMockModule,
+  finishMock,
+  saveMockProgress,
+  type MockModuleView,
+  type MockSittingData,
+} from "@/app/actions/mock";
+import { ExamShell, type StripPart } from "@/components/exam/exam-shell";
+import { SplitPane } from "@/components/exam/split-pane";
+import { SectionBody, type ClientSectionView } from "@/components/practice/section-body";
+import { ListeningTape, type Tape } from "./listening-tape";
 
-export type MockSection = {
-  section: SectionKey;
-  set: PlayerSet;
-  questions: PlayerQuestion[];
-  /** Exam numbers of this section's questions, in order — drives the palette. */
-  numbers: number[];
-};
-
-type Props = {
-  sessionId: string;
-  sections: MockSection[];
-  initialIndex: number;
-  initialRemaining: number;
-  initialAnswers: Record<string, Answer>;
-  initialTimings: Record<string, number>;
-};
+/**
+ * The full-mock player.
+ *
+ * ONE MODULE ON SCREEN, SEVERAL PARTS INSIDE IT. Listening is four recordings,
+ * Reading three passages — a candidate moves between the parts of the module
+ * freely, exactly as they can flip through a booklet, but a module that is over
+ * is over. The parts strip along the bottom is the answer sheet: Listening shows
+ * 1-40 across four tabs, Reading 1-40 across three, Writing 1-2, Speaking 1-11.
+ *
+ * THE CLOCK IS THE SERVER'S. `remainingSeconds` is seeded from the sitting's
+ * stored timeline and re-seeded by every advance. The countdown here is only a
+ * display of it: closing the tab does not pause anything, and reloading asks the
+ * server where the clock is rather than resuming from a number the client kept.
+ *
+ * The chrome is <ExamShell/>, shared with section practice, and the questions are
+ * drawn by <SectionBody/> — the same component, so a table completion looks
+ * identical whether it is sat as practice or inside a mock.
+ */
 
 const AUTOSAVE_MS = 5000;
 
-/**
- * Full-mock player — a timed, resumable, section-by-section exam environment.
- *
- * Fidelity to the real computer-delivered IELTS:
- *  - one section on screen at a time, its own clock, no returning once you move on;
- *  - the clock is server-authoritative (seeded from the session's stored
- *    deadline) — closing the tab does not pause it, and it can't be extended by
- *    tampering with the client;
- *  - a question-navigation palette shows answered vs unanswered and jumps to any
- *    question, exactly like the real paper's number strip;
- *  - work autosaves, so a reload or a return resumes mid-section.
- */
-export function MockPlayer({
-  sessionId,
-  sections,
-  initialIndex,
-  initialRemaining,
-  initialAnswers,
-  initialTimings,
-}: Props) {
-  const [index, setIndex] = useState(initialIndex);
-  const [answers, setAnswers] = useState<Record<string, Answer>>(initialAnswers);
-  const [remaining, setRemaining] = useState(initialRemaining);
+type Props = {
+  sitting: MockSittingData;
+};
+
+export function MockPlayer({ sitting }: Props) {
+  const [module, setModule] = useState<MockModuleView>(sitting.current);
+  const [remaining, setRemaining] = useState(sitting.remainingSeconds);
+  const [answers, setAnswers] = useState<Record<string, Answer>>(
+    sitting.draftAnswers as Record<string, Answer>,
+  );
+  const [activePartId, setActivePartId] = useState(sitting.current.parts[0]?.id ?? "");
+  const [current, setCurrent] = useState<number | null>(null);
   const [advancing, setAdvancing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  // Modules the clock closed rather than the candidate handing them in. Kept in
+  // state so the warning clears once they move on under their own steam.
+  const [lapsed, setLapsed] = useState(sitting.lapsedIndexes);
+  // Whether the Listening recording has run out. Only affects what the footer
+  // says — the module still runs to its own clock, which is what gives the
+  // candidate the paper exam's ten minutes to transfer answers.
+  const [tapeFinished, setTapeFinished] = useState(false);
 
-  const current = sections[index];
-  const isLast = index === sections.length - 1;
+  const isLastModule = module.index === sitting.modules.length - 1;
+  const part = module.parts.find((p) => p.id === activePartId) ?? module.parts[0];
 
-  // --- Per-question timing: attribute the think-time before an answer to that
-  // question. Cheap and honest, and survives resume via draftTimings. ---
-  const timings = useRef<Record<string, number>>({ ...initialTimings });
+  /* --- Per-question timing: the think-time before an answer belongs to that
+     question. Cheap, honest, and it survives a resume via draftTimings. --- */
+  const timings = useRef<Record<string, number>>({ ...sitting.draftTimings });
   const lastTick = useRef(Date.now());
-
-  const setAnswer = useCallback((qid: string, value: Answer) => {
-    const now = Date.now();
-    const delta = Math.round((now - lastTick.current) / 1000);
-    if (delta > 0 && delta < 3600) timings.current[qid] = (timings.current[qid] ?? 0) + delta;
-    lastTick.current = now;
-    setAnswers((prev) => ({ ...prev, [qid]: value }));
-  }, []);
-
-  // Latest state without re-subscribing effects on every keystroke.
   const answersRef = useRef(answers);
   answersRef.current = answers;
   const finished = useRef(false);
+
+  const handleAnswer = useCallback(
+    (sectionId: string, n: number, value: Answer) => {
+      const key = answerKey(sectionId, n);
+      const now = Date.now();
+      const delta = Math.round((now - lastTick.current) / 1000);
+      if (delta > 0 && delta < 3600) timings.current[key] = (timings.current[key] ?? 0) + delta;
+      lastTick.current = now;
+      setAnswers((prev) => ({ ...prev, [key]: value }));
+    },
+    [],
+  );
+
+  const handleClear = useCallback((sectionId: string, n: number) => {
+    setAnswers((prev) => {
+      const next = { ...prev };
+      delete next[answerKey(sectionId, n)];
+      return next;
+    });
+  }, []);
+
+  /* --- The answer sheet: every number in the module, and the input each one
+     belongs to. A paired "Choose TWO letters" prints as 23 AND 24 but is a
+     single input anchored at 23, so both squares lead back to it. --- */
+  const sheet = useMemo(() => {
+    const parts: StripPart[] = [];
+    const anchorOf = new Map<number, { sectionId: string; n: number }>();
+    const all: number[] = [];
+    for (const p of module.parts) {
+      const numbers: number[] = [];
+      for (const group of p.questions.groups) {
+        for (const item of group.items) {
+          for (let k = 0; k < (item.marks ?? 1); k++) {
+            numbers.push(item.n + k);
+            anchorOf.set(item.n + k, { sectionId: p.sectionId, n: item.n });
+            all.push(item.n + k);
+          }
+        }
+      }
+      parts.push({ id: p.id, label: partLabel(module.section, p.partNumber), numbers });
+    }
+    return { parts, anchorOf, all };
+  }, [module]);
+
+  const answered = useMemo(() => {
+    const done = new Set<number>();
+    for (const n of sheet.all) {
+      const a = sheet.anchorOf.get(n);
+      if (a && answers[answerKey(a.sectionId, a.n)] !== undefined) done.add(n);
+    }
+    return done;
+  }, [answers, sheet]);
+
+  /* --- The Listening recording --- */
+
+  const isListening = module.section === "listening";
+  const tracks: Tape[] = useMemo(
+    () =>
+      isListening
+        ? module.parts
+            .filter((p) => p.audioUrl)
+            .map((p) => ({
+              partId: p.id,
+              label: partLabel(module.section, p.partNumber),
+              src: p.audioUrl!,
+            }))
+        : [],
+    [isListening, module.parts, module.section],
+  );
+
+  /**
+   * Turn the page when the recording does — but only for a candidate who is
+   * following it.
+   *
+   * The tape announces each part and moves on, so the paper should move with it.
+   * Someone who has deliberately gone back to Part 1 to fix an answer is a
+   * different case: yanking them to Part 3 mid-sentence would lose their place
+   * for no reason. The recording still advances either way, because it always
+   * does — this only decides whether the screen follows.
+   */
+  const tapeAt = useRef<string | null>(null);
+  const onTrackChange = useCallback((partId: string) => {
+    const leaving = tapeAt.current;
+    tapeAt.current = partId;
+    setActivePartId((shown) => (leaving === null || shown === leaving ? partId : shown));
+    setCurrent(null);
+  }, []);
+
+  /* --- Moving on --- */
 
   const submit = useCallback(async () => {
     if (finished.current) return;
     finished.current = true;
     setSubmitting(true);
-    await finishMock(sessionId, answersRef.current, timings.current);
-    // finishMock redirects to /results/[id]; spinner stays up until navigation.
-  }, [sessionId]);
+    // finishMock redirects to the report; the spinner stays up until navigation.
+    await finishMock(sitting.sessionId, answersRef.current, timings.current);
+  }, [sitting.sessionId]);
 
   const advance = useCallback(async () => {
     if (finished.current || advancing) return;
-    if (isLast) {
+    // The last module ends the paper, so it hands in rather than moving on —
+    // finishMock grades and redirects server-side.
+    if (isLastModule) {
       void submit();
       return;
     }
     setAdvancing(true);
-    const next = index + 1;
-    // The server sets the next section's deadline — the client only reflects it.
-    const res = await advanceMockSection(sessionId, next, answersRef.current, timings.current);
-    setIndex(next);
-    setRemaining(res?.remainingSeconds ?? SECTIONS[sections[next].section].durationMin * 60);
+    const res = await advanceMockModule(
+      sitting.sessionId,
+      module.index,
+      answersRef.current,
+      timings.current,
+    );
+    if (res.done) {
+      // The clock ran out mid-request: the server has already graded and closed
+      // the sitting, so there is nothing left to do but go and read the report.
+      finished.current = true;
+      setSubmitting(true);
+      window.location.href = `/results/${sitting.sessionId}`;
+      return;
+    }
+    setModule(res.current);
+    setRemaining(res.remainingSeconds);
+    setLapsed(res.lapsedIndexes);
+    setTapeFinished(false);
+    tapeAt.current = null;
+    setActivePartId(res.current.parts[0]?.id ?? "");
+    setCurrent(null);
     lastTick.current = Date.now();
     setAdvancing(false);
-    window.scrollTo({ top: 0 });
-  }, [advancing, isLast, index, sessionId, sections, submit]);
+  }, [advancing, isLastModule, module.index, sitting.sessionId, submit]);
 
-  // Countdown. On zero the section's time is up → advance / submit.
+  // Countdown. At zero the module's time is up — the server is asked for the
+  // next one, which is also what re-syncs the clock.
   const advanceRef = useRef(advance);
   advanceRef.current = advance;
   useEffect(() => {
-    const t = setInterval(() => {
+    const t = window.setInterval(() => {
       setRemaining((s) => {
         if (s <= 1) {
-          clearInterval(t);
+          window.clearInterval(t);
           void advanceRef.current();
           return 0;
         }
         return s - 1;
       });
     }, 1000);
-    return () => clearInterval(t);
-  }, [index]);
+    return () => window.clearInterval(t);
+  }, [module.index]);
 
-  // Autosave: on a timer, and whenever the tab is hidden (a likely "leaving").
+  // Autosave on a timer, and whenever the tab is hidden — the most likely moment
+  // someone is about to walk away mid-module.
   useEffect(() => {
     const save = () => {
       if (finished.current) return;
-      void saveMockProgress(sessionId, answersRef.current, timings.current);
+      void saveMockProgress(sitting.sessionId, answersRef.current, timings.current);
     };
-    const iv = setInterval(save, AUTOSAVE_MS);
+    const iv = window.setInterval(save, AUTOSAVE_MS);
     const onHide = () => {
       if (document.visibilityState === "hidden") save();
     };
     document.addEventListener("visibilitychange", onHide);
     return () => {
-      clearInterval(iv);
+      window.clearInterval(iv);
       document.removeEventListener("visibilitychange", onHide);
     };
-  }, [sessionId]);
+  }, [sitting.sessionId]);
 
-  const jumpTo = useCallback((number: number) => {
-    document.getElementById(`mq-${number}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, []);
+  /* --- Speaking: the examiner moves on --- */
 
-  if (!current) {
+  /**
+   * A finished take advances the interview by itself.
+   *
+   * In a real Speaking test nobody sits in silence after answering — the
+   * examiner asks the next question. So when a recording ends, whether the
+   * candidate stopped it or the clock did, we move on. It is also the fix for a
+   * genuine trap: leaving a recorded question on screen invites a candidate to
+   * hit record again and talk over their own answer.
+   *
+   * A take is identified by its duration, so the upload completing (which
+   * rewrites the same answer with a URL) does not read as a second take, while a
+   * deliberate re-record of a different length does.
+   */
+  const takeSeen = useRef(new Map<string, string>());
+  /** Takes that were already in the autosave — restoring is not answering. */
+  const restored = useRef(new Set(Object.keys(sitting.draftAnswers)));
+  // Written further down, once the question on screen and the move-on function
+  // exist. Read only from the effect below, which runs after that.
+  const focusRef = useRef<number | null>(null);
+  const partRef = useRef("");
+  const nextQuestion = useRef<() => void>(() => {});
+
+  useEffect(() => {
+    const n = focusRef.current;
+    if (module.section !== "speaking" || n === null) return;
+    const key = answerKey(partRef.current, n);
+    const a = answers[key] as { recorded?: boolean; durationSec?: number } | undefined;
+    if (!a?.recorded) return;
+
+    const signature = String(a.durationSec ?? 0);
+    if (takeSeen.current.get(key) === signature) return;
+    const firstSighting = !takeSeen.current.has(key);
+    takeSeen.current.set(key, signature);
+    // Answers rebuilt from a resumed sitting must not stampede through the part.
+    if (firstSighting && restored.current.has(key)) return;
+
+    // A beat, so the candidate sees their answer land before the page turns.
+    const t = window.setTimeout(() => nextQuestion.current(), 900);
+    return () => window.clearTimeout(t);
+  }, [answers, module.section]);
+
+  /* --- Navigation inside the module --- */
+
+  const jumpTo = useCallback(
+    (n: number, partId: string) => {
+      if (partId !== activePartId) setActivePartId(partId);
+      setCurrent(n);
+      const anchor = sheet.anchorOf.get(n)?.n ?? n;
+      // Give a part switch a frame to render before hunting for the anchor.
+      requestAnimationFrame(() => {
+        const el =
+          document.getElementById(`mq-${anchor}`) ?? document.getElementById(`sq-${anchor}`);
+        if (!el) return;
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.querySelector<HTMLElement>("input, textarea, button")?.focus({ preventScroll: true });
+      });
+    },
+    [activePartId, sheet],
+  );
+
+  // Memoised so it is a stable dependency: a fresh `[]` on every render would
+  // rebuild `step` on every keystroke.
+  const partNumbers = useMemo(
+    () => sheet.parts.find((p) => p.id === activePartId)?.numbers ?? [],
+    [activePartId, sheet.parts],
+  );
+  const step = useCallback(
+    (delta: number) => {
+      if (partNumbers.length === 0) return;
+      const at = current === null ? -1 : partNumbers.indexOf(current);
+      const next = Math.min(partNumbers.length - 1, Math.max(0, (at === -1 ? 0 : at) + delta));
+      jumpTo(partNumbers[next], activePartId);
+    },
+    [activePartId, current, jumpTo, partNumbers],
+  );
+
+  /**
+   * The next question of the interview, crossing into the next part when this
+   * one runs out.
+   *
+   * Not `step(1)`: that clamps at the end of the current part, so a candidate
+   * who finished Part 1's last question would sit on a recorded answer with the
+   * Next button doing nothing. Speaking is one continuous interview across its
+   * three parts, so the move-on has to be too.
+   */
+  const nextInterviewQuestion = useCallback(() => {
+    const at = sheet.parts.findIndex((p) => p.id === activePartId);
+    const here = sheet.parts[at]?.numbers ?? [];
+    const i = current === null ? 0 : here.indexOf(current);
+    if (i >= 0 && i < here.length - 1) {
+      jumpTo(here[i + 1], activePartId);
+      return;
+    }
+    const next = sheet.parts[at + 1];
+    // The last question of the last part stays put: there is nowhere to go, and
+    // the candidate still has to hand the module in themselves.
+    if (next?.numbers.length) jumpTo(next.numbers[0], next.id);
+  }, [activePartId, current, jumpTo, sheet.parts]);
+  nextQuestion.current = nextInterviewQuestion;
+
+  if (!part) {
     return (
-      <div className="grid min-h-svh place-items-center bg-paper text-sm text-ink-muted">
-        This mock has no questions.
+      <div className="grid min-h-svh place-items-center bg-paper px-6 text-center text-sm text-ink-muted">
+        This paper has no content for {SECTIONS[module.section].label}.
       </div>
     );
   }
 
-  const mm = String(Math.floor(remaining / 60)).padStart(2, "0");
-  const ss = String(remaining % 60).padStart(2, "0");
+  /* --- Rendering --- */
+
+  const sec = SECTIONS[module.section];
+  const view = toSectionView(part, module.section, !isListening);
+  // Speaking is an interview: one question on screen, because seeing all eleven
+  // lets a candidate rehearse — the habit the real test punishes.
+  const oneAtATime = module.section === "speaking";
+  const focus = oneAtATime ? (current ?? partNumbers[0] ?? null) : null;
+  const focusIndex = focus === null ? -1 : partNumbers.indexOf(focus);
+  // Published for the auto-advance effect above, which cannot see them directly.
+  focusRef.current = focus;
+  partRef.current = part.sectionId;
+
+  const questions = (
+    <SectionBody
+      key={part.id}
+      section={view}
+      answers={answers}
+      results={null}
+      onAnswer={(n, value) => handleAnswer(part.sectionId, n, value)}
+      onClearAnswer={(n) => handleClear(part.sectionId, n)}
+      // A paper holds twelve parts whose numbers collide, so answers are keyed
+      // by part. The body has to index its inputs the same way or every one of
+      // them reads back empty. See `answerKey`.
+      answerScope={part.sectionId}
+      slot="questions"
+      focusNumber={focus}
+      groupHeaders={view.questions.groups.length > 1}
+    />
+  );
+
+  const stimulus = (
+    <SectionBody
+      key={`${part.id}-stimulus`}
+      section={view}
+      answers={answers}
+      results={null}
+      onAnswer={(n, value) => handleAnswer(part.sectionId, n, value)}
+      answerScope={part.sectionId}
+      slot="stimulus"
+    />
+  );
+
+  const twoPane = hasSideStimulus(module.section, view);
+  const body = twoPane ? (
+    <SplitPane
+      className="h-full"
+      storageKey={`exam-split-${module.section}`}
+      left={<div className="p-4 sm:p-5">{stimulus}</div>}
+      right={<div className="space-y-4 p-4 sm:p-5">{questions}</div>}
+    />
+  ) : (
+    <div className="h-full overflow-y-auto">
+      <div
+        className={cn("space-y-4 p-4 sm:p-5", module.section === "speaking" && "mx-auto max-w-2xl")}
+      >
+        {/* Outside the part-keyed body ON PURPOSE: this element must not be
+            unmounted when the candidate moves between parts, or the recording
+            stops and starts over. */}
+        {isListening && tracks.length > 0 && (
+          <ListeningTape
+            tracks={tracks}
+            onTrackChange={onTrackChange}
+            onFinished={() => setTapeFinished(true)}
+          />
+        )}
+        {stimulus}
+        {questions}
+      </div>
+    </div>
+  );
+
+  const savingRecording = anyUploadPending(answers);
   const timerState = remaining < 60 ? "critical" : remaining < 300 ? "warning" : "ok";
-  const answeredHere = current.numbers.filter((_, i) => answers[current.questions[i]?.id] !== undefined).length;
 
   return (
-    <div className="flex min-h-svh flex-col bg-paper">
-      {/* Exam header — brand, section, answered count, timer */}
-      <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-line bg-paper-elev/95 px-4 py-2.5 backdrop-blur">
-        <div className="flex min-w-0 items-center gap-2 font-semibold">
-          <LogoMark className="h-6 w-6" />
-          <span className="truncate" style={{ fontFamily: "var(--font-heading)" }}>
-            IELTSVega
+    <ExamShell
+      title={`${sitting.title} · ${sec.label}`}
+      partLabel={partLabel(module.section, part.partNumber)}
+      instruction={part.instructions}
+      remainingSec={remaining}
+      timerState={timerState}
+      badges={
+        <>
+          <span className={cn("chip", `chip-${sec.accent}`)}>{sec.label}</span>
+          <span className="chip capitalize">{sitting.module}</span>
+          <span className="chip">
+            Q{part.startNumber}
+            {part.endNumber > part.startNumber ? `-${part.endNumber}` : ""}
           </span>
-          <span className="chip ml-1 hidden sm:inline-flex">Full Mock</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="hidden text-sm text-ink-muted sm:inline">
-            {answeredHere}/{current.questions.length} answered
-          </span>
-          <span
-            className="exam-timer flex items-center gap-1.5 text-lg tabular-nums"
-            data-state={timerState}
-            aria-label={`${mm} minutes ${ss} seconds remaining`}
-          >
-            <Clock className="h-4 w-4" /> {mm}:{ss}
-          </span>
-        </div>
-      </header>
-
-      {/* Section progress rail — no navigation; a finished section can't be reopened */}
-      <nav className="flex items-center gap-2 overflow-x-auto border-b border-line bg-paper-elev/60 px-4 py-2">
-        {sections.map((s, i) => {
-          const sec = SECTIONS[s.section];
-          const done = i < index;
-          const here = i === index;
-          return (
-            <span
-              key={s.section}
-              className={cn(
-                "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-medium",
-                here && "border-brand bg-brand-soft text-brand",
-                done && "border-success/40 bg-success-soft text-success",
-                !here && !done && "border-line text-ink-muted",
-              )}
-            >
-              {done && <Check className="size-3" />}
-              {sec.label}
-            </span>
-          );
-        })}
-      </nav>
-
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">
-        <div className="mb-4">
-          <h2 className="display text-xl">{SECTIONS[current.section].label}</h2>
-          <p className="text-sm text-ink-muted">
-            {SECTIONS[current.section].durationMin} minutes · {current.questions.length} question
-            {current.questions.length !== 1 ? "s" : ""} · you can&apos;t return to this section once
-            you move on
-          </p>
-        </div>
-
-        <SetBody
-          key={current.section}
-          set={current.set}
-          questions={current.questions}
-          answers={answers}
-          results={null}
-          onAnswer={setAnswer}
+        </>
+      }
+      menu={<ModuleRail modules={sitting.modules} activeIndex={module.index} />}
+      parts={sheet.parts}
+      activePartId={activePartId}
+      answered={answered}
+      current={current}
+      onJump={jumpTo}
+      onSelectPart={(id) => {
+        setActivePartId(id);
+        setCurrent(null);
+      }}
+      onPrev={() => step(-1)}
+      onNext={() => step(1)}
+      canPrev={oneAtATime ? focusIndex > 0 : current === null || partNumbers.indexOf(current) > 0}
+      canNext={
+        oneAtATime
+          ? focusIndex < partNumbers.length - 1
+          : current === null || partNumbers.indexOf(current) < partNumbers.length - 1
+      }
+      onSubmit={advance}
+      submitting={submitting || advancing || savingRecording}
+      submitLabel={
+        savingRecording
+          ? "Saving recording…"
+          : isLastModule
+            ? "Finish test"
+            : `Finish ${sec.label}`
+      }
+      footerNote={
+        <FooterNote
+          savingRecording={savingRecording}
+          advancing={advancing}
+          submitting={submitting}
+          answered={answered.size}
+          total={sheet.all.length}
+          isLastModule={isLastModule}
+          section={module.section}
+          lapsed={lapsed.map((i) => SECTIONS[sitting.modules[i]?.section ?? "listening"].label)}
+          tapeFinished={isListening && tapeFinished}
         />
-      </main>
+      }
+    >
+      {body}
+    </ExamShell>
+  );
+}
 
-      {/* Question palette — the IELTS number strip: answered vs not, jump to any */}
-      <div className="sticky bottom-[3.25rem] z-20 border-t border-line bg-paper-elev/95 px-4 py-2 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-1.5">
-          <span className="mr-1 text-[10px] font-semibold uppercase tracking-wider text-ink-muted">
-            Questions
+/* ------------------------------------------------------------------ *
+ * Pieces
+ * ------------------------------------------------------------------ */
+
+/** What the paper calls a part of this module. */
+function partLabel(section: SectionKey, partNumber: number): string {
+  if (section === "reading") return `Passage ${partNumber}`;
+  if (section === "writing") return `Task ${partNumber}`;
+  return `Part ${partNumber}`;
+}
+
+/**
+ * Adapt one mock part to the shape section practice renders.
+ *
+ * The two are deliberately the same type: a mock part IS a practice part, sat
+ * under a clock, and giving the mock its own renderer is how the two drift until
+ * a table completion looks different in the exam than in practice.
+ */
+function toSectionView(
+  part: MockSittingData["current"]["parts"][number],
+  section: SectionKey,
+  /**
+   * False during Listening, where <ListeningTape/> plays all four parts from one
+   * element above the part switcher. Leaving the part's own player in as well
+   * would put a second, seekable, pausable copy of the recording on screen —
+   * which is a way to hear an answer twice.
+   */
+  ownsAudio: boolean,
+): ClientSectionView {
+  return {
+    id: part.sectionId,
+    sectionType: section,
+    title: part.title,
+    partNumber: part.partNumber,
+    instructions: part.instructions,
+    audioUrl: ownsAudio ? part.audioUrl : null,
+    passageText: part.passageText,
+    imageUrl: part.imageUrl,
+    startNumber: part.startNumber,
+    endNumber: part.endNumber,
+    totalQuestions: part.totalQuestions,
+    questions: part.questions,
+  };
+}
+
+/**
+ * The running order, in the header. Not navigation — a module you have left
+ * cannot be reopened, and one you have not reached cannot be started early.
+ */
+function ModuleRail({
+  modules,
+  activeIndex,
+}: {
+  modules: MockSittingData["modules"];
+  activeIndex: number;
+}) {
+  return (
+    <div className="flex items-center gap-1">
+      {modules.map((m) => {
+        const sec = SECTIONS[m.section];
+        const done = m.index < activeIndex;
+        const here = m.index === activeIndex;
+        return (
+          <span
+            key={m.section}
+            title={`${sec.label} · ${m.minutes} min`}
+            className={cn(
+              "inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-semibold",
+              here && "border-brand bg-brand-soft text-brand",
+              done && "border-success/40 bg-success-soft text-success",
+              !here && !done && "border-line text-ink-muted",
+            )}
+          >
+            {done && <Check className="size-3" />}
+            <span className={cn(!here && "hidden sm:inline")}>{sec.label}</span>
+            <span className={cn(here && "sm:hidden", !here && "sm:hidden")}>{sec.label[0]}</span>
           </span>
-          {current.numbers.map((n, i) => {
-            const answered = answers[current.questions[i]?.id] !== undefined;
-            return (
-              <button
-                key={n}
-                type="button"
-                onClick={() => jumpTo(n)}
-                aria-label={`Go to question ${n}${answered ? ", answered" : ""}`}
-                className={cn(
-                  "grid size-7 place-items-center rounded border font-mono text-[11px] tabular-nums transition-colors",
-                  answered
-                    ? "border-brand bg-brand text-white"
-                    : "border-line bg-paper text-ink-soft hover:bg-paper-sunken",
-                )}
-              >
-                {n}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Footer: advance / finish */}
-      <footer className="sticky bottom-0 z-20 flex items-center justify-between gap-3 border-t border-line bg-paper-elev/95 px-4 py-2.5 backdrop-blur">
-        <span className="hidden text-sm text-ink-muted sm:inline">
-          {isLast ? "Last section: finish to see your band report." : "Finished this section?"}
-        </span>
-        <Button
-          size="lg"
-          onClick={advance}
-          disabled={submitting || advancing}
-          className="btn-lift ml-auto"
-        >
-          {submitting ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" /> Scoring…
-            </>
-          ) : advancing ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" /> Saving…
-            </>
-          ) : isLast ? (
-            "Finish test"
-          ) : (
-            <>
-              Next section <ArrowRight className="h-4 w-4" />
-            </>
-          )}
-        </Button>
-      </footer>
+        );
+      })}
     </div>
+  );
+}
+
+function FooterNote({
+  savingRecording,
+  advancing,
+  submitting,
+  answered,
+  total,
+  isLastModule,
+  section,
+  lapsed,
+  tapeFinished,
+}: {
+  savingRecording: boolean;
+  advancing: boolean;
+  submitting: boolean;
+  answered: number;
+  total: number;
+  isLastModule: boolean;
+  section: SectionKey;
+  lapsed: string[];
+  tapeFinished: boolean;
+}) {
+  if (submitting) {
+    return (
+      <span className="inline-flex items-center gap-1.5">
+        <Loader2 className="size-3 animate-spin" /> Marking your paper…
+      </span>
+    );
+  }
+  if (advancing) {
+    return (
+      <span className="inline-flex items-center gap-1.5">
+        <Loader2 className="size-3 animate-spin" /> Moving on…
+      </span>
+    );
+  }
+  if (savingRecording) return <>Storing your recording — don&apos;t leave yet.</>;
+  if (lapsed.length > 0) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-warning">
+        <AlertTriangle className="size-3" />
+        {lapsed.join(" and ")} ran out of time — the exam clock kept going.
+      </span>
+    );
+  }
+  return (
+    <>
+      {answered} / {total} answered ·{" "}
+      <span className="hidden sm:inline">
+        {tapeFinished
+          ? "The recording has finished — check and transfer your answers. "
+          : `${MOCK_MODULE_NOTE[section]} `}
+      </span>
+      {isLastModule ? "Finishing hands in the whole paper." : "You can't come back to this module."}
+    </>
   );
 }

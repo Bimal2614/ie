@@ -42,8 +42,11 @@ export default async function ResultsPage() {
                 <Trophy className="size-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold capitalize text-ink">{r.module} full mock</p>
-                <p className="text-xs text-ink-muted">
+                <p className="truncate text-sm font-semibold text-ink">
+                  {r.title ?? `${r.module} full mock`}
+                </p>
+                <p className="text-xs capitalize text-ink-muted">
+                  {r.module} ·{" "}
                   {r.completedAt ? (
                     <LocalTime
                       value={r.completedAt.toISOString()}

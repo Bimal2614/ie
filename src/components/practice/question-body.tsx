@@ -142,6 +142,21 @@ export type BodyConfig = {
    * words" line on screen at the same time, in two different places.
    */
   itemPrompts?: boolean;
+  /**
+   * Let a single full-height answer (a Writing editor) grow to fill its pane so
+   * the two sides of the split end level, rather than a short box sitting beside
+   * a tall chart. Only meaningful for a one-item group.
+   */
+  fillHeight?: boolean;
+  /**
+   * Scale the stimulus figure to fit its pane instead of letting it overflow.
+   *
+   * At its natural aspect ratio a tall chart is taller than the pane, so the
+   * candidate scrolls a picture they are supposed to take in at a glance — and
+   * the bottom rows of a table sit off screen while they write about them. The
+   * real paper prints the whole figure on the page.
+   */
+  fitStimulus?: boolean;
   /** Flagging is a mock-player affordance. */
   flagged?: Set<string>;
   onToggleFlag?: (key: string) => void;
@@ -304,6 +319,7 @@ export function QuestionBody({
       audioRef={audioRef}
       sticky={config.stickyAudio}
       showImage={config.stimulusImage !== false}
+      fit={config.fitStimulus}
     />
   );
 
@@ -335,7 +351,7 @@ export function QuestionBody({
           .map((g) => ({ ...g, items: g.items.filter((i) => i.n === config.focusNumber) }));
 
   const questionBlocks = (
-    <div className="space-y-6">
+    <div className={cn("space-y-6", config.fillHeight && "flex h-full min-h-0 flex-col")}>
       {groups.map((group, gi) => (
         <GroupBlock
           key={gi}
@@ -445,7 +461,7 @@ function GroupBlock({
     group.from === group.to ? `Question ${group.from}` : `Questions ${group.from}-${group.to}`;
 
   return (
-    <section className="space-y-4">
+    <section className={cn("space-y-4", config.fillHeight && "flex min-h-0 flex-1 flex-col")}>
       {config.groupHeaders && (
         <div className="overflow-hidden rounded-xl border border-line bg-paper-elev">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-paper-sunken px-4 py-2.5">
@@ -529,7 +545,7 @@ function GroupBlock({
           )}
 
           {showItemRows && (
-            <div className="space-y-3">
+            <div className={cn("space-y-3", config.fillHeight && "flex min-h-0 flex-1 flex-col")}>
               {config.progressBar && !disabled && group.items.length > 1 && (
                 <div className="flex items-center gap-3 text-sm">
                   <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-paper-sunken">
@@ -544,7 +560,7 @@ function GroupBlock({
                   </span>
                 </div>
               )}
-              <ol className="space-y-4">
+              <ol className={cn("space-y-4", config.fillHeight && "flex min-h-0 flex-1 flex-col")}>
                 {group.items.map((item) => (
                   <ItemRow
                     key={item.key}
@@ -641,13 +657,22 @@ function ItemRow({
       className={cn(
         "scroll-mt-28 rounded-xl border border-line bg-paper-elev p-4",
         flagged && "ring-1 ring-warning/60",
+        config.fillHeight && "flex min-h-0 flex-1 flex-col",
       )}
     >
-      <div className="flex items-start gap-3">
+      <div
+        className={cn(
+          "flex gap-3",
+          // `items-start` would pin the answer column to its own content height,
+          // which silently defeats every flex-1 below it — the editor stayed a
+          // small box in a full-height card. Stretch is what lets it fill.
+          config.fillHeight ? "min-h-0 flex-1 items-stretch" : "items-start",
+        )}
+      >
         {!numberInGap && (
           <span
             className={cn(
-              "grid h-7 min-w-7 shrink-0 place-items-center rounded-full px-1.5 font-mono text-xs font-semibold tabular-nums",
+              "grid h-7 min-w-7 shrink-0 place-items-center self-start rounded-full px-1.5 font-mono text-xs font-semibold tabular-nums",
               state === "idle" && "bg-brand-soft text-brand",
               state === "correct" && "bg-success text-white",
               state === "incorrect" && "bg-danger text-white",
@@ -657,7 +682,7 @@ function ItemRow({
             {itemLabel(item)}
           </span>
         )}
-        <div className="min-w-0 flex-1 space-y-3">
+        <div className={cn("min-w-0 flex-1 space-y-3", config.fillHeight && "flex min-h-0 flex-col")}>
           {item.prompt && config.itemPrompts !== false && (
             <p className="text-sm font-medium text-ink">{item.prompt}</p>
           )}
@@ -672,6 +697,7 @@ function ItemRow({
             </button>
           )}
           <QuestionInput
+            fill={config.fillHeight}
             question={toRenderQuestion(item)}
             value={value}
             disabled={disabled}
@@ -851,19 +877,26 @@ function Stimulus({
   audioRef,
   sticky,
   showImage = true,
+  fit = false,
 }: {
   doc: BodyDoc;
   audioRef: React.RefObject<HTMLAudioElement | null>;
   sticky?: boolean;
   /** False when a layout or question group draws the figure itself. */
   showImage?: boolean;
+  /** Scale the figure down to fit the pane rather than overflowing it. */
+  fit?: boolean;
 }) {
   const sec = SECTIONS[doc.sectionType];
   const image = showImage ? doc.imageSrc : null;
   if (!doc.audioSrc && !image && !doc.passageText) return null;
 
+  // Only a figure standing alone can take the pane's height. Beside a passage
+  // or under a recording there is other content competing for it.
+  const fitImage = fit && Boolean(image) && !doc.passageText;
+
   return (
-    <div className="space-y-4">
+    <div className={cn("space-y-4", fitImage && "flex h-full min-h-0 flex-col")}>
       {doc.audioSrc && (
         <div
           className={cn(
@@ -887,7 +920,12 @@ function Stimulus({
       )}
 
       {image && (
-        <div className="overflow-hidden rounded-xl border border-line">
+        <div
+          className={cn(
+            "overflow-hidden rounded-xl border border-line",
+            fitImage && "flex min-h-0 flex-1 items-center justify-center p-2",
+          )}
+        >
           <Image
             // Same auth-gated indirection as the audio: the stored value is a
             // private s3:// object, which no <img> can load directly.
@@ -895,7 +933,12 @@ function Stimulus({
             alt={doc.title}
             width={1000}
             height={640}
-            className="h-auto w-full object-contain"
+            className={cn(
+              "object-contain",
+              // Bounded by BOTH axes so the whole figure lands inside the pane;
+              // `w-full` alone forces the natural aspect ratio and overflows.
+              fitImage ? "max-h-full min-h-0 w-auto max-w-full" : "h-auto w-full",
+            )}
             unoptimized
           />
         </div>

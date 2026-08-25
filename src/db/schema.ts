@@ -422,26 +422,140 @@ export const userResponses = pgTable(
 );
 
 /* ------------------------------------------------------------------ *
- * Mock tests: definition → session → served questions → answers → result
+ * MOCK TESTS
+ *
+ *   mock_tests           one full-length paper  ("Cambridge 19 · Test 2",
+ *                        Academic) — the definition, shared by everyone
+ *   mock_test_sections   its twelve parts, in exam order, each pointing at the
+ *                        `practice_sections` row that already holds that part
+ *   mock_test_sessions   one candidate's sitting of it, with the exam clock
+ *   mock_test_answers    what they wrote, one row per numbered answer
+ *   mock_test_results    the band report
+ *
+ * WHY THE DEFINITION POINTS AT `practice_sections` AND NOT AT QUESTIONS.
+ * A mock is not a new pile of content — it is the SAME twelve parts a candidate
+ * can already sit one at a time, assembled into a paper. Referencing the part
+ * means a fix to Cambridge 19 Reading Passage 2 reaches practice and the mock
+ * together, and the mock definition stays twelve rows rather than eighty.
  * ------------------------------------------------------------------ */
 
 export const mockTests = pgTable(
   "mock_tests",
   {
     id: uuid().defaultRandom().primaryKey(),
+
+    /**
+     * Stable, human-readable identity — `cambridge-19-test-2-academic`. It is
+     * what makes re-running the builder an UPDATE: a sitting started yesterday
+     * keeps pointing at the same test after content is re-imported.
+     */
+    slug: text().notNull(),
+
+    // A candidate sits one module, and Academic/General are different papers
+    // under the same book and test number, so the module is part of the key.
     module: ieltsModule().notNull().default("academic"),
-    title: text().notNull(),
+
+    source: text().notNull().default("cambridge"), // cambridge | original
+    book: text(), // "Cambridge 19"
+    testNumber: integer(), // 1-4
+
+    title: text().notNull(), // "Cambridge 19 · Test 2"
     description: text(),
-    // Which sections this test includes + per-section config (counts, timing).
-    config: jsonb(),
-    isFullTest: boolean().notNull().default(true), // all 4 sections
-    totalMinutes: integer(),
+
+    /** Wall-clock minutes from the first module's start to the last one's end. */
+    totalMinutes: integer().notNull().default(0),
+    /** Marks on the answer sheet across every module (Listening 40 + Reading 40 + …). */
+    totalQuestions: integer().notNull().default(0),
+    /** Parts, i.e. rows in mock_test_sections. A full paper is 12. */
+    totalParts: integer().notNull().default(0),
+    /** All four modules present. Only a full paper is offered as a mock. */
+    isFullTest: boolean().notNull().default(true),
+
+    /** Listing order — book then test, computed once so the UI needn't parse titles. */
+    sortOrder: integer().notNull().default(0),
+
     isActive: boolean().notNull().default(true),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("mock_tests_module_idx").on(t.module)],
+  (t) => [
+    uniqueIndex("mock_tests_slug_uq").on(t.slug),
+    // One paper per book+test+module: Cambridge 19 Test 2 exists twice, once
+    // per module, and never more than that.
+    uniqueIndex("mock_tests_source_uq").on(t.book, t.testNumber, t.module),
+    // The catalogue lists one module's live papers in order — the whole query.
+    index("mock_tests_listing_idx").on(t.module, t.isActive, t.sortOrder),
+  ],
 );
 
+/**
+ * The parts of one mock test, in the order they are sat.
+ *
+ * `orderIndex` runs 0..11 across the WHOLE paper (Listening 1-4, Reading 1-3,
+ * Writing 1-2, Speaking 1-3) so the exam order is data rather than a sort rule
+ * repeated in every reader.
+ *
+ * NUMBERING. `startNumber`/`endNumber` are the numbers printed on THIS paper's
+ * answer sheet. For Listening and Reading they match the part's own numbering
+ * (1-10, 11-20 …, and 1-13, 14-26 …). For Writing and Speaking they do not:
+ * every stored Writing task and Speaking part starts its own count at 1, so a
+ * paper would otherwise show three "question 1"s. Here they are renumbered
+ * continuously within the module — Writing 1-2, Speaking 1-11 — exactly as a
+ * candidate counts them. The offset between the two numberings is what the read
+ * layer applies to turn a stored item number into a sheet number.
+ */
+export const mockTestSections = pgTable(
+  "mock_test_sections",
+  {
+    id: uuid().defaultRandom().primaryKey(),
+    mockTestId: uuid()
+      .notNull()
+      .references(() => mockTests.id, { onDelete: "cascade" }),
+    /** The `practice_sections` row that holds this part's stimulus + questions. */
+    sectionId: uuid()
+      .notNull()
+      .references(() => practiceSections.id, { onDelete: "cascade" }),
+
+    section: section().notNull(), // denormalised: every read groups by it
+    /** Part within its module: Listening 1-4, Reading 1-3, Writing 1-2, Speaking 1-3. */
+    partNumber: integer().notNull().default(1),
+    /** Position in the whole paper, 0-based. */
+    orderIndex: integer().notNull().default(0),
+    /** Position within its module, 0-based — what the part tabs count. */
+    moduleIndex: integer().notNull().default(0),
+
+    /** This paper's answer-sheet numbers for the part (inclusive). */
+    startNumber: integer().notNull().default(1),
+    endNumber: integer().notNull().default(1),
+    /** Marks the part carries — not item count; a "choose TWO" item is worth 2. */
+    totalQuestions: integer().notNull().default(0),
+  },
+  (t) => [
+    index("mock_sections_test_idx").on(t.mockTestId),
+    // Exam order is unique by construction; a duplicate would be a build bug.
+    uniqueIndex("mock_sections_order_uq").on(t.mockTestId, t.orderIndex),
+    // A part appears in a paper exactly once.
+    uniqueIndex("mock_sections_part_uq").on(t.mockTestId, t.sectionId),
+    index("mock_sections_section_idx").on(t.sectionId),
+  ],
+);
+
+/**
+ * One candidate's sitting.
+ *
+ * THE CLOCK IS A FROZEN TIMELINE, NOT A COUNTDOWN. `timeline` holds an absolute
+ * start and end instant per module, decided by the server when the sitting
+ * begins. Nothing pauses it: closing the tab, losing the connection or walking
+ * away spends exam time exactly as it does in a real test hall. Resuming
+ * therefore does not "continue where you left off" — it asks the timeline where
+ * the clock is NOW, which is why leaving 5 minutes into a 40-minute Listening
+ * and coming back 50 minutes later lands you 10 minutes into Reading, with
+ * Listening gone.
+ *
+ * Finishing a module early is the one thing that moves the timeline: the
+ * modules after it are rebased to start immediately, so an early finish buys
+ * back the waiting rather than the time (see rebaseTimeline).
+ */
 export const mockTestSessions = pgTable(
   "mock_test_sessions",
   {
@@ -449,56 +563,66 @@ export const mockTestSessions = pgTable(
     userId: uuid()
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    mockTestId: uuid().references(() => mockTests.id, { onDelete: "set null" }),
+    mockTestId: uuid()
+      .notNull()
+      .references(() => mockTests.id, { onDelete: "cascade" }),
     module: ieltsModule().notNull().default("academic"),
 
     status: mockSessionStatus().notNull().default("in_progress"),
-    currentSection: section(),
 
-    // --- Resume state (a mock can be left and continued) ---
-    // Which section the candidate is on, 0-indexed into the frozen section list.
+    /** The module the candidate is in right now — Listening, Reading, … */
+    currentSection: section(),
+    /** Its position in the paper's module list, 0-based. */
     currentSectionIndex: integer().notNull().default(0),
     /**
-     * Server-authoritative deadline for the active section. The clock keeps
-     * running while the tab is closed — leaving does not pause it, matching the
-     * real exam — and "remaining" is always computed from this, so the timer
-     * cannot be extended by tampering with the client or the device clock.
+     * When that module's time is up, server-side. Denormalised from `timeline`
+     * so "which sittings have run out" is an indexed query rather than a jsonb
+     * scan, and so a stale client can never argue about the deadline.
      */
     currentSectionEndsAt: timestamp({ withTimezone: true }),
-    // Autosaved answers so a resumed session restores what was typed/selected.
+
+    /**
+     * The whole exam plan: `[{ section, index, startsAt, endsAt }]` in exam
+     * order, as absolute instants. Typed as `MockTimeline` in
+     * src/lib/mock-timing.ts.
+     */
+    timeline: jsonb().$type<unknown>(),
+
+    /**
+     * Autosaved work, keyed `"<practiceSectionId>:<itemNumber>"`.
+     *
+     * NOT keyed by the number alone: Listening and Reading both number 1-40, and
+     * every Writing task and Speaking part starts again at 1, so a bare number
+     * collides four ways inside a single paper.
+     */
     draftAnswers: jsonb().$type<Record<string, unknown>>(),
-    // Accumulated seconds of focus per question id, for per-question timing.
+    /** Accumulated focus seconds, same keys as draftAnswers. */
     draftTimings: jsonb().$type<Record<string, number>>(),
 
     startedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     completedAt: timestamp({ withTimezone: true }),
+    /** End of the last module — after this the paper is over, answered or not. */
     expiresAt: timestamp({ withTimezone: true }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     index("mock_sessions_user_idx").on(t.userId),
     index("mock_sessions_status_idx").on(t.status),
+    // "Do I already have this paper open?" — the resume check on every start.
+    index("mock_sessions_user_test_idx").on(t.userId, t.mockTestId, t.status),
+    // The sweep that closes sittings whose clock ran out while nobody was there.
+    index("mock_sessions_expiry_idx").on(t.status, t.expiresAt),
   ],
 );
 
-// The exact set of questions served for a given session (selection is frozen).
-export const mockTestQuestions = pgTable(
-  "mock_test_questions",
-  {
-    id: uuid().defaultRandom().primaryKey(),
-    sessionId: uuid()
-      .notNull()
-      .references(() => mockTestSessions.id, { onDelete: "cascade" }),
-    questionId: uuid()
-      .notNull()
-      .references(() => questions.id, { onDelete: "cascade" }),
-    setId: uuid(),
-    section: section().notNull(),
-    orderIndex: integer().notNull().default(0),
-  },
-  (t) => [index("mock_questions_session_idx").on(t.sessionId)],
-);
-
+/**
+ * One answered item.
+ *
+ * Items live inside a `practice_sections` jsonb document and have no row of
+ * their own, so a part id plus the item's number is the identity — the same
+ * pair `user_responses` uses for section practice, which is why the AI scorers
+ * resolve a mock answer's prompt without needing a second code path.
+ */
 export const mockTestAnswers = pgTable(
   "mock_test_answers",
   {
@@ -506,24 +630,33 @@ export const mockTestAnswers = pgTable(
     sessionId: uuid()
       .notNull()
       .references(() => mockTestSessions.id, { onDelete: "cascade" }),
-    questionId: uuid()
-      .notNull()
-      .references(() => questions.id, { onDelete: "cascade" }),
+    /** The part it belongs to, in `practice_sections`. */
+    sectionId: uuid().notNull(),
+    /** The item's number INSIDE that part — what the answer key is keyed by. */
+    questionNumber: integer().notNull(),
+    /** The number printed on this paper's answer sheet. See mock_test_sections. */
+    sheetNumber: integer().notNull().default(0),
+
     section: section().notNull(),
+    questionType: questionType().notNull(),
+    /** Marks the item carries; 2 for a paired "choose TWO letters". */
+    marks: integer().notNull().default(1),
 
     response: jsonb(),
     audioUrl: text(),
     transcript: text(),
     isCorrect: boolean(),
-    rawScore: integer(),
+    rawScore: integer(), // marks EARNED, which a half-right pair makes < marks
     band: numeric({ precision: 2, scale: 1 }),
     aiFeedback: jsonb(),
     timeSpentSec: integer(),
     answeredAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    uniqueIndex("mock_answers_session_question_uq").on(t.sessionId, t.questionId),
+    uniqueIndex("mock_answers_item_uq").on(t.sessionId, t.sectionId, t.questionNumber),
     index("mock_answers_session_idx").on(t.sessionId),
+    // The results drill-down loads one module of one sitting.
+    index("mock_answers_session_section_idx").on(t.sessionId, t.section),
   ],
 );
 
@@ -537,19 +670,20 @@ export const mockTestResults = pgTable(
     userId: uuid()
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
+    mockTestId: uuid().references(() => mockTests.id, { onDelete: "set null" }),
     module: ieltsModule().notNull().default("academic"),
 
-    // IELTS scaled bands 0.0–9.0 (half-band increments).
+    // IELTS scaled bands 0.0-9.0 (half-band increments).
     listeningBand: numeric({ precision: 2, scale: 1 }),
     readingBand: numeric({ precision: 2, scale: 1 }),
     writingBand: numeric({ precision: 2, scale: 1 }),
     speakingBand: numeric({ precision: 2, scale: 1 }),
     overallBand: numeric({ precision: 2, scale: 1 }),
 
-    // Raw correct counts (out of 40) for objective sections.
+    // Raw correct marks (out of 40) for the objective modules.
     listeningRaw: integer(),
     readingRaw: integer(),
-    // Per-question-type accuracy + other analytics for the dashboard.
+    // Per-module tallies + per-question-type accuracy for the dashboard.
     sectionBreakdown: jsonb(),
 
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
@@ -568,7 +702,11 @@ export type QuestionSet = typeof questionSets.$inferSelect;
 export type Question = typeof questions.$inferSelect;
 export type UserResponse = typeof userResponses.$inferSelect;
 export type MockTest = typeof mockTests.$inferSelect;
+export type NewMockTest = typeof mockTests.$inferInsert;
+export type MockTestSection = typeof mockTestSections.$inferSelect;
+export type NewMockTestSection = typeof mockTestSections.$inferInsert;
 export type MockTestSession = typeof mockTestSessions.$inferSelect;
+export type MockTestAnswer = typeof mockTestAnswers.$inferSelect;
 export type MockTestResult = typeof mockTestResults.$inferSelect;
 
 /* ================================================================== *

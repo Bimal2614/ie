@@ -287,3 +287,88 @@ export function numbersInSection(q: SectionQuestions | null): number[] {
   if (!q) return [];
   return q.groups.flatMap((g) => g.items.map((i) => i.n));
 }
+
+/**
+ * Renumber every gap in a layout by `offset`.
+ *
+ * A mock paper numbers its answer sheet continuously, but the parts it is built
+ * from each start their own count at 1 — Writing Task 2 and Speaking Part 2 are
+ * both "question 1" in `practice_sections`. The paper shows them as 2 and 5, so
+ * the items are shifted for display; a layout whose text says `[[1]]` has to
+ * move with them or its gap would bind to nothing.
+ *
+ * Listening and Reading already number across the whole paper, so their offset
+ * is 0 and this is a no-op — which is the case that matters, because those are
+ * the only sections with gap-bearing layouts today. It is written generally
+ * anyway: a silently mis-bound gap renders as literal `[[7]]` on screen.
+ */
+export function shiftLayoutGaps(layout: SetLayout | null | undefined, offset: number): SetLayout | null {
+  if (!layout) return null;
+  if (offset === 0) return layout;
+
+  const shiftText = (t: string) => t.replace(GAP_RE, (_, n: string) => `[[${Number(n) + offset}]]`);
+  const l = structuredClone(layout);
+
+  switch (l.kind) {
+    case "inline_blanks":
+      l.blocks = l.blocks.map(shiftText);
+      break;
+    case "notes":
+      if (l.example) l.example = shiftText(l.example);
+      l.groups = l.groups.map((g) => ({
+        title: g.title ? shiftText(g.title) : g.title,
+        items: g.items.map(shiftText),
+      }));
+      break;
+    case "table":
+      l.rows = l.rows.map((r) => r.map((c) => ({ ...c, text: shiftText(c.text) })));
+      break;
+    case "form":
+      l.rows = l.rows.map((r) => ({ ...r, value: shiftText(r.value) }));
+      break;
+    case "flowchart":
+      l.steps = l.steps.map(shiftText);
+      break;
+    case "diagram":
+      // Pins carry the number as data rather than inside text.
+      l.pins = l.pins.map((p) => ({ ...p, gap: p.gap + offset }));
+      break;
+    case "options":
+      // A shared letter box has no numbered gaps of its own.
+      break;
+  }
+  return l;
+}
+
+/* ------------------------------------------------------------------ *
+ * Addressing one answer
+ * ------------------------------------------------------------------ */
+
+/**
+ * The key one answer is filed under, everywhere: in the player's state, in a
+ * mock sitting's `draft_answers`, and as the (section_id, question_number) pair
+ * on `mock_test_answers`.
+ *
+ * WHY A NUMBER ALONE IS NOT ENOUGH. Section practice sits one part at a time, so
+ * there the exam number IS the identity. A mock paper holds twelve parts at
+ * once, and the number collides four ways inside it: Listening and Reading both
+ * run 1-40, and every Writing task and Speaking part starts again at 1. The part
+ * the item belongs to is what disambiguates it.
+ *
+ * WHY IT LIVES HERE, beside the content contract, rather than with the mock
+ * timing code that first needed it: this is the format the RENDERER indexes its
+ * inputs by. When the two disagree the failure is silent and horrible — the
+ * answer sheet lights up as answered while the input the candidate typed into
+ * shows nothing back, because the value is being stored under one key and read
+ * under another. Keeping the writer and the reader on one exported function is
+ * what stops that recurring.
+ */
+export function answerKey(scope: string | null | undefined, n: number): string {
+  return scope ? `${scope}:${n}` : String(n);
+}
+
+/** The exam number out of a key, whichever form it took. */
+export function numberFromKey(key: string): number {
+  const at = key.lastIndexOf(":");
+  return Number(at === -1 ? key : key.slice(at + 1));
+}

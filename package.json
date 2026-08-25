@@ -20,7 +20,8 @@
     "db:seed:responses": "tsx src/db/seed-responses.ts",
     "db:import": "tsx src/db/import-content.ts",
     "db:verify": "tsx src/db/verify-content.ts",
-    "db:build:questions": "tsx src/db/build-questions.ts"
+    "db:build:questions": "tsx src/db/build-questions.ts",
+    "db:build:mocks": "tsx src/db/build-mock-tests.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1089.0",

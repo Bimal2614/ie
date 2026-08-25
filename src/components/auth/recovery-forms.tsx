@@ -6,7 +6,6 @@ import { Loader2, MailCheck, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { requestPasswordReset, resetPassword } from "@/app/actions/recovery";
 import { AuthField, authButton, authError } from "./auth-ui";
 import { type AuthFormState } from "@/lib/validation";
-import { cn } from "@/lib/utils";
 
 export function ForgotPasswordForm() {
   const [state, action, pending] = useActionState<AuthFormState, FormData>(requestPasswordReset, null);
@@ -59,7 +58,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
       <AuthField
         label="New password" id="newPassword" name="newPassword"
         type={show ? "text" : "password"} autoComplete="new-password"
-        placeholder="At least 10 characters" required
+        placeholder="At least 6 characters" required
         error={state?.fieldErrors?.newPassword?.[0]}
         adornment={
           <button type="button" onClick={() => setShow((s) => !s)} tabIndex={-1}
@@ -68,7 +67,6 @@ export function ResetPasswordForm({ token }: { token: string }) {
           </button>
         }
       />
-      <p className={cn("text-xs text-ink-muted")}>Use upper &amp; lower case, a number and a symbol.</p>
       <button type="submit" disabled={pending} className={authButton}>
         {pending ? <Loader2 className="size-4 animate-spin" /> : null}
         Reset password

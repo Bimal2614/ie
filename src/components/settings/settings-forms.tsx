@@ -106,7 +106,7 @@ export function PasswordForm() {
       />
       <AuthField
         label="New password" id="newPassword" name="newPassword" type={show ? "text" : "password"}
-        autoComplete="new-password" placeholder="At least 10 characters" required
+        autoComplete="new-password" placeholder="At least 6 characters" required
         error={state?.fieldErrors?.newPassword?.[0]}
         adornment={
           <button type="button" onClick={() => setShow((s) => !s)} tabIndex={-1}
