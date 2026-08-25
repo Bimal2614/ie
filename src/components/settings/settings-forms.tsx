@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { Loader2, Check, Eye, EyeOff } from "lucide-react";
-import { updateProfile, changePassword, deleteAccount } from "@/app/actions/settings";
+import { updateProfile, changePassword } from "@/app/actions/settings";
 import { AuthField, authButton, authError } from "@/components/auth/auth-ui";
 import { TARGET_BANDS, type AuthFormState } from "@/lib/validation";
 import { cn } from "@/lib/utils";
@@ -127,45 +127,3 @@ export function PasswordForm() {
   );
 }
 
-export function DangerZone() {
-  const [state, action, pending] = useActionState<AuthFormState, FormData>(deleteAccount, null);
-  const [confirming, setConfirming] = useState(false);
-
-  if (!confirming) {
-    return (
-      <button
-        type="button"
-        onClick={() => setConfirming(true)}
-        className="rounded-lg border border-danger/40 px-5 py-2.5 text-sm font-semibold text-danger transition-colors hover:bg-danger-soft"
-      >
-        Delete my account
-      </button>
-    );
-  }
-
-  return (
-    <form action={action} className="space-y-3">
-      <p className="text-sm text-ink-soft">
-        This permanently deletes your account and all your practice history. Type{" "}
-        <span className="font-semibold text-ink">DELETE</span> to confirm.
-      </p>
-      <input
-        name="confirm"
-        autoComplete="off"
-        placeholder="DELETE"
-        aria-label="Type DELETE to confirm"
-        className={cn(control, "max-w-xs", state?.fieldErrors?.confirm && "border-danger")}
-      />
-      {state?.fieldErrors?.confirm && <p className="text-xs text-danger">{state.fieldErrors.confirm[0]}</p>}
-      <div className="flex items-center gap-3">
-        <button type="submit" disabled={pending} className="inline-flex items-center gap-2 rounded-lg bg-danger px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60">
-          {pending ? <Loader2 className="size-4 animate-spin" /> : null}
-          Permanently delete
-        </button>
-        <button type="button" onClick={() => setConfirming(false)} className="text-sm font-medium text-ink-muted hover:text-ink">
-          Cancel
-        </button>
-      </div>
-    </form>
-  );
-}

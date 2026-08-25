@@ -7,7 +7,7 @@ import { users } from "@/db/schema";
 import { requireUser } from "@/lib/dal";
 import { cardClass } from "@/components/dashboard/ui";
 import { cn } from "@/lib/utils";
-import { ProfileForm, PasswordForm, DangerZone } from "@/components/settings/settings-forms";
+import { ProfileForm, PasswordForm } from "@/components/settings/settings-forms";
 
 export const metadata: Metadata = { title: "Settings · IELTSVega", robots: { index: false } };
 
@@ -96,10 +96,6 @@ export default async function SettingsPage() {
           ))}
         </ul>
         <p className="mt-4 text-xs text-ink-muted">Notification preferences are coming soon.</p>
-      </Card>
-
-      <Card title="Danger zone" desc="Permanent and irreversible.">
-        <DangerZone />
       </Card>
     </div>
   );

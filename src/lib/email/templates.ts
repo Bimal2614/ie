@@ -7,7 +7,29 @@
 const BRAND = "#0e7490"; // kept simple/self-contained; not tied to the app theme tokens
 const GREEN = "#16a34a";
 
-function layout(opts: { heading: string; body: string; ctaLabel: string; ctaUrl: string; footer: string }): string {
+/**
+ * These templates interpolate user-controlled text — the display name, which
+ * accepts any 80 characters — straight into markup. Without escaping, a name
+ * containing `&`, a quote or a tag breaks the email's HTML or smuggles markup
+ * into it. Every dynamic value below goes through here.
+ */
+function esc(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function layout(raw: { heading: string; body: string; ctaLabel: string; ctaUrl: string; footer: string }): string {
+  const opts = {
+    heading: esc(raw.heading),
+    body: esc(raw.body),
+    ctaLabel: esc(raw.ctaLabel),
+    ctaUrl: esc(raw.ctaUrl),
+    footer: esc(raw.footer),
+  };
   return `<!doctype html><html><body style="margin:0;background:#f5f5f4;padding:24px;font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#1a202c">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
     <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="background:#fff;border:1px solid #e7e5e4;border-radius:16px;overflow:hidden">
@@ -30,6 +52,54 @@ function layout(opts: { heading: string; body: string; ctaLabel: string; ctaUrl:
 </body></html>`;
 }
 
+/**
+ * Sent on signup. We do not verify email addresses at the moment, so this is
+ * the only thing a new account receives: no "confirm your address" step, no
+ * dead link to click.
+ */
+export function welcomeTemplate(name: string, link: string) {
+  return {
+    subject: "Welcome to IELTSVega",
+    html: layout({
+      heading: `Welcome, ${name} 👋`,
+      body: "Your account is ready. Start with a full mock test to get a baseline band, or practise a single section if you already know what you want to work on. Writing and Speaking answers come back with examiner-style feedback and a band for each criterion.",
+      ctaLabel: "Go to my dashboard",
+      ctaUrl: link,
+      footer: "You received this because an account was created with this email address.",
+    }),
+    text: `Welcome to IELTSVega, ${name}!\n\nYour account is ready. Start with a full mock test to get a baseline band, or practise a single section.\n\n${link}\n\nYou received this because an account was created with this email address.`,
+  };
+}
+
+/**
+ * Security notice after a password changes, by reset or from settings. The CTA
+ * points at recovery so someone who did NOT make the change can take the
+ * account back straight away.
+ */
+export function passwordChangedTemplate(link: string, opts?: { signedOutEverywhere?: boolean }) {
+  // Only the reset flow revokes every session, so only it may say so.
+  const signedOut = opts?.signedOutEverywhere
+    ? " You have also been signed out on every device."
+    : "";
+  return {
+    subject: "Your IELTSVega password was changed",
+    html: layout({
+      heading: "Your password was changed",
+      body: `The password on your IELTSVega account was just changed.${signedOut} If this was you, there is nothing to do. If it was not, reset your password immediately using the button below.`,
+      ctaLabel: "This wasn't me, reset it",
+      ctaUrl: link,
+      footer: "This is an automatic security notice. We send it every time an account password changes.",
+    }),
+    text: `Your IELTSVega password was just changed.${signedOut}\n\nIf this was you, no action is needed.\n\nIf it was not you, reset your password immediately:\n${link}`,
+  };
+}
+
+/**
+ * Currently unused: signup sends `welcomeTemplate` instead, because addresses
+ * are not verified yet. Kept, along with the `email_verify` token type and the
+ * /verify-email route, so turning verification back on is a one-line change in
+ * `signup`.
+ */
 export function verifyEmailTemplate(name: string, link: string) {
   return {
     subject: "Verify your IELTSVega email",

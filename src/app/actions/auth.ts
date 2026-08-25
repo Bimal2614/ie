@@ -13,9 +13,8 @@ import {
   getRequestContext,
 } from "@/lib/session";
 import { getCurrentUser } from "@/lib/dal";
-import { createAuthToken } from "@/lib/auth-tokens";
 import { sendEmail } from "@/lib/email/mailer";
-import { verifyEmailTemplate } from "@/lib/email/templates";
+import { welcomeTemplate } from "@/lib/email/templates";
 import { env } from "@/lib/env";
 
 // Identical message for "no such user" and "wrong password" — no enumeration.
@@ -107,15 +106,18 @@ export async function signup(
   await createSession(userId); // rotates in a fresh session token
   await audit(userId, "signup", ip, userAgent);
 
-  // Send the verification email (best-effort — must never block signup, and the
-  // try MUST NOT wrap the redirect below, which throws NEXT_REDIRECT).
+  // Send the welcome email (best-effort — must never block signup, and the try
+  // MUST NOT wrap the redirect below, which throws NEXT_REDIRECT).
+  //
+  // No verification step for now: addresses are taken at face value and nothing
+  // in the app gates on `emailVerified`. To turn verification back on, issue an
+  // `email_verify` token here and send `verifyEmailTemplate` instead; the token
+  // type and the /verify-email route are both still in place.
   try {
-    const raw = await createAuthToken(userId, "email_verify");
-    const link = `${env.APP_URL ?? "https://ieltsvega.com"}/verify-email?token=${raw}`;
-    const t = verifyEmailTemplate(name, link);
+    const t = welcomeTemplate(name, `${env.APP_URL ?? "https://ieltsvega.com"}/dashboard`);
     await sendEmail({ to: email, subject: t.subject, html: t.html, text: t.text });
   } catch {
-    // A mail outage must not fail account creation; the user can resend later.
+    // A mail outage must not fail account creation.
   }
 
   redirect("/dashboard");

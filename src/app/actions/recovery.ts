@@ -9,7 +9,7 @@ import { hashPassword } from "@/lib/security/password";
 import { rateLimit } from "@/lib/security/rate-limit";
 import { getRequestContext } from "@/lib/session";
 import { sendEmail } from "@/lib/email/mailer";
-import { resetPasswordTemplate } from "@/lib/email/templates";
+import { resetPasswordTemplate, passwordChangedTemplate } from "@/lib/email/templates";
 import { env } from "@/lib/env";
 
 const APP_URL = env.APP_URL ?? "https://ieltsvega.com";
@@ -59,13 +59,26 @@ export async function resetPassword(_prev: AuthFormState, formData: FormData): P
   const userId = await consumeAuthToken(parsed.data.token, "password_reset");
   if (!userId) return { error: "This reset link is invalid or has expired. Please request a new one." };
 
-  await db
+  const [updated] = await db
     .update(users)
     .set({ passwordHash: await hashPassword(parsed.data.newPassword), passwordChangedAt: new Date(), updatedAt: new Date() })
-    .where(eq(users.id, userId));
+    .where(eq(users.id, userId))
+    .returning({ email: users.email });
 
   // Revoke all existing sessions — a reset should log out everywhere.
   await db.delete(sessions).where(eq(sessions.userId, userId));
+
+  // Tell the account holder their password moved. If the reset was not theirs,
+  // this is the only warning they get. Best-effort: the reset itself succeeded
+  // and a mail outage must not report it as failed.
+  if (updated?.email) {
+    try {
+      const t = passwordChangedTemplate(`${APP_URL}/forgot-password`, { signedOutEverywhere: true });
+      await sendEmail({ to: updated.email, subject: t.subject, html: t.html, text: t.text });
+    } catch {
+      // Nothing to do; the password is already changed.
+    }
+  }
 
   return { ok: true };
 }

@@ -1,14 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { requireUser } from "@/lib/dal";
 import { profileSchema, passwordChangeSchema, type AuthFormState } from "@/lib/validation";
 import { hashPassword, verifyPassword } from "@/lib/security/password";
-import { destroySession } from "@/lib/session";
+import { sendEmail } from "@/lib/email/mailer";
+import { passwordChangedTemplate } from "@/lib/email/templates";
+import { env } from "@/lib/env";
 
 const emptyToNull = (v: string | undefined) => (v && v.length ? v : null);
 
@@ -75,18 +76,15 @@ export async function changePassword(_prev: AuthFormState, formData: FormData): 
     .set({ passwordHash: await hashPassword(parsed.data.newPassword), passwordChangedAt: new Date(), updatedAt: new Date() })
     .where(eq(users.id, user.id));
 
+  // Security notice, same as the reset flow. Best-effort: the password has
+  // already changed and a mail outage must not report that as a failure.
+  try {
+    const t = passwordChangedTemplate(`${env.APP_URL ?? "https://ieltsvega.com"}/forgot-password`);
+    await sendEmail({ to: user.email, subject: t.subject, html: t.html, text: t.text });
+  } catch {
+    // Nothing to do; the password is already changed.
+  }
+
   return { ok: true };
 }
 
-/** Permanently delete the account. Cascades remove all related rows. */
-export async function deleteAccount(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
-  const user = await requireUser();
-
-  if (String(formData.get("confirm") ?? "") !== "DELETE") {
-    return { fieldErrors: { confirm: ['Type DELETE to confirm'] } };
-  }
-
-  await db.delete(users).where(eq(users.id, user.id));
-  await destroySession();
-  redirect("/");
-}

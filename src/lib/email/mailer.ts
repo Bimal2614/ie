@@ -1,6 +1,6 @@
 import "server-only";
 import nodemailer, { type Transporter } from "nodemailer";
-import { env, isEmailConfigured } from "@/lib/env";
+import { env, isEmailConfigured, isProd } from "@/lib/env";
 
 /**
  * SMTP mailer (provider-agnostic — SES, Mailgun, Postmark, Gmail, Resend-SMTP…).
@@ -28,6 +28,10 @@ export async function sendEmail(opts: {
 }): Promise<{ ok: boolean; skipped?: boolean; error?: string }> {
   if (!isEmailConfigured()) {
     console.warn(`[email] SMTP not configured: skipped "${opts.subject}" to ${opts.to}`);
+    // Outside production, print the plain-text body. It carries the reset link,
+    // so password recovery is testable end to end with no SMTP account. Never in
+    // production, where this would put single-use tokens into the server logs.
+    if (!isProd) console.warn(`[email] would have sent:\n${opts.text}`);
     return { ok: true, skipped: true };
   }
   try {
