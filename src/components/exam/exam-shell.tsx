@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Clock, Loader2, Send } from "lucide-react";
 import { FullscreenButton } from "./fullscreen-button";
+import { TextSizeControl } from "./text-size-control";
 import { QuestionStrip, type StripPart } from "./question-strip";
 
 /**
@@ -105,6 +106,9 @@ export function ExamShell({
         {menu ? <div className="shrink-0">{menu}</div> : null}
 
         <FullscreenButton target={root} />
+        {/* Beside fullscreen because they answer the same question — "I can't
+            read this comfortably" — and the real test groups them the same way. */}
+        <TextSizeControl />
 
         <p className="min-w-0 flex-1 truncate text-xs text-ink-muted sm:text-sm">{title}</p>
 

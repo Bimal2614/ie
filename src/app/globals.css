@@ -227,6 +227,25 @@
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
   }
+  /*
+   * Exam text size — the computer-delivered IELTS control, set by
+   * <TextSizeControl/>.
+   *
+   * Scaling the ROOT font size is what makes this work at all: Tailwind's type
+   * scale, spacing and pane widths are in `rem`, which resolves against the root
+   * and nothing else. Sizing a container would leave `text-sm` at 0.875rem
+   * exactly as before. Because everything moves by the same factor, the layout
+   * keeps its proportions instead of text overflowing boxes that stayed put.
+   *
+   * The attribute is only present while an exam screen is mounted, so nothing
+   * here touches the rest of the app.
+   */
+  html[data-exam-text="large"] {
+    font-size: 118%;
+  }
+  html[data-exam-text="xlarge"] {
+    font-size: 136%;
+  }
   body {
     background-color: hsl(var(--bg));
     color: hsl(var(--ink));

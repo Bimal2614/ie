@@ -19,6 +19,7 @@ import { anyUploadPending, type Answer, type SetLayout } from "@/lib/question-co
 import { getSetPaginated, type PaginatedSetResult } from "@/app/actions/questions";
 import { submitPractice, type SetSubmissionResult } from "@/app/actions/practice";
 import { FullscreenButton } from "@/components/exam/fullscreen-button";
+import { TextSizeControl } from "@/components/exam/text-size-control";
 import { SplitPane } from "@/components/exam/split-pane";
 import { SetBody, taskHeading, type PlayerSet } from "./set-body";
 import { InstructionBar } from "./question-body";
@@ -363,6 +364,10 @@ export function PracticeSession({
               exam shell has. `topRef` is the player's own root, so the app
               chrome is what gets left behind. */}
           <FullscreenButton target={topRef} className="hidden sm:inline-flex" />
+
+          {/* Same control the exam shell carries, so a candidate who sets their
+              text size in a mock finds it already set in question practice. */}
+          <TextSizeControl className="hidden sm:inline-flex" />
 
           {/* Past attempts and their bands. A band arrives after the response is
               sent, so the candidate needs a way to the record of it from inside
