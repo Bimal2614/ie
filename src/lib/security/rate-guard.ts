@@ -75,6 +75,30 @@ export async function guardGeneral(userId: string): Promise<void> {
   }
 }
 
+/**
+ * Ceiling for proxied media reads, per user per minute.
+ *
+ * Generous on purpose. One recording is fetched as many byte ranges, not one
+ * request — every seek, every resume, every duration probe is another — so this
+ * is a flood stop, not a budget.
+ */
+const MEDIA_READS_PER_MINUTE = 600;
+
+/**
+ * Throttle media byte-range reads.
+ *
+ * DELIBERATELY NOT guardGeneral. Listening audio is streamed through us rather
+ * than redirected (see src/lib/protected-media.ts), so a single part can spend
+ * dozens of requests from the general 60/minute allowance — which would throttle
+ * a candidate in the middle of a timed module and, three throttles later,
+ * deactivate their account for it. This one 429s and registers no violation:
+ * playing the exam you are sitting is not abuse.
+ */
+export async function guardMedia(userId: string): Promise<void> {
+  const r = await rateLimit(`media:min:${userId}`, MEDIA_READS_PER_MINUTE, 60);
+  if (!r.allowed) throw new RateLimitError(r.retryAfterSec);
+}
+
 /** Throttle expensive AI scoring (100/day + a per-account cap by default). */
 export async function guardAi(userId: string): Promise<void> {
   const [perDay, perAccount] = await Promise.all([

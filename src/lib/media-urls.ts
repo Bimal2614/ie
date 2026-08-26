@@ -3,8 +3,10 @@
  *
  * WHY THIS MODULE EXISTS. Media is stored as `s3://bucket/<key>` in a private
  * bucket, so nothing on the client can load it directly — every read goes
- * through a route that re-checks the session and mints a short-lived presigned
- * URL. That means each read shape needed a `stored value ? path : null` mapping,
+ * through a route that re-checks the session first. (Listening audio goes
+ * further: those routes stream the bytes themselves rather than handing over a
+ * presigned URL, so no link that plays without a session ever exists — see
+ * src/lib/protected-media.ts.) That means each read shape needed a `stored value ? path : null` mapping,
  * and those mappings were hand-written in fifteen places across five files.
  *
  * Predictably, some were missed: raw `s3://bucket/<prefix>/<userId>/<uuid>.wav`

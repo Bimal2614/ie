@@ -1,7 +1,13 @@
 "use client";
 
 import { useMemo } from "react";
-import { QUESTION_TYPES, showsInstruction, type SectionKey, type QuestionTypeKey } from "@/lib/ielts";
+import {
+  PRACTICE_INSTRUCTIONS_HIDDEN,
+  QUESTION_TYPES,
+  showsInstruction,
+  type SectionKey,
+  type QuestionTypeKey,
+} from "@/lib/ielts";
 import type { Answer, SetLayout } from "@/lib/question-content";
 import {
   QuestionBody,
@@ -70,6 +76,10 @@ export function taskHeading(set: PlayerSet, questions: PlayerQuestion[]): string
     const prompt = questions.find((q) => q.prompt?.trim())?.prompt;
     if (prompt) return prompt;
   }
+  // Everything below here is a rubric, and practice hides those for now. The
+  // Writing prompt above is not one — it is the question — so it is returned
+  // before this point rather than gated by it.
+  if (PRACTICE_INSTRUCTIONS_HIDDEN) return null;
   return showsInstruction(set.questionType)
     ? (set.instructions ?? meta?.instruction ?? null)
     : null;
@@ -189,11 +199,12 @@ export function SetBody({
         // in a per-group band. In the exam layout that line is `taskHeading`,
         // which for Writing is the prompt itself — the row no longer prints it,
         // so resolving this any other way would drop the question off the page.
+        // Both branches come out empty for a rubric while practice hides them.
         instructionText: exam
           ? taskHeading(set, questions)
-          : showsInstruction(set.questionType)
-            ? (set.instructions ?? meta.instruction ?? null)
-            : null,
+          : PRACTICE_INSTRUCTIONS_HIDDEN || !showsInstruction(set.questionType)
+            ? null
+            : (set.instructions ?? meta.instruction ?? null),
         groupHeaders: false,
         // `mq-` is what the mock's question palette scrolls to.
         anchorPrefix: "mq",
@@ -213,7 +224,6 @@ export function SetBody({
         // the exam layout too: section practice has no equivalent, so dropping
         // it to match would remove a feature rather than align a look.
         clips: true,
-        progressBar: true,
         // One recording serves the whole set, so it stays reachable while the
         // questions scroll under it.
         stickyAudio: exam,

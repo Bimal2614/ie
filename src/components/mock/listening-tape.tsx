@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Headphones, Loader2, Play, Volume1, Volume2, VolumeX } from "lucide-react";
+import { NO_DOWNLOAD_MEDIA_ATTRS } from "@/lib/media-attrs";
 import { cn } from "@/lib/utils";
 
 /**
@@ -407,11 +408,20 @@ export function ListeningTape({
       </div>
 
       {/* No captions: the transcript IS the answer key. It is review-only
-          material and is never served during a sitting. */}
+          material and is never served during a sitting.
+
+          No `controls` either, which is the exam rule AND the download defence:
+          a browser-drawn player is where Chromium hangs its Download entry and
+          everyone else hangs "Save Audio As…". The attributes below close the
+          same door for a browser that draws its own UI anyway (a media session,
+          a cast target); the bytes themselves are defended in
+          src/lib/protected-media.ts. */}
       <audio
         ref={audioRef}
         src={tracks[0].src}
         preload="auto"
+        {...NO_DOWNLOAD_MEDIA_ATTRS}
+        onContextMenu={(e) => e.preventDefault()}
         onEnded={onEnded}
         onPause={onPause}
         onPlaying={() => setState("playing")}

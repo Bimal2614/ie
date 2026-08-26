@@ -237,6 +237,31 @@ export const SET_NOUN: Record<SectionKey, string> = {
 const INSTRUCTION_HIDDEN: QuestionTypeKey[] = ["speaking_part1", "speaking_part3"];
 
 /**
+ * Instruction lines are hidden across PRACTICE — every module, every type.
+ *
+ * "Choose the correct letter, A, B or C" is a rubric written for a paper booklet
+ * where the answer sheet is somewhere else. On screen the options are right
+ * there with a radio beside each one, so the line explains a control the
+ * candidate is already looking at and pushes the actual question further down
+ * the page.
+ *
+ * THE MOCK KEEPS ITS OWN, deliberately. A mock is a rehearsal of the real
+ * thing, rubric included — the point there is that nothing on the day is
+ * unfamiliar. So this switch is consulted only by the practice surfaces
+ * (question practice, section practice, the paginated session, and the review
+ * of a practice attempt); the mock player and the exam shell it drives are left
+ * alone.
+ *
+ * WHY A SWITCH RATHER THAN DELETED CODE. "For now" is the whole point: this is
+ * a presentation decision that may well be reversed, and the render sites are
+ * spread across five components. One constant is one edit to put them all back,
+ * and it keeps the rule findable instead of scattered as five silent removals.
+ */
+// Typed `boolean`, not the literal `true`: flipping it back must stay a
+// one-character edit that cannot narrow a branch out from under the compiler.
+export const PRACTICE_INSTRUCTIONS_HIDDEN: boolean = true;
+
+/**
  * Sections whose band comes from AI marking rather than an answer key. There is
  * no marks card for these: the examiner report IS the result.
  */

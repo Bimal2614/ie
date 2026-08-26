@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
-import { Check, X, Flag, Headphones, ListChecks, Volume2 } from "lucide-react";
+import { Check, X, Flag, ListChecks, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { QUESTION_TYPES, SECTIONS, showsInstruction, type QuestionTypeKey, type SectionKey } from "@/lib/ielts";
 import type { Answer, CorrectAnswer, OptionsLayout, SetLayout } from "@/lib/question-content";
+import { AudioStimulus } from "./audio-stimulus";
 import { SetLayoutRenderer, layoutOwnsAnswers } from "./renderers/layouts";
 import { QuestionInput, type RenderQuestion, type QuestionState } from "./renderers/question-input";
 import { ReportQuestionButton } from "./report-question";
@@ -99,6 +100,15 @@ export type BodyConfig = {
   focusNumber?: number | null;
   /** Per-group "Questions 1–10 / Note completion" band. */
   groupHeaders?: boolean;
+  /**
+   * Print each group's instruction line inside that band.
+   *
+   * Defaults to on, which is the mock: an exam without "Choose the correct
+   * letter, A, B or C" is not a rehearsal of one. Practice turns it off — see
+   * PRACTICE_INSTRUCTIONS_HIDDEN. It is a caller's flag rather than a global
+   * rule because this component draws both surfaces.
+   */
+  showInstructions?: boolean;
   /** A single instruction line above everything, for a one-task document. */
   instructionText?: string | null;
   /** `mq` is what the mock palette scrolls to; `sq` is the section player's. */
@@ -113,8 +123,6 @@ export type BodyConfig = {
   splitStimulus?: boolean;
   /** Speaking Parts 1 and 3: an interview, one question at a time. */
   sequential?: boolean;
-  /** Progress bar above the question list. */
-  progressBar?: boolean;
   /** Where the report-a-problem button goes. */
   reportOn?: "row" | "feedback" | "none";
   /**
@@ -494,11 +502,13 @@ function GroupBlock({
               </span>
             )}
           </div>
-          {showsInstruction(group.questionType) && (group.instruction ?? meta?.instruction) && (
-            <p className="px-4 py-3 text-sm text-ink-strong">
-              {group.instruction ?? meta?.instruction}
-            </p>
-          )}
+          {config.showInstructions !== false &&
+            showsInstruction(group.questionType) &&
+            (group.instruction ?? meta?.instruction) && (
+              <p className="px-4 py-3 text-sm text-ink-strong">
+                {group.instruction ?? meta?.instruction}
+              </p>
+            )}
         </div>
       )}
 
@@ -564,20 +574,6 @@ function GroupBlock({
 
           {showItemRows && (
             <div className={cn("space-y-3", config.fillHeight && "flex min-h-0 flex-1 flex-col")}>
-              {config.progressBar && !disabled && group.items.length > 1 && (
-                <div className="flex items-center gap-3 text-sm">
-                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-paper-sunken">
-                    <div
-                      className="h-full rounded-full bg-brand transition-all"
-                      style={{ width: `${(answered / group.items.length) * 100}%` }}
-                    />
-                  </div>
-                  <span className="shrink-0 tabular-nums text-ink-muted">
-                    {answered} / {group.items.length} answered
-                    {config.flagged && config.flagged.size > 0 && ` · ${config.flagged.size} flagged`}
-                  </span>
-                </div>
-              )}
               <ol className={cn("space-y-4", config.fillHeight && "flex min-h-0 flex-1 flex-col")}>
                 {group.items.map((item) => (
                   <ItemRow
@@ -914,7 +910,6 @@ function Stimulus({
   /** Which attempt they belong to. Also required — see BodyConfig. */
   passageScope?: string;
 }) {
-  const sec = SECTIONS[doc.sectionType];
   const image = showImage ? doc.imageSrc : null;
   if (!doc.audioSrc && !image && !doc.passageText) return null;
 
@@ -927,22 +922,19 @@ function Stimulus({
       {doc.audioSrc && (
         <div
           className={cn(
-            "rounded-xl border border-line bg-paper-elev p-4",
+            // One row of controls and nothing else, so the padding is a frame
+            // rather than a card: the recording is the stimulus, not a heading.
+            "rounded-xl border border-line bg-paper-elev px-3 py-2",
             // Sticky: the recording is the stimulus for every group below it, so
             // it must stay reachable while scrolling from a table into the notes.
             sticky && "sticky top-2 z-20 bg-paper-elev/95 shadow-[var(--shadow-md)] backdrop-blur",
           )}
         >
-          <div className="mb-2 flex items-center gap-2">
-            <span className={cn("grid size-7 place-items-center rounded-lg", `chip-${sec.accent}`)}>
-              <Headphones className="size-3.5" />
-            </span>
-            <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
-              Audio: plays once in the real test
-            </p>
-          </div>
-          {/* Auth-gated route → short-lived presigned S3 URL; bucket never exposed. */}
-          <audio ref={audioRef} controls preload="metadata" src={doc.audioSrc} className="w-full" />
+          {/* Our own controls, never the browser's: a native <audio controls>
+              carries a Download entry in Chromium's menu and "Save Audio As…"
+              in everyone else's. The bytes behind this URL are defended
+              separately — see src/lib/protected-media.ts. */}
+          <AudioStimulus src={doc.audioSrc} audioRef={audioRef} />
         </div>
       )}
 

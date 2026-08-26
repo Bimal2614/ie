@@ -6,7 +6,14 @@ import { ArrowLeft, CheckCircle2, RotateCcw, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { anyUploadPending, type Answer } from "@/lib/question-content";
-import { hasSideStimulus, isAiScored, rawToBand, SECTIONS, type SectionKey } from "@/lib/ielts";
+import {
+  hasSideStimulus,
+  isAiScored,
+  PRACTICE_INSTRUCTIONS_HIDDEN,
+  rawToBand,
+  SECTIONS,
+  type SectionKey,
+} from "@/lib/ielts";
 import {
   submitSectionPractice,
   type SectionPracticeResult,
@@ -227,6 +234,9 @@ export function SectionPlayer({
       // The band above the panes is this group's header. A part that mixes
       // task types keeps a header per group to tell them apart.
       groupHeaders={section.questions.groups.length > 1}
+      // Practice hides the rubric; the mock, which shares this component, does
+      // not pass this and keeps it.
+      showInstructions={!PRACTICE_INSTRUCTIONS_HIDDEN}
     />
   );
 
@@ -281,7 +291,8 @@ export function SectionPlayer({
     <ExamShell
       title={paperTitle ?? section.title}
       partLabel={section.partNumber ? `Part ${section.partNumber}` : sec.label}
-      instruction={section.instructions}
+      // Same rule as the group bands: the rubric is hidden in practice.
+      instruction={PRACTICE_INSTRUCTIONS_HIDDEN ? null : section.instructions}
       badges={
         <>
           <span className={cn("chip", `chip-${sec.accent}`)}>{sec.label}</span>

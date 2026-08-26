@@ -64,6 +64,7 @@ export function SectionBody({
   slot = "all",
   focusNumber,
   groupHeaders = true,
+  showInstructions = true,
   answerScope,
   flagged,
   onToggleFlag,
@@ -121,6 +122,13 @@ export function SectionBody({
    * task types still needs one per group to tell them apart.
    */
   groupHeaders?: boolean;
+  /**
+   * Print each group's instruction line in that band.
+   *
+   * Defaults to on for the mock, which rehearses the real paper rubric and all.
+   * Section PRACTICE passes false — see PRACTICE_INSTRUCTIONS_HIDDEN.
+   */
+  showInstructions?: boolean;
 }) {
   /**
    * A map answers exactly one task, so it is drawn inside that group rather
@@ -209,6 +217,7 @@ export function SectionBody({
         slot,
         focusNumber,
         groupHeaders,
+        showInstructions,
         flagged,
         onToggleFlag: onToggleFlag ? (key) => onToggleFlag(numberFromKey(key)) : undefined,
         // Per-group bands carry the instruction here, so no bar above the part.
