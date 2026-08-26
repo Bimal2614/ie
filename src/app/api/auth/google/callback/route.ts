@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { users } from "@/db/schema";
+import { users, sessions } from "@/db/schema";
 import { isGoogleConfigured } from "@/lib/env";
 import { exchangeGoogleCode, fetchGoogleProfile } from "@/lib/oauth/google";
 import { createSession } from "@/lib/session";
@@ -46,15 +46,35 @@ export async function GET(req: Request) {
   // 2) else an existing account with the same email → link it.
   if (!user) {
     const [byEmail] = await db
-      .select({ id: users.id, deactivatedAt: users.deactivatedAt })
+      .select({
+        id: users.id,
+        deactivatedAt: users.deactivatedAt,
+        emailVerified: users.emailVerified,
+        passwordHash: users.passwordHash,
+      })
       .from(users)
       .where(eq(users.emailNormalized, emailNorm))
       .limit(1);
     if (byEmail) {
+      // Signup takes the address at face value, so an unverified row with a
+      // password may have been planted by someone who does not own the mailbox,
+      // waiting for the real owner to arrive through Google. Google has now
+      // proved ownership, so the account is rightly this user's — but the
+      // planted password must not survive the link, and neither may any session
+      // opened with it. The owner sets a fresh one via the reset flow.
+      const dropPassword = !byEmail.emailVerified && byEmail.passwordHash !== null;
       await db
         .update(users)
-        .set({ googleId: profile.sub, emailVerified: true, updatedAt: new Date() })
+        .set({
+          googleId: profile.sub,
+          emailVerified: true,
+          updatedAt: new Date(),
+          ...(dropPassword ? { passwordHash: null, passwordChangedAt: new Date() } : {}),
+        })
         .where(eq(users.id, byEmail.id));
+      if (dropPassword) {
+        await db.delete(sessions).where(eq(sessions.userId, byEmail.id));
+      }
       user = byEmail;
     }
   }
