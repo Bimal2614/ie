@@ -178,16 +178,6 @@ export function SpeakingAnalysis({ fb }: { fb: StoredSpeakingFeedback }) {
           </ol>
         </div>
       )}
-
-      {/* Which models produced this. Small, but it is what turns "the AI said 6"
-          into something a support request can actually be traced from. */}
-      {fb.meta.requestId && (
-        <p className="mt-4 font-mono text-[10px] text-ink-muted">
-          {fb.meta.judgeModel}
-          {fb.meta.transcriptionModel ? ` · ${fb.meta.transcriptionModel}` : ""} · ref{" "}
-          {fb.meta.requestId}
-        </p>
-      )}
     </div>
   );
 }
