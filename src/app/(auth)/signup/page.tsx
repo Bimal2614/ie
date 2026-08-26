@@ -16,8 +16,8 @@ export default function SignupPage() {
         title="Create account"
         subtitle="Enter your details to start practising."
       />
+      <GoogleButton label="Sign up with Google" position="top" />
       <SignupForm />
-      <GoogleButton label="Sign up with Google" />
     </div>
   );
 }

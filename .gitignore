@@ -5,6 +5,7 @@
 
 content/
 tools/
+tasks/
 
 # Dependencies
 /node_modules

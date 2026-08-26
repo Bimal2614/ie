@@ -1,11 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { requireUser } from "@/lib/dal";
-import { profileSchema, passwordChangeSchema, type AuthFormState } from "@/lib/validation";
+import { profileSchema, passwordChangeSchema, phoneSchema, type AuthFormState } from "@/lib/validation";
 import { hashPassword, verifyPassword } from "@/lib/security/password";
 import { sendEmail } from "@/lib/email/mailer";
 import { passwordChangedTemplate } from "@/lib/email/templates";
@@ -19,6 +19,7 @@ export async function updateProfile(_prev: AuthFormState, formData: FormData): P
 
   const parsed = profileSchema.safeParse({
     name: formData.get("name"),
+    phone: formData.get("phone"),
     country: formData.get("country") ?? undefined,
     targetModule: formData.get("targetModule"),
     targetBand: formData.get("targetBand") ?? undefined,
@@ -26,11 +27,12 @@ export async function updateProfile(_prev: AuthFormState, formData: FormData): P
   });
   if (!parsed.success) return { fieldErrors: parsed.error.flatten().fieldErrors };
 
-  const { name, country, targetModule, targetBand, examDate } = parsed.data;
+  const { name, phone, country, targetModule, targetBand, examDate } = parsed.data;
   await db
     .update(users)
     .set({
       name,
+      phone,
       country: emptyToNull(country),
       targetModule,
       targetBand: emptyToNull(targetBand),
@@ -41,6 +43,30 @@ export async function updateProfile(_prev: AuthFormState, formData: FormData): P
 
   revalidatePath("/settings");
   revalidatePath("/dashboard");
+  return { ok: true };
+}
+
+/**
+ * Save a phone number for an account that has none.
+ *
+ * Backs the app-shell prompt shown to Google sign-ins, which land without a
+ * number (Google's phone scope is sensitive and not requested). Deliberately
+ * fill-only: it will not overwrite an existing number, so the prompt can never
+ * be used — by a stale tab or a crafted POST — to clobber one the user set in
+ * Settings. Changing an existing number goes through `updateProfile`.
+ */
+export async function savePhone(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
+  const user = await requireUser();
+
+  const parsed = phoneSchema.safeParse({ phone: formData.get("phone") });
+  if (!parsed.success) return { fieldErrors: parsed.error.flatten().fieldErrors };
+
+  await db
+    .update(users)
+    .set({ phone: parsed.data.phone, updatedAt: new Date() })
+    .where(and(eq(users.id, user.id), isNull(users.phone)));
+
+  revalidatePath("/", "layout");
   return { ok: true };
 }
 

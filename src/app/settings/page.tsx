@@ -33,6 +33,7 @@ export default async function SettingsPage() {
     .select({
       name: users.name,
       email: users.email,
+      phone: users.phone,
       country: users.country,
       targetModule: users.targetModule,
       targetBand: users.targetBand,
@@ -56,6 +57,7 @@ export default async function SettingsPage() {
           initial={{
             name: u?.name ?? authed.name,
             email: u?.email ?? authed.email,
+            phone: u?.phone ?? "",
             country: u?.country ?? "",
             targetModule: u?.targetModule ?? authed.targetModule,
             targetBand: u?.targetBand ?? "",

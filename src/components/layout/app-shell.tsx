@@ -3,16 +3,23 @@
 import { useState, type ReactNode } from "react";
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
+import { PhonePrompt } from "@/components/auth/phone-prompt";
 
 type ShellUser = { name: string; email: string; targetModule: "academic" | "general" };
 
 interface AppShellProps {
   user: ShellUser;
+  /**
+   * The account has no phone number on file — i.e. a Google sign-in, since
+   * email signup collects one. Blocks the shell with a prompt until it's given.
+   * Lives here rather than in each layout so every authed route inherits it.
+   */
+  needsPhone?: boolean;
   logoutAction: () => void | Promise<void>;
   children: ReactNode;
 }
 
-export function AppShell({ user, logoutAction, children }: AppShellProps) {
+export function AppShell({ user, needsPhone, logoutAction, children }: AppShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -40,6 +47,8 @@ export function AppShell({ user, logoutAction, children }: AppShellProps) {
           </div>
         </>
       )}
+
+      {needsPhone && <PhonePrompt />}
 
       <div className="app-main">
         <Topbar user={user} onOpenSidebar={() => setMobileOpen(true)} logoutAction={logoutAction} />

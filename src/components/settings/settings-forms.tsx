@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { Loader2, Check, Eye, EyeOff } from "lucide-react";
 import { updateProfile, changePassword } from "@/app/actions/settings";
 import { AuthField, authButton, authError } from "@/components/auth/auth-ui";
+import { PhoneField } from "@/components/auth/phone-field";
 import { TARGET_BANDS, type AuthFormState } from "@/lib/validation";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +23,7 @@ function Saved() {
 type ProfileInitial = {
   name: string;
   email: string;
+  phone: string;
   country: string;
   targetModule: "academic" | "general";
   targetBand: string;
@@ -43,6 +45,8 @@ export function ProfileForm({ initial }: { initial: ProfileInitial }) {
         <div className={cn(control, "flex items-center bg-paper-sunken text-ink-muted")}>{initial.email}</div>
         <p className="mt-1 text-xs text-ink-muted">Contact support to change your email.</p>
       </div>
+
+      <PhoneField defaultValue={initial.phone} error={state?.fieldErrors?.phone?.[0]} />
 
       <AuthField label="Country" id="country" name="country" defaultValue={initial.country} placeholder="e.g. India" error={state?.fieldErrors?.country?.[0]} />
 

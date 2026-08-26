@@ -110,6 +110,8 @@ export type AuthenticatedUser = {
   name: string;
   role: "user" | "admin";
   emailVerified: boolean;
+  /** NULL for Google accounts that arrived without one — AppShell prompts. */
+  phone: string | null;
   targetModule: "academic" | "general";
   targetBand: string | null;
   examDate: Date | null;
@@ -133,6 +135,7 @@ export async function validateSession(): Promise<AuthenticatedUser | null> {
       name: users.name,
       role: users.role,
       emailVerified: users.emailVerified,
+      phone: users.phone,
       targetModule: users.targetModule,
       targetBand: users.targetBand,
       // Drives the dashboard's exam countdown.

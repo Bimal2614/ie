@@ -7,6 +7,7 @@ export default async function HistoryLayout({ children }: { children: React.Reac
   return (
     <AppShell
       user={{ name: user.name, email: user.email, targetModule: user.targetModule }}
+      needsPhone={!user.phone}
       logoutAction={logout}
     >
       {children}

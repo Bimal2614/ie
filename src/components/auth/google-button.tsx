@@ -1,13 +1,28 @@
 /**
  * "Continue with Google" button. A plain anchor (full navigation, not client
  * routing) to the OAuth start route. Server component — no client JS needed.
+ *
+ * `position` only moves the "or" divider to the other side of the button, so
+ * the same component reads correctly above a form or below one. Signup puts it
+ * above: the email form is long enough there (name, email, phone, password,
+ * module) that a button underneath sits below the fold and goes unseen.
  */
-export function GoogleButton({ label = "Continue with Google" }: { label?: string }) {
+export function GoogleButton({
+  label = "Continue with Google",
+  position = "bottom",
+}: {
+  label?: string;
+  position?: "top" | "bottom";
+}) {
+  const divider = (
+    <div className="my-5 flex items-center gap-3 text-xs text-ink-muted">
+      <span className="h-px flex-1 bg-line" /> or <span className="h-px flex-1 bg-line" />
+    </div>
+  );
+
   return (
     <div>
-      <div className="my-5 flex items-center gap-3 text-xs text-ink-muted">
-        <span className="h-px flex-1 bg-line" /> or <span className="h-px flex-1 bg-line" />
-      </div>
+      {position === "bottom" && divider}
       <a
         href="/api/auth/google"
         className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-line bg-paper-elev text-sm font-medium text-ink transition-colors hover:bg-paper-sunken"
@@ -15,6 +30,7 @@ export function GoogleButton({ label = "Continue with Google" }: { label?: strin
         <GoogleIcon />
         {label}
       </a>
+      {position === "top" && divider}
     </div>
   );
 }

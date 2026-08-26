@@ -7,6 +7,7 @@ import { signup } from "@/app/actions/auth";
 import { type AuthFormState } from "@/lib/validation";
 import { cn } from "@/lib/utils";
 import { AuthField, authButton, authError } from "./auth-ui";
+import { PhoneField } from "./phone-field";
 
 const MODULES = [
   { value: "academic", label: "Academic", hint: "University / professional" },
@@ -49,6 +50,8 @@ export function SignupForm() {
         required
         error={state?.fieldErrors?.email?.[0]}
       />
+
+      <PhoneField error={state?.fieldErrors?.phone?.[0]} />
 
       <div>
         <AuthField

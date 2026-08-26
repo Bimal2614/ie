@@ -44,6 +44,10 @@ export const users = pgTable(
     // Google account subject id ("sub"), set when linked via Google sign-in.
     googleId: text(),
     name: text().notNull(),
+    // Contact number, stored normalized (optional leading "+", digits only).
+    // Required at email signup, but NULL-able: Google sign-in creates the row
+    // before we have a number, and the app shell then prompts for one.
+    phone: text(),
     role: userRole().notNull().default("user"),
 
     // IELTS study profile

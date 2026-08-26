@@ -7,6 +7,7 @@ export default async function SettingsLayout({ children }: { children: React.Rea
   return (
     <AppShell
       user={{ name: user.name, email: user.email, targetModule: user.targetModule }}
+      needsPhone={!user.phone}
       logoutAction={logout}
     >
       {children}

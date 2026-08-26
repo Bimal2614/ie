@@ -7,6 +7,7 @@ import { isGoogleConfigured } from "@/lib/env";
 import { exchangeGoogleCode, fetchGoogleProfile } from "@/lib/oauth/google";
 import { createSession } from "@/lib/session";
 import { safeEqual } from "@/lib/security/tokens";
+import { normalizePhone } from "@/lib/phone";
 
 /**
  * Google OAuth callback → find-or-create the user, then create an app session.
@@ -29,16 +30,21 @@ export async function GET(req: Request) {
     return fail("failed");
   }
 
-  const accessToken = await exchangeGoogleCode(code);
-  if (!accessToken) return fail("failed");
-  const profile = await fetchGoogleProfile(accessToken);
+  const token = await exchangeGoogleCode(code);
+  if (!token) return fail("failed");
+  const profile = await fetchGoogleProfile(token);
   if (!profile) return fail("failed");
+
+  // Google almost never returns a number (the scope is sensitive and not
+  // requested), so `profile.phone` is normally null and the account is created
+  // without one. AppShell then prompts for it on the first authed page.
+  const phone = normalizePhone(profile.phone);
 
   const emailNorm = profile.email.trim().toLowerCase();
 
   // 1) already linked by googleId?
   let [user] = await db
-    .select({ id: users.id, deactivatedAt: users.deactivatedAt })
+    .select({ id: users.id, deactivatedAt: users.deactivatedAt, phone: users.phone })
     .from(users)
     .where(eq(users.googleId, profile.sub))
     .limit(1);
@@ -51,6 +57,7 @@ export async function GET(req: Request) {
         deactivatedAt: users.deactivatedAt,
         emailVerified: users.emailVerified,
         passwordHash: users.passwordHash,
+        phone: users.phone,
       })
       .from(users)
       .where(eq(users.emailNormalized, emailNorm))
@@ -69,6 +76,8 @@ export async function GET(req: Request) {
           googleId: profile.sub,
           emailVerified: true,
           updatedAt: new Date(),
+          // Never overwrite a number the user gave us themselves.
+          ...(phone && !byEmail.phone ? { phone } : {}),
           ...(dropPassword ? { passwordHash: null, passwordChangedAt: new Date() } : {}),
         })
         .where(eq(users.id, byEmail.id));
@@ -89,13 +98,20 @@ export async function GET(req: Request) {
         emailVerified: profile.emailVerified,
         googleId: profile.sub,
         name: profile.name,
+        phone,
         avatarUrl: profile.picture ?? null,
       })
-      .returning({ id: users.id, deactivatedAt: users.deactivatedAt });
+      .returning({ id: users.id, deactivatedAt: users.deactivatedAt, phone: users.phone });
     user = created;
   }
 
   if (user.deactivatedAt) return fail("deactivated");
+
+  // Already-linked account that predates the phone column (or was created
+  // before Google started returning one).
+  if (phone && !user.phone) {
+    await db.update(users).set({ phone, updatedAt: new Date() }).where(eq(users.id, user.id));
+  }
 
   await createSession(user.id);
   return NextResponse.redirect(new URL("/dashboard", req.url));

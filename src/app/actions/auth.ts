@@ -72,13 +72,14 @@ export async function signup(
   const parsed = signupSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),
+    phone: formData.get("phone"),
     password: formData.get("password"),
     targetModule: formData.get("targetModule") ?? "academic",
   });
   if (!parsed.success) {
     return { fieldErrors: parsed.error.flatten().fieldErrors };
   }
-  const { name, email, password, targetModule } = parsed.data;
+  const { name, email, phone, password, targetModule } = parsed.data;
   const { ip, userAgent } = await getRequestContext();
 
   // Throttle account creation per network.
@@ -93,7 +94,7 @@ export async function signup(
   try {
     const [created] = await db
       .insert(users)
-      .values({ name, email, emailNormalized: email, passwordHash, targetModule })
+      .values({ name, email, emailNormalized: email, phone, passwordHash, targetModule })
       .returning({ id: users.id });
     userId = created.id;
   } catch (err) {

@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { isValidStoredPhone } from "@/lib/phone";
+
 /**
  * Server-side input validation. Every Server Action re-validates with these —
  * client checks are UX only and are never trusted.
@@ -10,9 +12,26 @@ const password = z
   .min(6, "Use at least 6 characters")
   .max(128, "Password is too long");
 
+/**
+ * Phone number. The form posts one already-combined value (the country
+ * <select> and the national-number input are joined client-side by
+ * `PhoneField` into `+91-9904529857`), and this re-checks it against
+ * libphonenumber's rules — the client is UX, this is the gate. No country hint
+ * is needed, because the calling code is part of the string.
+ *
+ * There is no SMS verification yet; when OTP lands it verifies ownership of a
+ * number this has already established is real and mobile.
+ */
+const phone = z
+  .string()
+  .trim()
+  .max(24, "Phone number is too long")
+  .refine(isValidStoredPhone, "Enter a valid mobile number");
+
 export const signupSchema = z.object({
   name: z.string().trim().min(2, "Tell us your name").max(80),
   email: z.string().trim().toLowerCase().email("Enter a valid email").max(254),
+  phone,
   password,
   targetModule: z.enum(["academic", "general"]).default("academic"),
 });
@@ -42,6 +61,7 @@ export const TARGET_BANDS = [
 
 export const profileSchema = z.object({
   name: z.string().trim().min(2, "Tell us your name").max(80),
+  phone,
   country: z.string().trim().max(60).optional(),
   targetModule: z.enum(["academic", "general"]),
   targetBand: z.string().trim().max(4).optional(),
@@ -54,6 +74,9 @@ export const passwordChangeSchema = z.object({
   currentPassword: z.string().min(1, "Enter your current password").max(128),
   newPassword: password,
 });
+
+/** The app-shell prompt shown to Google accounts that arrived without a number. */
+export const phoneSchema = z.object({ phone });
 
 export const forgotPasswordSchema = z.object({
   email: z.string().trim().toLowerCase().email("Enter a valid email").max(254),
