@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Headphones, Loader2, Play, Volume2 } from "lucide-react";
+import { Headphones, Loader2, Play, Volume1, Volume2, VolumeX } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -52,6 +52,27 @@ export type Tape = {
  */
 const FRESH_START_SEC = 10;
 
+/**
+ * The candidate's own listening level, remembered between sittings.
+ *
+ * The real test has a volume slider and a sound check before the paper starts,
+ * for the obvious reason: a candidate who cannot hear the recording cannot
+ * answer, and the module has no replay. Ours has no controls at all by design —
+ * a scrub bar is a way to hear an answer twice — but volume is the one control
+ * that changes nothing about WHAT you hear, only whether you hear it.
+ */
+const VOLUME_KEY = "ielts:listening-volume";
+
+function readVolume(): number {
+  try {
+    const v = Number(window.localStorage.getItem(VOLUME_KEY));
+    return Number.isFinite(v) && v >= 0 && v <= 1 ? v : 1;
+  } catch {
+    // Private windows throw on read, not just on write.
+    return 1;
+  }
+}
+
 /** Where in the tape a given elapsed time falls. */
 type Cue = { index: number; offset: number; past: boolean };
 
@@ -91,6 +112,9 @@ export function ListeningTape({
     elapsedSeconds > FRESH_START_SEC ? "seeking" : "idle",
   );
   const [progress, setProgress] = useState(0);
+  // Starts at full and corrects after mount: the server has no localStorage,
+  // and reading it during render is a hydration mismatch.
+  const [volume, setVolume] = useState(1);
 
   const track = tracks[index];
   // Read inside handlers that must not re-subscribe on every tick.
@@ -104,6 +128,28 @@ export function ListeningTape({
   done.current = onFinished;
   /** Frozen on mount — a live value would re-seek the tape every second. */
   const startedAtSec = useRef(elapsedSeconds);
+
+  useEffect(() => {
+    setVolume(readVolume());
+  }, []);
+
+  // Applied to the element, which keeps it across a source change — so the level
+  // set during Part 1 still holds when Part 2 loads.
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.volume = volume;
+  }, [volume, index]);
+
+  const changeVolume = useCallback((v: number) => {
+    const clamped = Math.min(1, Math.max(0, v));
+    setVolume(clamped);
+    try {
+      window.localStorage.setItem(VOLUME_KEY, String(clamped));
+    } catch {
+      // Not being able to remember it is no reason to refuse to apply it.
+    }
+  }, []);
+  /** Restores to a sensible level rather than un-muting to silence. */
+  const lastAudible = useRef(1);
 
   /**
    * Start, or explain that the browser refused to.
@@ -253,6 +299,8 @@ export function ListeningTape({
             <Loader2 className="size-4 animate-spin" />
           ) : finished ? (
             <Headphones className="size-4" />
+          ) : volume === 0 ? (
+            <VolumeX className="size-4" />
           ) : (
             <Volume2 className="size-4" />
           )}
@@ -275,9 +323,51 @@ export function ListeningTape({
                 ? "Use the time left to check your answers. You can still move between parts."
                 : state === "blocked"
                   ? "Tap play to start. It runs through all four parts once, without stopping."
-                  : "Plays once, straight through all four parts. It won't wait or repeat."}
+                  : volume === 0
+                    ? "Muted — the recording is still playing and will not repeat."
+                    : "Plays once, straight through all four parts. It won't wait or repeat."}
           </p>
         </div>
+
+        {/* Volume, and ONLY volume. Everything else a media player offers —
+            pause, seek, restart — would change what the candidate hears; this
+            changes whether they hear it. Hidden once the tape is over, when
+            there is nothing left to level. */}
+        {!finished && (
+          <div className="flex shrink-0 items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => {
+                if (volume > 0) {
+                  lastAudible.current = volume;
+                  changeVolume(0);
+                } else {
+                  changeVolume(lastAudible.current || 1);
+                }
+              }}
+              aria-label={volume === 0 ? "Unmute recording" : "Mute recording"}
+              className="grid size-7 place-items-center rounded-md text-ink-soft transition-colors hover:text-ink"
+            >
+              {volume === 0 ? (
+                <VolumeX className="size-4" />
+              ) : volume < 0.5 ? (
+                <Volume1 className="size-4" />
+              ) : (
+                <Volume2 className="size-4" />
+              )}
+            </button>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={volume}
+              onChange={(e) => changeVolume(Number(e.target.value))}
+              aria-label="Recording volume"
+              className="h-1 w-20 cursor-pointer accent-[hsl(var(--brand))] sm:w-24"
+            />
+          </div>
+        )}
 
         {state === "blocked" && (
           <button

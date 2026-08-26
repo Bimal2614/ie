@@ -11,9 +11,11 @@ import {
   submitSectionPractice,
   type SectionPracticeResult,
 } from "@/app/actions/section-practice";
+import { ConfirmSubmit } from "@/components/exam/confirm-submit";
 import { ExamShell, type StripPart } from "@/components/exam/exam-shell";
 import { SplitPane } from "@/components/exam/split-pane";
 import { SectionBody, type ClientSectionView } from "./section-body";
+import { clearAnnotations } from "./renderers/highlightable-passage";
 import { AttemptFeedback } from "./attempt-feedback";
 
 /**
@@ -46,9 +48,32 @@ export function SectionPlayer({
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState<SectionPracticeResult | null>(null);
   const [current, setCurrent] = useState<number | null>(null);
+  /** Questions marked to come back to — the real paper's flag column. */
+  const [flagged, setFlagged] = useState<Set<string>>(new Set());
+  const [confirming, setConfirming] = useState(false);
+  /**
+   * This attempt's working notes.
+   *
+   * Scoped to practice so they can never surface inside a mock built from the
+   * same part — the two share a `practice_sections` id — and cleared when the
+   * attempt ends, because a highlight is a note about the paper in front of you.
+   * Coming back to a passage with last time's findings already marked would give
+   * away the answers the exercise is meant to make you find.
+   */
+  const annotationScope = `practice:${section.id}`;
 
   const handleAnswer = useCallback((n: number, value: Answer) => {
     setAnswers((prev) => ({ ...prev, [String(n)]: value }));
+  }, []);
+
+  const toggleFlag = useCallback((n: number) => {
+    setFlagged((prev) => {
+      const next = new Set(prev);
+      const key = String(n);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
   }, []);
 
   const handleClear = useCallback((n: number) => {
@@ -88,6 +113,14 @@ export function SectionPlayer({
     return done;
   }, [answers, sheet]);
 
+  const flaggedNumbers = useMemo(() => {
+    const marked = new Set<number>();
+    for (const n of sheet.numbers) {
+      if (flagged.has(String(sheet.anchorOf.get(n)))) marked.add(n);
+    }
+    return marked;
+  }, [flagged, sheet]);
+
   const jumpTo = useCallback(
     (n: number) => {
       setCurrent(n);
@@ -117,6 +150,9 @@ export function SectionPlayer({
     try {
       setResult(await submitSectionPractice(section.id, answers));
       setCurrent(null);
+      // The attempt is over: the marks on the passage go with it, so a return
+      // visit starts from a clean page rather than last time's findings.
+      clearAnnotations(annotationScope);
     } finally {
       setPending(false);
     }
@@ -126,6 +162,11 @@ export function SectionPlayer({
     setResult(null);
     setAnswers({});
     setCurrent(null);
+    // A flag says "come back to this before you submit". Carrying it into a
+    // fresh attempt would mark questions the candidate has not seen yet — and
+    // the same argument retires the highlights.
+    setFlagged(new Set());
+    clearAnnotations(annotationScope);
   };
 
   // A part is 10 of the paper's 40 marks, so a band off this alone would be an
@@ -176,6 +217,9 @@ export function SectionPlayer({
       results={result?.results ?? null}
       onAnswer={handleAnswer}
       onClearAnswer={handleClear}
+      flagged={flagged}
+      onToggleFlag={toggleFlag}
+      annotationScope={annotationScope}
       slot="questions"
       // Once graded, the whole interview is shown so every answer can be
       // reviewed together.
@@ -199,6 +243,7 @@ export function SectionPlayer({
             answers={answers}
             results={null}
             onAnswer={handleAnswer}
+            annotationScope={annotationScope}
             slot="stimulus"
           />
         </div>
@@ -223,6 +268,7 @@ export function SectionPlayer({
           answers={answers}
           results={null}
           onAnswer={handleAnswer}
+          annotationScope={annotationScope}
           slot="stimulus"
         />
         {scoreCard}
@@ -247,6 +293,8 @@ export function SectionPlayer({
       parts={parts}
       activePartId={section.id}
       answered={answered}
+      flagged={flaggedNumbers}
+      onToggleFlag={(n) => toggleFlag(sheet.anchorOf.get(n) ?? n)}
       current={current}
       onJump={(n) => jumpTo(n)}
       onPrev={() => step(-1)}
@@ -257,7 +305,8 @@ export function SectionPlayer({
           ? focusIndex < sheet.numbers.length - 1
           : current === null || sheet.numbers.indexOf(current) < sheet.numbers.length - 1
       }
-      onSubmit={result ? reset : onSubmit}
+      // Already graded, the button becomes "Try again" — nothing to confirm.
+      onSubmit={result ? reset : () => setConfirming(true)}
       submitting={pending || savingRecording}
       submitLabel={result ? "Try again" : savingRecording ? "Saving recording…" : "Submit"}
       menu={
@@ -282,6 +331,20 @@ export function SectionPlayer({
       }
     >
       {body}
+
+      <ConfirmSubmit
+        open={confirming}
+        title="Submit this part?"
+        detail="Your answers are marked straight away and the correct ones are shown against each question."
+        unanswered={sheet.numbers.length - answered.size}
+        flagged={flaggedNumbers.size}
+        confirmLabel="Submit"
+        onConfirm={() => {
+          setConfirming(false);
+          void onSubmit();
+        }}
+        onCancel={() => setConfirming(false)}
+      />
     </ExamShell>
   );
 }

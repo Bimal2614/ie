@@ -65,6 +65,9 @@ export function SectionBody({
   focusNumber,
   groupHeaders = true,
   answerScope,
+  flagged,
+  onToggleFlag,
+  annotationScope,
 }: {
   section: ClientSectionView;
   answers: Record<string, Answer>;
@@ -84,6 +87,21 @@ export function SectionBody({
    * input the candidate typed into shows nothing back.
    */
   answerScope?: string;
+  /**
+   * Questions marked "come back to this", keyed the same way as `answers`.
+   *
+   * Flagging is not a nicety — the real test has it because the winning strategy
+   * in a timed paper is to leave a hard question and return, and without a mark
+   * on the answer sheet you have to remember which one it was.
+   */
+  flagged?: Set<string>;
+  onToggleFlag?: (n: number) => void;
+  /**
+   * Which attempt the passage highlights belong to. Omitted, the highlighter is
+   * off — better no tool than one that shows a mock candidate their practice
+   * notes, since the two surfaces share a passage's id.
+   */
+  annotationScope?: string;
   /**
    * Which half to draw. The exam layout puts the passage or recording in one
    * pane and the questions in the other, so it asks for them separately; the
@@ -191,9 +209,15 @@ export function SectionBody({
         slot,
         focusNumber,
         groupHeaders,
+        flagged,
+        onToggleFlag: onToggleFlag ? (key) => onToggleFlag(numberFromKey(key)) : undefined,
         // Per-group bands carry the instruction here, so no bar above the part.
         instructionText: null,
         anchorPrefix: "sq",
+        // Highlights are filed against the part, so they survive a re-render and
+        // a move away and back within the same paper.
+        passageId: section.id,
+        passageScope: annotationScope,
         // One recording serves every group below it, so it has to stay reachable.
         stickyAudio: true,
         // Lettered labelling gets the answer grid the real sheet uses.

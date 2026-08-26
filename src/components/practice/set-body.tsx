@@ -197,6 +197,12 @@ export function SetBody({
         groupHeaders: false,
         // `mq-` is what the mock's question palette scrolls to.
         anchorPrefix: "mq",
+        // Same highlighter the section player offers, filed against the set.
+        // `question_sets` ids are a different table from `practice_sections`, so
+        // this can never collide with a mock's — but it is scoped anyway, so the
+        // rule is one rule everywhere rather than a coincidence to rely on.
+        passageId: set.id,
+        passageScope: "practice-set",
         // Reading puts the passage beside the questions. In the exam layout the
         // player draws that divider instead, and a drag-resizable SplitPane and
         // this fixed grid would otherwise both try to split the same content.

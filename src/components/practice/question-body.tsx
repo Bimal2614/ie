@@ -13,6 +13,7 @@ import { LabelMatrix } from "./renderers/label-matrix";
 import { MatchingBoard } from "./renderers/matching-board";
 import { SpeakingInterview } from "./renderers/speaking-interview";
 import type { GapBinding, GapResolver } from "./renderers/gap-field";
+import { HighlightablePassage } from "./renderers/highlightable-passage";
 
 /**
  * The one renderer for a page of IELTS questions.
@@ -160,6 +161,18 @@ export type BodyConfig = {
   /** Flagging is a mock-player affordance. */
   flagged?: Set<string>;
   onToggleFlag?: (key: string) => void;
+  /**
+   * Identity the passage's highlights and notes are stored against — the part
+   * id. Supplying it turns the highlighter on; it is off during review, where
+   * the marks are history rather than a working tool.
+   */
+  passageId?: string;
+  /**
+   * Which attempt the passage's highlights belong to — one mock sitting, or one
+   * practice attempt. Both are required to offer the highlighter; see
+   * `storageKey` in highlightable-passage.tsx for why the scope exists.
+   */
+  passageScope?: string;
 };
 
 /* ------------------------------------------------------------------ *
@@ -320,6 +333,11 @@ export function QuestionBody({
       sticky={config.stickyAudio}
       showImage={config.stimulusImage !== false}
       fit={config.fitStimulus}
+      // Only while the paper is live: once it is graded the passage is evidence,
+      // and a highlighter over the top of it is just something else to misread.
+      annotate={!disabled}
+      passageId={config.passageId}
+      passageScope={config.passageScope}
     />
   );
 
@@ -878,6 +896,9 @@ function Stimulus({
   sticky,
   showImage = true,
   fit = false,
+  annotate = false,
+  passageId,
+  passageScope,
 }: {
   doc: BodyDoc;
   audioRef: React.RefObject<HTMLAudioElement | null>;
@@ -886,6 +907,12 @@ function Stimulus({
   showImage?: boolean;
   /** Scale the figure down to fit the pane rather than overflowing it. */
   fit?: boolean;
+  /** Offer the highlighter. Off once the paper is graded — see BodyConfig. */
+  annotate?: boolean;
+  /** What the annotations are filed under; required to offer them. */
+  passageId?: string;
+  /** Which attempt they belong to. Also required — see BodyConfig. */
+  passageScope?: string;
 }) {
   const sec = SECTIONS[doc.sectionType];
   const image = showImage ? doc.imageSrc : null;
@@ -944,16 +971,22 @@ function Stimulus({
         </div>
       )}
 
-      {doc.passageText && (
-        // Copy-protected: auth-gated practice content only (never on indexed pages).
-        <article
-          className="select-none whitespace-pre-line rounded-xl border border-line bg-paper-elev p-5 text-sm leading-relaxed text-ink-soft"
-          onCopy={(e) => e.preventDefault()}
-          onContextMenu={(e) => e.preventDefault()}
-        >
-          {doc.passageText}
-        </article>
-      )}
+      {doc.passageText &&
+        (annotate && passageId && passageScope ? (
+          // Selection is enabled here so the highlighter can work; copying is
+          // still refused and the browser's own menu still suppressed.
+          <HighlightablePassage id={passageId} scope={passageScope} text={doc.passageText} />
+        ) : (
+          // Copy-protected: auth-gated practice content only (never on indexed
+          // pages). Read-only review keeps the stricter, unselectable version.
+          <article
+            className="select-none whitespace-pre-line rounded-xl border border-line bg-paper-elev p-5 text-sm leading-relaxed text-ink-soft"
+            onCopy={(e) => e.preventDefault()}
+            onContextMenu={(e) => e.preventDefault()}
+          >
+            {doc.passageText}
+          </article>
+        ))}
     </div>
   );
 }

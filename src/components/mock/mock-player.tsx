@@ -13,9 +13,11 @@ import {
   type MockModuleView,
   type MockSittingData,
 } from "@/app/actions/mock";
+import { ConfirmSubmit } from "@/components/exam/confirm-submit";
 import { ExamShell, type StripPart } from "@/components/exam/exam-shell";
 import { SplitPane } from "@/components/exam/split-pane";
 import { SectionBody, type ClientSectionView } from "@/components/practice/section-body";
+import { clearAnnotations } from "@/components/practice/renderers/highlightable-passage";
 import { ListeningTape, type Tape } from "./listening-tape";
 
 /**
@@ -51,8 +53,19 @@ export function MockPlayer({ sitting }: Props) {
   );
   const [activePartId, setActivePartId] = useState(sitting.current.parts[0]?.id ?? "");
   const [current, setCurrent] = useState<number | null>(null);
+  /**
+   * Questions marked to come back to, keyed like the answers.
+   *
+   * Deliberately NOT autosaved with them: a flag is a note to self about the
+   * paper in front of you, not an answer, and it has no meaning once the module
+   * is handed in. Keeping it out of `draft_answers` also keeps the submitted
+   * payload exactly the set of things that get marked.
+   */
+  const [flagged, setFlagged] = useState<Set<string>>(new Set());
   const [advancing, setAdvancing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  /** Set while the hand-in check is on screen. Never set by the clock. */
+  const [confirming, setConfirming] = useState(false);
   // Modules the clock closed rather than the candidate handing them in. Kept in
   // state so the warning clears once they move on under their own steam.
   const [lapsed, setLapsed] = useState(sitting.lapsedIndexes);
@@ -61,6 +74,8 @@ export function MockPlayer({ sitting }: Props) {
   // candidate the paper exam's ten minutes to transfer answers.
   const [tapeFinished, setTapeFinished] = useState(false);
 
+  /** One sitting's working notes, kept apart from practice and from other sittings. */
+  const annotationScope = `mock:${sitting.sessionId}`;
   const isLastModule = module.index === sitting.modules.length - 1;
   const part = module.parts.find((p) => p.id === activePartId) ?? module.parts[0];
 
@@ -83,6 +98,16 @@ export function MockPlayer({ sitting }: Props) {
     },
     [],
   );
+
+  const toggleFlag = useCallback((sectionId: string, n: number) => {
+    setFlagged((prev) => {
+      const next = new Set(prev);
+      const key = answerKey(sectionId, n);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }, []);
 
   const handleClear = useCallback((sectionId: string, n: number) => {
     setAnswers((prev) => {
@@ -123,6 +148,17 @@ export function MockPlayer({ sitting }: Props) {
     }
     return done;
   }, [answers, sheet]);
+
+  // The strip marks sheet NUMBERS; flags are held against answer keys. Numbers
+  // are unique within a module, so the two map cleanly here.
+  const flaggedNumbers = useMemo(() => {
+    const marked = new Set<number>();
+    for (const n of sheet.all) {
+      const a = sheet.anchorOf.get(n);
+      if (a && flagged.has(answerKey(a.sectionId, a.n))) marked.add(n);
+    }
+    return marked;
+  }, [flagged, sheet]);
 
   /* --- The Listening recording --- */
 
@@ -175,9 +211,12 @@ export function MockPlayer({ sitting }: Props) {
     if (finished.current) return;
     finished.current = true;
     setSubmitting(true);
+    // The paper is gone; so are the notes on it. Left behind they would sit in
+    // storage until the tab closed, and reappear on a re-sit of the same test.
+    clearAnnotations(annotationScope);
     // finishMock redirects to the report; the spinner stays up until navigation.
     await finishMock(sitting.sessionId, answersRef.current, timings.current);
-  }, [sitting.sessionId]);
+  }, [annotationScope, sitting.sessionId]);
 
   const advance = useCallback(async () => {
     if (finished.current || advancing) return;
@@ -199,6 +238,7 @@ export function MockPlayer({ sitting }: Props) {
       // the sitting, so there is nothing left to do but go and read the report.
       finished.current = true;
       setSubmitting(true);
+      clearAnnotations(annotationScope);
       window.location.href = `/results/${sitting.sessionId}`;
       return;
     }
@@ -214,7 +254,7 @@ export function MockPlayer({ sitting }: Props) {
     setCurrent(null);
     lastTick.current = Date.now();
     setAdvancing(false);
-  }, [advancing, isLastModule, module.index, sitting.sessionId, submit]);
+  }, [advancing, annotationScope, isLastModule, module.index, sitting.sessionId, submit]);
 
   // Countdown. At zero the module's time is up — the server is asked for the
   // next one, which is also what re-syncs the clock.
@@ -225,6 +265,10 @@ export function MockPlayer({ sitting }: Props) {
       setRemaining((s) => {
         if (s <= 1) {
           window.clearInterval(t);
+          // Straight through, with no confirmation: the bell is not the
+          // candidate's decision, and a dialog nobody dismisses would just sit
+          // there while the module was submitted behind it.
+          setConfirming(false);
           void advanceRef.current();
           return 0;
         }
@@ -387,6 +431,12 @@ export function MockPlayer({ sitting }: Props) {
       // by part. The body has to index its inputs the same way or every one of
       // them reads back empty. See `answerKey`.
       answerScope={part.sectionId}
+      flagged={flagged}
+      onToggleFlag={(n) => toggleFlag(part.sectionId, n)}
+      // Scoped to THIS sitting. Highlights made while practising the same
+      // passage must not appear on a timed paper, and a second sitting of this
+      // test starts with a clean page.
+      annotationScope={annotationScope}
       slot="questions"
       focusNumber={focus}
       groupHeaders={view.questions.groups.length > 1}
@@ -401,6 +451,7 @@ export function MockPlayer({ sitting }: Props) {
       results={null}
       onAnswer={(n, value) => handleAnswer(part.sectionId, n, value)}
       answerScope={part.sectionId}
+      annotationScope={annotationScope}
       slot="stimulus"
     />
   );
@@ -459,8 +510,16 @@ export function MockPlayer({ sitting }: Props) {
       parts={sheet.parts}
       activePartId={activePartId}
       answered={answered}
+      flagged={flaggedNumbers}
       current={current}
       onJump={jumpTo}
+      // A sheet number maps back to the input that owns it, so flagging the
+      // second square of a paired "choose TWO" flags the one question, not a
+      // number with nothing behind it.
+      onToggleFlag={(n) => {
+        const a = sheet.anchorOf.get(n);
+        if (a) toggleFlag(a.sectionId, a.n);
+      }}
       onSelectPart={(id) => {
         setActivePartId(id);
         setCurrent(null);
@@ -473,7 +532,7 @@ export function MockPlayer({ sitting }: Props) {
           ? focusIndex < partNumbers.length - 1
           : current === null || partNumbers.indexOf(current) < partNumbers.length - 1
       }
-      onSubmit={advance}
+      onSubmit={() => setConfirming(true)}
       submitting={submitting || advancing || savingRecording}
       submitLabel={
         savingRecording
@@ -497,6 +556,24 @@ export function MockPlayer({ sitting }: Props) {
       }
     >
       {body}
+
+      <ConfirmSubmit
+        open={confirming}
+        title={isLastModule ? "Hand in the whole paper?" : `Finish ${sec.label}?`}
+        detail={
+          isLastModule
+            ? "This submits every module and produces your band report. You can't return to the paper."
+            : `You won't be able to come back to ${sec.label} once you move on.`
+        }
+        unanswered={sheet.all.length - answered.size}
+        flagged={flaggedNumbers.size}
+        confirmLabel={isLastModule ? "Hand in" : `Finish ${sec.label}`}
+        onConfirm={() => {
+          setConfirming(false);
+          void advance();
+        }}
+        onCancel={() => setConfirming(false)}
+      />
     </ExamShell>
   );
 }

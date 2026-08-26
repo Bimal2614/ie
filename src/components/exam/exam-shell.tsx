@@ -42,6 +42,7 @@ export function ExamShell({
   current,
   onJump,
   onSelectPart,
+  onToggleFlag,
   onPrev,
   onNext,
   canPrev = true,
@@ -72,6 +73,8 @@ export function ExamShell({
   current?: number | null;
   onJump: (n: number, partId: string) => void;
   onSelectPart?: (partId: string) => void;
+  /** Flag from the answer sheet — the only route that reaches gap-fill questions. */
+  onToggleFlag?: (n: number) => void;
   onPrev?: () => void;
   onNext?: () => void;
   canPrev?: boolean;
@@ -196,6 +199,7 @@ export function ExamShell({
           current={current}
           onJump={onJump}
           onSelectPart={onSelectPart}
+          onToggleFlag={onToggleFlag}
         />
       </div>
     </div>

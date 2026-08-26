@@ -74,7 +74,7 @@ function ChoiceRow({
   return (
     <label
       className={cn(
-        "flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 text-sm transition-colors",
+        "relative flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 text-sm transition-colors",
         selected ? selectedRow : "border-line hover:bg-paper-sunken",
         disabled && "cursor-default",
       )}
@@ -276,6 +276,25 @@ function Writing({ question, value, disabled, onChange, fill }: InputProps) {
         value={text}
         placeholder="Write your response here…"
         onChange={(e) => onChange({ text: e.target.value, words })}
+        /*
+         * NO WRITING AID OF ANY KIND. The real test gives none, and spelling and
+         * grammatical accuracy are two of the four things Writing is marked on —
+         * so a red squiggle under a misspelling is not a convenience, it is the
+         * examiner's job done for the candidate. Practising with it produces a
+         * band the real exam will not reproduce.
+         *
+         * `data-gramm` and friends turn off Grammarly, which is the same problem
+         * an order of magnitude larger and is installed on a great many machines.
+         * The gap fields already do this (see gap-field.tsx); the essay editor is
+         * where it matters most and was the one place still missing it.
+         */
+        spellCheck={false}
+        autoCorrect="off"
+        autoCapitalize="off"
+        autoComplete="off"
+        data-gramm="false"
+        data-gramm_editor="false"
+        data-enable-grammarly="false"
         className={cn(
           "leading-relaxed",
           // Filling the pane, the drag handle would fight the layout; sized to

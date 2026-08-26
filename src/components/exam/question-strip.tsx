@@ -28,6 +28,7 @@ export function QuestionStrip({
   current,
   onJump,
   onSelectPart,
+  onToggleFlag,
 }: {
   parts: StripPart[];
   activePartId: string;
@@ -38,6 +39,16 @@ export function QuestionStrip({
   onJump: (n: number, partId: string) => void;
   /** Omit for a single part — nothing to switch to. */
   onSelectPart?: (partId: string) => void;
+  /**
+   * Flag a question from the answer sheet itself.
+   *
+   * The per-question Flag button only exists on types that draw a question ROW —
+   * so a whole Listening part answered as a table or a set of notes had no way to
+   * mark anything at all, which is most of the module. The sheet has a square for
+   * every number whatever its type, so it is the one place flagging can be
+   * complete. It is also where the real test keeps its review markers.
+   */
+  onToggleFlag?: (n: number) => void;
 }) {
   // Which part's numbers are on show. Follows the active part, but the
   // candidate can peek at another part's sheet without leaving this one.
@@ -99,7 +110,18 @@ export function QuestionStrip({
                     key={n}
                     type="button"
                     onClick={() => onJump(n, part.id)}
-                    aria-label={`Question ${n}${isAnswered ? ", answered" : ", not answered"}`}
+                    onContextMenu={
+                      onToggleFlag
+                        ? (e) => {
+                            e.preventDefault();
+                            onToggleFlag(n);
+                          }
+                        : undefined
+                    }
+                    title={onToggleFlag ? `Question ${n} — right-click to flag for review` : undefined}
+                    aria-label={`Question ${n}${isAnswered ? ", answered" : ", not answered"}${
+                      isFlagged ? ", flagged for review" : ""
+                    }`}
                     aria-current={current === n ? "true" : undefined}
                     className={cn(
                       "relative grid size-7 place-items-center rounded border font-mono text-[11px] font-semibold tabular-nums transition-colors",
