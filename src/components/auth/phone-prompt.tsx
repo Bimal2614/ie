@@ -43,8 +43,7 @@ export function PhonePrompt() {
           Add your phone number
         </h2>
         <p className="mt-1 text-sm text-ink-muted">
-          Google didn&apos;t share a number with us. We need one on your account before you
-          continue.
+          We need your phone number to give you personalized plan and templates recommendations, you will not be able to change this once you submit it.
         </p>
 
         <form action={action} className="mt-5 space-y-4">
