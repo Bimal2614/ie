@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Check, X, ArrowRight, Headphones, BookOpen, PenLine, Mic, type LucideIcon } from "lucide-react";
+import { Check, X, ArrowRight, Headphones, BookOpen, PenLine, Mic, Monitor, RefreshCw, TrendingUp, type LucideIcon } from "lucide-react";
 import { MarketingShell, PageHead } from "@/components/marketing/marketing-shell";
 import { BANDS, BAND_SLUGS, type BandGuide } from "@/lib/band-content";
 import { JsonLd } from "@/components/seo/json-ld";
-import { KEYWORDS, breadcrumbJsonLd, courseJsonLd, pageMeta } from "@/lib/seo";
+import { KEYWORDS, breadcrumbJsonLd, courseJsonLd, faqJsonLd, pageMeta } from "@/lib/seo";
+import { LONG_TAIL } from "@/lib/keywords";
 
 type Params = { band: string };
 
@@ -34,6 +35,8 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
       `IELTS band ${b.band} requirements`,
       `is band ${b.band} good IELTS`,
       ...KEYWORDS.bands,
+      ...LONG_TAIL.bandTargets,
+      ...LONG_TAIL.scoring,
     ],
   });
 }
@@ -59,6 +62,10 @@ export default async function BandPage({ params }: { params: Promise<Params> }) 
           path: `/ielts-band/${b.slug}`,
         })}
       />
+      {/* The Q&A below is real page content first and a rich result second —
+          the questions are the ones people actually type, so the answers earn
+          the "People Also Ask" slot only because they answer them on the page. */}
+      <JsonLd data={faqJsonLd(b.faqs)} />
 
       <Link href="/ielts-band-scores" className="text-sm font-medium text-brand hover:underline">← IELTS band scores explained</Link>
 
@@ -117,6 +124,100 @@ export default async function BandPage({ params }: { params: Promise<Params> }) 
             <li key={m} className="flex gap-2 text-sm text-ink-soft"><X className="mt-0.5 size-3.5 shrink-0 text-danger" />{m}</li>
           ))}
         </ul>
+      </div>
+
+      {/* ── How long it takes ─────────────────────────────────────── */}
+      <h2 className="mt-14 flex items-center gap-2 text-2xl font-semibold tracking-tight text-ink">
+        <TrendingUp className="size-5 text-brand" /> How long it takes to reach Band {b.band}
+      </h2>
+      <p className="mt-2 max-w-2xl text-sm text-ink-soft">
+        Timelines assume focused, diagnosed practice rather than hours logged. The single biggest
+        predictor of speed is whether you drill your weakest question types or simply repeat full
+        mock tests without analysing them.
+      </p>
+      <div className="mt-6 space-y-4">
+        {b.journey.map((j) => (
+          <div key={j.from} className="rounded-2xl border border-line bg-paper-elev p-6 sm:flex sm:gap-7">
+            <div className="shrink-0 sm:w-40">
+              <p className="text-xs font-medium uppercase tracking-wider text-ink-muted">From</p>
+              <p className="font-serif text-xl text-ink">{j.from}</p>
+              <p className="mt-1 text-sm font-semibold text-green">{j.weeks}</p>
+            </div>
+            <p className="mt-3 text-sm leading-relaxed text-ink-soft sm:mt-0">{j.focus}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Where this band gets you ──────────────────────────────── */}
+      <h2 className="mt-14 text-2xl font-semibold tracking-tight text-ink">
+        Is Band {b.band} enough for what you need?
+      </h2>
+      <p className="mt-2 max-w-2xl text-sm text-ink-soft">
+        Requirements are almost always stated <strong>per skill</strong>, not as an overall average.
+        This is where most candidates misjudge their own score: an overall band that clears the bar
+        with one skill below the per-skill minimum is refused.
+      </p>
+      <div className="mt-6 overflow-hidden rounded-2xl border border-line">
+        {b.accepted.map((a, i) => (
+          <div
+            key={a.context}
+            className={`p-6 sm:flex sm:gap-6 ${i > 0 ? "border-t border-line" : ""} ${
+              a.enough === "partly" ? "bg-paper-sunken" : "bg-paper-elev"
+            }`}
+          >
+            <div className="shrink-0 sm:w-52">
+              <p className="text-sm font-semibold text-ink">{a.context}</p>
+              <span
+                className={`mt-2 inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                  a.enough === "yes"
+                    ? "bg-brand-soft text-brand"
+                    : a.enough === "partly"
+                      ? "bg-paper text-ink-muted"
+                      : "bg-paper text-danger"
+                }`}
+              >
+                {a.enough === "yes" ? "Meets it" : a.enough === "partly" ? "Depends on the skill split" : "Below the bar"}
+              </span>
+            </div>
+            <p className="mt-3 text-sm leading-relaxed text-ink-soft sm:mt-0">{a.detail}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* ── 2026 format ───────────────────────────────────────────── */}
+      <div className="mt-14 grid gap-4 md:grid-cols-2">
+        <div className="rounded-2xl border border-line bg-paper-elev p-6">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-ink">
+            <Monitor className="size-4 text-brand" /> What the on-screen test changes at Band {b.band}
+          </h2>
+          <p className="mt-3 text-sm leading-relaxed text-ink-soft">{b.onScreen}</p>
+          <Link href="/ielts-2026-changes" className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-brand hover:underline">
+            What changed in IELTS in 2026 <ArrowRight className="size-4" />
+          </Link>
+        </div>
+        <div className="rounded-2xl border border-line bg-paper-elev p-6">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-ink">
+            <RefreshCw className="size-4 text-brand" /> Using One Skill Retake to reach Band {b.band}
+          </h2>
+          <p className="mt-3 text-sm leading-relaxed text-ink-soft">{b.retake}</p>
+          <Link href="/ielts-band-score-calculator" className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-brand hover:underline">
+            Work out your overall band <ArrowRight className="size-4" />
+          </Link>
+        </div>
+      </div>
+
+      {/* ── FAQ ───────────────────────────────────────────────────── */}
+      <h2 className="mt-14 text-2xl font-semibold tracking-tight text-ink">Band {b.band} questions, answered</h2>
+      <div className="mt-5 divide-y divide-line border-y border-line">
+        {b.faqs.map((f) => (
+          <details key={f.q} className="group py-5">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-left">
+              <h3 className="text-base font-semibold text-ink">{f.q}</h3>
+              <span className="grid size-6 shrink-0 place-items-center rounded-full border border-line text-ink-muted transition-transform group-open:rotate-45">+</span>
+            </summary>
+            <p className="mt-3 text-sm leading-relaxed text-ink-soft">{f.a}</p>
+          </details>
+        ))}
       </div>
 
       {/* Cross-links to other bands */}

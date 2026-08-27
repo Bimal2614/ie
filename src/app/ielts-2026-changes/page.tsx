@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Check, Info, Monitor, RefreshCw, PenLine, ExternalLink } from "lucide-react";
+import { ArrowRight, Check, Globe, Info, Monitor, RefreshCw, PenLine, ShieldCheck, ExternalLink } from "lucide-react";
 import { MarketingShell, PageHead } from "@/components/marketing/marketing-shell";
 import { JsonLd } from "@/components/seo/json-ld";
 import { KEYWORDS, breadcrumbJsonLd, faqJsonLd, pageMeta } from "@/lib/seo";
@@ -30,7 +30,17 @@ const CHANGES = [
   {
     Icon: RefreshCw,
     title: "One Skill Retake is a standard feature",
-    body: "If one skill lets you down, you can re-sit that single skill instead of the whole exam, within 60 days of your original test, and receive an updated Test Report Form. It only applies to computer-delivered IELTS. Confirm the organisation you are applying to accepts a One Skill Retake result before you rely on it.",
+    body: "If one skill lets you down, you can re-sit that single skill instead of the whole exam and receive an updated Test Report Form. The rules are specific: computer-delivered tests only, within 60 days of the original test, in the same country you sat it, and once per full test. There is no minimum band to qualify. It is offered across most of the 110+ countries where IELTS runs, but not in the United States. Confirm the organisation you are applying to accepts a One Skill Retake result before you rely on it.",
+  },
+  {
+    Icon: ShieldCheck,
+    title: "The UK raised its work-visa English requirement to B2",
+    body: "From 8 January 2026 the English requirement for first-time Skilled Worker, Scale-up and High Potential Individual applicants rose from B1 to B2. On IELTS for UKVI that is 5.5 in every one of the four skills — a per-skill benchmark, not an overall average, so a 6.5 overall with 5.0 in Writing does not qualify. UKVI IELTS also moved to computer-only delivery on 22 March 2026, ahead of the global transition.",
+  },
+  {
+    Icon: Globe,
+    title: "What did not change: the questions or the marking",
+    body: "Nothing about what the test asks or how it is scored moved in 2026. The same question types, the same timings, the same 0-9 band scale, the same four criteria in Writing and Speaking. Scores are fully comparable across delivery formats, and there is no scoring advantage or penalty either way. Preparation material written for the paper test is still accurate about content — only about medium is it out of date.",
   },
 ];
 
@@ -71,10 +81,28 @@ const FAQS = [
     q: "How should I prepare for computer-delivered IELTS?",
     a: "Practise in the same medium as the test. Do full-length timed sections on screen, type your Writing answers rather than handwriting them, and rehearse using on-screen highlighting for Reading. Familiarity with the interface removes a whole category of avoidable mistakes.",
   },
+  {
+    q: "Which IELTS sections are on computer, and can I still write on paper?",
+    a: "Listening, Reading and Writing all run on computer as standard, and Speaking remains a live face-to-face interview with an examiner in every format. In selected markets a Writing on Paper option lets you handwrite the Writing component while Listening and Reading stay on screen. It is an option rather than the default, availability varies by test centre, and it does not change how the Writing is marked.",
+  },
+  {
+    q: "Can I take One Skill Retake in a different country from my original test?",
+    a: "No. You must sit the One Skill Retake in the same country where you took the original test, within 60 days of it, and it is available for computer-delivered IELTS only. You may use it once per full test, and there is no minimum band score needed to qualify. It is not currently offered in the United States.",
+  },
+  {
+    q: "What IELTS score do I need for a UK Skilled Worker visa in 2026?",
+    a: "From 8 January 2026 the requirement is CEFR B2, which on IELTS for UKVI means 5.5 in each of Listening, Reading, Writing and Speaking. The benchmark applies per skill rather than to your overall band, so every one of the four has to reach 5.5 independently. SELT results are valid for two years and must still be current when you submit the application.",
+  },
+  {
+    q: "Is a computer-delivered IELTS score worth the same as a paper one?",
+    a: "Yes. The band scale, the question types and the marking criteria are identical, and scores are fully comparable across formats. No university or visa authority treats a computer-delivered result differently from a paper-based one. Computer-delivered results are also released faster, typically within a few days rather than around two weeks.",
+  },
 ];
 
 const SOURCES = [
   { label: "IDP IELTS: test delivery updates for 2026", href: "https://ielts.idp.com/about/news-and-articles/article-updates-to-ielts-test-delivery" },
+  { label: "IELTS.org: ways to take IELTS", href: "https://ielts.org/take-a-test/test-types" },
+  { label: "UK Home Office: English language requirement for work visas", href: "https://www.gov.uk/english-language" },
   { label: "IELTS.org, how IELTS is scored", href: "https://www.ielts.org/for-test-takers/how-ielts-is-scored" },
   { label: "British Council: prepare for IELTS", href: "https://takeielts.britishcouncil.org/take-ielts/prepare" },
 ];

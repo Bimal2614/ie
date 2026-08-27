@@ -103,10 +103,25 @@ const METHOD = [
  * (resources/[section] renders `id={topic.slug}` on each question type). Verify
  * the target before adding a row — a hub full of 404s is worse than a short hub.
  */
-const QUESTION_HUB: { skill: string; href: string; intro: string; links: { label: string; href: string }[] }[] = [
+const QUESTION_HUB: {
+  skill: string;
+  href: string;
+  /** Matches the icon used in the SKILLS row above, so a skill reads the same everywhere. */
+  Icon: typeof Headphones;
+  /** Real exam facts. They double as the card's scannable sub-line — the design
+   *  device and the content are the same thing, which is the only kind of
+   *  decoration worth shipping on a page that has to rank. */
+  count: string;
+  time: string;
+  intro: string;
+  links: { label: string; href: string }[];
+}[] = [
   {
     skill: "Listening",
     href: "/resources/listening",
+    Icon: Headphones,
+    count: "40 questions",
+    time: "30 min",
     intro:
       "Most Listening marks are lost to spelling, plurals and distractors rather than to not hearing the answer. The audio plays once here too, exactly as it does on test day.",
     links: [
@@ -115,11 +130,15 @@ const QUESTION_HUB: { skill: string; href: string; intro: string; links: { label
       { label: "Listening multiple choice and how distractors work", href: "/resources/listening#multiple-choice" },
       { label: "Matching questions in Listening", href: "/resources/listening#matching" },
       { label: "Sentence and summary completion", href: "/resources/listening#sentence-summary-completion" },
+      { label: "Listening strategies that actually work", href: "/blog/ielts-listening-strategies" },
     ],
   },
   {
     skill: "Reading",
     href: "/resources/reading",
+    Icon: BookOpen,
+    count: "40 questions",
+    time: "60 min",
     intro:
       "Sixty minutes, forty questions, and no extra transfer time. Reading is a timing problem before it is a comprehension problem, so every guide below leads with the technique that costs the fewest minutes.",
     links: [
@@ -128,11 +147,15 @@ const QUESTION_HUB: { skill: string; href: string; intro: string; links: { label
       { label: "Matching information, features and sentence endings", href: "/resources/reading#matching-information-features" },
       { label: "Summary, note and table completion", href: "/resources/reading#completion-tasks" },
       { label: "Short-answer questions", href: "/resources/reading#short-answer" },
+      { label: "Reading tips to improve your score fast", href: "/blog/ielts-reading-tips-improve-score" },
     ],
   },
   {
     skill: "Writing",
     href: "/resources/writing",
+    Icon: PenLine,
+    count: "2 tasks",
+    time: "60 min",
     intro:
       "Task 2 is worth twice Task 1, and both are marked on four criteria you can study directly. Each guide below carries a model answer and the band descriptors that produced its score.",
     links: [
@@ -150,6 +173,9 @@ const QUESTION_HUB: { skill: string; href: string; intro: string; links: { label
   {
     skill: "Speaking",
     href: "/resources/speaking",
+    Icon: Mic,
+    count: "3 parts",
+    time: "11-14 min",
     intro:
       "Record an answer and get a band on Fluency, Lexical Resource, Grammar and Pronunciation in seconds, with the hesitation marked where it happened. The part most people underprepare is Part 3.",
     links: [
@@ -157,6 +183,8 @@ const QUESTION_HUB: { skill: string; href: string; intro: string; links: { label
       { label: "Part 2: the cue card and the one-minute long turn", href: "/resources/speaking#part-2-cue-card" },
       { label: "Part 3: the abstract two-way discussion", href: "/resources/speaking#part-3-discussion" },
       { label: "Sentence banks for Speaking Part 2", href: "/templates" },
+      { label: "Band descriptors: Band 6 vs 7 vs 8", href: "/blog/ielts-speaking-band-descriptors" },
+      { label: "Recent Speaking questions this cycle", href: "/blog/recent-ielts-speaking-questions-july-2026" },
     ],
   },
 ];
@@ -339,75 +367,181 @@ export default async function Home() {
 
       {/* == Question-type hub — the page's real content block, and the only
              route from the home page to every guide in a single click == */}
-      <section id="question-types" className="mx-auto w-full max-w-6xl scroll-mt-20 px-5 py-20">
-        <Reveal>
-          <Header
-            eyebrow="Every question type"
-            title="Practise the exact task costing you marks."
-            lead="Forty Listening questions, forty Reading questions, two Writing tasks and three Speaking parts, each with its own technique. Start with the one you keep getting wrong."
-          />
-        </Reveal>
+      {/* == Question-type hub — the page's real content block, and the only
+             route from the home page to every guide in a single click.
 
-        <div className="mt-14 grid gap-10 md:grid-cols-2">
-          {QUESTION_HUB.map((g, i) => (
-            <Reveal key={g.skill} delay={i * 0.08}>
-              <h3 className="font-serif text-2xl tracking-tight text-ink">
-                <Link href={g.href} className="transition-colors hover:text-brand">
-                  IELTS {g.skill}
-                </Link>
-              </h3>
-              <p className="mt-2 max-w-md text-sm leading-relaxed text-ink-soft">{g.intro}</p>
-              <ul className="mt-4 space-y-2">
-                {g.links.map((l) => (
-                  <li key={l.href} className="flex gap-2 text-sm">
-                    <ArrowRight className="mt-1 size-3.5 shrink-0 text-brand/50" />
-                    <Link href={l.href} className="text-ink-soft transition-colors hover:text-brand">
-                      {l.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
-          ))}
+             Designed as four skill cards rather than four bulleted lists: the
+             list version carried the same links and the same words, but nothing
+             about it invited a reader in, and a block people scroll past earns
+             nothing however well it is optimised. Every visual element here is
+             load-bearing content — the icon matches the skill's icon elsewhere
+             on the page, and the count/time sub-line is a real exam fact people
+             search for, not a decorative chip. == */}
+      <section id="question-types" className="scroll-mt-20 border-y border-line bg-paper-elev">
+        <div className="mx-auto w-full max-w-6xl px-5 py-24">
+          <Reveal>
+            <Header
+              eyebrow="Every question type"
+              title="Practise the exact task costing you marks."
+              lead="Forty Listening questions, forty Reading questions, two Writing tasks and three Speaking parts, each with its own technique. Start with the one you keep getting wrong."
+            />
+          </Reveal>
+
+          <div className="mt-14 grid items-start gap-5 lg:grid-cols-2">
+            {QUESTION_HUB.map((g, i) => (
+              <Reveal key={g.skill} delay={i * 0.07}>
+                <article className="rounded-2xl border border-line bg-paper p-7 transition-shadow hover:shadow-lg">
+                  {/* Head — icon, skill, and the two exam facts */}
+                  <div className="flex items-start gap-4">
+                    <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand">
+                      <g.Icon className="size-5" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-serif text-2xl leading-none tracking-tight text-ink">
+                        <Link href={g.href} className="transition-colors hover:text-brand">
+                          IELTS {g.skill}
+                        </Link>
+                      </h3>
+                      <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium uppercase tracking-wider text-ink-muted">
+                        <span>{g.count}</span>
+                        <span aria-hidden className="text-line-strong">&middot;</span>
+                        <span>{g.time}</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  <p className="mt-5 text-sm leading-relaxed text-ink-soft">{g.intro}</p>
+
+                  {/* Question types — full-width rows, so each link is a target
+                      rather than a word in a list. */}
+                  <ul className="mt-6 -mx-2 border-t border-line">
+                    {g.links.map((l) => (
+                      <li key={l.href} className="border-b border-line">
+                        <Link
+                          href={l.href}
+                          className="group/row flex items-center gap-3 rounded-lg px-2 py-2.5 text-sm text-ink-soft transition-colors hover:bg-paper-sunken hover:text-ink"
+                        >
+                          <span className="flex-1">{l.label}</span>
+                          <ArrowRight className="size-3.5 shrink-0 text-ink-muted transition-all group-hover/row:translate-x-0.5 group-hover/row:text-brand" />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Link
+                    href={g.href}
+                    className="group/all mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-brand"
+                  >
+                    Full IELTS {g.skill} guide
+                    <ArrowRight className="size-4 transition-transform group-hover/all:translate-x-0.5" />
+                  </Link>
+                </article>
+              </Reveal>
+            ))}
+          </div>
         </div>
+      </section>
 
-        {/* Closing prose — carries the scoring and format queries onto the page
-            as sentences, and links the three tool/explainer pages that were
-            otherwise reachable only from the footer. */}
-        <Reveal delay={0.1}>
-          <div className="mt-16 border-t border-line pt-10">
-            <h3 className="font-serif text-2xl tracking-tight text-ink">Know the number you need before you book</h3>
-            <p className="mt-3 max-w-3xl text-sm leading-relaxed text-ink-soft">
-              IELTS is marked on a 0&ndash;9 band scale in half-band steps, and your overall score is the average
-              of the four skill bands, rounded to the nearest half. That rounding is where people lose the band
-              they thought they had: an average of 6.75 rounds up to 7.0, but 6.625 rounds down to 6.5. Work out
-              where you actually stand with the{" "}
-              <Link href="/ielts-band-score-calculator" className="text-brand underline underline-offset-4">
+      {/* == Scoring explainer — carries the band and format queries onto the
+             page as prose, and links the three tool pages that were otherwise
+             reachable only from the footer. The rounding rule gets a panel of
+             its own because it is the single most misunderstood fact in IELTS
+             scoring, and showing the two sums side by side explains it faster
+             than the paragraph beside it can. == */}
+      <section className="mx-auto w-full max-w-6xl px-5 py-24">
+        <div className="grid gap-14 lg:grid-cols-[1.25fr_1fr] lg:items-start lg:gap-20">
+          <Reveal>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand">Before you book</p>
+            <h2 className="font-serif mt-3 text-3xl tracking-tight sm:text-4xl">
+              Know the number you actually need.
+            </h2>
+            <p className="mt-5 text-ink-soft">
+              IELTS is marked on a 0&ndash;9 band scale in half-band steps, and your overall score is the
+              average of the four skill bands, rounded to the nearest half. That rounding is where people
+              lose the band they thought they had. Work out where you stand with the{" "}
+              <Link href="/ielts-band-score-calculator" className="font-medium text-brand underline decoration-brand/30 underline-offset-4 transition-colors hover:decoration-brand">
                 IELTS band score calculator
               </Link>
-              , which turns raw Listening and Reading marks and your Writing and Speaking bands into an overall
-              score, or read{" "}
-              <Link href="/ielts-band-scores" className="text-brand underline underline-offset-4">
+              , or read{" "}
+              <Link href="/ielts-band-scores" className="font-medium text-brand underline decoration-brand/30 underline-offset-4 transition-colors hover:decoration-brand">
                 how IELTS band scores are calculated
               </Link>{" "}
               for the full marking rules.
             </p>
-            <p className="mt-4 max-w-3xl text-sm leading-relaxed text-ink-soft">
-              If you are aiming at a specific target, start from the band rather than the syllabus:{" "}
-              <Link href="/ielts-band/6-5" className="text-brand underline underline-offset-4">how to get Band 6.5</Link>,{" "}
-              <Link href="/ielts-band/7" className="text-brand underline underline-offset-4">Band 7</Link>,{" "}
-              <Link href="/ielts-band/8" className="text-brand underline underline-offset-4">Band 8</Link>{" "}or{" "}
-              <Link href="/ielts-band/9" className="text-brand underline underline-offset-4">Band 9</Link>. Each one
-              sets out what that score takes in all four skills, and the specific mistakes that cap you one band
-              below it. Before you book, check{" "}
-              <Link href="/ielts-2026-changes" className="text-brand underline underline-offset-4">
+            <p className="mt-4 text-ink-soft">
+              And before you book, check{" "}
+              <Link href="/ielts-2026-changes" className="font-medium text-brand underline decoration-brand/30 underline-offset-4 transition-colors hover:decoration-brand">
                 what changed in IELTS in 2026
               </Link>
-              : computer-delivered testing is now the default in most markets, One Skill Retake lets you resit a
+              : computer-delivered testing is the default in most markets, One Skill Retake lets you resit a
               single section instead of the whole test, and paper-based IELTS has been retired almost everywhere.
             </p>
-          </div>
-        </Reveal>
+
+            <div className="mt-8">
+              <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">Start from your target band</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {[
+                  { label: "Band 6.5", href: "/ielts-band/6-5" },
+                  { label: "Band 7", href: "/ielts-band/7" },
+                  { label: "Band 8", href: "/ielts-band/8" },
+                  { label: "Band 9", href: "/ielts-band/9" },
+                ].map((b) => (
+                  <Link
+                    key={b.href}
+                    href={b.href}
+                    className="rounded-full border border-line px-4 py-1.5 text-sm font-medium text-ink transition-colors hover:border-brand hover:text-brand"
+                  >
+                    How to get {b.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </Reveal>
+
+          {/* The rounding panel */}
+          <Reveal x={24} y={0} delay={0.08}>
+            <div className="rounded-2xl border border-line bg-paper-elev p-7">
+              <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
+                The half-band rounding rule
+              </p>
+              <p className="mt-2 text-sm text-ink-soft">
+                Two averages, a tenth of a band apart, and a whole band between the results.
+              </p>
+
+              <div className="mt-6 space-y-3">
+                {[
+                  { skills: "7.5 · 7.0 · 6.5 · 6.0", avg: "6.75", band: "7.0", up: true },
+                  { skills: "7.0 · 6.5 · 6.5 · 6.5", avg: "6.625", band: "6.5", up: false },
+                ].map((r) => (
+                  <div
+                    key={r.avg}
+                    className={`rounded-xl border p-4 ${r.up ? "border-green/30 bg-green-soft/40" : "border-line bg-paper"}`}
+                  >
+                    <p className="text-xs uppercase tracking-wider text-ink-muted">{r.skills}</p>
+                    <div className="mt-2 flex items-baseline gap-2.5">
+                      <span className="font-serif text-lg tabular-nums text-ink-muted">{r.avg}</span>
+                      <ArrowRight className="size-3.5 shrink-0 text-ink-muted" />
+                      <span className={`font-serif text-3xl tabular-nums ${r.up ? "text-green" : "text-ink"}`}>
+                        {r.band}
+                      </span>
+                      <span className="text-xs font-medium uppercase tracking-wider text-ink-muted">
+                        {r.up ? "rounds up" : "rounds down"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <Link
+                href="/ielts-band-score-calculator"
+                className="group/calc mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-5 py-3 text-sm font-semibold text-brand-ink transition-[filter] hover:brightness-110"
+              >
+                Calculate your overall band
+                <ArrowRight className="size-4 transition-transform group-hover/calc:translate-x-0.5" />
+              </Link>
+            </div>
+          </Reveal>
+        </div>
       </section>
 
       {/* == FAQ — SEO / AI-answer content == */}

@@ -9,55 +9,70 @@ import { Reveal, Magnetic } from "./motion";
  * columns, and the oversized wordmark. Reused across landing, pricing, etc.
  */
 
+/**
+ * Footer navigation.
+ *
+ * EVERY LINK HERE POINTS AT A PUBLIC PAGE, and that is a deliberate constraint.
+ *
+ * This footer renders on every marketing page, so it is the single largest
+ * source of internal links on the site — and it used to spend a whole column of
+ * them on /practice/listening, /practice/reading, /mock-tests and friends. Those
+ * routes call requireUser(), so an anonymous visitor and Googlebot both get a
+ * redirect to /login rather than a page. Three things followed from that:
+ *
+ *   1. Link equity went to URLs that can never rank. A gated page has no
+ *      indexable content, so no amount of internal linking helps it.
+ *   2. Search Console filled with "Page with redirect" entries. Harmless in
+ *      itself — it is a status, not an error — but it is noise in the one report
+ *      you want to be able to read at a glance.
+ *   3. A logged-out visitor clicking "Listening practice" hit a login wall with
+ *      no explanation, which is a worse first answer than a page of strategy
+ *      with a signup call to action at the bottom.
+ *
+ * So the practice-intent labels now point at the public /resources guides, which
+ * DO rank, and the conversion path is one explicit "Start practising free" link
+ * to /signup. The app's own navigation still links the real practice routes for
+ * signed-in users — that is the right place for them.
+ *
+ * Anchor text is written as the query, not as a label: "IELTS Listening
+ * practice" rather than "Listening", because anchor text is a ranking input for
+ * the page being linked to.
+ */
 const COLS: { title: string; links: { label: string; href: string }[] }[] = [
   {
     title: "Practice",
     links: [
-      { label: "Listening practice", href: "/practice/listening" },
-      { label: "Reading practice", href: "/practice/reading" },
-      { label: "Writing practice", href: "/practice/writing" },
-      { label: "Speaking practice", href: "/practice/speaking" },
-      { label: "Full mock tests", href: "/mock-tests" },
+      { label: "IELTS Listening practice", href: "/resources/listening" },
+      { label: "IELTS Reading practice", href: "/resources/reading" },
+      { label: "IELTS Writing practice", href: "/resources/writing" },
+      { label: "IELTS Speaking practice", href: "/resources/speaking" },
+      { label: "Start practising free", href: "/signup" },
     ],
   },
   {
-    title: "Study materials",
-    links: [
-      { label: "Listening strategies", href: "/resources/listening" },
-      { label: "Reading strategies", href: "/resources/reading" },
-      { label: "Writing guide", href: "/resources/writing" },
-      { label: "Speaking guide", href: "/resources/speaking" },
-      { label: "Sentence banks & templates", href: "/templates" },
-      { label: "All study materials", href: "/resources" },
-    ],
-  },
-  {
-    title: "Product",
-    links: [
-      { label: "Pricing", href: "/pricing" },
-      { label: "AI band scoring", href: "/#features" },
-      { label: "Results", href: "/#results" },
-      { label: "Sign in", href: "/login" },
-      { label: "Create account", href: "/signup" },
-    ],
-  },
-  {
-    // Sitewide footer links are how the newer SEO pages get discovered and how
-    // link equity reaches them — without a link on every page they are orphans.
     title: "Guides & tools",
     links: [
-      { label: "Band score calculator", href: "/ielts-band-score-calculator" },
-      { label: "IELTS band scores", href: "/ielts-band-scores" },
+      { label: "All study materials", href: "/resources" },
+      { label: "Sentence banks & templates", href: "/templates" },
+      { label: "IELTS band score calculator", href: "/ielts-band-score-calculator" },
+      { label: "How IELTS scoring works", href: "/ielts-band-scores" },
       { label: "IELTS 2026 changes", href: "/ielts-2026-changes" },
+    ],
+  },
+  {
+    title: "By target band",
+    links: [
+      { label: "How to get Band 6.5", href: "/ielts-band/6-5" },
       { label: "How to get Band 7", href: "/ielts-band/7" },
       { label: "How to get Band 8", href: "/ielts-band/8" },
       { label: "How to get Band 9", href: "/ielts-band/9" },
-      { label: "IELTS blog", href: "/blog" },
+      { label: "IELTS tips & guides blog", href: "/blog" },
     ],
   },
   {
     title: "Company",
     links: [
+      { label: "Pricing", href: "/pricing" },
       { label: "About", href: "/about" },
       { label: "Contact", href: "/contact" },
       { label: "Terms of use", href: "/terms" },
@@ -66,6 +81,7 @@ const COLS: { title: string; links: { label: string; href: string }[] }[] = [
     ],
   },
 ];
+
 
 /**
  * Brand marks, inlined.
@@ -115,7 +131,7 @@ export function LandingFooter() {
       </Reveal>
 
       {/* Link columns */}
-      <div className="mx-auto grid w-full max-w-6xl gap-8 border-t border-white/10 px-5 py-14 sm:grid-cols-3 lg:grid-cols-[1.6fr_repeat(5,1fr)]">
+      <div className="mx-auto grid w-full max-w-6xl gap-8 border-t border-white/10 px-5 py-14 sm:grid-cols-3 lg:grid-cols-[1.6fr_repeat(4,1fr)]">
         <div className="md:col-span-1">
           <span className="flex items-center gap-2 font-semibold">
             <LogoMark className="size-8" />
