@@ -3,7 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { SITE_URL } from "@/lib/site";
-import { BRAND, DEFAULT_DESCRIPTION, KEYWORDS } from "@/lib/seo";
+import { BRAND, DEFAULT_DESCRIPTION, DEFAULT_TITLE, KEYWORDS } from "@/lib/seo";
+import { LONG_TAIL, metaKeywordSlice } from "@/lib/keywords";
 
 // One typeface for the entire app — Inter. The theme maps heading/body/mono/
 // serif tokens all to this, so landing, auth and dashboard share a single font.
@@ -19,8 +20,6 @@ const inter = Inter({
 // without a nonce and the browser's CSP blocks hydration.
 export const dynamic = "force-dynamic";
 
-const DEFAULT_TITLE = "IELTS Practice Online: AI Band Scoring & Mock Tests | IELTSVega";
-
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
@@ -32,7 +31,22 @@ export const metadata: Metadata = {
   description: DEFAULT_DESCRIPTION,
   applicationName: BRAND,
   // Baseline terms only. Pages layer their own clusters on via pageMeta().
-  keywords: [...KEYWORDS.core, ...KEYWORDS.ai, BRAND],
+  keywords: metaKeywordSlice([...KEYWORDS.core, ...KEYWORDS.ai, ...LONG_TAIL.aiTools, BRAND]),
+
+  /**
+   * NO site-wide `alternates` — deliberately.
+   *
+   * A layout-level `canonical: "/"` is inherited by every page that does not
+   * set its own, and the only pages in that position here are the noindex ones
+   * (/login, /signup and the gated app routes). That combination — `noindex` on
+   * page A plus a canonical from A to B — is a documented way to lose page B:
+   * Google consolidates A into B and can carry the noindex across with it. The
+   * B in question would have been the home page.
+   *
+   * Every indexable route already emits its own self-referencing canonical and
+   * hreflang through pageMeta(), so there is nothing for a default to cover.
+   * Noindex pages correctly emit no canonical at all.
+   */
   authors: [{ name: BRAND, url: SITE_URL }],
   creator: BRAND,
   publisher: BRAND,

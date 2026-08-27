@@ -7,7 +7,7 @@ import { KEYWORDS, pageMeta } from "@/lib/seo";
 export const metadata = pageMeta({
   title: "About IELTSVega: our Mission & Method for IELTS Success",
   description:
-    "IELTSVega is an independent IELTS practice platform combining AI band scoring for Writing & Speaking, full mock tests, and 15,000+ Academic and General Training questions built around how examiners actually mark.",
+    "An independent IELTS practice platform built around how examiners actually mark: AI band scoring for Writing and Speaking, mock tests, and 15,000+ questions.",
   path: "/about",
   keywords: [...KEYWORDS.ai, "IELTS practice platform", "online IELTS course", "IELTS preparation website"],
 });

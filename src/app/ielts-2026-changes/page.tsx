@@ -5,9 +5,9 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { KEYWORDS, breadcrumbJsonLd, faqJsonLd, pageMeta } from "@/lib/seo";
 
 const PATH = "/ielts-2026-changes";
-const TITLE = "IELTS 2026 Changes: Computer-Delivered Tests, One Skill Retake & Writing on Paper | IELTSVega";
+const TITLE = "IELTS 2026 Changes: Computer Tests & One Skill Retake";
 const DESCRIPTION =
-  "What changed in IELTS in 2026: paper-based testing retired in most markets from 27 June 2026, computer-delivered IELTS as the standard, One Skill Retake, and the new Writing on Paper option. What it means for how you prepare.";
+  "What changed in IELTS in 2026: paper-based testing retired, computer-delivered IELTS as the standard, One Skill Retake, and the new Writing on Paper option.";
 
 export const metadata = pageMeta({
   title: TITLE,

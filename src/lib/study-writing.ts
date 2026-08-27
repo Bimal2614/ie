@@ -8,6 +8,13 @@
 export type WritingQuestionType = {
   slug: string;
   name: string;
+  /**
+   * A short label for the <title> tag. `name` is written for the page heading
+   * and carries a parenthetical gloss ("Line graph (trends over time)"), which
+   * pushed every generated title to 103-126 characters — Google truncates
+   * around 60, so the useful half was never shown. Keep this under ~26 chars.
+   */
+  shortName: string;
   what: string;
   howToAnswer: string[];
   plan: string;
@@ -76,6 +83,7 @@ export const WRITING_TASK1: WritingGuide = {
     {
       slug: "line-graph",
       name: "Line graph (trends over time)",
+      shortName: "Line Graph",
       what: "One or more lines showing how values change over a period. Tests trend language and comparison across time.",
       howToAnswer: [
         "State what the graph shows, the units, and the time span in the introduction.",
@@ -117,6 +125,7 @@ export const WRITING_TASK1: WritingGuide = {
     {
       slug: "bar-chart",
       name: "Bar chart (comparisons)",
+      shortName: "Bar Chart",
       what: "Bars comparing quantities across categories (and sometimes across time). Tests comparison and grouping.",
       howToAnswer: [
         "Identify whether it compares categories, time, or both.",
@@ -154,6 +163,7 @@ export const WRITING_TASK1: WritingGuide = {
     {
       slug: "pie-chart",
       name: "Pie chart (proportions)",
+      shortName: "Pie Chart",
       what: "Segments of a whole (usually percentages). Often two or more pies to compare proportions or time.",
       howToAnswer: [
         "Describe the largest and smallest slices first.",
@@ -187,6 +197,7 @@ export const WRITING_TASK1: WritingGuide = {
     {
       slug: "table",
       name: "Table (multiple categories)",
+      shortName: "Table",
       what: "Raw figures across rows and columns. Tests your ability to select. Tables give more data than you should report.",
       howToAnswer: [
         "Do NOT describe every cell: find the highest, lowest and any striking pattern.",
@@ -209,6 +220,7 @@ export const WRITING_TASK1: WritingGuide = {
     {
       slug: "process-diagram",
       name: "Process / diagram (how something works)",
+      shortName: "Process Diagram",
       what: "A sequence of stages (natural cycle or manufacturing) or how a device works. Tests sequencing and the passive voice.",
       howToAnswer: [
         "Count the stages and note where the process begins and ends (or if it's a cycle).",
@@ -234,6 +246,7 @@ export const WRITING_TASK1: WritingGuide = {
     {
       slug: "map",
       name: "Map (changes over time / two locations)",
+      shortName: "Map",
       what: "Usually two maps of the same place at different times, or two proposed sites. Tests location language and change verbs.",
       howToAnswer: [
         "Orient the reader (a town, north/south, a river, the coast).",
@@ -260,6 +273,7 @@ export const WRITING_TASK1: WritingGuide = {
     {
       slug: "mixed-charts",
       name: "Multiple / mixed charts",
+      shortName: "Mixed Charts",
       what: "Two different visuals together (e.g. a pie plus a table, or a line graph plus a bar chart). Tests selection and linking across sources.",
       howToAnswer: [
         "Introduce both visuals in the intro.",
@@ -314,6 +328,7 @@ export const WRITING_TASK2: WritingGuide = {
     {
       slug: "opinion",
       name: "Opinion (agree / disagree)",
+      shortName: "Opinion Essay",
       what: "'To what extent do you agree or disagree?' You must take and sustain a clear position, full, partial, or a balanced view, for the whole essay.",
       howToAnswer: [
         "Decide your position before writing and commit to it.",
@@ -345,6 +360,7 @@ export const WRITING_TASK2: WritingGuide = {
     {
       slug: "discussion",
       name: "Discussion (discuss both views + your opinion)",
+      shortName: "Discussion Essay",
       what: "'Discuss both these views and give your own opinion.' You must fairly present two opposing views AND state which you favour. Both are required.",
       howToAnswer: [
         "Give your opinion in the introduction (don't save it for the end).",
@@ -376,6 +392,7 @@ export const WRITING_TASK2: WritingGuide = {
     {
       slug: "advantages-disadvantages",
       name: "Advantages & disadvantages",
+      shortName: "Advantages/Disadvantages",
       what: "'Do the advantages outweigh the disadvantages?' (opinion needed) or 'discuss the advantages and disadvantages' (balanced). Read carefully which one it is.",
       howToAnswer: [
         "Check whether an opinion is required ('outweigh') or just a balanced discussion.",
@@ -398,6 +415,7 @@ export const WRITING_TASK2: WritingGuide = {
     {
       slug: "problem-solution",
       name: "Problem / solution (causes & solutions)",
+      shortName: "Problem & Solution",
       what: "'What are the causes and what solutions can you suggest?' Address BOTH parts: causes in one paragraph, solutions in another, clearly linked.",
       howToAnswer: [
         "Identify both parts: what does it ask you to explain, and what to propose?",
@@ -420,6 +438,7 @@ export const WRITING_TASK2: WritingGuide = {
     {
       slug: "two-part",
       name: "Two-part / direct questions",
+      shortName: "Two-Part Question",
       what: "Two direct questions in the prompt (e.g. 'Why is this the case? Is it a positive or negative development?'). You must answer BOTH, usually one per body paragraph.",
       howToAnswer: [
         "Underline both questions and make sure each gets a full paragraph.",

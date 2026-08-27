@@ -4,22 +4,22 @@ import { ArrowRight } from "lucide-react";
 import { MarketingShell, PageHead } from "@/components/marketing/marketing-shell";
 import { Reveal } from "@/components/marketing/motion";
 import { FAQS } from "@/lib/faqs";
+import { pageMeta } from "@/lib/seo";
+import { LONG_TAIL } from "@/lib/keywords";
 
-export const metadata: Metadata = {
-  title: "IELTS Practice FAQ: AI Band Scoring & Mock Tests | IELTSVega",
+export const metadata: Metadata = pageMeta({
+  title: "IELTS Practice FAQ: AI Band Scoring & Mock Tests",
   description:
-    "Answers to common questions about practising IELTS online with IELTSVega: AI band scoring for Writing and Speaking, mock tests, Academic vs General Training, and how to raise your band.",
-  keywords: [
-    "ielts practice faq",
+    "Answers to the common questions about practising IELTS online: how AI band scoring works, mock tests, Academic vs General Training, and how to raise your band.",
+  path: "/faq",
+  keywords: ["ielts practice faq",
     "ielts online",
     "ai ielts band scoring",
     "ielts mock test",
     "ielts academic",
     "ielts general",
-    "how to improve ielts band",
-  ],
-  alternates: { canonical: "/faq" },
-};
+    "how to improve ielts band", ...LONG_TAIL.problems, ...LONG_TAIL.scoring],
+});
 
 /** FAQPage structured data — pairs with the visible Q&A below. JSON-LD is data,
  *  so CSP script-src doesn't gate it and no nonce is needed. */

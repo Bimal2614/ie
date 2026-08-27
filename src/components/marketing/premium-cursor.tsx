@@ -58,8 +58,12 @@ export function PremiumCursor() {
     <div
       ref={ref}
       aria-hidden
-      className="pointer-events-none fixed left-0 top-0 z-[90] size-6 rounded-full border border-brand/40 opacity-0 transition-[width,height,opacity] duration-200 data-[active=1]:size-10 data-[active=1]:opacity-100"
-      style={{ mixBlendMode: "multiply" }}
+      // Tailwind's mix-blend-multiply, not an inline style: this was the last
+      // authored `style=` attribute in the server HTML, and inline styles are
+      // both an audit flag and a CSP liability (they are the reason style-src
+      // has to keep 'unsafe-inline'). The decorative cursor is aria-hidden and
+      // starts at opacity-0, so it contributes nothing to indexable content.
+      className="pointer-events-none fixed left-0 top-0 z-[90] size-6 rounded-full border border-brand/40 opacity-0 mix-blend-multiply transition-[width,height,opacity] duration-200 data-[active=1]:size-10 data-[active=1]:opacity-100"
     />
   );
 }

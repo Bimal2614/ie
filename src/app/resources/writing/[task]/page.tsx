@@ -23,8 +23,8 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const g = get(task);
   if (!g) return {};
   return pageMeta({
-    title: `IELTS ${g.title}. All Question Types, Templates & Band 9 Model Answers (2026) | IELTSVega`,
-    description: `${g.tagline} Every ${g.title} question type with how to answer, a plan, structure, useful language, common mistakes and a full Band 9 sample answer.`,
+    title: `IELTS ${g.title}: Question Types & Band 9 Samples`,
+    description: `Every IELTS ${g.title} question type: the method for each, a paragraph structure, useful language, the mistakes that cost marks, and a Band 9 sample.`,
     path: `/resources/writing/${g.task}`,
     keywords: [
       `IELTS writing ${g.task.replace("-", " ")}`,

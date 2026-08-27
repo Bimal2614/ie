@@ -7,9 +7,9 @@ import { BAND_TABLES } from "@/lib/ielts";
 import { KEYWORDS, breadcrumbJsonLd, faqJsonLd, pageMeta, webAppJsonLd } from "@/lib/seo";
 
 const PATH = "/ielts-band-score-calculator";
-const TITLE = "IELTS Band Score Calculator: Raw Score to Band (2026) | IELTSVega";
+const TITLE = "IELTS Band Score Calculator: Raw Score to Band";
 const DESCRIPTION =
-  "Free IELTS band score calculator. Convert your Listening or Reading raw score out of 40 into a band, or average your four skill bands into an overall IELTS band, with the official rounding rule applied.";
+  "Free IELTS band score calculator: turn a Listening or Reading raw score out of 40 into a band, or average your four skills into an overall band score.";
 
 export const metadata = pageMeta({
   title: TITLE,

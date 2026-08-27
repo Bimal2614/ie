@@ -13,9 +13,20 @@ import { ArrowRight, ArrowUpRight } from "lucide-react";
  */
 
 const EASE = [0.22, 1, 0.36, 1] as const;
+
+/**
+ * Transform only, no opacity — same reasoning as Reveal in ./motion.
+ *
+ * This one mattered most: `initial: { opacity: 0 }` put the page's H1, its
+ * lead paragraph and both calls to action into the server HTML at
+ * `style="opacity:0"`. The H1 is the single strongest on-page ranking signal a
+ * document has, and shipping it invisible to any crawler that respects inline
+ * opacity is not a risk worth carrying for a fade. The copy now renders fully
+ * opaque and slides 18px into place.
+ */
 const rise = (delay: number) => ({
-  initial: { opacity: 0, y: 18 },
-  animate: { opacity: 1, y: 0 },
+  initial: { y: 18 },
+  animate: { y: 0 },
   transition: { duration: 0.7, ease: EASE, delay },
 });
 

@@ -16,31 +16,55 @@ import { Reveal, ScrollWords } from "@/components/marketing/motion";
 import { LandingFooter } from "@/components/marketing/landing-footer";
 import { BlogStrip } from "@/components/marketing/blog-strip";
 import { SITE_URL } from "@/lib/site";
-import { LOGO_URL } from "@/lib/seo";
+import {
+  WEBSITE_ID,
+  DEFAULT_DESCRIPTION,
+  DEFAULT_TITLE,
+  KEYWORDS,
+  faqJsonLd,
+  graphJsonLd,
+  organizationJsonLd,
+  pageMeta,
+  webSiteJsonLd,
+} from "@/lib/seo";
+import { LONG_TAIL } from "@/lib/keywords";
 import { FAQS } from "@/lib/faqs";
 
-export const metadata: Metadata = {
-  title: "IELTS Practice Online: AI Band Scoring & Mock Tests | IELTSVega",
-  description:
-    "Practise IELTS online with instant AI band scores for Writing & Speaking, full-length mock tests, and 15,000+ Academic and General Training questions. Real band jumps, scored the way examiners mark.",
-  keywords: [
-    "IELTS practice", "IELTS test", "test IELTS", "IELTS practice test online", "IELTS online practice",
-    "best IELTS platform", "IELTS preparation online", "IELTS mock test", "AI IELTS band score",
-    "IELTS reading", "IELTS writing", "IELTS speaking", "IELTS listening",
-    "IELTS writing checker", "IELTS speaking practice", "IELTS Academic practice",
-    "IELTS General Training practice", "free IELTS practice test",
-  ],
-  alternates: { canonical: "/" },
-  openGraph: {
-    type: "website",
-    title: "IELTS Practice Online with AI Band Scoring: IELTSVega",
-    description: "Real IELTS band jumps, instant AI scoring for Writing & Speaking, and full mock tests across Academic & General Training.",
-    siteName: "IELTSVega",
-  },
-  twitter: { card: "summary_large_image", title: "IELTS Practice Online with AI Band Scoring", description: "AI-scored Writing & Speaking, full mock tests, and 15,000+ IELTS questions." },
-  robots: { index: true, follow: true },
-};
-
+/**
+ * Built through pageMeta() rather than hand-rolled, which is what fixes three
+ * things the audit caught on this page specifically: there was no `og:url` at
+ * all (a page-level `openGraph` object replaces the layout's wholesale, url
+ * included), the canonical pointed at the apex host that 308-redirects, and
+ * there was no hreflang. The OG title/description are then overridden below —
+ * a social card gets a different, punchier line than a SERP snippet.
+ */
+export const metadata: Metadata = (() => {
+  const base = pageMeta({
+    title: DEFAULT_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    path: "/",
+    keywords: [
+      ...KEYWORDS.core,
+      ...KEYWORDS.ai,
+      ...LONG_TAIL.practiceMaterial,
+      ...LONG_TAIL.aiTools,
+    ],
+  });
+  return {
+    ...base,
+    openGraph: {
+      ...base.openGraph,
+      title: "IELTS Practice Online with AI Band Scoring: IELTSVega",
+      description:
+        "Real IELTS band jumps, instant AI scoring for Writing & Speaking, and full mock tests across Academic & General Training.",
+    },
+    twitter: {
+      ...base.twitter,
+      title: "IELTS Practice Online with AI Band Scoring",
+      description: "AI-scored Writing & Speaking, full mock tests, and 15,000+ IELTS questions.",
+    },
+  };
+})();
 /* ---- Content. Swap the `img` and numbers for real data before launch. ---- */
 
 const RESULTS = [
@@ -61,6 +85,80 @@ const METHOD = [
   { n: "02", title: "Target", copy: "A focused plan drills your weak types first: not a generic syllabus, the specific gaps between you and your target." },
   { n: "03", title: "Score with AI", copy: "Every Writing and Speaking answer is graded on the four official band criteria in seconds, with what to fix next." },
   { n: "04", title: "Mock under pressure", copy: "Full four-section mocks on real 2026 timing, ending in a band report. So exam day is a repeat, not a shock." },
+];
+
+/**
+ * The internal-link hub.
+ *
+ * Two jobs at once. For readers it answers the question the marketing copy
+ * above does not — "is the thing I keep failing actually covered here?" — with
+ * a named list rather than a claim. For search it is the page's densest block of
+ * real text, and the only place on the site where every question-type guide sits
+ * one click from the home page with anchor text that says what the target is
+ * about. Anchor text is a ranking input for the page being LINKED TO, so
+ * "Discussion essays: both views plus your opinion" pointing at the discussion
+ * guide is worth more to that guide than any amount of copy on this one.
+ *
+ * Every href resolves to a page or an on-page anchor that exists today
+ * (resources/[section] renders `id={topic.slug}` on each question type). Verify
+ * the target before adding a row — a hub full of 404s is worse than a short hub.
+ */
+const QUESTION_HUB: { skill: string; href: string; intro: string; links: { label: string; href: string }[] }[] = [
+  {
+    skill: "Listening",
+    href: "/resources/listening",
+    intro:
+      "Most Listening marks are lost to spelling, plurals and distractors rather than to not hearing the answer. The audio plays once here too, exactly as it does on test day.",
+    links: [
+      { label: "Form, note, table and flow-chart completion", href: "/resources/listening#form-note-table-completion" },
+      { label: "Plan, map and diagram labelling", href: "/resources/listening#plan-map-diagram-labelling" },
+      { label: "Listening multiple choice and how distractors work", href: "/resources/listening#multiple-choice" },
+      { label: "Matching questions in Listening", href: "/resources/listening#matching" },
+      { label: "Sentence and summary completion", href: "/resources/listening#sentence-summary-completion" },
+    ],
+  },
+  {
+    skill: "Reading",
+    href: "/resources/reading",
+    intro:
+      "Sixty minutes, forty questions, and no extra transfer time. Reading is a timing problem before it is a comprehension problem, so every guide below leads with the technique that costs the fewest minutes.",
+    links: [
+      { label: "True / False / Not Given (and Yes / No / Not Given)", href: "/resources/reading#true-false-notgiven" },
+      { label: "Matching headings to paragraphs", href: "/resources/reading#matching-headings" },
+      { label: "Matching information, features and sentence endings", href: "/resources/reading#matching-information-features" },
+      { label: "Summary, note and table completion", href: "/resources/reading#completion-tasks" },
+      { label: "Short-answer questions", href: "/resources/reading#short-answer" },
+    ],
+  },
+  {
+    skill: "Writing",
+    href: "/resources/writing",
+    intro:
+      "Task 2 is worth twice Task 1, and both are marked on four criteria you can study directly. Each guide below carries a model answer and the band descriptors that produced its score.",
+    links: [
+      { label: "How to describe a line graph in Task 1", href: "/resources/writing/task-1/line-graph" },
+      { label: "Bar charts and comparison language", href: "/resources/writing/task-1/bar-chart" },
+      { label: "Process diagrams and the passive voice", href: "/resources/writing/task-1/process-diagram" },
+      { label: "Map questions: describing changes over time", href: "/resources/writing/task-1/map" },
+      { label: "Discussion essays: both views plus your opinion", href: "/resources/writing/task-2/discussion" },
+      { label: "Agree or disagree: opinion essay structure", href: "/resources/writing/task-2/opinion" },
+      { label: "Advantages and disadvantages essays", href: "/resources/writing/task-2/advantages-disadvantages" },
+      { label: "Problem and solution essays", href: "/resources/writing/task-2/problem-solution" },
+      { label: "Two-part questions", href: "/resources/writing/task-2/two-part" },
+    ],
+  },
+  {
+    skill: "Speaking",
+    href: "/resources/speaking",
+    intro:
+      "Record an answer and get a band on Fluency, Lexical Resource, Grammar and Pronunciation in seconds, with the hesitation marked where it happened. The part most people underprepare is Part 3.",
+    links: [
+      { label: "Part 1: interview questions on work, study and home", href: "/resources/speaking#part-1-interview" },
+      { label: "Part 2: the cue card and the one-minute long turn", href: "/resources/speaking#part-2-cue-card" },
+      { label: "Part 3: the abstract two-way discussion", href: "/resources/speaking#part-3-discussion" },
+      { label: "Sentence banks for Speaking Part 2", href: "/templates" },
+    ],
+  },
 ];
 
 const SKILLS = [
@@ -94,7 +192,17 @@ export default async function Home() {
           {RESULTS.map((r, i) => (
             <Reveal key={r.name} delay={i * 0.12} className="h-full">
             <figure className="flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-paper-elev">
-              <Image src={r.img} alt={`${r.name}. IELTS result`} width={1000} height={680} className="aspect-[3/2] w-full object-cover" />
+              <Image
+                src={r.img}
+                alt={`IELTS score report: ${r.name} improved from Band ${r.from.toFixed(1)} to Band ${r.to.toFixed(1)} in IELTS ${r.module}`}
+                width={1000}
+                height={680}
+                // Three-up from md, full width below. Without `sizes`, next/image
+                // assumes 100vw at every breakpoint and served the 2048px variant
+                // into a ~380px slot — three times over, all below the fold.
+                sizes="(min-width: 768px) 33vw, 100vw"
+                className="aspect-[3/2] w-full object-cover"
+              />
               <div className="flex flex-1 flex-col p-5">
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-ink-muted line-through">{r.from.toFixed(1)}</span>
@@ -164,7 +272,16 @@ export default async function Home() {
       <section id="features" className="scroll-mt-20 border-y border-line bg-paper-elev">
         <div className="mx-auto grid w-full max-w-6xl gap-12 px-5 py-20 lg:grid-cols-2 lg:items-center">
           <Reveal x={-30} y={0} className="order-2 overflow-hidden rounded-2xl border border-line shadow-xl lg:order-1">
-            <Image src="/test-6.png" alt="AI band scoring in the IELTSVega app" width={1280} height={720} className="h-auto w-full" />
+            <Image
+              src="/test-6.png"
+              alt="IELTSVega AI band scoring: a Writing Task 2 answer marked on Task Response, Coherence and Cohesion, Lexical Resource and Grammatical Range"
+              width={1280}
+              height={720}
+              // Half of a max-w-6xl (1152px) grid from lg, so ~576px at most.
+              // Was requesting w=3840.
+              sizes="(min-width: 1024px) 576px, 100vw"
+              className="h-auto w-full"
+            />
           </Reveal>
           <Reveal x={30} y={0} delay={0.1} className="order-1 lg:order-2">
             <Header align="left" eyebrow="Scored like the real thing" title="AI band scoring on every criterion." lead="" />
@@ -220,7 +337,80 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ══ FAQ — SEO / AI-answer content ══ */}
+      {/* == Question-type hub — the page's real content block, and the only
+             route from the home page to every guide in a single click == */}
+      <section id="question-types" className="mx-auto w-full max-w-6xl scroll-mt-20 px-5 py-20">
+        <Reveal>
+          <Header
+            eyebrow="Every question type"
+            title="Practise the exact task costing you marks."
+            lead="Forty Listening questions, forty Reading questions, two Writing tasks and three Speaking parts, each with its own technique. Start with the one you keep getting wrong."
+          />
+        </Reveal>
+
+        <div className="mt-14 grid gap-10 md:grid-cols-2">
+          {QUESTION_HUB.map((g, i) => (
+            <Reveal key={g.skill} delay={i * 0.08}>
+              <h3 className="font-serif text-2xl tracking-tight text-ink">
+                <Link href={g.href} className="transition-colors hover:text-brand">
+                  IELTS {g.skill}
+                </Link>
+              </h3>
+              <p className="mt-2 max-w-md text-sm leading-relaxed text-ink-soft">{g.intro}</p>
+              <ul className="mt-4 space-y-2">
+                {g.links.map((l) => (
+                  <li key={l.href} className="flex gap-2 text-sm">
+                    <ArrowRight className="mt-1 size-3.5 shrink-0 text-brand/50" />
+                    <Link href={l.href} className="text-ink-soft transition-colors hover:text-brand">
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </Reveal>
+          ))}
+        </div>
+
+        {/* Closing prose — carries the scoring and format queries onto the page
+            as sentences, and links the three tool/explainer pages that were
+            otherwise reachable only from the footer. */}
+        <Reveal delay={0.1}>
+          <div className="mt-16 border-t border-line pt-10">
+            <h3 className="font-serif text-2xl tracking-tight text-ink">Know the number you need before you book</h3>
+            <p className="mt-3 max-w-3xl text-sm leading-relaxed text-ink-soft">
+              IELTS is marked on a 0&ndash;9 band scale in half-band steps, and your overall score is the average
+              of the four skill bands, rounded to the nearest half. That rounding is where people lose the band
+              they thought they had: an average of 6.75 rounds up to 7.0, but 6.625 rounds down to 6.5. Work out
+              where you actually stand with the{" "}
+              <Link href="/ielts-band-score-calculator" className="text-brand underline underline-offset-4">
+                IELTS band score calculator
+              </Link>
+              , which turns raw Listening and Reading marks and your Writing and Speaking bands into an overall
+              score, or read{" "}
+              <Link href="/ielts-band-scores" className="text-brand underline underline-offset-4">
+                how IELTS band scores are calculated
+              </Link>{" "}
+              for the full marking rules.
+            </p>
+            <p className="mt-4 max-w-3xl text-sm leading-relaxed text-ink-soft">
+              If you are aiming at a specific target, start from the band rather than the syllabus:{" "}
+              <Link href="/ielts-band/6-5" className="text-brand underline underline-offset-4">how to get Band 6.5</Link>,{" "}
+              <Link href="/ielts-band/7" className="text-brand underline underline-offset-4">Band 7</Link>,{" "}
+              <Link href="/ielts-band/8" className="text-brand underline underline-offset-4">Band 8</Link>{" "}or{" "}
+              <Link href="/ielts-band/9" className="text-brand underline underline-offset-4">Band 9</Link>. Each one
+              sets out what that score takes in all four skills, and the specific mistakes that cap you one band
+              below it. Before you book, check{" "}
+              <Link href="/ielts-2026-changes" className="text-brand underline underline-offset-4">
+                what changed in IELTS in 2026
+              </Link>
+              : computer-delivered testing is now the default in most markets, One Skill Retake lets you resit a
+              single section instead of the whole test, and paper-based IELTS has been retired almost everywhere.
+            </p>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* == FAQ — SEO / AI-answer content == */}
       <section id="faq" className="mx-auto w-full max-w-3xl scroll-mt-20 px-5 py-20">
         <Header eyebrow="Questions, answered" title="Everything about practising IELTS online." lead="" />
         <div className="mt-10 divide-y divide-line">
@@ -262,33 +452,19 @@ function Header({ eyebrow, title, lead, align = "center" }: { eyebrow: string; t
 
 
 function StructuredData() {
-  const orgId = `${SITE_URL}/#organization`;
-  const json = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Organization",
-        "@id": orgId,
-        name: "IELTSVega",
-        url: SITE_URL,
-        logo: LOGO_URL,
-        image: LOGO_URL,
-        description:
-          "IELTS preparation platform with AI band scoring for Writing and Speaking, full mock tests, and 15,000+ Academic and General Training questions.",
-        // sameAs: add your social profile URLs here (X, Instagram, Facebook,
-        // LinkedIn, YouTube) to strengthen the brand entity / knowledge panel.
-      },
-      {
-        "@type": "WebSite",
-        "@id": `${SITE_URL}/#website`,
-        name: "IELTSVega: IELTS Practice Online",
-        url: SITE_URL,
-        description: "Practise IELTS online with AI band scoring and full mock tests.",
-        publisher: { "@id": orgId },
-      },
-      { "@type": "FAQPage", mainEntity: FAQS.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) },
-    ],
-  };
+  /**
+   * One `@graph`, not three separate <script> blocks — the FAQPage's publisher
+   * edge and the WebSite's only resolve by `@id` when the entities share a
+   * graph. The Organization and WebSite blocks live in lib/seo so the same
+   * entity is emitted here, in emails and in any future page, with one
+   * definition of `sameAs` behind them.
+   */
+  const json = graphJsonLd(
+    organizationJsonLd(),
+    webSiteJsonLd(),
+    // isPartOf ties the FAQ to the site entity instead of leaving it floating.
+    { ...faqJsonLd(FAQS), "@id": `${SITE_URL}/#faq`, isPartOf: { "@id": WEBSITE_ID }, inLanguage: "en" },
+  );
   // JSON-LD is data, not executable script — CSP script-src doesn't gate it, so
   // no nonce is needed. Omitting it keeps server/client identical (no hydration
   // mismatch — the browser would otherwise blank a nonce and differ from SSR).

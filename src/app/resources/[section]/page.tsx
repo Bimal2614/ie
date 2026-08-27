@@ -27,8 +27,10 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   if (!s) return {};
   const n = s.name.toLowerCase();
   return pageMeta({
-    title: `IELTS ${s.name}. Strategies, Worked Examples & Tips (2026) | IELTSVega`,
-    description: `Master IELTS ${s.name}: ${s.tagline} How to answer every question type, dos and don'ts, worked examples with answers explained, and band-boosting tips.`,
+    // No "| IELTSVega" suffix on templated titles: the brand costs 12 of the
+    // ~60 characters Google renders, and it is the half a reader can infer.
+    title: `IELTS ${s.name} Practice: Strategies, Tips & Examples`,
+    description: `How to answer every IELTS ${s.name} question type: the method for each, the mistakes that cost marks, and worked examples with the answers explained.`,
     path: `/resources/${s.key}`,
     keywords: [
       `IELTS ${n}`,

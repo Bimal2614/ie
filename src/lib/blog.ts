@@ -10,7 +10,16 @@
 export type BlogSection = { heading?: string; paragraphs?: string[]; bullets?: string[] };
 export type BlogPost = {
   slug: string;
+  /** The article headline. Rendered as the page H1 — keep it under 70 chars. */
   title: string;
+  /**
+   * Optional <title> override, for headlines that read well on the page but
+   * exceed the ~60 characters Google renders in a result. Falls back to
+   * `title`. Note the page title no longer carries a "| IELTSVega Blog"
+   * suffix: 17 characters of brand was pushing every post's real headline out
+   * of the visible part of the snippet.
+   */
+  seoTitle?: string;
   excerpt: string;
   category: string;
   date: string; // display string, e.g. "July 2026"
@@ -36,9 +45,9 @@ export const POSTS: BlogPost[] = [
    * ---------------------------------------------------------------- */
   {
     slug: "recent-ielts-speaking-questions-july-2026",
-    title: "Recent IELTS Speaking questions: July 2026 (Part 1, 2 & 3 with model answers)",
+    title: "Recent IELTS Speaking questions: July 2026 (Part 1, 2 & 3)",
     excerpt:
-      "The IELTS Speaking topics most commonly reported this July 2026 cycle: real-style Part 1, 2 and 3 questions, cue cards, and model answers you can practise today.",
+      "The IELTS Speaking topics most reported in the July 2026 cycle: real-style Part 1, 2 and 3 questions, cue cards, and model answers you can practise today.",
     category: "Speaking",
     date: "July 2026",
     publishedAt: "2026-07-05",
@@ -71,7 +80,7 @@ export const POSTS: BlogPost[] = [
     slug: "recent-ielts-speaking-questions-june-2026",
     title: "Recent IELTS Speaking questions: June 2026 (Part 1, 2 & 3)",
     excerpt:
-      "The IELTS Speaking topics commonly reported in the June 2026 cycle: Part 1 questions, Part 2 cue cards and Part 3 discussion prompts, with tips to answer each well.",
+      "The IELTS Speaking topics reported in the June 2026 cycle: Part 1 questions, Part 2 cue cards and Part 3 discussion prompts, with tips for answering each.",
     category: "Speaking",
     date: "June 2026",
     publishedAt: "2026-06-05",
@@ -100,6 +109,7 @@ export const POSTS: BlogPost[] = [
   },
   {
     slug: "recent-ielts-writing-task-2-topics-july-2026",
+    seoTitle: "Recent IELTS Writing Task 2 Topics: July 2026",
     title: "Recent IELTS Writing Task 2 topics: July 2026 (with essay plans)",
     excerpt:
       "The IELTS Writing Task 2 essay questions and themes commonly reported this July 2026 cycle. Grouped by type, with quick plans and a Band 8 opening for each.",
@@ -137,9 +147,10 @@ export const POSTS: BlogPost[] = [
    * ---------------------------------------------------------------- */
   {
     slug: "what-is-ielts-complete-guide",
+    seoTitle: "What is IELTS? A Complete Beginner's Guide",
     title: "What is IELTS? A complete beginner's guide to the exam (2026)",
     excerpt:
-      "What the IELTS test is, who accepts it, Academic vs General Training, the four sections, how band scores work, and how to start practising. Everything a first-time test taker needs.",
+      "What IELTS is, who accepts it, Academic vs General Training, the four sections, how band scores work, and how to start practising as a first-time test taker.",
     category: "Basics",
     date: "July 2026",
     readMins: 9,
@@ -174,7 +185,8 @@ export const POSTS: BlogPost[] = [
   },
   {
     slug: "ielts-speaking-parts-questions-answers",
-    title: "IELTS Speaking Part 1, 2 & 3: sample questions and Band 9 model answers",
+    seoTitle: "IELTS Speaking Parts 1, 2 & 3: Questions & Answers",
+    title: "IELTS Speaking Parts 1, 2 & 3: sample questions and model answers",
     excerpt:
       "How the IELTS Speaking test is structured, real sample questions for Parts 1-3, model answers, and the exact techniques that move you from Band 6 to Band 8.",
     category: "Speaking",
@@ -212,6 +224,7 @@ export const POSTS: BlogPost[] = [
   },
   {
     slug: "ielts-writing-task-1-guide-band-9",
+    seoTitle: "IELTS Writing Task 1: Step-by-Step Band 9 Guide",
     title: "IELTS Writing Task 1: a step-by-step guide with Band 9 examples",
     excerpt:
       "How to structure IELTS Academic Writing Task 1: how to write a high-scoring overview, describe data accurately, and reach Band 9, with a full model answer.",
@@ -277,7 +290,7 @@ export const POSTS: BlogPost[] = [
     slug: "ielts-listening-strategies",
     title: "IELTS Listening: strategies that actually work",
     excerpt:
-      "Why the audio plays only once, how to use the reading time, spelling and number traps, and the section-by-section strategy that raises your IELTS Listening band.",
+      "Why the audio plays once, how to use the reading time, the spelling and number traps, and the section-by-section strategy that raises your Listening band.",
     category: "Listening",
     date: "July 2026",
     readMins: 8,
@@ -340,6 +353,7 @@ export const POSTS: BlogPost[] = [
   },
   {
     slug: "ielts-vs-toefl",
+    seoTitle: "IELTS vs TOEFL: Key Differences & Which to Take",
     title: "IELTS vs TOEFL: key differences and which test is right for you",
     excerpt:
       "A clear comparison of IELTS and TOEFL, format, scoring, Speaking style, acceptance and difficulty, to help you choose the test that plays to your strengths.",
@@ -469,7 +483,7 @@ export const POSTS: BlogPost[] = [
   {
     slug: "how-ielts-band-score-is-calculated",
     title: "How the IELTS band score is calculated, and how to raise it",
-    excerpt: "The 9-band scale, how each section is scored, how the overall band is rounded, and where the easiest half-bands hide.",
+    excerpt: "The 9-band scale, how each section is marked, how the overall band is averaged and rounded, and where the rounding rule quietly costs people half a band.",
     category: "Scoring",
     date: "July 2026",
     readMins: 6,
@@ -490,7 +504,7 @@ export const POSTS: BlogPost[] = [
   {
     slug: "writing-mistakes-stuck-at-6-5",
     title: "7 mistakes that keep you stuck at Band 6.5 in Writing",
-    excerpt: "The recurring habits that cap fluent writers at 6.5, and the specific fixes that move you to 7 and beyond.",
+    excerpt: "The recurring habits that cap fluent writers at Band 6.5 in IELTS Writing, why examiners penalise each one, and the specific fixes that move you to Band 7.",
     category: "Writing",
     date: "July 2026",
     readMins: 7,

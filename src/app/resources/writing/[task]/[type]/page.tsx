@@ -45,8 +45,10 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const n = qt.name;
 
   return pageMeta({
-    title: `IELTS Writing ${label}: ${n}: Structure, Vocabulary & Band 9 Sample (2026) | IELTSVega`,
-    description: `How to answer an IELTS Writing ${label} ${n.toLowerCase()} question: a step-by-step method, the paragraph structure, useful language, the mistakes that cost marks, and a full Band 9 model answer.`,
+    // qt.shortName, not qt.name — the full name carries a parenthetical gloss
+    // that ran the title to 126 characters. See WritingQuestionType.shortName.
+    title: `IELTS Writing ${label}: ${qt.shortName} Band 9 Guide`,
+    description: `How to answer an IELTS Writing ${label} ${qt.shortName.toLowerCase()} question: a step-by-step method, paragraph structure, useful language and a Band 9 model answer.`,
     path: `/resources/writing/${guide.task}/${qt.slug}`,
     keywords: [
       `IELTS ${n}`,

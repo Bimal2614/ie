@@ -5,23 +5,23 @@ import { MarketingShell, PageHead } from "@/components/marketing/marketing-shell
 import { Reveal } from "@/components/marketing/motion";
 import { TEMPLATE_SECTIONS, type TemplateSet, type TemplateSection } from "@/lib/templates";
 import { SITE_URL } from "@/lib/site";
+import { pageMeta } from "@/lib/seo";
+import { LONG_TAIL } from "@/lib/keywords";
 
-export const metadata: Metadata = {
-  title: "IELTS Writing & Speaking Templates & Sentence Banks | IELTSVega",
+export const metadata: Metadata = pageMeta({
+  title: "IELTS Writing & Speaking Templates & Sentence Banks",
   description:
-    "Free IELTS templates and sentence banks for Writing (Task 1 & 2) and Speaking (Parts 1-3). Examiner-friendly Band 7-9 patterns, structures and formulas you can adapt to any topic.",
-  keywords: [
-    "ielts writing template",
+    "Free IELTS templates and sentence banks for Writing Task 1 and 2 and Speaking Parts 1-3: examiner-friendly Band 7-9 patterns you can adapt to any topic.",
+  path: "/templates",
+  keywords: ["ielts writing template",
     "ielts writing task 2 template",
     "ielts writing task 1 sentences",
     "ielts speaking phrases",
     "ielts speaking part 2 template",
     "ielts sentence bank",
     "ielts band 9 sentences",
-    "ielts essay sentences",
-  ],
-  alternates: { canonical: "/templates" },
-};
+    "ielts essay sentences", ...LONG_TAIL.language, ...LONG_TAIL.writingTask2],
+});
 
 /** Article + Breadcrumb structured data (JSON-LD is data, no CSP nonce needed). */
 function TemplatesJsonLd() {

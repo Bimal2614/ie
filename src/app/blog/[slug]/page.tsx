@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Clock, ArrowRight } from "lucide-react";
@@ -16,13 +17,32 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const { slug } = await params;
   const post = POST_BY_SLUG[slug];
   if (!post) return {};
-  return {
-    title: `${post.title} | IELTSVega Blog`,
+  const meta = pageMeta({
+    title: post.seoTitle ?? post.title,
     description: post.excerpt,
+    path: `/blog/${post.slug}`,
     keywords: post.keywords,
-    alternates: { canonical: `/blog/${post.slug}` },
-    openGraph: { type: "article", title: post.title, description: post.excerpt },
-  };
+    type: "article",
+    publishedTime: post.publishedAt,
+  });
+
+  /**
+   * Drop `images` so Next re-injects this segment's own opengraph-image.tsx.
+   *
+   * Next merges a file-based OG image into a segment's metadata only when that
+   * segment does not declare `openGraph.images` itself. pageMeta() always sets
+   * the site-wide default, which would replace every post's generated card with
+   * one identical brand image — so the per-post image is restored by removing
+   * the key rather than by bypassing pageMeta and losing canonical, hreflang,
+   * og:url and the Twitter card with it (which is what the hand-written object
+   * this replaced was doing: every post shared with the HOME PAGE's title).
+   */
+  const openGraph = { ...meta.openGraph };
+  delete (openGraph as { images?: unknown }).images;
+  const twitter = { ...meta.twitter };
+  delete (twitter as { images?: unknown }).images;
+
+  return { ...meta, openGraph, twitter };
 }
 
 /** BlogPosting structured data — helps Google surface the article richly.

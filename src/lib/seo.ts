@@ -13,7 +13,9 @@
  */
 
 import type { Metadata } from "next";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL, absoluteUrl } from "@/lib/site";
+import { SAME_AS, SUPPORT_EMAIL } from "@/lib/brand-links";
+import { metaKeywordSlice } from "@/lib/keywords";
 
 export const BRAND = "IELTSVega";
 /**
@@ -23,8 +25,27 @@ export const BRAND = "IELTSVega";
  */
 export const LOGO_URL = `${SITE_URL}/brand/logo-512.png`;
 export const SITE_NAME = "IELTSVega: IELTS Practice Online";
+
+/**
+ * The site-wide title. 58 characters — Google truncates the SERP link around
+ * 60, and the previous 63-character version was losing "IELTSVega" to an
+ * ellipsis on desktop, which is the worst half to lose: the brand is the part
+ * that earns the repeat click.
+ *
+ * It leads with "IELTS Practice Test Online" rather than "IELTS Practice
+ * Online" because the former is the phrase with the search volume behind it.
+ */
+export const DEFAULT_TITLE = "IELTS Practice Test Online with AI Band Scores | IELTSVega";
+
+/**
+ * 142 characters. Google renders roughly 155-160 before truncating, and the old
+ * 198-character version was cut mid-sentence at "...General Training questions.
+ * Real band jum…" — so the closing hook never showed. Ends on a call to action
+ * instead, which is what a description is actually for: it does not rank the
+ * page, it decides whether the impression becomes a click.
+ */
 export const DEFAULT_DESCRIPTION =
-  "Practise IELTS online with instant AI band scores for Writing & Speaking, full-length mock tests, and 15,000+ Academic and General Training questions.";
+  "Practise IELTS online: instant AI band scores for Writing & Speaking, full mock tests, and 15,000+ Academic and General questions. Start free.";
 
 /* ───────────────────────────── Keyword clusters ─────────────────────────────
  * Grouped by search intent so a page can pull the clusters it actually competes
@@ -149,14 +170,54 @@ export function pageMeta(opts: {
   imageUrl?: string;
 }): Metadata {
   const { title, description, path, keywords = [], index = true, type = "website", publishedTime, modifiedTime, imageUrl } = opts;
-  const url = `${SITE_URL}${path === "/" ? "" : path}`;
+
+  /**
+   * Length guard. Not cosmetic: 46 of 52 titles and 36 of 52 descriptions had
+   * drifted outside the range Google renders, so most of the site was being
+   * truncated mid-phrase in search results. Nothing catches that at review time
+   * — a title only looks too long once you count it — so it is counted here.
+   *
+   * Dev/build only, and a warning rather than a throw: shipping a 62-character
+   * title is a minor CTR loss, while failing a production build over one would
+   * be an outage. The warning appears in `next build` output, which is where
+   * anyone adding a page will see it.
+   */
+  if (process.env.NODE_ENV !== "production") {
+    if (title.length < 30 || title.length > 60) {
+      console.warn(`[seo] ${path}: title is ${title.length} chars (want 30-60) — "${title}"`);
+    }
+    if (description.length < 120 || description.length > 160) {
+      console.warn(`[seo] ${path}: description is ${description.length} chars (want 120-160)`);
+    }
+  }
+
+  const url = absoluteUrl(path);
   const image = imageUrl ? { ...DEFAULT_OG_IMAGE, url: imageUrl } : DEFAULT_OG_IMAGE;
 
   return {
     title,
     description,
-    keywords: [...new Set([...keywords, ...BASELINE_KEYWORDS])],
-    alternates: { canonical: path },
+    // Capped — see metaKeywordSlice. Pages pass whole clusters for readability;
+    // only the first dozen ship, because the tag barely counts and the bytes do.
+    keywords: metaKeywordSlice([...keywords, ...BASELINE_KEYWORDS]),
+    alternates: {
+      canonical: url,
+      /**
+       * hreflang. The site is English-only, so this is a SELF-REFERENCING set:
+       * `en` points at this page and `x-default` names it the fallback for every
+       * other language. That is not a no-op — without x-default, Google has no
+       * declared default for a monolingual site and the audit reports the
+       * implementation as broken. It also reserves the shape for the day a
+       * localised version exists: add `"hi": ...` here and nothing else changes.
+       *
+       * Absolute URLs are mandatory in hreflang; relative ones are ignored
+       * silently, which is why this passes `url` and not `path`.
+       */
+      languages: {
+        en: url,
+        "x-default": url,
+      },
+    },
     robots: index
       ? undefined // inherit the permissive root default (see app/layout.tsx)
       : { index: false, follow: false, googleBot: { index: false, follow: false } },
@@ -188,6 +249,94 @@ export function pageMeta(opts: {
 
 export const ORG_ID = `${SITE_URL}/#organization`;
 export const WEBSITE_ID = `${SITE_URL}/#website`;
+
+/**
+ * The brand entity. Emitted once, on the home page, and referenced by `@id`
+ * from every other block on the site.
+ *
+ * `sameAs` is the part that matters here: it is how five separate social
+ * profiles and this domain get resolved to ONE entity, which is the
+ * precondition for a knowledge panel and for a brand search returning us rather
+ * than an unrelated account with a similar handle. It is populated from
+ * lib/brand-links, and only with profiles marked verified — an unreachable
+ * sameAs discredits the whole list.
+ *
+ * `contactPoint` replaces the postal address Google's "local business" advice
+ * asks for. This is a global online platform with no walk-in premises, so
+ * LocalBusiness + PostalAddress would be a fabricated claim; ContactPoint with
+ * areaServed: Worldwide is the honest and valid way to state the same thing.
+ */
+export function organizationJsonLd() {
+  return {
+    "@type": "EducationalOrganization",
+    "@id": ORG_ID,
+    name: BRAND,
+    alternateName: "IELTS Vega",
+    url: SITE_URL,
+    // Google rejects a favicon here and wants a raster image of at least
+    // 112x112; logo-512.png is the 512px master.
+    logo: {
+      "@type": "ImageObject",
+      url: LOGO_URL,
+      width: 512,
+      height: 512,
+      caption: BRAND,
+    },
+    image: LOGO_URL,
+    description:
+      "IELTS preparation platform with AI band scoring for Writing and Speaking, full mock tests, and 15,000+ Academic and General Training questions.",
+    email: SUPPORT_EMAIL,
+    ...(SAME_AS.length > 0 ? { sameAs: [...SAME_AS] } : {}),
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer support",
+      email: SUPPORT_EMAIL,
+      url: absoluteUrl("/contact"),
+      areaServed: "Worldwide",
+      availableLanguage: ["English"],
+    },
+    knowsAbout: [
+      "IELTS Academic",
+      "IELTS General Training",
+      "IELTS band descriptors",
+      "English language proficiency testing",
+    ],
+  };
+}
+
+/**
+ * The site entity. Separate from the organization because they are genuinely
+ * different things — the org publishes the site — and Google reads the
+ * publisher edge between them.
+ *
+ * No `potentialAction`/SearchAction is declared. That markup only earns the
+ * sitelinks searchbox when the URL template it names is a real, crawlable
+ * search endpoint returning results; there is no such route here, and declaring
+ * one that 404s is an invalid-markup error rather than a missed opportunity.
+ * Add it the day /search exists.
+ */
+export function webSiteJsonLd() {
+  return {
+    "@type": "WebSite",
+    "@id": WEBSITE_ID,
+    name: SITE_NAME,
+    url: SITE_URL,
+    description: "Practise IELTS online with AI band scoring and full mock tests.",
+    inLanguage: "en",
+    publisher: { "@id": ORG_ID },
+  };
+}
+
+/**
+ * Wrap a set of schema blocks into one `@graph`.
+ *
+ * One graph per page, not one <script> per block: cross-references by `@id`
+ * only resolve reliably inside a single graph, and it is the difference between
+ * Google seeing four related entities and four orphans.
+ */
+export function graphJsonLd(...blocks: object[]) {
+  return { "@context": "https://schema.org", "@graph": blocks };
+}
 
 /** Breadcrumb trail. Pass the full path including the page itself. */
 export function breadcrumbJsonLd(items: { name: string; path: string }[]) {

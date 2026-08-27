@@ -3,14 +3,16 @@ import Link from "next/link";
 import { ArrowRight, Check } from "lucide-react";
 import { MarketingShell, PageHead } from "@/components/marketing/marketing-shell";
 import { BANDS, BAND_SLUGS } from "@/lib/band-content";
+import { pageMeta } from "@/lib/seo";
+import { LONG_TAIL } from "@/lib/keywords";
 
-export const metadata: Metadata = {
-  title: "IELTS Band Scores Explained: how IELTS Scoring Works (2026) | IELTSVega",
+export const metadata: Metadata = pageMeta({
+  title: "IELTS Band Scores Explained: How IELTS Scoring Works",
   description:
-    "How IELTS band scores work: the 9-band scale, how Listening, Reading, Writing and Speaking are scored, how the overall band is calculated and rounded, and how to reach Band 7, 8 or 9.",
-  alternates: { canonical: "/ielts-band-scores" },
-  keywords: ["IELTS band scores", "IELTS scoring", "how IELTS is scored", "IELTS band score calculator", "IELTS overall band"],
-};
+    "How IELTS band scores work: the 9-band scale, how each skill is marked, how the overall band is averaged and rounded, and what Band 7, 8 and 9 actually require.",
+  path: "/ielts-band-scores",
+  keywords: ["IELTS band scores", "IELTS scoring", "how IELTS is scored", "IELTS band score calculator", "IELTS overall band", ...LONG_TAIL.scoring, ...LONG_TAIL.bandTargets],
+});
 
 const SCALE = [
   { band: "9", label: "Expert user" },

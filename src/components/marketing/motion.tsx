@@ -18,6 +18,22 @@ const EASE = [0.22, 1, 0.36, 1] as const;
  * Direction and delay are props, so sections get *varied* motion instead of the
  * same fade everywhere (which reads as AI-generated). Fully static under
  * reduced-motion.
+ *
+ * WHY THIS ANIMATES TRANSFORM AND NOT OPACITY.
+ *
+ * `initial={{ opacity: 0 }}` is rendered into the SERVER HTML as
+ * `style="opacity:0"`. About twenty blocks on the home page shipped that way,
+ * which covered most of the page's copy. Googlebot does render JavaScript and
+ * usually fires these reveals, but "usually" is doing real work in that
+ * sentence — and every naive text extractor (including the SEO auditors people
+ * run on you, and a fair number of AI answer-engine crawlers) treats
+ * `opacity: 0` as hidden and drops the text outright.
+ *
+ * Animating transform alone keeps the text fully opaque in the server HTML —
+ * it is merely offset by 24px until it slides home. Visually this is a slide-in
+ * rather than a fade-and-slide; functionally it means no crawler ever has to
+ * decide whether our content counts as visible. If you want the fade back,
+ * re-add opacity here and accept that trade knowingly.
  */
 export function Reveal({
   children,
@@ -39,8 +55,8 @@ export function Reveal({
   return (
     <motion.div
       className={className}
-      initial={{ opacity: 0, y, x }}
-      whileInView={{ opacity: 1, y: 0, x: 0 }}
+      initial={{ y, x }}
+      whileInView={{ y: 0, x: 0 }}
       viewport={{ once: true, amount: 0.25 }}
       transition={{ duration, ease: EASE, delay }}
     >
@@ -53,6 +69,13 @@ export function Reveal({
  * ScrollWords — the narrative reveals word-by-word as it scrolls through the
  * viewport (the signature editorial motion). Each word fades from faint to full
  * across the section's scroll progress.
+ *
+ * The faint end is 0.35, not the 0.15 it started at. This paragraph is 47 words
+ * of the page's most keyword-relevant copy, and each word server-renders with
+ * its own inline opacity. 0.15 is low enough that a contrast checker calls it
+ * invisible and a text extractor may discount it; 0.35 still reads as clearly
+ * "not yet revealed" while never being arguable as hidden text. The effect
+ * survives, the ambiguity does not.
  */
 export function ScrollWords({ text, className }: { text: string; className?: string }) {
   const reduced = useReducedMotion();
@@ -82,7 +105,7 @@ function Word({
   progress: MotionValue<number>;
   range: [number, number];
 }) {
-  const opacity = useTransform(progress, range, [0.15, 1]);
+  const opacity = useTransform(progress, range, [0.35, 1]);
   return (
     <motion.span style={{ opacity }} className="mr-[0.28em] inline-block">
       {children}

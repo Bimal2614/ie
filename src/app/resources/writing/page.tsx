@@ -7,9 +7,9 @@ import { WRITING_TASK1, WRITING_TASK2 } from "@/lib/study-writing";
 import { KEYWORDS, pageMeta } from "@/lib/seo";
 
 export const metadata = pageMeta({
-  title: "IELTS Writing: Task 1 & Task 2 Guides, Templates & Band 9 Answers (2026) | IELTSVega",
+  title: "IELTS Writing Guide: Task 1 & Task 2 Band 9 Answers",
   description:
-    "Complete IELTS Writing study guide for 2026: every Task 1 and Task 2 question type, how to answer, planning, structure, useful language, common mistakes and full Band 9 model answers.",
+    "Every IELTS Writing Task 1 and Task 2 question type: how to answer, planning, structure, useful language, the common mistakes, and full Band 9 model answers.",
   path: "/resources/writing",
   keywords: [
     ...KEYWORDS.writing,

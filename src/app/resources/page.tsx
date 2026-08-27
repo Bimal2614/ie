@@ -8,9 +8,9 @@ import { BlogStrip } from "@/components/marketing/blog-strip";
 import { KEYWORDS, pageMeta } from "@/lib/seo";
 
 export const metadata = pageMeta({
-  title: "IELTS Study Materials: Strategies, Templates & Tips (2026) | IELTSVega",
+  title: "IELTS Study Materials: Strategies, Templates & Tips",
   description:
-    "Free IELTS study materials for 2026: exam-accurate strategies, dos and don'ts, essay and letter templates, and tips for every Listening, Reading, Writing and Speaking task type.",
+    "Free IELTS study materials: exam strategies, dos and don'ts, essay and letter templates, and tips for every Listening, Reading, Writing and Speaking task.",
   path: "/resources",
   keywords: [
     "IELTS study material",

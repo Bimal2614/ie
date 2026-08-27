@@ -24,8 +24,8 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const b = get(band);
   if (!b) return {};
   return pageMeta({
-    title: `How to Get Band ${b.band} in IELTS. Tips for Every Section (2026) | IELTSVega`,
-    description: `A practical guide to reaching IELTS Band ${b.band}: the scores you need, what each of Listening, Reading, Writing and Speaking requires, and the top tips to get there.`,
+    title: `How to Get Band ${b.band} in IELTS: Tips for Every Section`,
+    description: `How to reach IELTS Band ${b.band}: the raw scores you need in Listening and Reading, what Writing and Speaking require, and what holds you one band below.`,
     path: `/ielts-band/${b.slug}`,
     keywords: [
       `IELTS band ${b.band}`,

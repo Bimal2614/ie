@@ -9,7 +9,7 @@ import { KEYWORDS, pageMeta } from "@/lib/seo";
 export const metadata = pageMeta({
   title: "Pricing: IELTS Practice Plans | IELTSVega",
   description:
-    "Simple IELTS practice pricing. Start free, or unlock unlimited AI band scoring for Writing & Speaking, full mock tests, and 15,000+ Academic and General Training questions.",
+    "Start IELTS practice free, then unlock unlimited AI band scoring for Writing and Speaking, full mock tests, and 15,000+ Academic and General questions.",
   path: "/pricing",
   keywords: [...KEYWORDS.core, "IELTS practice price", "IELTS course cost", "IELTS preparation online cost", "IELTS practice subscription"],
 });
