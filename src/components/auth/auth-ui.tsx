@@ -21,16 +21,24 @@ export function AuthHeader({
   title,
   subtitle,
 }: {
-  chip: string;
+  /**
+   * Decorative brand pill. Optional, and signup omits it on purpose: that form
+   * has five fields and is the tallest thing either auth page renders, so the
+   * chip's ~36px was the difference between the column fitting a laptop
+   * viewport and growing its own scrollbar. Login is short enough to keep it.
+   */
+  chip?: string;
   title: string;
   subtitle: string;
 }) {
   return (
     <div className="text-center">
-      <span className="font-mono inline-flex rounded-full border border-line bg-paper-elev px-3 py-1 text-[11px] tracking-wide text-ink-soft">
-        {chip}
-      </span>
-      <h1 className="font-serif mt-4 text-3xl tracking-tight text-ink">
+      {chip && (
+        <span className="font-mono inline-flex rounded-full border border-line bg-paper-elev px-3 py-1 text-[11px] tracking-wide text-ink-soft">
+          {chip}
+        </span>
+      )}
+      <h1 className={cn("font-serif text-2xl tracking-tight text-ink", chip && "mt-2.5")}>
         {title}
       </h1>
       {/* <p className="mt-1.5 text-sm text-ink-muted">{subtitle}</p> */}

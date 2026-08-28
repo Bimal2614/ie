@@ -13,8 +13,21 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   // Fixed to the viewport — the auth pages never scroll; content fits.
   return (
     <div className="grid h-svh overflow-hidden bg-paper text-ink lg:grid-cols-[minmax(0,460px)_1fr]">
-      {/* ── Form column (light). Slim top bar: logo (home) + back-to-site. ── */}
-      <div className="flex h-full flex-col overflow-y-auto px-6 py-6 sm:px-12">
+      {/*
+        ── Form column (light). Slim top bar: logo (home) + back-to-site. ──
+
+        The vertical rhythm here is deliberately tight. The signup form is the
+        tallest thing either auth page renders, and at a 695px viewport — an
+        ordinary laptop with browser chrome — the column was overflowing by
+        131px and showing its own scrollbar beside the fixed dark panel, which
+        looked broken rather than scrollable.
+
+        `overflow-y-auto` stays as a safety valve: it is what keeps the form
+        reachable on a genuinely short window (a 500px-tall browser, a phone in
+        landscape) instead of clipping the submit button off the bottom. It
+        simply no longer engages at normal heights.
+      */}
+      <div className="flex h-full flex-col overflow-y-auto px-6 py-3 sm:px-12">
         <div className="flex items-center justify-between">
           <Link href="/" className="inline-flex w-fit items-center gap-2.5">
             <LogoMark className="size-9" priority />
@@ -25,7 +38,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </Link>
         </div>
 
-        <div className="flex flex-1 items-center justify-center py-6">
+        <div className="flex flex-1 items-center justify-center py-2 lg:py-0">
           <div className="w-full max-w-sm">{children}</div>
         </div>
 

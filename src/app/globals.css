@@ -552,3 +552,66 @@
 ::-webkit-scrollbar-track { background: hsl(var(--bg-sunken)); }
 ::-webkit-scrollbar-thumb { background: hsl(var(--line-strong)); border-radius: 999px; border: 2px solid hsl(var(--bg-sunken)); }
 ::-webkit-scrollbar-thumb:hover { background: hsl(var(--ink-muted)); }
+
+/* ------------------------------------------------------------------ *
+ * Results marquee — the two looping rails of student band jumps in the
+ * home page's #results section (<ResultsMarquee/>).
+ *
+ * Pure CSS, no JavaScript, so the component stays a server component and
+ * the rail is already looping in the server-rendered HTML.
+ *
+ * HOW THE SEAMLESS LOOP WORKS. Each row holds TWO identical groups of
+ * cards. Translating the row by -50% moves it left by exactly one
+ * group's width — the groups are identical, trailing gap included — so
+ * at the moment the animation restarts, group two is sitting precisely
+ * where group one started and there is nothing to see. The loop point is
+ * a ratio rather than a pixel count, which is why this needs no
+ * measurement and holds at every viewport width. The duplicate group is
+ * aria-hidden, so assistive tech reads each student once.
+ * ------------------------------------------------------------------ */
+.marquee {
+  position: relative;
+  overflow: hidden;
+  /* Feather both ends so cards dissolve at the edge instead of being
+     guillotined by it. -webkit- included for Safari. */
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+}
+.marquee-row {
+  display: flex;
+  width: max-content;
+  animation: marquee-shift var(--marquee-duration, 60s) linear infinite;
+  /* Promote to its own layer once, up front. Without this the browser
+     re-rasterises a very wide element every frame and the rail judders. */
+  will-change: transform;
+}
+/* Row two runs the other way. Two rails moving in parallel read as one
+   large sheet being dragged; counter-motion reads as a field of separate
+   cards, which is the effect worth having. */
+.marquee-row-reverse { animation-direction: reverse; }
+.marquee-group {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--marquee-gap, 1rem);
+  padding-right: var(--marquee-gap, 1rem);
+}
+@keyframes marquee-shift {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+/* Hovering anywhere on the rail holds BOTH rows, so a quote can actually
+   be read. Pausing only the hovered row looks like a bug. */
+.marquee:hover .marquee-row { animation-play-state: paused; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* Motion off, content still reachable: the rail becomes an ordinary
+     horizontally-scrollable list, and the duplicate group is dropped so
+     the same students are not listed twice. */
+  .marquee {
+    overflow-x: auto;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .marquee-row { animation: none; width: auto; }
+  .marquee-group[aria-hidden="true"] { display: none; }
+}

@@ -23,7 +23,7 @@ export function SignupForm() {
   const [module, setModule] = useState<"academic" | "general">("academic");
 
   return (
-    <form action={action} className="space-y-3.5" noValidate>
+    <form action={action} className="space-y-3" noValidate>
       {state?.error && (
         <p role="alert" className={authError}>
           {state.error}

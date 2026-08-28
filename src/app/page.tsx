@@ -3,7 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import {
-  ArrowRight, ArrowUpRight, Check, Quote,
+  ArrowRight, ArrowUpRight,
   Headphones, BookOpen, PenLine, Mic,
 } from "lucide-react";
 import { getCurrentUser } from "@/lib/dal";
@@ -12,6 +12,7 @@ import { PremiumCursor } from "@/components/marketing/premium-cursor";
 import { CountUp } from "@/components/marketing/count-up";
 import { LandingNav } from "@/components/marketing/landing-nav";
 import { LandingHero } from "@/components/marketing/landing-hero";
+import { ResultsMarquee } from "@/components/marketing/results-marquee";
 import { Reveal, ScrollWords } from "@/components/marketing/motion";
 import { LandingFooter } from "@/components/marketing/landing-footer";
 import { BlogStrip } from "@/components/marketing/blog-strip";
@@ -65,13 +66,10 @@ export const metadata: Metadata = (() => {
     },
   };
 })();
-/* ---- Content. Swap the `img` and numbers for real data before launch. ---- */
+/* ---- Content. Swap the numbers for real data before launch. ----
 
-const RESULTS = [
-  { img: "/test-1.png", name: "Priya S.", place: "Melbourne, AU", from: 6.5, to: 8.0, module: "Academic", quote: "The AI writing feedback showed me exactly why I was stuck at 6.5. Two weeks later I hit 8." },
-  { img: "/test-2.png", name: "Ahmed R.", place: "Lahore, PK", from: 5.5, to: 7.0, module: "General", quote: "Recording speaking answers and getting an instant band changed everything for me." },
-  { img: "/test-3.png", name: "Lucia M.", place: "Bogotá, CO", from: 7.0, to: 8.5, module: "Academic", quote: "Full mocks under real timing made the actual exam feel routine. No surprises." },
-];
+   Student testimonials moved to src/lib/student-results.ts and render through
+   <ResultsMarquee/> — that file is the one place to paste your real students. */
 
 const STATS = [
   { to: 94, suffix: "%", label: "reach their target band within 6 weeks" },
@@ -81,8 +79,8 @@ const STATS = [
 ];
 
 const METHOD = [
-  { n: "01", title: "Diagnose", copy: "One short diagnostic places your band across all four skills and finds the exact question types costing you marks." },
-  { n: "02", title: "Target", copy: "A focused plan drills your weak types first: not a generic syllabus, the specific gaps between you and your target." },
+  { n: "01", title: "Pick a section", copy: "Listening, Reading, Writing or Speaking. Practise one part at a time from a library of real exam-style material, Academic or General." },
+  { n: "02", title: "Drill the question type", copy: "Every official task type, from True / False / Not Given to map labelling, each with the technique and the model answers that go with it." },
   { n: "03", title: "Score with AI", copy: "Every Writing and Speaking answer is graded on the four official band criteria in seconds, with what to fix next." },
   { n: "04", title: "Mock under pressure", copy: "Full four-section mocks on real 2026 timing, ending in a band report. So exam day is a repeat, not a shock." },
 ];
@@ -213,44 +211,22 @@ export default async function Home() {
       {/* ══ Hero — dark, image-backed, one quiet entrance ══ */}
       <LandingHero />
 
-      {/* ══ Results — the authority centrepiece: real band jumps ══ */}
-      <section id="results" className="mx-auto w-full max-w-6xl scroll-mt-20 px-5 py-20">
-        <Reveal><Header eyebrow="Real results" title="Band jumps, not promises." lead="Students who practised the way examiners mark, and moved on with their lives." /></Reveal>
-        <div className="mt-12 grid gap-5 md:grid-cols-3">
-          {RESULTS.map((r, i) => (
-            <Reveal key={r.name} delay={i * 0.12} className="h-full">
-            <figure className="flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-paper-elev">
-              <Image
-                src={r.img}
-                alt={`IELTS score report: ${r.name} improved from Band ${r.from.toFixed(1)} to Band ${r.to.toFixed(1)} in IELTS ${r.module}`}
-                width={1000}
-                height={680}
-                // Three-up from md, full width below. Without `sizes`, next/image
-                // assumes 100vw at every breakpoint and served the 2048px variant
-                // into a ~380px slot — three times over, all below the fold.
-                sizes="(min-width: 768px) 33vw, 100vw"
-                className="aspect-[3/2] w-full object-cover"
-              />
-              <div className="flex flex-1 flex-col p-5">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-ink-muted line-through">{r.from.toFixed(1)}</span>
-                  <ArrowRight className="size-3.5 text-ink-muted" />
-                  <span className="font-serif text-2xl tabular-nums text-green">{r.to.toFixed(1)}</span>
-                  <span className="ml-1 rounded-full bg-brand-soft px-2 py-0.5 text-xs font-medium text-brand">{r.module}</span>
-                </div>
-                <blockquote className="mt-3 flex-1 text-sm leading-relaxed text-ink-soft">
-                  <Quote className="mb-1.5 size-4 text-brand/30" />
-                  {r.quote}
-                </blockquote>
-                <figcaption className="mt-4 border-t border-line pt-3 text-sm">
-                  <span className="font-semibold text-ink">{r.name}</span>
-                  <span className="text-ink-muted"> · {r.place}</span>
-                </figcaption>
-              </div>
-            </figure>
-            </Reveal>
-          ))}
+      {/* ══ Results — the authority centrepiece: real band jumps ══
+
+             Was a three-up grid of three students. It is now every student, on
+             two rails looping in opposite directions and pausing on hover so a
+             quote can be read. The heading block is unchanged.
+
+             The rail is full-bleed rather than boxed to the max-w-6xl column:
+             a marquee that stops dead at a container edge reads as a carousel
+             someone forgot to put arrows on. The heading keeps the column. ══ */}
+      <section id="results" className="scroll-mt-20 py-16">
+        <div className="mx-auto w-full max-w-6xl px-5">
+          <Reveal><Header eyebrow="Real results" title="Band jumps, not promises." lead="Students who practised the way examiners mark, and moved on with their lives." /></Reveal>
         </div>
+        <Reveal y={32} className="mt-12">
+          <ResultsMarquee />
+        </Reveal>
       </section>
 
       {/* ══ DARK SHOWCASE — stats + method, a rounded near-black panel like auth ══ */}
@@ -270,12 +246,12 @@ export default async function Home() {
 
           {/* Method */}
           <div className="pt-16">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-green">The IELTSVega Method</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-green">How IELTSVega works</p>
             <h2 className="font-serif mt-3 max-w-2xl text-3xl tracking-tight sm:text-4xl">
-              Four steps between you and your target band.
+              From your first question to a full mock.
             </h2>
             <p className="mt-3 max-w-xl text-white/55">
-              Not more study hours: the specific gaps examiners mark you down for, closed one by one.
+              An online practice platform, not a coaching course: real exam material to work through, an instant band on everything you write or say, and full mocks whenever you want one.
             </p>
 
             <div className="mt-12 divide-y divide-white/10 border-y border-white/10">
@@ -298,7 +274,7 @@ export default async function Home() {
 
       {/* ══ What you get — editorial: one feature image + a skills list ══ */}
       <section id="features" className="scroll-mt-20 border-y border-line bg-paper-elev">
-        <div className="mx-auto grid w-full max-w-6xl gap-12 px-5 py-20 lg:grid-cols-2 lg:items-center">
+        <div className="mx-auto grid w-full max-w-6xl gap-12 px-5 py-16 lg:grid-cols-2 lg:items-center">
           <Reveal x={-30} y={0} className="order-2 overflow-hidden rounded-2xl border border-line shadow-xl lg:order-1">
             <Image
               src="/test-6.png"
@@ -332,37 +308,12 @@ export default async function Home() {
       </section>
 
       {/* ══ Reframe narrative — word-by-word scroll reveal (signature motion) ══ */}
-      <section className="mx-auto w-full max-w-3xl px-5 py-24 text-center">
+      <section className="mx-auto w-full max-w-2xl px-5 py-16 text-center">
         <Reveal><p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand">Why fluent speakers still miss their band</p></Reveal>
         <ScrollWords
-          className="font-serif mt-5 text-2xl leading-relaxed text-ink sm:text-[1.85rem]"
+          className="font-serif mt-4 text-lg leading-relaxed text-ink sm:text-xl"
           text="Fluent English alone rarely earns a Band 8. IELTS scores your Writing and Speaking against four precise criteria. And most test-takers never learn what examiners actually reward. Criteria-based practice, scored the way the real exam marks, is how you close that gap and reach your target band."
         />
-      </section>
-
-      {/* ══ Two paths — decision ══ */}
-      <section className="border-y border-line bg-paper-elev">
-        <div className="mx-auto grid w-full max-w-5xl gap-5 px-5 py-20 md:grid-cols-2">
-          <Reveal x={-28} y={0} className="rounded-2xl border border-line bg-paper p-7">
-            <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">Keep guessing</p>
-            <ul className="mt-4 space-y-3 text-sm text-ink-soft">
-              {["Re-book the test and hope the next attempt is different", "Random YouTube tips with no idea what's scoring", "Pay exam fees again for the same band"].map((t) => (
-                <li key={t} className="flex gap-2"><span className="mt-2 size-1.5 shrink-0 rounded-full bg-ink-muted/40" />{t}</li>
-              ))}
-            </ul>
-          </Reveal>
-          <Reveal x={28} y={0} delay={0.1} className="rounded-2xl border-2 border-brand bg-brand-soft/40 p-7">
-            <p className="text-xs font-semibold uppercase tracking-wider text-brand">Practise the way it&apos;s marked</p>
-            <ul className="mt-4 space-y-3 text-sm text-ink">
-              {["See your band on every answer, instantly", "Drill the exact question types costing you marks", "Walk in knowing you're already at your target"].map((t) => (
-                <li key={t} className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-green" />{t}</li>
-              ))}
-            </ul>
-            <Link href="/signup" className="mt-6 inline-flex items-center gap-2 rounded-lg bg-green px-5 py-2.5 text-sm font-semibold text-green-ink transition-[filter] hover:brightness-105">
-              Start free <ArrowRight className="size-4" />
-            </Link>
-          </Reveal>
-        </div>
       </section>
 
       {/* == Question-type hub — the page's real content block, and the only
@@ -377,52 +328,68 @@ export default async function Home() {
              load-bearing content — the icon matches the skill's icon elsewhere
              on the page, and the count/time sub-line is a real exam fact people
              search for, not a decorative chip. == */}
-      <section id="question-types" className="scroll-mt-20 border-y border-line bg-paper-elev">
-        <div className="mx-auto w-full max-w-6xl px-5 py-24">
+      {/* Same rounded near-black slab as the #method panel above — inset from
+          the viewport edges rather than full-bleed, so the two dark sections
+          read as the same object appearing twice instead of as two different
+          treatments. Geometry is copied from #method deliberately: identical
+          max-width, radius, and horizontal/vertical padding at both breakpoints. */}
+      <section id="question-types" className="scroll-mt-20 px-4 py-8 sm:px-5">
+        <div className="mx-auto w-full max-w-6xl overflow-hidden rounded-[2rem] bg-paper-strong px-6 py-20 text-white sm:px-12 sm:py-24">
           <Reveal>
             <Header
+              tone="dark"
               eyebrow="Every question type"
               title="Practise the exact task costing you marks."
               lead="Forty Listening questions, forty Reading questions, two Writing tasks and three Speaking parts, each with its own technique. Start with the one you keep getting wrong."
             />
           </Reveal>
 
-          <div className="mt-14 grid items-start gap-5 lg:grid-cols-2">
+          {/* EQUAL HEIGHTS. `items-start` was letting every card shrink to its
+              own content, so Writing (nine question types) towered over
+              Speaking (six) beside it. Dropping it restores the grid's default
+              `stretch`; `h-full` then has to be threaded through BOTH the
+              Reveal wrapper and the article, because Reveal renders a real div
+              between the grid and the card and a percentage height collapses
+              through any ancestor that is not itself full-height. The card is
+              a flex column so the "Full guide" link can be pinned to the
+              bottom with mt-auto, which is what actually makes the four cards
+              look aligned rather than merely be the same height. */}
+          <div className="mt-10 grid gap-4 lg:grid-cols-2">
             {QUESTION_HUB.map((g, i) => (
-              <Reveal key={g.skill} delay={i * 0.07}>
-                <article className="rounded-2xl border border-line bg-paper p-7 transition-shadow hover:shadow-lg">
+              <Reveal key={g.skill} delay={i * 0.07} className="h-full">
+                <article className="flex h-full flex-col rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition-colors hover:border-white/20 hover:bg-white/[0.07]">
                   {/* Head — icon, skill, and the two exam facts */}
                   <div className="flex items-start gap-4">
-                    <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand">
+                    <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-white/10 text-green">
                       <g.Icon className="size-5" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-serif text-2xl leading-none tracking-tight text-ink">
-                        <Link href={g.href} className="transition-colors hover:text-brand">
+                      <h3 className="font-serif text-2xl leading-none tracking-tight text-white">
+                        <Link href={g.href} className="transition-colors hover:text-green">
                           IELTS {g.skill}
                         </Link>
                       </h3>
-                      <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium uppercase tracking-wider text-ink-muted">
+                      <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium uppercase tracking-wider text-white/45">
                         <span>{g.count}</span>
-                        <span aria-hidden className="text-line-strong">&middot;</span>
+                        <span aria-hidden className="text-white/25">&middot;</span>
                         <span>{g.time}</span>
                       </p>
                     </div>
                   </div>
 
-                  <p className="mt-5 text-sm leading-relaxed text-ink-soft">{g.intro}</p>
+                  <p className="mt-4 text-[0.8125rem] leading-relaxed text-white/55">{g.intro}</p>
 
-                  {/* Question types — full-width rows, so each link is a target
-                      rather than a word in a list. */}
-                  <ul className="mt-6 -mx-2 border-t border-line">
+                  {/* Question types as chips, not rows. Same links, same anchor
+                      text, a quarter of the height — and a block of tags reads
+                      as something to browse rather than as more paragraph. */}
+                  <ul className="mt-5 flex flex-wrap gap-2">
                     {g.links.map((l) => (
-                      <li key={l.href} className="border-b border-line">
+                      <li key={l.href}>
                         <Link
                           href={l.href}
-                          className="group/row flex items-center gap-3 rounded-lg px-2 py-2.5 text-sm text-ink-soft transition-colors hover:bg-paper-sunken hover:text-ink"
+                          className="inline-block rounded-full border border-white/15 bg-white/[0.04] px-3 py-1.5 text-xs leading-snug text-white/70 transition-colors hover:border-green/50 hover:bg-green/10 hover:text-green"
                         >
-                          <span className="flex-1">{l.label}</span>
-                          <ArrowRight className="size-3.5 shrink-0 text-ink-muted transition-all group-hover/row:translate-x-0.5 group-hover/row:text-brand" />
+                          {l.label}
                         </Link>
                       </li>
                     ))}
@@ -430,7 +397,7 @@ export default async function Home() {
 
                   <Link
                     href={g.href}
-                    className="group/all mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-brand"
+                    className="group/all mt-auto pt-5 inline-flex items-center gap-1.5 text-[0.8125rem] font-semibold text-green"
                   >
                     Full IELTS {g.skill} guide
                     <ArrowRight className="size-4 transition-transform group-hover/all:translate-x-0.5" />
@@ -448,14 +415,14 @@ export default async function Home() {
              its own because it is the single most misunderstood fact in IELTS
              scoring, and showing the two sums side by side explains it faster
              than the paragraph beside it can. == */}
-      <section className="mx-auto w-full max-w-6xl px-5 py-24">
-        <div className="grid gap-14 lg:grid-cols-[1.25fr_1fr] lg:items-start lg:gap-20">
+      <section className="mx-auto w-full max-w-6xl px-5 py-16">
+        <div className="grid gap-10 lg:grid-cols-[1.25fr_1fr] lg:items-start lg:gap-14">
           <Reveal>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand">Before you book</p>
             <h2 className="font-serif mt-3 text-3xl tracking-tight sm:text-4xl">
               Know the number you actually need.
             </h2>
-            <p className="mt-5 text-ink-soft">
+            <p className="mt-4 text-sm leading-relaxed text-ink-soft">
               IELTS is marked on a 0&ndash;9 band scale in half-band steps, and your overall score is the
               average of the four skill bands, rounded to the nearest half. That rounding is where people
               lose the band they thought they had. Work out where you stand with the{" "}
@@ -468,7 +435,7 @@ export default async function Home() {
               </Link>{" "}
               for the full marking rules.
             </p>
-            <p className="mt-4 text-ink-soft">
+            <p className="mt-3 text-sm leading-relaxed text-ink-soft">
               And before you book, check{" "}
               <Link href="/ielts-2026-changes" className="font-medium text-brand underline decoration-brand/30 underline-offset-4 transition-colors hover:decoration-brand">
                 what changed in IELTS in 2026
@@ -544,8 +511,15 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* A hairline that fades out at both ends, rather than a rule straight
+          across the viewport — it marks the change of subject into the FAQ
+          without drawing a hard box across the page. */}
+      <div className="mx-auto w-full max-w-3xl px-5">
+        <hr className="h-px border-0 bg-gradient-to-r from-transparent via-line-strong to-transparent" />
+      </div>
+
       {/* == FAQ — SEO / AI-answer content == */}
-      <section id="faq" className="mx-auto w-full max-w-3xl scroll-mt-20 px-5 py-20">
+      <section id="faq" className="mx-auto w-full max-w-3xl scroll-mt-20 px-5 py-16">
         <Header eyebrow="Questions, answered" title="Everything about practising IELTS online." lead="" />
         <div className="mt-10 divide-y divide-line">
           {FAQS.map((f) => (
@@ -574,12 +548,15 @@ export default async function Home() {
  * ------------------------------------------------------------------ */
 
 
-function Header({ eyebrow, title, lead, align = "center" }: { eyebrow: string; title: string; lead: string; align?: "center" | "left" }) {
+function Header({ eyebrow, title, lead, align = "center", tone = "light" }: { eyebrow: string; title: string; lead: string; align?: "center" | "left"; tone?: "light" | "dark" }) {
+  const dark = tone === "dark";
   return (
     <div className={align === "center" ? "mx-auto max-w-2xl text-center" : "max-w-2xl"}>
-      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand">{eyebrow}</p>
-      <h2 className="font-serif mt-3 text-3xl tracking-tight sm:text-4xl">{title}</h2>
-      {lead && <p className="mt-3 text-ink-soft">{lead}</p>}
+      {/* Green is the accent that already carries eyebrows on the dark method
+          panel; brand blue is too dark to read on near-black. */}
+      <p className={`text-xs font-semibold uppercase tracking-[0.2em] ${dark ? "text-green" : "text-brand"}`}>{eyebrow}</p>
+      <h2 className={`font-serif mt-3 text-3xl tracking-tight sm:text-4xl ${dark ? "text-white" : ""}`}>{title}</h2>
+      {lead && <p className={`mt-3 ${dark ? "text-white/55" : "text-ink-soft"}`}>{lead}</p>}
     </div>
   );
 }
