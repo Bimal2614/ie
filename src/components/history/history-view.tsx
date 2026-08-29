@@ -7,13 +7,13 @@ import {
   ChevronRight,
   ChevronLeft,
   Check,
-  X,
   Sparkles,
   Loader2,
   CalendarDays,
 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { AttemptScoreChip } from "./attempt-score";
 import { SECTIONS, QUESTION_TYPES, SECTION_ORDER, type SectionKey, type QuestionTypeKey } from "@/lib/ielts";
 import {
   getDaySummary,
@@ -405,7 +405,7 @@ function TypeRowBlock({
                   · {a.questions} question{a.questions !== 1 ? "s" : ""}
                 </span>
               </span>
-              <AttemptScore attempt={a} />
+              <AttemptScoreChip correct={a.correct} graded={a.graded} avgBand={a.avgBand} />
               <span className="font-mono text-[11px] tabular-nums text-ink-muted">
                 {a.createdAt.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
               </span>
@@ -415,36 +415,6 @@ function TypeRowBlock({
         </div>
       )}
     </div>
-  );
-}
-
-/**
- * An attempt's headline score: "3 / 4" for objective sets, a band for
- * AI-scored ones. A single tick would be a lie for a 4-gap table.
- */
-function AttemptScore({ attempt }: { attempt: AttemptRow }) {
-  if (attempt.graded === 0) {
-    return attempt.avgBand !== null ? (
-      <span className="rounded bg-info-soft px-1.5 py-0.5 font-mono text-[11px] font-semibold text-info">
-        Band {attempt.avgBand.toFixed(1)}
-      </span>
-    ) : (
-      <span className="rounded bg-paper-elev px-1.5 py-0.5 text-[11px] text-ink-muted">
-        Awaiting score
-      </span>
-    );
-  }
-  const all = attempt.correct === attempt.graded;
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[11px] font-semibold tabular-nums",
-        all ? "bg-success-soft text-success" : "bg-danger-soft text-danger",
-      )}
-    >
-      {all ? <Check className="size-3" /> : <X className="size-3" />}
-      {attempt.correct}/{attempt.graded}
-    </span>
   );
 }
 

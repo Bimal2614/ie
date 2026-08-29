@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, RotateCcw, X, AlertCircle, Loader2, LayoutGrid, Check, History, Flag, Eraser } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +23,7 @@ import { SplitPane } from "@/components/exam/split-pane";
 import { SetBody, taskHeading, type PlayerSet } from "./set-body";
 import { InstructionBar } from "./question-body";
 import { AttemptFeedback } from "./attempt-feedback";
+import { AttemptHistoryPanel } from "./attempt-history-panel";
 
 /**
  * Set-based practice player.
@@ -70,6 +70,7 @@ export function PracticeSession({
   }, []);
   const [attemptedSets, setAttemptedSets] = useState<Set<number>>(() => new Set(initialAttempted.setIndices));
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const sec = SECTIONS[section];
   const meta = QUESTION_TYPES[questionType];
@@ -98,6 +99,8 @@ export function PracticeSession({
     setResult(null);
     topRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
+
+  const closeHistory = useCallback(() => setHistoryOpen(false), []);
 
   const goBack = useCallback(() => {
     router.push(`/practice/${section}`);
@@ -369,17 +372,20 @@ export function PracticeSession({
               text size in a mock finds it already set in question practice. */}
           <TextSizeControl className="hidden sm:inline-flex" />
 
-          {/* Past attempts and their bands. A band arrives after the response is
-              sent, so the candidate needs a way to the record of it from inside
-              the player rather than having to find History from the nav. */}
-          <Link
-            href="/history"
+          {/* Past attempts and their bands. This used to be a link to
+              /history, which threw away the set in progress to get there — it
+              opens the same record in a panel over the player instead. */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setHistoryOpen(true)}
             title="Your previous attempts and bands"
             aria-label="Previous attempts and bands"
-            className="inline-flex size-9 items-center justify-center rounded-md text-ink-soft transition-colors hover:bg-paper-sunken hover:text-ink"
+            aria-haspopup="dialog"
+            className="text-ink-soft"
           >
             <History className="h-4 w-4" />
-          </Link>
+          </Button>
           <Button
             variant="ghost"
             size="icon"
@@ -598,6 +604,15 @@ export function PracticeSession({
           </Button>
         </div>
       </div>
+
+      {/* ── Past attempts ── */}
+      <AttemptHistoryPanel
+        open={historyOpen}
+        onClose={closeHistory}
+        section={section}
+        questionType={questionType}
+        currentSetId={currentSet?.id ?? null}
+      />
 
       {/* ── Passage palette ── */}
       {paletteOpen && (

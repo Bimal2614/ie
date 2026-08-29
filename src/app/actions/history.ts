@@ -512,3 +512,90 @@ export async function getLatestActiveDate(tzOffsetMinutes: number): Promise<stri
     .limit(1);
   return row?.day ?? null;
 }
+
+/* ------------------------------------------------------------------ *
+ * Recent attempts at ONE task type — the in-player history panel
+ *
+ * The day-scoped pair above answers "what did I do on Tuesday". Mid-practice
+ * the question is a different one — "how did I do at this task before" — and
+ * the answer must not depend on the candidate having practised today. So this
+ * one is scoped by (section, type) and bounded by a count, not a day.
+ * ------------------------------------------------------------------ */
+
+/** Ceiling on the panel, whatever the caller asks for. */
+const MAX_RECENT_ATTEMPTS = 30;
+
+export type RecentAttemptRow = AttemptRow & {
+  /** Which set it was, so the panel can mark the one currently on screen. */
+  setId: string | null;
+};
+
+export async function getRecentAttempts(
+  section: SectionKey,
+  questionType: QuestionTypeKey,
+  limit = 12,
+): Promise<RecentAttemptRow[]> {
+  const user = await requireUser();
+
+  const rows = await db
+    .select({
+      attemptId: userResponses.attemptId,
+      setId: userResponses.setId,
+      questionType: userResponses.questionType,
+      // Left join for the same reason getAttempts uses one: a response outlives
+      // the set it came from. Only `question_sets` is joined because this panel
+      // belongs to the /practice/[section]/[type] player, which is fed from
+      // that table — a section-practice attempt simply shows no title.
+      setTitle: questionSets.title,
+      questions: count(),
+      correct: sql<number>`count(*) filter (where ${userResponses.isCorrect} = true)`,
+      graded: sql<number>`count(*) filter (where ${userResponses.isCorrect} is not null)`,
+      avgBand: sql<number | null>`avg(${userResponses.band})`,
+      createdAt: sql<Date>`min(${userResponses.createdAt})`,
+    })
+    .from(userResponses)
+    .leftJoin(questionSets, eq(userResponses.setId, questionSets.id))
+    .where(
+      and(
+        eq(userResponses.userId, user.id),
+        eq(userResponses.section, section),
+        eq(userResponses.questionType, questionType),
+      ),
+    )
+    .groupBy(
+      userResponses.attemptId,
+      userResponses.setId,
+      userResponses.questionType,
+      questionSets.title,
+    )
+    // Most recent first — the panel opens on what you just did.
+    .orderBy(desc(sql`min(${userResponses.createdAt})`))
+    .limit(Math.min(Math.max(limit, 1), MAX_RECENT_ATTEMPTS));
+
+  return rows.map((r) => ({
+    attemptId: r.attemptId,
+    setId: r.setId,
+    questionType: r.questionType as QuestionTypeKey,
+    setTitle: r.setTitle,
+    questions: Number(r.questions),
+    correct: Number(r.correct),
+    graded: Number(r.graded),
+    avgBand: r.avgBand === null ? null : Number(r.avgBand),
+    createdAt: new Date(r.createdAt),
+  }));
+}
+
+/**
+ * One attempt for the panel: the answers and the marks, without the passage.
+ *
+ * The full review re-renders the reading passage, which is the largest thing
+ * in an attempt by far and is already on screen behind the panel. Dropping it
+ * here keeps a preview that is opened casually, several times a session, from
+ * shipping a few KB of prose the panel never draws. `/history/[id]` still
+ * calls getAttemptDetail and gets the whole thing.
+ */
+export async function getAttemptPreview(attemptId: string): Promise<AttemptDetail | null> {
+  const a = await getAttemptDetail(attemptId);
+  if (!a?.set) return a;
+  return { ...a, set: { ...a.set, passageText: null } };
+}
