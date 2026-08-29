@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth/auth-provider";
+import { DevtoolsGuard } from "@/components/security/devtools-guard";
 import { SITE_URL } from "@/lib/site";
 import { BRAND, DEFAULT_DESCRIPTION, DEFAULT_TITLE, KEYWORDS } from "@/lib/seo";
 import { LONG_TAIL, metaKeywordSlice } from "@/lib/keywords";
@@ -115,8 +116,13 @@ export default function RootLayout({
           suppressHydrationWarning silences it for this element only — not the
           tree — which is the documented fix for extension-injected attributes. */}
       <body className="min-h-full" suppressHydrationWarning>
-        {/* One auth probe for the whole app; consumed via useAuth() everywhere. */}
-        <AuthProvider>{children}</AuthProvider>
+        {/* Open DevTools and the whole tree below unmounts, then the tab leaves
+            for about:blank. Development builds, crawlers and holders of the
+            bypass token are exempt — see src/lib/devtools-watch.ts. */}
+        <DevtoolsGuard>
+          {/* One auth probe for the whole app; consumed via useAuth() everywhere. */}
+          <AuthProvider>{children}</AuthProvider>
+        </DevtoolsGuard>
       </body>
     </html>
   );

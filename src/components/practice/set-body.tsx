@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import {
-  PRACTICE_INSTRUCTIONS_HIDDEN,
+  practiceInstruction,
   QUESTION_TYPES,
   showsInstruction,
   type SectionKey,
@@ -76,12 +76,12 @@ export function taskHeading(set: PlayerSet, questions: PlayerQuestion[]): string
     const prompt = questions.find((q) => q.prompt?.trim())?.prompt;
     if (prompt) return prompt;
   }
-  // Everything below here is a rubric, and practice hides those for now. The
-  // Writing prompt above is not one — it is the question — so it is returned
-  // before this point rather than gated by it.
-  if (PRACTICE_INSTRUCTIONS_HIDDEN) return null;
+  // Everything below here is a rubric, and practice prints only the half of it
+  // that is not already on screen. The Writing prompt above is not a rubric —
+  // it is the question — so it is returned before this point rather than
+  // trimmed by it.
   return showsInstruction(set.questionType)
-    ? (set.instructions ?? meta?.instruction ?? null)
+    ? practiceInstruction(set.instructions ?? meta?.instruction)
     : null;
 }
 
@@ -199,12 +199,13 @@ export function SetBody({
         // in a per-group band. In the exam layout that line is `taskHeading`,
         // which for Writing is the prompt itself — the row no longer prints it,
         // so resolving this any other way would drop the question off the page.
-        // Both branches come out empty for a rubric while practice hides them.
+        // Both branches come back trimmed: what survives is the word limit and
+        // anything else the screen does not already say.
         instructionText: exam
           ? taskHeading(set, questions)
-          : PRACTICE_INSTRUCTIONS_HIDDEN || !showsInstruction(set.questionType)
-            ? null
-            : (set.instructions ?? meta.instruction ?? null),
+          : showsInstruction(set.questionType)
+            ? practiceInstruction(set.instructions ?? meta.instruction)
+            : null,
         groupHeaders: false,
         // `mq-` is what the mock's question palette scrolls to.
         anchorPrefix: "mq",

@@ -980,6 +980,126 @@ export function InstructionBar({ text, section }: { text: string | null | undefi
   );
 }
 
+/* ------------------------------------------------------------------ *
+ * The passage, with the structure the paper actually prints
+ * ------------------------------------------------------------------ */
+
+/**
+ * A reading passage is not one block of prose.
+ *
+ * It carries an instruction ("Read the text below and answer Questions 15-20"),
+ * a title, section headings, and — where the questions ask about paragraphs —
+ * a letter labelling each one. Rendered as a single pre-wrapped string all of
+ * that came out as flat body text, so the instruction ran straight into the
+ * title and a heading was indistinguishable from the sentence under it.
+ *
+ * One line per block: the extractor already joins each wrapped paragraph onto a
+ * single line, so a line IS a block and no re-flowing is needed.
+ */
+type PassageBlock = {
+  kind: "instruction" | "title" | "heading" | "label" | "body";
+  text: string;
+  /** Offset into the ORIGINAL passage, so annotations still line up. */
+  at: number;
+};
+
+const PASSAGE_INSTRUCTION =
+  /^(?:Read the (?:text|passage)s?\b.*\bQuestions?\s+\d+|You should spend about \d+ minutes on Questions?\s+\d+)/i;
+/** "A", "B." — the paragraph letters a matching-headings task refers to. */
+const PARAGRAPH_LABEL = /^[A-Z]\.?$/;
+
+function passageBlocks(text: string): PassageBlock[] {
+  const out: PassageBlock[] = [];
+  let cursor = 0;
+  // Each instruction opens a new text — a General Training section carries two,
+  // and the line after each one is that text's own title.
+  let expectTitle = true;
+
+  for (const line of text.split("\n")) {
+    const start = cursor;
+    cursor += line.length + 1; // the newline split() removed
+    const s = line.trim();
+    if (!s) continue;
+    const at = start + line.indexOf(s);
+
+    if (PASSAGE_INSTRUCTION.test(s)) {
+      out.push({ kind: "instruction", text: s, at });
+      expectTitle = true;
+      continue;
+    }
+    if (PARAGRAPH_LABEL.test(s)) {
+      out.push({ kind: "label", text: s, at });
+      continue;
+    }
+    // A bare number is a question number the export leaked into the passage,
+    // not a heading. It is left as body rather than dressed up as structure.
+    if (/^\d+$/.test(s)) {
+      out.push({ kind: "body", text: s, at });
+      continue;
+    }
+    if (expectTitle) {
+      expectTitle = false;
+      if (s.length <= 90 && !/[.,;:]$/.test(s)) {
+        out.push({ kind: "title", text: s, at });
+        continue;
+      }
+    }
+    if (s.length <= 60 && !/[.?!,;:]$/.test(s)) {
+      out.push({ kind: "heading", text: s, at });
+      continue;
+    }
+    out.push({ kind: "body", text: s, at });
+  }
+  return out;
+}
+
+function PassageText({ text, annotate }: { text: string; annotate: boolean }) {
+  const blocks = useMemo(() => passageBlocks(text), [text]);
+
+  return (
+    <div className="space-y-3">
+      {blocks.map((b, i) => {
+        // `base` is what keeps a highlight on the right words: the annotation
+        // spans index the whole passage, not this block.
+        const inner = annotate ? (
+          <AnnotatedText run="passage" text={b.text} base={b.at} />
+        ) : (
+          b.text
+        );
+        if (b.kind === "instruction") {
+          return (
+            <p key={i} className="text-xs italic text-ink-muted">
+              {inner}
+            </p>
+          );
+        }
+        if (b.kind === "title") {
+          return (
+            <h3 key={i} className="font-display text-base font-bold leading-snug text-ink-strong">
+              {inner}
+            </h3>
+          );
+        }
+        if (b.kind === "heading") {
+          return (
+            <h4 key={i} className="pt-1 text-sm font-semibold text-ink-strong">
+              {inner}
+            </h4>
+          );
+        }
+        if (b.kind === "label") {
+          return (
+            <p key={i} className="pt-1 font-mono text-xs font-bold text-brand">
+              {inner}
+            </p>
+          );
+        }
+        return <p key={i}>{inner}</p>;
+      })}
+    </div>
+  );
+}
+
 /** Passage / audio / image — the one stimulus the whole document shares. */
 function Stimulus({
   doc,
@@ -1057,18 +1177,18 @@ function Stimulus({
           // Selection is enabled here so the highlighter can work; copying is
           // still refused and the browser's own menu still suppressed — the
           // annotation layer wrapping this tree does both.
-          <article className="whitespace-pre-line rounded-xl border border-line bg-paper-elev p-5 text-sm leading-relaxed text-ink-soft">
-            <AnnotatedText run="passage" text={doc.passageText} />
+          <article className="rounded-xl border border-line bg-paper-elev p-5 text-sm leading-relaxed text-ink-soft">
+            <PassageText text={doc.passageText} annotate />
           </article>
         ) : (
           // Copy-protected: auth-gated practice content only (never on indexed
           // pages). Read-only review keeps the stricter, unselectable version.
           <article
-            className="select-none whitespace-pre-line rounded-xl border border-line bg-paper-elev p-5 text-sm leading-relaxed text-ink-soft"
+            className="select-none rounded-xl border border-line bg-paper-elev p-5 text-sm leading-relaxed text-ink-soft"
             onCopy={(e) => e.preventDefault()}
             onContextMenu={(e) => e.preventDefault()}
           >
-            {doc.passageText}
+            <PassageText text={doc.passageText} annotate={false} />
           </article>
         ))}
     </div>

@@ -267,8 +267,10 @@ function Flowchart({ layout, resolve, run }: LayoutProps<FlowchartLayout>) {
    *
    * The box sits BESIDE the chart, as the computer-delivered test shows it: the
    * candidate reads every option before placing any, so it has to stay on screen
-   * while they work down the steps. Below the chart on a narrow screen, where
-   * side-by-side would squeeze both to nothing.
+   * while they work down the steps. Below the chart in a narrow PANE, where
+   * side-by-side would squeeze both to nothing — measured with a container query
+   * rather than `lg:`, because the questions pane of the reading split stays
+   * narrow however wide the window is. See <MatchingBoard/> for the full story.
    *
    * Answers are still stored as gap text, so the grader, the answer sheet and the
    * review screens needed no change — only the way the blank is filled.
@@ -279,10 +281,14 @@ function Flowchart({ layout, resolve, run }: LayoutProps<FlowchartLayout>) {
       {/* Read the graded state off a REAL gap. Resolving a made-up number
           returns null, which would leave the box draggable after submission. */}
       <ChoiceBankProvider choices={layout.choices} disabled={firstGapDisabled(layout, resolve)}>
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] lg:items-start">
-          {chart}
-          <div className="lg:sticky lg:top-4">
-            <ChoiceBank />
+        <div className="@container">
+          <div className="grid gap-5 @3xl:grid-cols-[minmax(0,1fr)_minmax(0,20rem)] @3xl:items-start">
+            {chart}
+            {/* Sticky only while it is a column of its own — stuck to the top of
+                a stacked box would pin the options over the chart. */}
+            <div className="@3xl:sticky @3xl:top-4">
+              <ChoiceBank />
+            </div>
           </div>
         </div>
       </ChoiceBankProvider>

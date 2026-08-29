@@ -9,7 +9,7 @@ import { anyUploadPending, isAnswered, type Answer } from "@/lib/question-conten
 import {
   hasSideStimulus,
   isAiScored,
-  PRACTICE_INSTRUCTIONS_HIDDEN,
+  practiceInstruction,
   rawToBand,
   SECTIONS,
   type SectionKey,
@@ -234,9 +234,9 @@ export function SectionPlayer({
       // The band above the panes is this group's header. A part that mixes
       // task types keeps a header per group to tell them apart.
       groupHeaders={section.questions.groups.length > 1}
-      // Practice hides the rubric; the mock, which shares this component, does
-      // not pass this and keeps it.
-      showInstructions={!PRACTICE_INSTRUCTIONS_HIDDEN}
+      // Practice trims the rubric to the part that is not already on screen —
+      // the word limit. The mock shares this component and does not pass it.
+      instructions="trimmed"
     />
   );
 
@@ -291,8 +291,16 @@ export function SectionPlayer({
     <ExamShell
       title={paperTitle ?? section.title}
       partLabel={section.partNumber ? `Part ${section.partNumber}` : sec.label}
-      // Same rule as the group bands: the rubric is hidden in practice.
-      instruction={PRACTICE_INSTRUCTIONS_HIDDEN ? null : section.instructions}
+      // A single-group part draws no group band, so this header is the only
+      // place its word limit can appear — and `practice_sections.instructions`
+      // is that group's own line. With several groups each band carries its
+      // own, and repeating the first one up here would label the whole part
+      // with a limit that applies to ten of its questions.
+      instruction={
+        section.questions.groups.length > 1
+          ? null
+          : practiceInstruction(section.instructions)
+      }
       badges={
         <>
           <span className={cn("chip", `chip-${sec.accent}`)}>{sec.label}</span>

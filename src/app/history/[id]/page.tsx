@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Check, X } from "lucide-react";
 import { getAttemptDetail, type AttemptDetail } from "@/app/actions/history";
-import { PRACTICE_INSTRUCTIONS_HIDDEN, QUESTION_TYPES, SECTIONS } from "@/lib/ielts";
+import { practiceInstruction, QUESTION_TYPES, SECTIONS } from "@/lib/ielts";
 import type { Answer } from "@/lib/question-content";
 import type { PlayerSet, PlayerQuestion, PlayerResult } from "@/components/practice/set-body";
 import { AttemptReview } from "@/components/history/attempt-review";
@@ -122,11 +122,12 @@ function toPlayerProps(a: AttemptDetail): {
 function ProseReview({ attempt: a }: { attempt: AttemptDetail }) {
   return (
     <div className="mx-auto w-full max-w-3xl space-y-5">
-      {/* The rubric is hidden in practice, and reviewing a practice attempt is
-          still practice — see PRACTICE_INSTRUCTIONS_HIDDEN. */}
-      {!PRACTICE_INSTRUCTIONS_HIDDEN && a.set?.instructions && (
+      {/* Trimmed, because reviewing a practice attempt is still practice — see
+          `practiceInstruction`. Worth keeping in review rather than dropping:
+          the word limit is often the reason an answer was marked wrong. */}
+      {practiceInstruction(a.set?.instructions) && (
         <p className="rounded-xl border border-line bg-paper-elev p-4 text-sm text-ink-strong">
-          {a.set.instructions}
+          {practiceInstruction(a.set?.instructions)}
         </p>
       )}
 

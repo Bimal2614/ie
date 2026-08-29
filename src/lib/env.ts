@@ -1,6 +1,21 @@
 import { z } from "zod";
 
 /**
+ * Strips one layer of wrapping quotes. `.env` parsers drop them, but shell
+ * exports and hosting-panel env fields keep them literal, and a quoted value
+ * such as `"IELTSVega <no-reply@x.com>"` then parses as one single (invalid)
+ * address, which SMTP rejects with "501 5.1.7 Bad sender address syntax".
+ * Applied only where quotes are never part of the value: hosts and addresses.
+ */
+function unquote(value: string): string {
+  const trimmed = value.trim();
+  const quote = trimmed[0];
+  const isQuoted =
+    (quote === '"' || quote === "'") && trimmed.length > 1 && trimmed.endsWith(quote);
+  return (isQuoted ? trimmed.slice(1, -1) : trimmed).trim();
+}
+
+/**
  * Centralized, validated environment access. Importing this module fails fast
  * (at boot) if a required variable is missing or malformed, so we never ship a
  * half-configured server. Only ever import this from server code.
@@ -30,11 +45,11 @@ const EnvSchema = z.object({
 
   // --- Transactional email (SMTP — any provider). Optional: without it,
   //     verification/reset emails are skipped (link is logged in dev). ---
-  SMTP_HOST: z.string().optional(),
+  SMTP_HOST: z.string().transform(unquote).optional(),
   SMTP_PORT: z.coerce.number().int().positive().optional(),
-  SMTP_USER: z.string().optional(),
+  SMTP_USER: z.string().transform(unquote).optional(),
   SMTP_PASS: z.string().optional(),
-  EMAIL_FROM: z.string().optional(), // e.g. "IELTSVega <no-reply@ieltsvega.com>"
+  EMAIL_FROM: z.string().transform(unquote).optional(), // e.g. IELTSVega <no-reply@ieltsvega.com>
 
   // --- Google sign-in (OAuth 2.0). Optional: the button degrades gracefully
   //     when unset. Redirect URI = `${APP_URL}/api/auth/google/callback`. ---

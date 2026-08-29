@@ -1,7 +1,12 @@
 "use client";
 
 import { useMemo } from "react";
-import { QUESTION_TYPES, type QuestionTypeKey, type SectionKey } from "@/lib/ielts";
+import {
+  practiceInstruction,
+  QUESTION_TYPES,
+  type QuestionTypeKey,
+  type SectionKey,
+} from "@/lib/ielts";
 import { answerKey, numberFromKey, type Answer, type SetLayout } from "@/lib/question-content";
 import type { SectionItemResult } from "@/app/actions/section-practice";
 import { QuestionBody, type BodyDoc, type BodyResult } from "./question-body";
@@ -64,7 +69,7 @@ export function SectionBody({
   slot = "all",
   focusNumber,
   groupHeaders = true,
-  showInstructions = true,
+  instructions = "full",
   answerScope,
   flagged,
   onToggleFlag,
@@ -123,12 +128,13 @@ export function SectionBody({
    */
   groupHeaders?: boolean;
   /**
-   * Print each group's instruction line in that band.
+   * How much of each group's instruction to print in that band.
    *
-   * Defaults to on for the mock, which rehearses the real paper rubric and all.
-   * Section PRACTICE passes false — see PRACTICE_INSTRUCTIONS_HIDDEN.
+   * "full" is the mock, which rehearses the real paper rubric and all. Section
+   * PRACTICE passes "trimmed": the word limit stays, the line restating the
+   * controls goes — see `practiceInstruction`.
    */
-  showInstructions?: boolean;
+  instructions?: "full" | "trimmed";
 }) {
   /**
    * A map answers exactly one task, so it is drawn inside that group rather
@@ -159,7 +165,15 @@ export function SectionBody({
       imageSrc: section.imageUrl,
       groups: section.questions.groups.map((g) => ({
         questionType: g.questionType as QuestionTypeKey,
-        instruction: g.instruction,
+        // Trimmed HERE rather than in the band that draws it, so the renderer —
+        // which the mock shares — keeps one rule: print what you were handed.
+        // Empty string, NOT undefined: the band falls back to the question
+        // type's default instruction when this is nullish, and that default
+        // carries a GENERIC word limit ("NO MORE THAN TWO WORDS") which is a
+        // guess, not this group's rule. Showing the wrong limit is worse than
+        // showing none.
+        instruction:
+          instructions === "trimmed" ? (practiceInstruction(g.instruction) ?? "") : g.instruction,
         from: g.from,
         to: g.to,
         layout: g.layout ?? null,
@@ -188,7 +202,7 @@ export function SectionBody({
         })),
       })),
     }),
-    [section, answerScope],
+    [section, answerScope, instructions],
   );
 
   const bodyResults: BodyResult[] | null = useMemo(
@@ -217,7 +231,9 @@ export function SectionBody({
         slot,
         focusNumber,
         groupHeaders,
-        showInstructions,
+        // The trim already happened in `doc`; an empty instruction simply draws
+        // no line, so the band never has to be told to keep quiet.
+        showInstructions: true,
         flagged,
         onToggleFlag: onToggleFlag ? (key) => onToggleFlag(numberFromKey(key)) : undefined,
         // Per-group bands carry the instruction here, so no bar above the part.

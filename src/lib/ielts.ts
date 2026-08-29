@@ -237,19 +237,44 @@ export const SET_NOUN: Record<SectionKey, string> = {
 const INSTRUCTION_HIDDEN: QuestionTypeKey[] = ["speaking_part1", "speaking_part3"];
 
 /**
- * Instruction lines are hidden across PRACTICE — every module, every type.
+ * Rubric that only restates a control the candidate is already looking at.
  *
- * "Choose the correct letter, A, B or C" is a rubric written for a paper booklet
- * where the answer sheet is somewhere else. On screen the options are right
- * there with a radio beside each one, so the line explains a control the
- * candidate is already looking at and pushes the actual question further down
- * the page.
+ * "Choose the correct letter, A, B or C" is written for a paper booklet where
+ * the answer sheet is somewhere else. On screen the options are right there
+ * with a radio beside each one, so the line explains nothing and pushes the
+ * actual question further down the page. Same for "Complete the notes below"
+ * above a note sheet with boxes in it.
  *
- * THE MOCK KEEPS ITS OWN, deliberately. A mock is a rehearsal of the real
+ * Matched only as a LEADING sentence, and only these forms. Anything the list
+ * does not recognise is kept, which is the safe direction to fail in: an
+ * unfamiliar rubric shows in full rather than vanishing.
+ *
+ * The opener runs to its full stop OR to the word that starts the constraint,
+ * because a handful of these arrived from the export with the full stop missing
+ * ("Complete the flow-chart below Choose SIX answers from the box…"). Stopping
+ * only at punctuation ate the whole line on exactly the groups whose constraint
+ * matters most.
+ */
+const REDUNDANT_RUBRIC =
+  /^\s*(?:complete the (?:notes?|table|form|flow[-\s]?chart|summary|sentences?|diagram)|label the (?:map|plan|diagram)|choose the correct letter|choose (?:two|three|four)\s+letters)\b[^.?]*?(?:[.?]|(?=\s+(?:write|choose|drag|answer)\b)|$)\s*/i;
+
+/**
+ * Instruction lines are TRIMMED across PRACTICE — every module, every type.
+ *
+ * Only the half above comes off. What survives is the half that is real
+ * information and appears nowhere else on screen: "Write ONE WORD ONLY for each
+ * answer", "Choose SIX answers from the box and write the correct letter, A-H".
+ * That limit is per group and it varies inside a single paper — Part 1 of a
+ * listening test can allow a word and a number where Part 4 allows one word —
+ * so it cannot be replaced by a rule the UI knows on its own, and a candidate
+ * who never sees it is marked wrong for something the paper told them and the
+ * app did not.
+ *
+ * THE MOCK KEEPS EVERYTHING, deliberately. A mock is a rehearsal of the real
  * thing, rubric included — the point there is that nothing on the day is
- * unfamiliar. So this switch is consulted only by the practice surfaces
- * (question practice, section practice, the paginated session, and the review
- * of a practice attempt); the mock player and the exam shell it drives are left
+ * unfamiliar. So this is consulted only by the practice surfaces (question
+ * practice, section practice, the paginated session, and the review of a
+ * practice attempt); the mock player and the exam shell it drives are left
  * alone.
  *
  * WHY A SWITCH RATHER THAN DELETED CODE. "For now" is the whole point: this is
@@ -260,6 +285,21 @@ const INSTRUCTION_HIDDEN: QuestionTypeKey[] = ["speaking_part1", "speaking_part3
 // Typed `boolean`, not the literal `true`: flipping it back must stay a
 // one-character edit that cannot narrow a branch out from under the compiler.
 export const PRACTICE_INSTRUCTIONS_HIDDEN: boolean = true;
+
+/**
+ * What a PRACTICE surface should print of a stored instruction.
+ *
+ * Returns null when nothing is left worth a line — the whole rubric was the
+ * redundant kind — so every caller can render the result unconditionally
+ * instead of each deciding for itself what "empty" means.
+ */
+export function practiceInstruction(instruction: string | null | undefined): string | null {
+  const text = instruction?.trim();
+  if (!text) return null;
+  if (!PRACTICE_INSTRUCTIONS_HIDDEN) return text;
+  const kept = text.replace(REDUNDANT_RUBRIC, "").trim();
+  return kept || null;
+}
 
 /**
  * Sections whose band comes from AI marking rather than an answer key. There is
