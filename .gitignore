@@ -89,3 +89,6 @@ Desktop.ini
 # Scratch / temp analysis scripts (kept out of history by convention)
 *.tmp
 .scratch/
+
+# One-off local utility / db seeding scripts — not part of the app
+utility/

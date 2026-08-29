@@ -33,6 +33,10 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "ptelistening.s3.eu-north-1.amazonaws.com" },
+      // Real-results headshots — only the `students/` prefix is public (see
+      // utility/scripts/upload-student-photos.ts); scoped here too so this
+      // allow-list can't be used to proxy-optimize anything else in the bucket.
+      { protocol: "https", hostname: "ielts-ace-files.s3.us-east-1.amazonaws.com", pathname: "/students/**" },
     ],
   },
   experimental: {

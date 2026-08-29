@@ -84,9 +84,11 @@ function Rail({
 /**
  * The student's face if there is one, their initials if there is not.
  *
- * Both branches render the SAME 44px disc, so a rail that is only half
+ * Both branches render the SAME 72px disc, so a rail that is only half
  * photographed still has a straight edge down the left of every card — which
- * is what makes filling these in gradually safe.
+ * is what makes filling these in gradually safe. Keep the two in sync: if the
+ * disc changes size here it must change in both branches, and the card's fixed
+ * height in ResultCard has to absorb the difference.
  *
  * ON THE EMPTY ALT. The student's name sits immediately to the right of this
  * image as real text. An alt of "Priya S." would make a screen reader announce
@@ -101,21 +103,21 @@ function Avatar({ student: s }: { student: StudentResult }) {
       <Image
         src={s.photo}
         alt=""
-        width={88}
-        height={88}
-        // 44px on every breakpoint, so state it and let Next serve the 2x
+        width={144}
+        height={144}
+        // 72px on every breakpoint, so state it and let Next serve the 2x
         // variant instead of assuming 100vw and shipping a full-width image
         // into a disc. The rail renders each student twice, but both copies
         // request the identical URL, so it is one fetch per student.
-        sizes="44px"
-        className="size-11 shrink-0 rounded-full object-cover ring-1 ring-line"
+        sizes="72px"
+        className="size-18 shrink-0 rounded-full object-cover ring-1 ring-line"
       />
     );
   }
   return (
     <span
       aria-hidden
-      className="grid size-11 shrink-0 place-items-center rounded-full bg-brand-soft text-xs font-bold tracking-wide text-brand"
+      className="grid size-18 shrink-0 place-items-center rounded-full bg-brand-soft text-base font-bold tracking-wide text-brand"
     >
       {initials(s.name)}
     </span>
@@ -129,17 +131,21 @@ function ResultCard({ student: s }: { student: StudentResult }) {
     // Fixed width AND fixed height. A rail of ragged-height cards is the
     // fastest way to make an otherwise clean marquee look unfinished, so the
     // quote clamps to three lines rather than the card growing to fit it.
-    <li className="h-[13.75rem] w-[19.5rem] shrink-0 sm:w-[21.5rem]">
+    // The height carries the 72px avatar: it is the tallest thing in the
+    // header row, so it — not the name/place stack — sets that row's height.
+    <li className="h-[15.5rem] w-[19.5rem] shrink-0 sm:w-[21.5rem]">
       <figure className="flex h-full flex-col rounded-2xl border border-line bg-paper-elev p-5 transition-shadow hover:shadow-lg">
+        {/* The name gets this row to itself. At 72px the avatar leaves about
+            114px beside it on the narrow (19.5rem) card, and these are real
+            full names — "Rushikesh Kakadiya" truncated to "Rushikesh Kaka…"
+            in a testimonial reads as a bug. The module tag moved to the
+            footer, where it sits next to the band it describes. */}
         <div className="flex items-center gap-3">
           <Avatar student={s} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-ink">{s.name}</p>
             <p className="truncate text-xs text-ink-muted">{s.place}</p>
           </div>
-          <span className="shrink-0 rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-brand">
-            {s.module}
-          </span>
         </div>
 
         <blockquote className="mt-4 line-clamp-3 flex-1 text-sm leading-relaxed text-ink-soft">
@@ -150,7 +156,10 @@ function ResultCard({ student: s }: { student: StudentResult }) {
           <span className="text-sm tabular-nums text-ink-muted line-through">{s.from.toFixed(1)}</span>
           <ArrowRight aria-hidden className="size-3.5 shrink-0 text-ink-muted" />
           <span className="font-serif text-2xl leading-none tabular-nums text-green">{s.to.toFixed(1)}</span>
-          <span className="ml-auto rounded-full bg-green-soft px-2 py-0.5 text-xs font-semibold tabular-nums text-green-ink">
+          <span className="ml-auto shrink-0 rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-brand">
+            {s.module}
+          </span>
+          <span className="shrink-0 rounded-full bg-green-soft px-2 py-0.5 text-xs font-semibold tabular-nums text-green-ink">
             +{gain.toFixed(1)}
           </span>
         </figcaption>

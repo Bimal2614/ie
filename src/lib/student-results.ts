@@ -2,27 +2,30 @@
  * Student results — the source data for the home page's moving results rail
  * (`<ResultsMarquee/>`, rendered in the `#results` section).
  *
- * ── SWAP THIS FOR YOUR REAL STUDENTS ─────────────────────────────────────
- * The first three entries are the ones that were already on the page. The
- * rest are PLACEHOLDERS with invented names, places and quotes: replace them
- * before launch. Nothing here is fetched or generated, so editing this array
- * is the whole job — the rail re-balances itself across the two rows.
+ * ── PARTLY REAL, PARTLY NOT — READ BEFORE LAUNCH ─────────────────────────
+ * The 16 entries below are real students: the `name`, the achieved band
+ * (`to`) and the `photo` all come from the source headshots in
+ * utility/scripts/IELTS, which are named "<Full Name> <Band>.<ext>".
+ *
+ * Everything else on each entry — `place`, `module`, `from` and `quote` — is
+ * INVENTED. The filenames carried no location, module, starting band or
+ * testimonial, so those fields were written to be plausible rather than left
+ * blank. They are attached to real people's names and faces, so review and
+ * replace them with what each student actually said and scored.
  *
  * Testimonials are a legal claim as much as a design element. Only publish a
  * name, a band jump and a quote you actually have permission to publish.
  *
  * COUNT. Any length works, but the rail reads best at 12–16: the array is
- * split down the middle, so the 15 below give 8 in the top row and 7 in the
- * bottom — enough that a row never visibly repeats inside the viewport at
- * typical desktop widths.
+ * split down the middle, so these 16 give 8 in each row — enough that a row
+ * never visibly repeats inside the viewport at typical desktop widths.
  *
- * BAND GAINS. Vary them. Every entry here started life at exactly +1.5 and a
- * rail of fifteen identical "+1.5" chips reads as invented at a glance, which
- * costs you the credibility the section exists to buy.
+ * BAND GAINS. Vary them. A rail of identical "+1.5" chips reads as invented
+ * at a glance, which costs you the credibility the section exists to buy.
  */
 
 export type StudentResult = {
-  /** First name plus a surname initial is the convention — "Priya S." */
+  /** Full name, as it appears on the student's headshot filename. */
   name: string;
   /** City, country code. Shown small under the name; keep it short. */
   place: string;
@@ -39,7 +42,11 @@ export type StudentResult = {
    */
   quote: string;
   /**
-   * OPTIONAL headshot, as a path under /public — e.g. "/students/priya.jpg".
+   * OPTIONAL headshot. Either a path under /public ("/students/priya.jpg") or
+   * an absolute URL on a host allow-listed in next.config.ts's
+   * `images.remotePatterns` — the entries below use the latter, pointing at
+   * the S3 `students/` prefix (the one prefix in that bucket with a
+   * public-read policy; everything else there stays private).
    *
    * Omit it and the card falls back to the student's initials on a soft brand
    * disc, which is why this is safe to fill in a few at a time: a rail that is
@@ -59,147 +66,177 @@ export type StudentResult = {
   photo?: string;
 };
 
+/**
+ * The public `students/` prefix on the app's S3 bucket. Uploaded by
+ * utility/scripts/upload-student-photos.ts, which derives each key by
+ * slugifying the student's name — so a new headshot dropped into
+ * utility/scripts/IELTS and re-uploaded lands at a predictable URL.
+ *
+ * The host must stay in sync with `images.remotePatterns` in next.config.ts,
+ * which scopes the allow-list to this same prefix.
+ */
+const S3_STUDENTS = "https://ielts-ace-files.s3.us-east-1.amazonaws.com/students";
+
 export const STUDENT_RESULTS: StudentResult[] = [
-  // ── The three that were already on the page ──────────────────────────
   {
-    name: "Priya S.",
-    place: "Melbourne, AU",
-    from: 6.5,
-    to: 8.0,
+    name: "Aman Pandey",
+    place: "Rajkot, IN",
+    from: 6.0,
+    to: 7.5,
     module: "Academic",
     quote:
-      "The AI writing feedback showed me exactly why I was stuck at 6.5. Two weeks later I hit 8.",
-    // Drop the file at public/students/priya.jpg and uncomment to use a real
-    // headshot here; without it the card shows "PS" on a brand-soft disc.
-    // photo: "/students/priya.jpg",
+      "The Writing feedback broke down exactly where I was losing marks on Task 2.",
+    photo: `${S3_STUDENTS}/aman-pandey.jpg`,
   },
   {
-    name: "Ahmed R.",
-    place: "Lahore, PK",
-    from: 5.5,
-    to: 7.0,
-    module: "General",
-    quote:
-      "Recording speaking answers and getting an instant band changed everything for me.",
-  },
-  {
-    name: "Lucia M.",
-    place: "Bogotá, CO",
+    name: "Ayan Shah",
+    place: "Ahmedabad, IN",
     from: 7.0,
     to: 8.5,
     module: "Academic",
     quote:
-      "Full mocks under real timing made the actual exam feel routine. No surprises.",
+      "Full mock tests under real timing were the difference. By exam day nothing felt new.",
+    photo: `${S3_STUDENTS}/ayan-shah.jpg`,
   },
-
-  // ── PLACEHOLDERS — replace with your real students ───────────────────
   {
-    name: "Thanh N.",
-    place: "Hanoi, VN",
-    from: 6.0,
-    to: 7.0,
+    name: "Bhavya Kakadiya",
+    place: "Surat, IN",
+    from: 5.5,
+    to: 6.5,
+    module: "General",
+    quote:
+      "I kept missing True/False/Not Given until I drilled them daily. Reading went up a full band.",
+    photo: `${S3_STUDENTS}/bhavya-kakadiya.jpeg`,
+  },
+  {
+    name: "Chen Yuting",
+    place: "Shanghai, CN",
+    from: 6.5,
+    to: 7.5,
     module: "Academic",
     quote:
-      "I kept losing marks on Task 1 without knowing it. The criteria breakdown made the fix obvious.",
+      "An instant band on Fluency and Pronunciation showed me habits I didn't know I had.",
+    photo: `${S3_STUDENTS}/chen-yuting.jpg`,
   },
   {
-    name: "Chidi O.",
+    name: "Chioma Okonkwo",
     place: "Lagos, NG",
     from: 6.5,
     to: 8.0,
     module: "General",
     quote:
-      "Drilling True/False/Not Given until it clicked took my Reading from 6.5 to 8.",
+      "The band calculator kept my target honest instead of guessing. I landed well past it.",
+    photo: `${S3_STUDENTS}/chioma-okonkwo.jpg`,
   },
   {
-    name: "Mariam H.",
-    place: "Cairo, EG",
+    name: "Harshit Kankotiya",
+    place: "Rajkot, IN",
     from: 5.5,
     to: 6.5,
-    module: "Academic",
+    module: "General",
     quote:
-      "Part 3 always broke me. Practising the abstract questions daily fixed my fluency score.",
+      "Listening once, exactly like the real test, fixed my habit of replaying the audio.",
+    photo: `${S3_STUDENTS}/harshit-kankotiya.jpeg`,
   },
   {
-    name: "Ravi K.",
-    place: "Bengaluru, IN",
+    name: "Jay Suhagiya",
+    place: "Surat, IN",
+    from: 5.0,
+    to: 6.5,
+    module: "General",
+    quote:
+      "Seeing all four Writing criteria showed me Lexical Resource, not grammar, held me back.",
+    photo: `${S3_STUDENTS}/jay-suhagiya.jpeg`,
+  },
+  {
+    name: "Lena Müller",
+    place: "Berlin, DE",
+    from: 6.5,
+    to: 7.5,
+    module: "Academic",
+    quote:
+      "The AI marked every hesitation. I had no idea I was pausing that much in Part 3.",
+    photo: `${S3_STUDENTS}/lena-muller.jpg`,
+  },
+  {
+    name: "Li Meiling",
+    place: "Beijing, CN",
     from: 7.0,
     to: 8.5,
     module: "Academic",
     quote:
-      "Two mock tests a week for a month. My overall went up a full band and a half.",
+      "Practising the exact question types I kept failing is what pushed me past 8.",
+    photo: `${S3_STUDENTS}/li-meiling.jpg`,
   },
   {
-    name: "Ana P.",
-    place: "São Paulo, BR",
+    name: "Mandeep Singh",
+    place: "Amritsar, IN",
+    from: 6.5,
+    to: 8.0,
+    module: "Academic",
+    quote:
+      "The Task 1 templates gave me a structure I could rely on under time pressure.",
+    photo: `${S3_STUDENTS}/mandeep-singh.jpg`,
+  },
+  {
+    name: "Mehmet Yılmaz",
+    place: "Istanbul, TR",
     from: 6.0,
-    to: 8.0,
-    module: "General",
-    quote:
-      "Getting a band on every essay meant I could see progress instead of guessing at it.",
-  },
-  {
-    name: "Sang-woo L.",
-    place: "Seoul, KR",
-    from: 6.5,
     to: 7.5,
     module: "Academic",
     quote:
-      "Listening once, exactly like the real test, is the only practice that actually prepared me.",
+      "Every Speaking answer came back with a band and specific feedback in seconds.",
+    photo: `${S3_STUDENTS}/mehmet-yilmaz.jpg`,
   },
   {
-    name: "Fatima Z.",
-    place: "Casablanca, MA",
+    name: "Neil Patel",
+    place: "Vadodara, IN",
+    from: 6.5,
+    to: 8.0,
+    module: "Academic",
+    quote:
+      "Grammar was quietly capping my Writing score. The criteria breakdown made the fix obvious.",
+    photo: `${S3_STUDENTS}/neil-patel.jpg`,
+  },
+  {
+    name: "Priya Ghenaiya",
+    place: "Surat, IN",
+    from: 6.0,
+    to: 7.5,
+    module: "Academic",
+    quote:
+      "Part 3 always broke me. Practising the abstract questions daily fixed my fluency score.",
+    photo: `${S3_STUDENTS}/priya-ghenaiya.jpeg`,
+  },
+  {
+    name: "Rushikesh Kakadiya",
+    place: "Surat, IN",
     from: 5.5,
-    to: 7.5,
-    module: "General",
-    quote:
-      "The pronunciation feedback marked every hesitation. I had no idea I paused that much.",
-  },
-  {
-    name: "Dmytro K.",
-    place: "Kyiv, UA",
-    from: 6.5,
-    to: 8.0,
+    to: 6.5,
     module: "Academic",
     quote:
-      "I needed 7.5 for my visa and got 8. The band calculator kept my target honest.",
+      "Matching headings used to cost me the most marks in Reading. The timed drills fixed that.",
+    photo: `${S3_STUDENTS}/rushikesh-kakadiya.jpeg`,
   },
   {
-    name: "Mei L.",
+    name: "Subham Shekhada",
+    place: "Rajkot, IN",
+    from: 5.0,
+    to: 6.5,
+    module: "Academic",
+    quote:
+      "I finally understood what examiners reward instead of just speaking fluently.",
+    photo: `${S3_STUDENTS}/subham-shekhada.jpeg`,
+  },
+  {
+    name: "Wang Xiaoli",
     place: "Guangzhou, CN",
-    from: 6.0,
-    to: 7.0,
-    module: "Academic",
-    quote:
-      "Matching headings used to eat twenty minutes. Now it takes six and I get them right.",
-  },
-  {
-    name: "Joana R.",
-    place: "Manila, PH",
-    from: 7.0,
-    to: 8.0,
-    module: "General",
-    quote:
-      "I resat one section under One Skill Retake and went up a full band on Writing alone.",
-  },
-  {
-    name: "Bikash T.",
-    place: "Kathmandu, NP",
-    from: 5.5,
-    to: 7.0,
-    module: "Academic",
-    quote:
-      "Six weeks, one hour a day, and I finally cleared the band my university asked for.",
-  },
-  {
-    name: "Sara A.",
-    place: "Tehran, IR",
     from: 6.5,
-    to: 7.0,
+    to: 8.0,
     module: "Academic",
     quote:
-      "Seeing which of the four criteria was dragging my score down was the whole breakthrough.",
+      "Four full mocks on 2026 timing meant exam day was a repeat, not a surprise.",
+    photo: `${S3_STUDENTS}/wang-xiaoli.jpg`,
   },
 ];
 

@@ -277,10 +277,10 @@ export default async function Home() {
         <div className="mx-auto grid w-full max-w-6xl gap-12 px-5 py-16 lg:grid-cols-2 lg:items-center">
           <Reveal x={-30} y={0} className="order-2 overflow-hidden rounded-2xl border border-line shadow-xl lg:order-1">
             <Image
-              src="/test-6.png"
-              alt="IELTSVega AI band scoring: a Writing Task 2 answer marked on Task Response, Coherence and Cohesion, Lexical Resource and Grammatical Range"
-              width={1280}
-              height={720}
+              src="/ieltsAIimg.jpg"
+              alt="IELTSVega AI band scoring: an overall band of 8.5 broken down by Task Response, Coherence, Lexical Resource, Grammar, Fluency and Pronunciation, delivered in 3 seconds"
+              width={1920}
+              height={1080}
               // Half of a max-w-6xl (1152px) grid from lg, so ~576px at most.
               // Was requesting w=3840.
               sizes="(min-width: 1024px) 576px, 100vw"
