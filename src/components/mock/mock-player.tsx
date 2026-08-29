@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { hasSideStimulus, SECTIONS, type SectionKey } from "@/lib/ielts";
-import { answerKey, anyUploadPending, type Answer } from "@/lib/question-content";
+import { answerKey, anyUploadPending, isAnswered, type Answer } from "@/lib/question-content";
 import { MOCK_MODULE_NOTE, moduleSeconds } from "@/lib/mock-timing";
 import {
   advanceMockModule,
@@ -144,7 +144,7 @@ export function MockPlayer({ sitting }: Props) {
     const done = new Set<number>();
     for (const n of sheet.all) {
       const a = sheet.anchorOf.get(n);
-      if (a && answers[answerKey(a.sectionId, a.n)] !== undefined) done.add(n);
+      if (a && isAnswered(answers[answerKey(a.sectionId, a.n)])) done.add(n);
     }
     return done;
   }, [answers, sheet]);

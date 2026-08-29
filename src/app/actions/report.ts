@@ -7,10 +7,17 @@ import { getRequestContext } from "@/lib/session";
 import { rateLimit } from "@/lib/security/rate-limit";
 
 /**
- * Report a problem with a question (wrong key, typo, media issue). Recorded to
- * the audit log — queryable for triage, no dedicated table needed for v1.
+ * Report a problem with a question (wrong key, typo, media issue, offensive
+ * content). Recorded to the audit log — queryable for triage, no dedicated
+ * table needed for v1.
  */
-const REASONS = ["wrong_answer", "typo_unclear", "media_problem", "other"] as const;
+const REASONS = [
+  "wrong_answer",
+  "typo_unclear",
+  "media_problem",
+  "inappropriate",
+  "other",
+] as const;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function reportQuestion(input: {

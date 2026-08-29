@@ -9,11 +9,19 @@ const REASONS: { value: string; label: string }[] = [
   { value: "wrong_answer", label: "The answer key looks wrong" },
   { value: "typo_unclear", label: "Typo or unclear wording" },
   { value: "media_problem", label: "Audio / image problem" },
+  { value: "inappropriate", label: "Offensive or inappropriate content" },
   { value: "other", label: "Something else" },
 ];
 
-/** A small "Report a problem" control + modal for a single question. */
-export function ReportQuestionButton({ questionId }: { questionId: string }) {
+/**
+ * A small "Report a problem" control + modal for a single question.
+ *
+ * Deliberately NOT the flag beside it: the flag is the exam's own "come back to
+ * this one" marker and says nothing to us, while this reaches a human. A gap
+ * group answers inline and so has no row to hang an icon on — `label` gives
+ * those the same control as a button under the block.
+ */
+export function ReportQuestionButton({ questionId, label }: { questionId: string; label?: string }) {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("wrong_answer");
   const [note, setNote] = useState("");
@@ -38,11 +46,17 @@ export function ReportQuestionButton({ questionId }: { questionId: string }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        title="Report a problem with this question"
-        aria-label="Report a problem"
-        className="grid size-7 place-items-center rounded-md text-ink-muted transition-colors hover:bg-paper-sunken hover:text-ink"
+        title="Report a problem with this question — wrong answer, typo, or inappropriate content"
+        aria-label={label ? `Report a problem with ${label}` : "Report a problem with this question"}
+        className={cn(
+          "text-ink-muted transition-colors hover:bg-paper-sunken hover:text-ink",
+          label
+            ? "inline-flex items-center gap-1.5 rounded-md border border-line px-2 py-1 text-xs font-medium"
+            : "grid size-7 place-items-center rounded-md",
+        )}
       >
         <AlertCircle className="size-4" />
+        {label && <span>Report a problem</span>}
       </button>
 
       {open && (

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, CheckCircle2, RotateCcw, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { anyUploadPending, type Answer } from "@/lib/question-content";
+import { anyUploadPending, isAnswered, type Answer } from "@/lib/question-content";
 import { QUESTION_TYPES, SECTIONS, hasSideStimulus, isAiScored } from "@/lib/ielts";
 import { submitPractice, type PracticeResult } from "@/app/actions/practice";
 import { ExamShell, type StripPart } from "@/components/exam/exam-shell";
@@ -78,7 +78,7 @@ export function QuestionPlayer({
     const done = new Set<number>();
     for (const n of sheet.numbers) {
       const id = sheet.idOf.get(n);
-      if (id && answers[id] !== undefined) done.add(n);
+      if (id && isAnswered(answers[id])) done.add(n);
     }
     return done;
   }, [answers, sheet]);
@@ -225,6 +225,10 @@ export function QuestionPlayer({
           )}
         </>
       }
+      onClearAll={result ? undefined : () => setAnswers({})}
+      // Empty boxes left behind by a cleared gap are not answers, so the
+      // button greys out in step with the counter on the answer strip.
+      clearDisabled={!Object.values(answers).some(isAnswered)}
       parts={parts}
       activePartId={set.id}
       answered={answered}

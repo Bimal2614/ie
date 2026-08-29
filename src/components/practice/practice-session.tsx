@@ -14,7 +14,7 @@ import {
   type SectionKey,
   type QuestionTypeKey,
 } from "@/lib/ielts";
-import { anyUploadPending, type Answer, type SetLayout } from "@/lib/question-content";
+import { anyUploadPending, isAnswered, type Answer, type SetLayout } from "@/lib/question-content";
 import { getSetPaginated, type PaginatedSetResult } from "@/app/actions/questions";
 import { submitPractice, type SetSubmissionResult } from "@/app/actions/practice";
 import { FullscreenButton } from "@/components/exam/fullscreen-button";
@@ -59,6 +59,8 @@ export function PracticeSession({
   const [result, setResult] = useState<SetSubmissionResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  /** "Clear all" is armed by the first click and fires on the second. */
+  const [confirmClear, setConfirmClear] = useState(false);
 
   const toggleFlag = useCallback((id: string) => {
     setFlagged((prev) => {
@@ -124,6 +126,33 @@ export function PracticeSession({
       return next;
     });
   }, []);
+
+  /**
+   * Empties the whole set from one place at the top.
+   *
+   * This replaces the "Clear" that used to appear in a row the moment it was
+   * answered: it widened the gutter and shrank the options next to it, so the
+   * card moved under the cursor on the very click that summoned it. One button
+   * that is always there cannot do that. Losing ten answers (or an essay) to a
+   * stray click would be worse than the twitch, so it arms first and clears on
+   * the second click.
+   */
+  const clearAllAnswers = useCallback(() => {
+    setAnswers({});
+    // The Writing autosave only writes when there IS something to save, so a
+    // cleared essay would come straight back on the next reload unless the
+    // stored draft goes with it.
+    if (currentSet) {
+      try {
+        localStorage.removeItem(`ielts:draft:${currentSet.id}`);
+      } catch {}
+    }
+  }, [currentSet]);
+
+  // A button left armed on one set must not still be armed on the next.
+  useEffect(() => {
+    setConfirmClear(false);
+  }, [currentSet?.id, result]);
 
   // Resume the last set the user was on for this question type.
   useEffect(() => {
@@ -246,9 +275,11 @@ export function PracticeSession({
   }, [goBack, result, submitting, answers, data.hasPreviousSet, data.hasNextSet, setPage, paletteOpen, historyOpen]);
 
   const answeredCount = currentSet
-    ? currentSet.questions.filter((q) => answers[q.id] !== undefined).length
+    ? currentSet.questions.filter((q) => isAnswered(answers[q.id])).length
     : 0;
   const totalQsInSet = currentSet?.questions.length ?? 0;
+  // Disabling the button is also what disarms it.
+  const armedClear = confirmClear && answeredCount > 0;
 
   const playerSet: PlayerSet | null = currentSet
     ? {
@@ -285,7 +316,6 @@ export function PracticeSession({
       ? {
           id: currentSet.questions[0].id,
           flagged: flagged.has(currentSet.questions[0].id),
-          hasAnswer: answers[currentSet.questions[0].id] !== undefined,
         }
       : null;
 
@@ -341,20 +371,24 @@ export function PracticeSession({
             </p>
           </div>
 
-          {/* Flag and Clear act on the task, not on a row.
-              They used to sit in a gutter down the right of every question card,
-              which on a Writing task is a column of dead space beside a
-              full-width editor, and put "Clear" one stray click from wiping 250
-              words. Up here they are out of the way but still reachable, and the
-              set-wide progress bar they replace only repeated the "n / m
-              answered" already printed above the Submit button. */}
-          {taskControls && (
-            <div className="hidden items-center gap-1 sm:flex">
+          {/* Flag marks the task for review; it belongs up here only when the
+              set IS one task, since with ten questions on screen "flag the
+              question" has no referent and those rows carry their own.
+
+              Clear is different: it is set-wide, so it is here for every type.
+              Per-row Clear buttons appeared only once a row was answered, which
+              moved the layout on the click that created them. */}
+          <div className="hidden items-center gap-1 sm:flex">
+            {taskControls && (
               <button
                 type="button"
                 onClick={() => toggleFlag(taskControls.id)}
-                title={taskControls.flagged ? "Unflag this question" : "Flag this question for review"}
-                aria-label="Flag this question for review"
+                title={
+                  taskControls.flagged
+                    ? "Remove your review mark"
+                    : "Mark for review — a private bookmark, only you see it"
+                }
+                aria-label="Mark this question for review"
                 aria-pressed={taskControls.flagged}
                 className={cn(
                   "inline-flex items-center gap-1.5 rounded-md border border-line bg-paper px-2.5 py-1.5 text-xs font-semibold transition-colors hover:border-brand/50 hover:text-ink",
@@ -364,18 +398,41 @@ export function PracticeSession({
                 <Flag className={cn("size-3.5", taskControls.flagged && "fill-warning")} />
                 <span className="hidden lg:inline">{taskControls.flagged ? "Flagged" : "Flag"}</span>
               </button>
+            )}
+            {!result && totalQsInSet > 0 && (
               <button
                 type="button"
-                onClick={() => clearAnswer(taskControls.id)}
-                disabled={!taskControls.hasAnswer}
-                title="Clear this answer"
-                className="inline-flex items-center gap-1.5 rounded-md border border-line bg-paper px-2.5 py-1.5 text-xs font-semibold text-ink-soft transition-colors enabled:hover:border-brand/50 enabled:hover:text-ink disabled:opacity-40"
+                onClick={() => {
+                  if (!armedClear) setConfirmClear(true);
+                  else {
+                    clearAllAnswers();
+                    setConfirmClear(false);
+                  }
+                }}
+                onBlur={() => setConfirmClear(false)}
+                disabled={answeredCount === 0}
+                title={
+                  armedClear
+                    ? "Click again to clear"
+                    : totalQsInSet === 1
+                      ? "Clear your answer"
+                      : `Clear all ${totalQsInSet} answers`
+                }
+                aria-label={totalQsInSet === 1 ? "Clear your answer" : "Clear all answers in this set"}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-md border bg-paper px-2.5 py-1.5 text-xs font-semibold transition-colors disabled:opacity-40",
+                  armedClear
+                    ? "border-danger/60 text-danger"
+                    : "border-line text-ink-soft enabled:hover:border-brand/50 enabled:hover:text-ink",
+                )}
               >
                 <Eraser className="size-3.5" />
-                <span className="hidden lg:inline">Clear</span>
+                {/* Fixed width: the label swaps between two lengths, and this
+                    button has the fullscreen and history controls next to it. */}
+                <span className="hidden w-14 lg:inline-block">{armedClear ? "Sure?" : "Clear all"}</span>
               </button>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Writing a 250-word essay inside the sidebar and topbar wastes most
               of the screen, so this route offers the same fullscreen control the

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Check, X, Flag, ListChecks, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { QUESTION_TYPES, SECTIONS, showsInstruction, type QuestionTypeKey, type SectionKey } from "@/lib/ielts";
+import { isAnswered } from "@/lib/question-content";
 import type { Answer, CorrectAnswer, OptionsLayout, SetLayout } from "@/lib/question-content";
 import { AudioStimulus } from "./audio-stimulus";
 import { SetLayoutRenderer, layoutOwnsAnswers } from "./renderers/layouts";
@@ -540,7 +541,11 @@ function GroupBlock({
   // of letters read faster than any drag.
   const isMatching = meta?.family === "matching" && !!optionsLayout;
   const isLabelMatrix = Boolean(config.labelMatrix) && meta?.family === "labelling" && !!optionsLayout;
-  const answered = group.items.filter((i) => answers[i.key] !== undefined).length;
+  // Mirrors the branch below: a matrix, a drag board, and a gap-backed layout
+  // all answer without ever drawing an <ItemRow>, so there is no gutter on them
+  // to carry the per-question controls.
+  const rowsRendered = !isLabelMatrix && !isMatching && showItemRows;
+  const answered = group.items.filter((i) => isAnswered(answers[i.key])).length;
   const byNumber = itemsByNumber(group);
 
   const range =
@@ -665,6 +670,16 @@ function GroupBlock({
         </>
       )}
 
+      {/* Reporting a bad question must not depend on the question type. Rows
+          carry the control in their own gutter; a group that has no rows gets
+          one under the block, filed against its first question — the note in
+          the dialog is where a candidate says which number it was. */}
+      {config.reportOn === "row" && !rowsRendered && group.items[0] && (
+        <div className="flex justify-end">
+          <ReportQuestionButton questionId={group.items[0].key} label={range} />
+        </div>
+      )}
+
       {/* Gap-backed groups answer inline, so their feedback lives here. */}
       {config.inlineFeedback && !isMatching && !showItemRows && disabled && (
         <FeedbackList group={group} resultFor={resultFor} report={config.reportOn === "feedback"} />
@@ -725,10 +740,10 @@ function ItemRow({
   const numberInGap = QUESTION_TYPES[item.questionType]?.family === "completion";
   const flagged = config.flagged?.has(item.key) ?? false;
   /**
-   * A Writing answer is one full-width editor. "Clear" there wipes 250 words on
-   * a stray click, and there is nothing to flag for review when the task IS the
-   * whole question, so the control gutter would only reserve dead space down the
-   * right-hand side of the box. The wrapper collapses to zero width once empty.
+   * A Writing answer is one full-width editor, and there is nothing to flag for
+   * review when the task IS the whole question, so the control gutter would only
+   * reserve dead space down the right-hand side of the box. The wrapper
+   * collapses to zero width once empty.
    */
   const isWriting = QUESTION_TYPES[item.questionType]?.family === "writing";
 
@@ -766,11 +781,47 @@ function ItemRow({
           </span>
         )}
         <div className={cn("min-w-0 flex-1 space-y-3", config.fillHeight && "flex min-h-0 flex-col")}>
-          {item.prompt && config.itemPrompts !== false && (
-            <p className="text-sm font-medium text-ink">
-              <AnnotatedText run={`q${item.key}:p`} text={item.prompt} />
-            </p>
-          )}
+          {/* The prompt and the row's controls share the top line.
+              Down the right as a column, the flag and the report reserved their
+              width for the FULL height of the card while occupying only its
+              first 28px — so every option below was ~60px narrower than the
+              card, and lines wrapped that would otherwise have fitted. Here
+              they cost one line's width, once. */}
+          <div className="flex items-start gap-3">
+            <div className="min-w-0 flex-1">
+              {item.prompt && config.itemPrompts !== false && (
+                <p className="text-sm font-medium text-ink">
+                  <AnnotatedText run={`q${item.key}:p`} text={item.prompt} />
+                </p>
+              )}
+            </div>
+            <div className="flex shrink-0 items-center gap-1">
+              {result && state !== "review" && (
+                <span
+                  className={cn(
+                    "grid size-6 place-items-center rounded-full",
+                    state === "correct" ? "bg-success-soft text-success" : "bg-danger-soft text-danger",
+                  )}
+                  aria-label={state === "correct" ? "Correct" : "Incorrect"}
+                >
+                  {state === "correct" ? <Check className="size-4" /> : <X className="size-4" />}
+                </span>
+              )}
+              {config.onToggleFlag && !isWriting && (
+                <button
+                  type="button"
+                  onClick={() => config.onToggleFlag?.(item.key)}
+                  title={flagged ? "Remove your review mark" : "Mark for review — a private bookmark, only you see it"}
+                  aria-label="Mark this question for review"
+                  aria-pressed={flagged}
+                  className="grid size-7 place-items-center rounded-md text-ink-muted transition-colors hover:bg-paper-sunken hover:text-ink"
+                >
+                  <Flag className={cn("size-4", flagged && "fill-warning text-warning")} />
+                </button>
+              )}
+              {config.reportOn === "row" && <ReportQuestionButton questionId={item.key} />}
+            </div>
+          </div>
           {clip && (
             <button
               type="button"
@@ -788,44 +839,15 @@ function ItemRow({
             disabled={disabled}
             state={state}
             options={optionsLayout}
-            onChange={(v) => onAnswer(item.key, v)}
+            onChange={(v) => {
+              // Deselecting your own choice sends an empty answer. Read as a
+              // clear, the question goes back to unanswered — which is what the
+              // per-row "Clear" button used to do before it was removed.
+              if (onClearAnswer && Object.keys(v).length === 0) onClearAnswer(item.key);
+              else onAnswer(item.key, v);
+            }}
           />
           {result && <ResultNote result={result} />}
-        </div>
-        <div className="flex shrink-0 items-center gap-1">
-          {!disabled && onClearAnswer && value !== undefined && !isWriting && (
-            <button
-              type="button"
-              onClick={() => onClearAnswer(item.key)}
-              className="rounded-md px-2 py-1 text-xs font-medium text-ink-muted transition-colors hover:bg-paper-sunken hover:text-ink"
-            >
-              Clear
-            </button>
-          )}
-          {result && state !== "review" && (
-            <span
-              className={cn(
-                "grid size-6 place-items-center rounded-full",
-                state === "correct" ? "bg-success-soft text-success" : "bg-danger-soft text-danger",
-              )}
-              aria-label={state === "correct" ? "Correct" : "Incorrect"}
-            >
-              {state === "correct" ? <Check className="size-4" /> : <X className="size-4" />}
-            </span>
-          )}
-          {config.onToggleFlag && !isWriting && (
-            <button
-              type="button"
-              onClick={() => config.onToggleFlag?.(item.key)}
-              title={flagged ? "Unflag" : "Flag for review"}
-              aria-label="Flag for review"
-              aria-pressed={flagged}
-              className="grid size-7 place-items-center rounded-md text-ink-muted transition-colors hover:bg-paper-sunken hover:text-ink"
-            >
-              <Flag className={cn("size-4", flagged && "fill-warning text-warning")} />
-            </button>
-          )}
-          {config.reportOn === "row" && <ReportQuestionButton questionId={item.key} />}
         </div>
       </div>
     </li>

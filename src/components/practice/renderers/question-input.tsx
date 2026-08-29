@@ -52,6 +52,7 @@ function ChoiceRow({
   multi,
   state,
   onSelect,
+  onDeselect,
   run,
 }: {
   letter: string;
@@ -61,6 +62,11 @@ function ChoiceRow({
   multi: boolean;
   state: QuestionState;
   onSelect: () => void;
+  /**
+   * Activating the option you already chose. Rows no longer carry a "Clear"
+   * button, so clicking your own answer again is the way back to blank.
+   */
+  onDeselect?: () => void;
   /** Makes the option text highlightable. See annotations.tsx. */
   run?: string;
 }) {
@@ -99,6 +105,12 @@ function ChoiceRow({
         checked={selected}
         disabled={disabled}
         onChange={onSelect}
+        // A radio that is already checked fires no change event, so the
+        // deselect has to be read off the click itself. A checkbox does fire,
+        // and its own handler toggles, so it must not be double-handled here.
+        onClick={() => {
+          if (selected && !multi) onDeselect?.();
+        }}
         className="sr-only"
       />
       <span
@@ -131,6 +143,9 @@ function SingleChoice({ question, value, disabled, state, onChange }: InputProps
           multi={false}
           state={state}
           onSelect={() => onChange({ index: i })}
+          // An empty answer reads as "cleared" upstream — same contract the
+          // drag-and-drop bank uses when you empty a slot.
+          onDeselect={() => onChange({})}
           run={`q${question.id}:o${i}`}
         />
       ))}
@@ -192,7 +207,9 @@ function Judgement({ question, value, disabled, state, onChange }: InputProps) {
           key={c}
           type="button"
           disabled={disabled}
-          onClick={() => onChange({ value: c })}
+          // Clicking the answer you already gave takes the question back to
+          // blank, which is what the removed per-row "Clear" button did.
+          onClick={() => onChange(selected === c ? {} : { value: c })}
           className={cn(
             "rounded-md border px-4 py-1.5 text-sm font-medium transition-colors",
             selected === c

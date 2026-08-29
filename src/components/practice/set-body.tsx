@@ -229,7 +229,12 @@ export function SetBody({
         stickyAudio: exam,
         labelMatrix: exam,
         inlineFeedback: exam,
-        reportOn: exam ? "feedback" : "row",
+        // Always on the row, answering or answered. Behind "feedback" it only
+        // appeared after submitting, so on the question-type routes — which run
+        // with `exam` — there was no way to report a bad question while you
+        // were looking at it, and the flag beside it is a private review mark
+        // that reaches nobody.
+        reportOn: "row",
         // A Writing prompt is printed once by the surface above (see
         // `taskHeading`), so the row would otherwise show the question twice.
         itemPrompts: !(exam && meta?.family === "writing"),

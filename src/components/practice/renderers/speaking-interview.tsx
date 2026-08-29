@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ArrowLeft, ArrowRight, Check, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { isAnswered } from "@/lib/question-content";
 import type { Answer } from "@/lib/question-content";
 import { QuestionInput, type RenderQuestion } from "./question-input";
 
@@ -30,8 +31,8 @@ export function SpeakingInterview({
 }) {
   const [index, setIndex] = useState(0);
   const current = questions[index];
-  const answeredCount = questions.filter((q) => answers[q.id] !== undefined).length;
-  const isAnswered = (id: string) => answers[id] !== undefined;
+  const answeredCount = questions.filter((q) => isAnswered(answers[q.id])).length;
+  const answeredById = (id: string) => isAnswered(answers[id]);
   const atLast = index === questions.length - 1;
 
   if (!current) return null;
@@ -61,16 +62,16 @@ export function SpeakingInterview({
             key={q.id}
             type="button"
             onClick={() => setIndex(i)}
-            aria-label={`Question ${i + 1}${isAnswered(q.id) ? " (answered)" : ""}`}
+            aria-label={`Question ${i + 1}${answeredById(q.id) ? " (answered)" : ""}`}
             aria-current={i === index}
             className={cn(
               "grid size-7 place-items-center rounded-full border font-mono text-[11px] font-semibold tabular-nums transition-colors",
               i === index && "border-brand bg-brand text-white",
-              i !== index && isAnswered(q.id) && "border-success/40 bg-success-soft text-success",
-              i !== index && !isAnswered(q.id) && "border-line text-ink-muted hover:bg-paper-sunken",
+              i !== index && answeredById(q.id) && "border-success/40 bg-success-soft text-success",
+              i !== index && !answeredById(q.id) && "border-line text-ink-muted hover:bg-paper-sunken",
             )}
           >
-            {isAnswered(q.id) && i !== index ? <Check className="size-3.5" /> : i + 1}
+            {answeredById(q.id) && i !== index ? <Check className="size-3.5" /> : i + 1}
           </button>
         ))}
       </div>

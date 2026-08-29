@@ -187,6 +187,30 @@ export type CueCardContent = { cueCard: { topic: string; bullets: string[] } };
 export type Answer = Record<string, unknown>;
 
 /**
+ * Does this answer count as GIVEN?
+ *
+ * Emptying an input does not delete its key. A gap cleared with backspace
+ * writes { text: "" }, a matching slot cleared by clicking it writes
+ * { key: "" }, and a deselected choice writes {}. Every one of those is
+ * `!== undefined`, so counting keys left the answer sheet lighting up numbers
+ * whose box was visibly empty — and the count above Submit agreed with it.
+ *
+ * Shape-aware on purpose: option A is `{ index: 0 }`, so a blanket "is it
+ * truthy" test would read the first option of every question as unanswered.
+ */
+export function isAnswered(a: Answer | undefined): boolean {
+  if (!a) return false;
+  if (Object.keys(a).length === 0) return false;
+  if (typeof a.index === "number") return true;
+  if (Array.isArray(a.indices)) return a.indices.length > 0;
+  for (const k of ["value", "key", "text"] as const) {
+    if (typeof a[k] === "string") return a[k].trim() !== "";
+  }
+  // Anything left is a recording, which is an answer by virtue of existing.
+  return true;
+}
+
+/**
  * Is this answer's recording still being stored?
  *
  * A speaking answer is reported to the player the instant recording stops, so

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Clock, Loader2, Send } from "lucide-react";
+import { ArrowLeft, ArrowRight, Clock, Eraser, Loader2, Send } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { FullscreenButton } from "./fullscreen-button";
 import { TextSizeControl } from "./text-size-control";
 import { QuestionStrip, type StripPart } from "./question-strip";
@@ -32,6 +33,8 @@ export function ExamShell({
   partLabel,
   instruction,
   badges,
+  onClearAll,
+  clearDisabled,
   menu,
   remainingSec,
   timerState,
@@ -59,6 +62,13 @@ export function ExamShell({
   partLabel?: string;
   instruction?: string | null;
   badges?: React.ReactNode;
+  /**
+   * Empties every answer on this part. Rows used to carry their own "Clear",
+   * which appeared only once a row was answered and so moved the layout on the
+   * click that created it; one button up here cannot.
+   */
+  onClearAll?: () => void;
+  clearDisabled?: boolean;
   menu?: React.ReactNode;
   /**
    * Seconds left, for a timed sitting. Omitted, the shell counts up instead —
@@ -87,6 +97,10 @@ export function ExamShell({
 }) {
   const root = useRef<HTMLDivElement | null>(null);
   const [elapsed, setElapsed] = useState(0);
+  /** Losing a whole part to one stray click: armed first, cleared second. */
+  const [confirmClear, setConfirmClear] = useState(false);
+  // Disabling the button is also what disarms it.
+  const armedClear = confirmClear && !clearDisabled;
 
   const counting = remainingSec === undefined;
   useEffect(() => {
@@ -126,13 +140,38 @@ export function ExamShell({
       </header>
 
       {/* ---- instruction band ---- */}
-      {(partLabel || instruction || badges) && (
+      {(partLabel || instruction || badges || onClearAll) && (
         <div className="shrink-0 border-b border-line bg-paper-elev/60 px-4 py-2">
           <div className="flex flex-wrap items-center gap-2">
             {partLabel && (
               <span className="text-sm font-bold text-ink-strong">{partLabel}</span>
             )}
             {badges}
+            {onClearAll && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (!armedClear) setConfirmClear(true);
+                  else {
+                    onClearAll();
+                    setConfirmClear(false);
+                  }
+                }}
+                onBlur={() => setConfirmClear(false)}
+                disabled={clearDisabled}
+                title={armedClear ? "Click again to clear" : "Clear every answer on this part"}
+                aria-label="Clear every answer on this part"
+                className={cn(
+                  "ml-auto inline-flex items-center justify-center gap-1.5 rounded-md border bg-paper px-2.5 py-1 text-xs font-semibold transition-colors disabled:opacity-40",
+                  armedClear
+                    ? "border-danger/60 text-danger"
+                    : "border-line text-ink-soft enabled:hover:border-brand/50 enabled:hover:text-ink",
+                )}
+              >
+                <Eraser className="size-3.5" />
+                <span className="w-14 text-left">{armedClear ? "Sure?" : "Clear all"}</span>
+              </button>
+            )}
           </div>
           {instruction && (
             <p className="mt-0.5 text-sm leading-snug text-ink-soft">{instruction}</p>

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, CheckCircle2, RotateCcw, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { anyUploadPending, type Answer } from "@/lib/question-content";
+import { anyUploadPending, isAnswered, type Answer } from "@/lib/question-content";
 import {
   hasSideStimulus,
   isAiScored,
@@ -115,7 +115,7 @@ export function SectionPlayer({
   const answered = useMemo(() => {
     const done = new Set<number>();
     for (const n of sheet.numbers) {
-      if (answers[String(sheet.anchorOf.get(n))] !== undefined) done.add(n);
+      if (isAnswered(answers[String(sheet.anchorOf.get(n))])) done.add(n);
     }
     return done;
   }, [answers, sheet]);
@@ -301,6 +301,10 @@ export function SectionPlayer({
           </span>
         </>
       }
+      onClearAll={result ? undefined : () => setAnswers({})}
+      // Empty boxes left behind by a cleared gap are not answers, so the
+      // button greys out in step with the counter on the answer strip.
+      clearDisabled={!Object.values(answers).some(isAnswered)}
       parts={parts}
       activePartId={section.id}
       answered={answered}
