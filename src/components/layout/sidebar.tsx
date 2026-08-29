@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   LayoutDashboard,
   Headphones,
@@ -33,8 +33,6 @@ type NavItem = {
   children?: NavChild[];
   badge?: string;
   exact?: boolean;
-  /** Start expanded even when none of its routes are active. */
-  defaultOpen?: boolean;
 };
 type Group = { label: string; items: NavItem[] };
 
@@ -51,12 +49,9 @@ const GROUPS: Group[] = [
     items: [
       {
         href: "/practice",
-        label: "All practice",
+        label: "Practice",
         icon: Target,
         exact: true,
-        // The four skills are the main way in, so keep them visible from the
-        // start rather than hiding them behind a chevron.
-        defaultOpen: true,
         children: [
           { href: "/practice/listening", label: "Listening", icon: Headphones },
           { href: "/practice/reading", label: "Reading", icon: BookOpen },
@@ -90,6 +85,13 @@ const GROUPS: Group[] = [
   },
 ];
 
+/**
+ * The nav's own `pb-10`, in px. It keeps the last item clear of the "More"
+ * pill, so it must not count as scrollable content when deciding whether the
+ * list actually runs past the fold.
+ */
+const NAV_BOTTOM_PAD = 40;
+
 interface SidebarProps {
   onNavigate?: () => void;
   showCloseButton?: boolean;
@@ -99,6 +101,37 @@ interface SidebarProps {
 export function Sidebar({ onNavigate, showCloseButton, onClose }: SidebarProps) {
   const pathname = usePathname();
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const navRef = useRef<HTMLElement>(null);
+  // The shell hides its scrollbars, so on a short viewport the tail of the nav
+  // ("Study Materials", "Blog") sits below the fold with nothing to say so.
+  // Track which edge still has content behind it and fade / nudge that edge.
+  const [overflow, setOverflow] = useState({ top: false, bottom: false });
+
+  const syncOverflow = useCallback(() => {
+    const el = navRef.current;
+    if (!el) return;
+    const max = el.scrollHeight - el.clientHeight;
+    setOverflow({
+      top: el.scrollTop > 4,
+      bottom: max > NAV_BOTTOM_PAD && el.scrollTop < max - 4,
+    });
+  }, []);
+
+  useEffect(() => {
+    const el = navRef.current;
+    if (!el) return;
+    syncOverflow();
+    // A viewport resize changes what fits; expanding a group and changing route
+    // change what there is to fit, hence those deps.
+    const observer = new ResizeObserver(syncOverflow);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [syncOverflow, expanded, pathname]);
+
+  const scrollToMore = () => {
+    const el = navRef.current;
+    el?.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  };
 
   const isActive = (href: string, exact = false) =>
     exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
@@ -130,7 +163,7 @@ export function Sidebar({ onNavigate, showCloseButton, onClose }: SidebarProps) 
       </div>
 
       <div className="relative min-h-0 flex-1">
-        <nav className="h-full overflow-y-auto px-3 pb-6">
+        <nav ref={navRef} onScroll={syncOverflow} className="h-full overflow-y-auto px-3 pb-10">
           {GROUPS.map((group) => (
             <div key={group.label} className="mt-4 first:mt-2">
               <p className="sidebar-group-label">{group.label}</p>
@@ -138,14 +171,14 @@ export function Sidebar({ onNavigate, showCloseButton, onClose }: SidebarProps) 
                 {group.items.map((item) => {
                   const parentActive = isActive(item.href, item.exact);
                   const childActive = item.children?.some((c) => isActive(c.href)) ?? false;
-                  // `expanded` only holds entries the user has toggled, so an
-                  // explicit collapse always wins over the default.
-                  const isOpen =
-                    expanded[item.href] ?? (item.defaultOpen || parentActive || childActive);
+                  // Always collapsed until the user opens it — being on a child
+                  // route highlights the parent instead of expanding it, so the
+                  // list keeps the same height wherever you are.
+                  const isOpen = expanded[item.href] ?? false;
                   return (
                     <li key={item.href}>
                       {item.children ? (
-                        <div className="sidebar-item gap-0 pr-1" data-active={parentActive}>
+                        <div className="sidebar-item gap-0 pr-1" data-active={parentActive || childActive}>
                           <Link href={item.href} className="flex min-w-0 flex-1 items-center gap-3" onClick={onNavigate}>
                             <item.icon className="h-4 w-4 shrink-0 opacity-80" />
                             <span className="flex-1 truncate">{item.label}</span>
@@ -191,6 +224,21 @@ export function Sidebar({ onNavigate, showCloseButton, onClose }: SidebarProps) 
             </div>
           ))}
         </nav>
+
+        <div aria-hidden className="sidebar-fade sidebar-fade-top" data-visible={overflow.top} />
+        <div aria-hidden className="sidebar-fade sidebar-fade-bottom" data-visible={overflow.bottom} />
+        <button
+          type="button"
+          onClick={scrollToMore}
+          className="sidebar-more"
+          data-visible={overflow.bottom}
+          tabIndex={overflow.bottom ? 0 : -1}
+          aria-hidden={!overflow.bottom}
+          aria-label="Scroll down for more navigation"
+        >
+          <span>More</span>
+          <ChevronDown className="h-3 w-3" />
+        </button>
       </div>
 
       <div className="space-y-0.5 border-t border-white/5 px-3 py-3">
