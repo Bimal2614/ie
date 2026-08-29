@@ -23,9 +23,12 @@ export default function BlogIndex() {
         />
       </Reveal>
 
+      {/* Cards reveal as they scroll into view, so the stagger is by column
+          (i % 3) rather than by absolute index — an index-based delay made the
+          last card in a 46-post list wait 3.6s after entering the viewport. */}
       <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {POSTS.map((p, i) => (
-          <Reveal key={p.slug} delay={i * 0.08} className="h-full">
+          <Reveal key={p.slug} delay={(i % 3) * 0.08} className="h-full">
             <Link href={`/blog/${p.slug}`} className="flex h-full flex-col rounded-2xl border border-line bg-paper-elev p-6 transition-shadow hover:shadow-lg">
               <div className="flex items-center gap-2 text-xs">
                 <span className="rounded-full bg-brand-soft px-2.5 py-0.5 font-medium text-brand">{p.category}</span>

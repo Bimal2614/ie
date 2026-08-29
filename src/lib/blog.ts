@@ -7,34 +7,15 @@
  * Every call-to-action points at IELTSVega; we never link to other platforms.
  */
 
-export type BlogSection = { heading?: string; paragraphs?: string[]; bullets?: string[] };
-export type BlogPost = {
-  slug: string;
-  /** The article headline. Rendered as the page H1 — keep it under 70 chars. */
-  title: string;
-  /**
-   * Optional <title> override, for headlines that read well on the page but
-   * exceed the ~60 characters Google renders in a result. Falls back to
-   * `title`. Note the page title no longer carries a "| IELTSVega Blog"
-   * suffix: 17 characters of brand was pushing every post's real headline out
-   * of the visible part of the snippet.
-   */
-  seoTitle?: string;
-  excerpt: string;
-  category: string;
-  date: string; // display string, e.g. "July 2026"
-  /** ISO date (YYYY-MM-DD) for JSON-LD datePublished + freshness signals. */
-  publishedAt?: string;
-  readMins: number;
-  /** SEO target queries for this post (meta keywords + JSON-LD). */
-  keywords: string[];
-  sections: BlogSection[];
-  /** Optional Q&A — rendered as a visible FAQ section and FAQPage JSON-LD.
-   *  Target real "People Also Ask" questions in the answers. */
-  faqs?: { q: string; a: string }[];
-};
+import type { BlogPost } from "./blog-types";
+import { TOPIC_POSTS_2026 } from "./blog-2026-topics";
+import { PRACTICE_POSTS } from "./blog-practice";
+
+/** Re-exported so `import type { BlogPost } from "@/lib/blog"` keeps working. */
+export type { BlogPost, BlogSection } from "./blog-types";
 
 export const POSTS: BlogPost[] = [
+
   /* ---------------------------------------------------------------- *
    * Timely "recent questions" posts — these target the monthly, high-
    * intent searches ("recent ielts speaking questions July 2026") that
@@ -140,6 +121,21 @@ export const POSTS: BlogPost[] = [
       { heading: "Get your essays scored instantly", paragraphs: ["Writing a plan is easy; hitting the band descriptors under time is the hard part. On IELTSVega you can write real Task 2 essays on prompts like these and get instant AI band scoring on all four criteria, Task Response, Coherence, Lexical Resource and Grammar, with feedback on exactly what's holding your band down. Fix the pattern, not just one essay."] },
     ],
   },
+  /* ---------------------------------------------------------------- *
+   * Rising-query cluster (Aug 2026) — test-centre, booking, fee, format
+   * and requirement intent: "ielts centres near me", "ielts slot booking",
+   * "one skill retake", "ielts vs pte vs duolingo". Lives in
+   * blog-2026-topics.ts.
+   * ---------------------------------------------------------------- */
+  ...TOPIC_POSTS_2026,
+
+  /* ---------------------------------------------------------------- *
+   * Practice / platform cluster (Aug-Sep 2026) — "best ielts practice
+   * platform", "free ielts mock test", "ielts writing checker" and the
+   * per-skill practice queries. Lives in blog-practice.ts.
+   * ---------------------------------------------------------------- */
+  ...PRACTICE_POSTS,
+
   /* ---------------------------------------------------------------- *
    * SEO pillar posts (2026) — targeting the highest-volume and rising
    * IELTS queries. Each is written to genuinely answer the query, then
