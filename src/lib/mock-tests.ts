@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { mockTests, mockTestSections, practiceSections } from "@/db/schema";
 import { SECTION_ORDER, type SectionKey } from "@/lib/ielts";
@@ -42,25 +42,55 @@ export type MockTestSummary = {
 };
 
 /**
- * Every live full-length paper for one module, in book/test order.
+ * Every live full-length paper for one module, newest book first.
  *
- * Two queries, not one per test: the parts are fetched for the whole page and
- * grouped in memory, so adding a book doesn't add a round trip.
+ * Two queries, not one per test, and both are aggregates: adding a book adds
+ * rows to a `count(*)`, never a round trip.
  */
 export async function listMockTests(module: "academic" | "general"): Promise<MockTestSummary[]> {
   const tests = await db
-    .select()
+    // Named columns, not the whole row: `source`, `isFullTest` and the
+    // timestamps are never read here, and SELECT * would ship them to every
+    // card on the page.
+    .select({
+      id: mockTests.id,
+      slug: mockTests.slug,
+      title: mockTests.title,
+      description: mockTests.description,
+      module: mockTests.module,
+      book: mockTests.book,
+      testNumber: mockTests.testNumber,
+      totalMinutes: mockTests.totalMinutes,
+      totalQuestions: mockTests.totalQuestions,
+      totalParts: mockTests.totalParts,
+    })
     .from(mockTests)
     .where(and(eq(mockTests.module, module), eq(mockTests.isActive, true)))
-    .orderBy(asc(mockTests.sortOrder), asc(mockTests.title));
+    // NEWEST BOOK FIRST, oldest last: Cambridge 21 down to Cambridge 11. The
+    // tests INSIDE a book still run 1 → 4 — a candidate wants this year's
+    // paper at the top of the shelf, not Test 4 before Test 1 — so the two
+    // halves of `sortOrder` (bookNumber * 10 + testNumber) are split back out
+    // here and sorted in opposite directions. Sorting an expression gives up
+    // mock_tests_listing_idx for the ordering, which costs nothing on a
+    // catalogue of ~44 rows and saves storing a second column that could drift
+    // out of step with the first.
+    .orderBy(
+      desc(sql`${mockTests.sortOrder} / 10`),
+      asc(sql`${mockTests.sortOrder} % 10`),
+      asc(mockTests.title),
+    );
 
   if (tests.length === 0) return [];
 
+  // COUNTED IN POSTGRES, not here. The card only needs "4 · 3 · 2 · 3",
+  // so this returns one row per (paper, module) — four per test — rather
+  // than one row per part, which for a shelf of 40 papers is 480 rows
+  // fetched to produce 160 numbers.
   const parts = await db
     .select({
       mockTestId: mockTestSections.mockTestId,
       section: mockTestSections.section,
-      orderIndex: mockTestSections.orderIndex,
+      count: sql<number>`count(*)`,
     })
     .from(mockTestSections)
     .where(
@@ -68,13 +98,13 @@ export async function listMockTests(module: "academic" | "general"): Promise<Moc
         mockTestSections.mockTestId,
         tests.map((t) => t.id),
       ),
-    );
+    )
+    .groupBy(mockTestSections.mockTestId, mockTestSections.section);
 
   const counts = new Map<string, Map<SectionKey, number>>();
   for (const p of parts) {
     const byTest = counts.get(p.mockTestId) ?? new Map<SectionKey, number>();
-    const s = p.section as SectionKey;
-    byTest.set(s, (byTest.get(s) ?? 0) + 1);
+    byTest.set(p.section as SectionKey, Number(p.count));
     counts.set(p.mockTestId, byTest);
   }
 

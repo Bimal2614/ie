@@ -61,8 +61,9 @@ export function MockCatalogue({
         )
       : tests;
 
-    // The catalogue arrives in sortOrder (book number, then test), so grouping
-    // in a Map preserves that order without a second sort.
+    // The catalogue arrives newest book first (Cambridge 21 down to 11, tests
+    // 1-4 inside each), so grouping in a Map preserves that order without a
+    // second sort.
     const grouped = new Map<string, MockTestCard[]>();
     for (const t of matched) {
       const key = t.book ?? "Other";

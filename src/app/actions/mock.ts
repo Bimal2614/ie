@@ -1,6 +1,6 @@
 "use server";
 
-import { and, asc, desc, eq, inArray, isNull, isNotNull } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, isNotNull, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import {
@@ -112,17 +112,34 @@ export async function getMockCatalogue(
   const tests = await listMockTests(stream);
   if (tests.length === 0) return { module: stream, tests: [] };
 
-  // Every sitting this candidate has of these papers, in one query rather than
-  // one per card — a book of 44 papers would otherwise be 44 round trips.
-  const sittings = await db
+  // This candidate's history against these papers, REDUCED IN POSTGRES to one
+  // row per paper. The four things a card shows — the open sitting, the
+  // completed count, the best band, the latest report — are all aggregates, so
+  // fetching the sittings themselves and folding them in JS would ship a row
+  // per attempt to compute a row per paper: a candidate who has sat 40 papers
+  // four times each transfers 160 rows to render 40 cards, and grows from
+  // there every time they sit anything.
+  //
+  // `array_agg(... order by started_at desc) filter (...)` picks the most
+  // recent id of one status inside the same single pass — the SQL spelling of
+  // the `.find()` this used to do on a client-side sorted list. Runs on
+  // mock_sessions_user_test_idx (user_id, mock_test_id, status).
+  const latestId = (status: "in_progress" | "completed") =>
+    sql<string | null>`(array_agg(${mockTestSessions.id} order by ${mockTestSessions.startedAt} desc)
+      filter (where ${mockTestSessions.status} = ${status}))[1]`;
+
+  const history = await db
     .select({
-      id: mockTestSessions.id,
       mockTestId: mockTestSessions.mockTestId,
-      status: mockTestSessions.status,
-      startedAt: mockTestSessions.startedAt,
-      overallBand: mockTestResults.overallBand,
+      attempts: sql<number>`count(*) filter (where ${mockTestSessions.status} = 'completed')`,
+      // numeric(2,1), so max() is the band itself — no scan, no Math.max.
+      bestBand: sql<string | null>`max(${mockTestResults.overallBand})`,
+      inProgressSessionId: latestId("in_progress"),
+      lastSessionId: latestId("completed"),
     })
     .from(mockTestSessions)
+    // mock_results_session_uq makes this at most 1:1, so it cannot inflate the
+    // count above.
     .leftJoin(mockTestResults, eq(mockTestResults.sessionId, mockTestSessions.id))
     .where(
       and(
@@ -133,29 +150,22 @@ export async function getMockCatalogue(
         ),
       ),
     )
-    .orderBy(desc(mockTestSessions.startedAt));
+    .groupBy(mockTestSessions.mockTestId);
 
-  const byTest = new Map<string, typeof sittings>();
-  for (const s of sittings) {
-    const list = byTest.get(s.mockTestId);
-    if (list) list.push(s);
-    else byTest.set(s.mockTestId, [s]);
-  }
+  const byTest = new Map(history.map((h) => [h.mockTestId, h]));
 
   return {
     module: stream,
     tests: tests.map((t) => {
-      const mine = byTest.get(t.id) ?? [];
-      const open = mine.find((s) => s.status === "in_progress");
-      const bands = mine
-        .map((s) => (s.overallBand === null ? null : Number(s.overallBand)))
-        .filter((b): b is number => b !== null);
+      const mine = byTest.get(t.id);
       return {
         ...t,
-        inProgressSessionId: open?.id ?? null,
-        attempts: mine.filter((s) => s.status === "completed").length,
-        bestBand: bands.length > 0 ? Math.max(...bands).toFixed(1) : null,
-        lastSessionId: mine.find((s) => s.status === "completed")?.id ?? null,
+        inProgressSessionId: mine?.inProgressSessionId ?? null,
+        attempts: Number(mine?.attempts ?? 0),
+        // Re-formatted rather than passed through: max() drops the column's
+        // typmod, so the scale is not guaranteed by the type alone.
+        bestBand: mine?.bestBand == null ? null : Number(mine.bestBand).toFixed(1),
+        lastSessionId: mine?.lastSessionId ?? null,
       };
     }),
   };

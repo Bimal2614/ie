@@ -211,7 +211,18 @@ function itemLabel(item: { n: number; marks: number }): string {
 }
 
 /** The slice of the recording where one question is answered. */
-type AudioWindow = { fromFrac: number; toFrac: number; approx?: boolean };
+type AudioWindow = {
+  /** Absolute seconds, measured against the recording's own speech spans. */
+  fromSec?: number;
+  toSec?: number;
+  /** Legacy: a fraction of the TRANSCRIPT, which is not a fraction of the
+   *  audio — the recording also holds an announcement and two long reading
+   *  pauses the transcript has no words for, so this ran ~50s early. Kept only
+   *  so parts not yet measured still do something. */
+  fromFrac: number;
+  toFrac: number;
+  approx?: boolean;
+};
 
 function windowOf(content: Record<string, unknown> | null): AudioWindow | null {
   const a = content?.audio as AudioWindow | undefined;
@@ -228,15 +239,26 @@ function windowOf(content: Record<string, unknown> | null): AudioWindow | null {
  * been said.
  */
 function useAudioClip(ref: React.RefObject<HTMLAudioElement | null>) {
-  const stopAt = useRef<number | null>(null);
+  const clip = useRef<{ from: number; to: number } | null>(null);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const onTime = () => {
-      if (stopAt.current !== null && el.currentTime >= stopAt.current) {
+      const c = clip.current;
+      if (!c) return;
+      const t = el.currentTime;
+      // The stop point belongs to THIS clip and nothing else. Scrubbing the bar
+      // or restarting the recording moves playback outside the window, and a
+      // stop point left armed from an earlier "play this part" then cut the
+      // recording off mid-sentence — so leaving the window disarms it.
+      if (t < c.from - 1 || t > c.to + 3) {
+        clip.current = null;
+        return;
+      }
+      if (t >= c.to) {
         el.pause();
-        stopAt.current = null;
+        clip.current = null;
       }
     };
     el.addEventListener("timeupdate", onTime);
@@ -249,10 +271,16 @@ function useAudioClip(ref: React.RefObject<HTMLAudioElement | null>) {
       if (!el) return;
       const start = () => {
         if (!Number.isFinite(el.duration) || el.duration <= 0) return;
-        const lead = w.approx ? 12 : 6;
-        const tail = w.approx ? 8 : 4;
-        stopAt.current = Math.min(el.duration, w.toFrac * el.duration + tail);
-        el.currentTime = Math.max(0, w.fromFrac * el.duration - lead);
+        const exact = typeof w.fromSec === "number" && typeof w.toSec === "number";
+        // A measured window needs only enough lead to catch the run-up to the
+        // sentence; a transcript-fraction guess needs far more slack.
+        const lead = exact ? 3 : w.approx ? 12 : 6;
+        const tail = exact ? 2 : w.approx ? 8 : 4;
+        const from = exact ? w.fromSec! : w.fromFrac * el.duration;
+        const to = exact ? w.toSec! : w.toFrac * el.duration;
+        const at = Math.max(0, from - lead);
+        clip.current = { from: at, to: Math.min(el.duration, to + tail) };
+        el.currentTime = at;
         void el.play();
       };
       // `preload="metadata"` usually has the duration already; if the browser

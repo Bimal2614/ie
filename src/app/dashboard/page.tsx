@@ -35,11 +35,11 @@ export default async function DashboardPage() {
           <h1 className="mt-1.5 font-semibold text-4xl tracking-tight text-ink">Welcome back, {firstName}.</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {stats.currentStreak > 0 && (
+          {/* {stats.currentStreak > 0 && (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-paper-elev px-3 py-1.5 text-sm text-ink-soft">
               <Flame className="size-4 text-ink-muted" /> {stats.currentStreak}-day streak
             </span>
-          )}
+          )} */}
           {daysUntilExam !== null && (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-paper-elev px-3 py-1.5 text-sm text-ink-soft">
               <CalendarClock className="size-4 text-ink-muted" /> Exam in{" "}

@@ -43,6 +43,8 @@ import type { QuestionGroup, QuestionItem } from "../lib/question-content";
 
 const SOURCE = "cambridge";
 const EXPL_PATH = join("tools", "cambridge", "explanations.json");
+/** Char-offset -> seconds pins per part, from tools/cambridge/align.py. */
+const TIMINGS_PATH = join("tools", "cambridge", "timings.json");
 
 /* ------------------------------------------------------------------ *
  * Anchoring a listening question to its moment in the recording
@@ -74,7 +76,35 @@ function findAt(t: string, e: string, from: number): number {
   return -1;
 }
 
-type Window = { fromFrac: number; toFrac: number; approx?: true };
+type Window = {
+  /**
+   * Real seconds, force-aligned. Present once align.py has measured the part;
+   * the player prefers these and pads them tightly, because they are exact.
+   */
+  fromSec?: number;
+  toSec?: number;
+  /** Fraction of the TRANSCRIPT — see anchorPart. Kept as the fallback. */
+  fromFrac: number;
+  toFrac: number;
+  approx?: true;
+};
+
+/** Seconds at a character offset, interpolated between two aligned pins. */
+function secondsAt(pins: [number, number][], at: number): number {
+  if (at <= pins[0][0]) return pins[0][1];
+  const last = pins[pins.length - 1];
+  if (at >= last[0]) return last[1];
+  let lo = 0;
+  let hi = pins.length - 1;
+  while (hi - lo > 1) {
+    const mid = (lo + hi) >> 1;
+    if (pins[mid][0] <= at) lo = mid;
+    else hi = mid;
+  }
+  const [a, ta] = pins[lo];
+  const [b, tb] = pins[hi];
+  return ta + ((tb - ta) * (at - a)) / Math.max(1, b - a);
+}
 
 /**
  * Anchor every question in one listening part to its moment in the recording.
@@ -91,6 +121,7 @@ type Window = { fromFrac: number; toFrac: number; approx?: true };
 function anchorPart(
   transcript: string,
   items: { n: number; explanation: string | null }[],
+  pins: [number, number][] | null,
 ): Map<number, Window> {
   const t = normalise(transcript);
   const out = new Map<number, Window>();
@@ -122,9 +153,18 @@ function anchorPart(
       at = Math.round(prev + (next - prev) / 2);
     }
     const span = Math.max(e.length, 90);
+    const to = Math.min(t.length, at + span);
     out.set(items[i].n, {
+      // Seconds where the recording has been aligned; the fraction stays as the
+      // fallback for a part align.py has not measured, or could not.
+      ...(pins && pins.length >= 2
+        ? {
+            fromSec: Number(secondsAt(pins, at).toFixed(2)),
+            toSec: Number(secondsAt(pins, to).toFixed(2)),
+          }
+        : {}),
       fromFrac: Number((at / t.length).toFixed(5)),
-      toFrac: Number((Math.min(t.length, at + span) / t.length).toFixed(5)),
+      toFrac: Number((to / t.length).toFixed(5)),
       ...(approx ? { approx: true as const } : {}),
     });
   }
@@ -166,6 +206,14 @@ async function main() {
   const explanations: Record<string, Record<string, string>> = JSON.parse(
     readFileSync(EXPL_PATH, "utf-8"),
   );
+  // Optional: a part with no pins keeps its transcript-fraction window, so the
+  // build works before align.py has been run and improves part by part after.
+  let timings: Record<string, [number, number][]> = {};
+  try {
+    timings = JSON.parse(readFileSync(TIMINGS_PATH, "utf-8"));
+  } catch {
+    console.log("no timings.json yet - listening windows stay approximate");
+  }
 
   const parts = await db.select().from(practiceSections);
   parts.sort(
@@ -202,6 +250,7 @@ async function main() {
                 explanation: i.explanation ?? expl[String(i.n)] ?? null,
               })),
             ),
+            timings[`${bookNo}|${part.testNumber}|${part.partNumber}`] ?? null,
           )
         : new Map<number, Window>();
 
