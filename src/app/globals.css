@@ -680,3 +680,45 @@
   .marquee-row { animation: none; width: auto; }
   .marquee-group[aria-hidden="true"] { display: none; }
 }
+
+/* ------------------------------------------------------------------ *
+ * DRAGGING A PHRASE INTO AN ANSWER BOX
+ *
+ * The two floating pieces of answer-drag.tsx. They are created as plain
+ * DOM rather than rendered by React, because the exam layout draws the
+ * passage pane and the questions pane as two separate trees and either
+ * can start a drag — rendered from a component, each tree would draw its
+ * own copy. Keeping the ghost out of React also means the pointer can
+ * move it every frame without re-rendering forty answer fields.
+ * ------------------------------------------------------------------ */
+.phrase-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 60;
+  /* Never in the way of what it is being aimed at: the drop target is
+     found with elementFromPoint, which would otherwise return this. */
+  pointer-events: none;
+  max-width: 22rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  border-radius: 0.375rem;
+  border: 1px solid hsl(var(--brand));
+  /* The highlighter's own yellow, so what is in flight reads as the same
+     scrap of text the marker pen leaves behind. */
+  background: hsl(var(--marker));
+  color: hsl(var(--marker-ink));
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  box-shadow: var(--shadow-md);
+}
+
+/* The cursor has to say "held" everywhere, including over the text the
+   drag started in, which has its own text cursor. */
+body.phrase-dragging,
+body.phrase-dragging * {
+  cursor: grabbing !important;
+}

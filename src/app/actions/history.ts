@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, gte, lt, count, sql, desc, asc } from "drizzle-orm";
+import { and, eq, gte, lt, count, sql, desc, asc, type SQL } from "drizzle-orm";
 import { db } from "@/db";
 import { userResponses, questions, questionSets, practiceSections } from "@/db/schema";
 import { requireUser } from "@/lib/dal";
@@ -159,6 +159,8 @@ export async function getDaySummary(date: string, tzOffsetMinutes: number): Prom
 export type AttemptRow = {
   attemptId: string;
   questionType: QuestionTypeKey;
+  /** Which set it was — lets a caller mark the one already on screen. */
+  setId: string | null;
   setTitle: string | null;
   questions: number;
   correct: number;
@@ -168,6 +170,106 @@ export type AttemptRow = {
   createdAt: Date;
 };
 
+/**
+ * ROLLED UP FIRST, TITLED SECOND — one statement, but two stages.
+ *
+ * Both attempt lists are this query with a different WHERE, so they are this
+ * query. What differs between "everything I did on Tuesday" and "my last dozen
+ * goes at table completion" is the filter, the direction and the ceiling —
+ * nothing about how responses become attempts, or where an attempt's title
+ * comes from.
+ *
+ * The two stages matter. Joining the set tables alongside the responses instead
+ * puts the title lookup *inside* the aggregate: the planner does one
+ * primary-key probe per ANSWER, so a 13-gap attempt pays 13 probes per table
+ * for one title, and the group key grows text columns it then has to sort on.
+ * Rolling up to attempts first and applying the LIMIT there means each join
+ * runs at most `limit` times, whatever the history holds.
+ */
+async function rollUpAttempts(
+  where: SQL | undefined,
+  { newestFirst, limit }: { newestFirst: boolean; limit: number },
+): Promise<AttemptRow[]> {
+  const started = sql`min(${userResponses.createdAt})`;
+
+  const attempts = db
+    .select({
+      attemptId: userResponses.attemptId,
+      setId: userResponses.setId,
+      questionType: userResponses.questionType,
+      /**
+       * `attempt_`-PREFIXED ALIASES, DELIBERATELY.
+       *
+       * A real column of the subquery comes out qualified —
+       * `"attempts"."set_id"` — but a SQL alias comes out bare, and the outer
+       * query left-joins two set tables. `practice_sections` has a `questions`
+       * column of its own, so a plain `questions` alias is genuinely ambiguous
+       * and Postgres rejects the statement (42702). The prefix is what keeps
+       * these five names the subquery's own, whatever columns those tables
+       * grow later.
+       */
+      questions: count().as("attempt_questions"),
+      correct: sql<number>`count(*) filter (where ${userResponses.isCorrect} = true)`.as(
+        "attempt_correct",
+      ),
+      graded: sql<number>`count(*) filter (where ${userResponses.isCorrect} is not null)`.as(
+        "attempt_graded",
+      ),
+      avgBand: sql<number | null>`avg(${userResponses.band})`.as("attempt_avg_band"),
+      createdAt: sql<Date>`${started}`.as("attempt_started_at"),
+    })
+    .from(userResponses)
+    .where(where)
+    .groupBy(userResponses.attemptId, userResponses.setId, userResponses.questionType)
+    .orderBy(newestFirst ? desc(started) : asc(started))
+    .limit(limit)
+    .as("attempts");
+
+  const rows = await db
+    .select({
+      attemptId: attempts.attemptId,
+      setId: attempts.setId,
+      questionType: attempts.questionType,
+      /**
+       * BOTH SET TABLES, because `set_id` points at whichever one the attempt
+       * came from: question practice writes a `question_sets` id, section
+       * practice a `practice_sections` id. Asking only the first is why a
+       * section-practice attempt used to be listed as "Untitled set" — its
+       * title was in the other table all along.
+       *
+       * Left joins, and coalesced rather than picked: a response outlives the
+       * set it came from, so history must not vanish when content is edited.
+       */
+      setTitle: sql<string | null>`coalesce(${questionSets.title}, ${practiceSections.title})`,
+      questions: attempts.questions,
+      correct: attempts.correct,
+      graded: attempts.graded,
+      avgBand: attempts.avgBand,
+      createdAt: attempts.createdAt,
+    })
+    .from(attempts)
+    // Primary-key lookups driven by the subquery's ≤ `limit` rows, so the pair
+    // costs two probes per listed attempt, not two per answer.
+    .leftJoin(questionSets, eq(attempts.setId, questionSets.id))
+    .leftJoin(practiceSections, eq(attempts.setId, practiceSections.id))
+    // A subquery's order is not carried through a join — it has to be said
+    // again out here or the list comes back in whatever order the join emits.
+    .orderBy(newestFirst ? desc(attempts.createdAt) : asc(attempts.createdAt));
+
+  return rows.map((r) => ({
+    attemptId: r.attemptId,
+    setId: r.setId,
+    questionType: r.questionType as QuestionTypeKey,
+    setTitle: r.setTitle,
+    questions: Number(r.questions),
+    correct: Number(r.correct),
+    graded: Number(r.graded),
+    avgBand: r.avgBand === null ? null : Number(r.avgBand),
+    createdAt: new Date(r.createdAt),
+  }));
+}
+
+/** One day's attempts at one task type, in the order they were sat. */
 export async function getAttempts(
   date: string,
   tzOffsetMinutes: number,
@@ -177,47 +279,19 @@ export async function getAttempts(
   const user = await requireUser();
   const { start, end } = dayBounds(date, tzOffsetMinutes);
 
-  const rows = await db
-    .select({
-      attemptId: userResponses.attemptId,
-      questionType: userResponses.questionType,
-      // Left join: a response outlives the set it came from, and history must
-      // not vanish when content is edited.
-      setTitle: questionSets.title,
-      questions: count(),
-      correct: sql<number>`count(*) filter (where ${userResponses.isCorrect} = true)`,
-      graded: sql<number>`count(*) filter (where ${userResponses.isCorrect} is not null)`,
-      avgBand: sql<number | null>`avg(${userResponses.band})`,
-      createdAt: sql<Date>`min(${userResponses.createdAt})`,
-    })
-    .from(userResponses)
-    .leftJoin(questionSets, eq(userResponses.setId, questionSets.id))
-    .where(
-      and(
-        eq(userResponses.userId, user.id),
-        gte(userResponses.createdAt, start),
-        lt(userResponses.createdAt, end),
-        eq(userResponses.section, section),
-        eq(userResponses.questionType, questionType),
-      ),
-    )
-    .groupBy(userResponses.attemptId, userResponses.questionType, questionSets.title)
-    .orderBy(asc(sql`min(${userResponses.createdAt})`))
-    // One row per attempt for one day, one section and one type. A candidate
-    // cannot realistically sit this many in a day; the cap is here so a runaway
-    // cannot render an unbounded list.
-    .limit(MAX_ATTEMPTS_PER_DAY);
-
-  return rows.map((r) => ({
-    attemptId: r.attemptId,
-    questionType: r.questionType as QuestionTypeKey,
-    setTitle: r.setTitle,
-    questions: Number(r.questions),
-    correct: Number(r.correct),
-    graded: Number(r.graded),
-    avgBand: r.avgBand === null ? null : Number(r.avgBand),
-    createdAt: new Date(r.createdAt),
-  }));
+  return rollUpAttempts(
+    and(
+      eq(userResponses.userId, user.id),
+      gte(userResponses.createdAt, start),
+      lt(userResponses.createdAt, end),
+      eq(userResponses.section, section),
+      eq(userResponses.questionType, questionType),
+    ),
+    // Chronological: a day reads forwards. The cap is a backstop, not paging —
+    // a candidate cannot realistically sit this many in a day, and without it a
+    // runaway could render an unbounded list.
+    { newestFirst: false, limit: MAX_ATTEMPTS_PER_DAY },
+  );
 }
 
 /* ------------------------------------------------------------------ *
@@ -280,6 +354,22 @@ export type AttemptDetail = {
 
 /** Every question answered in one submit, in exam order. */
 export async function getAttemptDetail(attemptId: string): Promise<AttemptDetail | null> {
+  return loadAttempt(attemptId, true);
+}
+
+/**
+ * The body of both attempt reads.
+ *
+ * `withPassage` is the only difference between them, and it is a column in the
+ * SELECT rather than a `delete` on the way out — a reading passage dropped
+ * after the fact has still crossed the wire from Postgres and still sat in this
+ * process's memory. Not exported: the flag is an internal detail, and every
+ * export in a "use server" module is a callable endpoint.
+ */
+async function loadAttempt(
+  attemptId: string,
+  withPassage: boolean,
+): Promise<AttemptDetail | null> {
   const user = await requireUser();
 
   /**
@@ -356,7 +446,7 @@ export async function getAttemptDetail(attemptId: string): Promise<AttemptDetail
             id: questionSets.id,
             title: questionSets.title,
             instructions: questionSets.instructions,
-            passageText: questionSets.passageText,
+            passageText: withPassage ? questionSets.passageText : sql<string | null>`null`,
             audioUrl: questionSets.audioUrl,
             imageUrl: questionSets.imageUrl,
             layout: questionSets.layout,
@@ -373,7 +463,7 @@ export async function getAttemptDetail(attemptId: string): Promise<AttemptDetail
             id: practiceSections.id,
             title: practiceSections.title,
             instructions: practiceSections.instructions,
-            passageText: practiceSections.passageText,
+            passageText: withPassage ? practiceSections.passageText : sql<string | null>`null`,
             audioUrl: practiceSections.audioUrl,
             imageUrl: practiceSections.imageUrl,
             startNumber: practiceSections.startNumber,
@@ -525,77 +615,35 @@ export async function getLatestActiveDate(tzOffsetMinutes: number): Promise<stri
 /** Ceiling on the panel, whatever the caller asks for. */
 const MAX_RECENT_ATTEMPTS = 30;
 
-export type RecentAttemptRow = AttemptRow & {
-  /** Which set it was, so the panel can mark the one currently on screen. */
-  setId: string | null;
-};
-
 export async function getRecentAttempts(
   section: SectionKey,
   questionType: QuestionTypeKey,
   limit = 12,
-): Promise<RecentAttemptRow[]> {
+): Promise<AttemptRow[]> {
   const user = await requireUser();
 
-  const rows = await db
-    .select({
-      attemptId: userResponses.attemptId,
-      setId: userResponses.setId,
-      questionType: userResponses.questionType,
-      // Left join for the same reason getAttempts uses one: a response outlives
-      // the set it came from. Only `question_sets` is joined because this panel
-      // belongs to the /practice/[section]/[type] player, which is fed from
-      // that table — a section-practice attempt simply shows no title.
-      setTitle: questionSets.title,
-      questions: count(),
-      correct: sql<number>`count(*) filter (where ${userResponses.isCorrect} = true)`,
-      graded: sql<number>`count(*) filter (where ${userResponses.isCorrect} is not null)`,
-      avgBand: sql<number | null>`avg(${userResponses.band})`,
-      createdAt: sql<Date>`min(${userResponses.createdAt})`,
-    })
-    .from(userResponses)
-    .leftJoin(questionSets, eq(userResponses.setId, questionSets.id))
-    .where(
-      and(
-        eq(userResponses.userId, user.id),
-        eq(userResponses.section, section),
-        eq(userResponses.questionType, questionType),
-      ),
-    )
-    .groupBy(
-      userResponses.attemptId,
-      userResponses.setId,
-      userResponses.questionType,
-      questionSets.title,
-    )
-    // Most recent first — the panel opens on what you just did.
-    .orderBy(desc(sql`min(${userResponses.createdAt})`))
-    .limit(Math.min(Math.max(limit, 1), MAX_RECENT_ATTEMPTS));
-
-  return rows.map((r) => ({
-    attemptId: r.attemptId,
-    setId: r.setId,
-    questionType: r.questionType as QuestionTypeKey,
-    setTitle: r.setTitle,
-    questions: Number(r.questions),
-    correct: Number(r.correct),
-    graded: Number(r.graded),
-    avgBand: r.avgBand === null ? null : Number(r.avgBand),
-    createdAt: new Date(r.createdAt),
-  }));
+  return rollUpAttempts(
+    and(
+      eq(userResponses.userId, user.id),
+      eq(userResponses.section, section),
+      eq(userResponses.questionType, questionType),
+    ),
+    // Most recent first — the panel opens on what you just did — and capped by
+    // a count rather than a day, since "how did I do at this before" must not
+    // depend on having practised today.
+    { newestFirst: true, limit: Math.min(Math.max(limit, 1), MAX_RECENT_ATTEMPTS) },
+  );
 }
 
 /**
  * One attempt for the panel: the answers and the marks, without the passage.
  *
  * The full review re-renders the reading passage, which is the largest thing
- * in an attempt by far and is already on screen behind the panel. Dropping it
- * here keeps a preview that is opened casually, several times a session, from
- * shipping a few KB of prose the panel never draws. `/history/[id]` still
- * calls getAttemptDetail and gets the whole thing.
+ * in an attempt by far and is already on screen behind the panel. Leaving it
+ * out of the SELECT keeps a preview that is opened casually, several times a
+ * session, from reading and shipping prose the panel never draws.
+ * `/history/[id]` still calls getAttemptDetail and gets the whole thing.
  */
 export async function getAttemptPreview(attemptId: string): Promise<AttemptDetail | null> {
-  const a = await getAttemptDetail(attemptId);
-  if (!a?.set) return a;
-  return { ...a, set: { ...a.set, passageText: null } };
+  return loadAttempt(attemptId, false);
 }

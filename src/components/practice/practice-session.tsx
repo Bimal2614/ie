@@ -211,6 +211,21 @@ export function PracticeSession({
       // Never hijack typing in a field.
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+      /**
+       * AN OPEN OVERLAY OWNS THE KEYBOARD.
+       *
+       * Escape here exits the whole session, so with a dialog on top of the
+       * player it did the one thing the dialog exists to avoid: one keypress
+       * discarded a half-answered set to dismiss a panel. Enter and the arrows
+       * were no better — they submitted or paged a set the candidate could not
+       * see. The panel closes itself on Escape; the palette is closed here
+       * because it has no handler of its own.
+       */
+      if (historyOpen) return;
+      if (paletteOpen) {
+        if (e.key === "Escape") { e.preventDefault(); setPaletteOpen(false); }
+        return;
+      }
       if (e.key === "Escape") { e.preventDefault(); goBack(); return; }
       // Enter: submit while answering, or advance after feedback.
       if (e.key === "Enter") {
@@ -228,7 +243,7 @@ export function PracticeSession({
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [goBack, result, submitting, answers, data.hasPreviousSet, data.hasNextSet, setPage]);
+  }, [goBack, result, submitting, answers, data.hasPreviousSet, data.hasNextSet, setPage, paletteOpen, historyOpen]);
 
   const answeredCount = currentSet
     ? currentSet.questions.filter((q) => answers[q.id] !== undefined).length

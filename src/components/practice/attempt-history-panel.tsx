@@ -7,7 +7,7 @@ import { SECTIONS, QUESTION_TYPES, type SectionKey, type QuestionTypeKey } from 
 import {
   getRecentAttempts,
   getAttemptPreview,
-  type RecentAttemptRow,
+  type AttemptRow,
   type AttemptDetail,
 } from "@/app/actions/history";
 import { AttemptAnswers } from "@/components/history/attempt-answers";
@@ -42,7 +42,7 @@ export function AttemptHistoryPanel({
   /** The set on screen, so its own past attempts can be called out. */
   currentSetId: string | null;
 }) {
-  const [rows, setRows] = useState<RecentAttemptRow[] | null>(null);
+  const [rows, setRows] = useState<AttemptRow[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
@@ -183,7 +183,7 @@ export function AttemptHistoryPanel({
  * actually opened — a candidate glancing at "4/4 · 3/4 · 2/4" to see whether
  * they are improving never pays for it.
  */
-function AttemptCard({ row, isCurrentSet }: { row: RecentAttemptRow; isCurrentSet: boolean }) {
+function AttemptCard({ row, isCurrentSet }: { row: AttemptRow; isCurrentSet: boolean }) {
   const [open, setOpen] = useState(false);
   const [detail, setDetail] = useState<AttemptDetail | null>(null);
   const [loading, setLoading] = useState(false);

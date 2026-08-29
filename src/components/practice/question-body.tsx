@@ -389,6 +389,10 @@ export function QuestionBody({
       id={config.annotationId}
       scope={config.annotationScope}
       slot={config.slot ?? "all"}
+      // Copying a phrase out of the text and into the answer box — by Ctrl+C /
+      // Ctrl+V or by dragging it — is a READING tool, because Reading is the
+      // paper whose answers are taken verbatim off the page in front of you.
+      phrases={doc.sectionType === "reading"}
     >
       {node}
     </AnnotationProvider>

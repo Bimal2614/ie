@@ -1,9 +1,10 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { parseGaps, isGap } from "@/lib/question-content";
 import { AnnotatedText } from "./annotations";
+import { useAnswerTarget, usePhraseDrag } from "./answer-drag";
 
 /**
  * A gap is a question. The layout renderers below don't know about question
@@ -46,6 +47,22 @@ export function GapField({
   binding: GapBinding | null;
   width?: keyof typeof WIDTH;
 }) {
+  /**
+   * Somewhere a phrase dragged out of the passage can land — on a live Reading
+   * paper, and nowhere else. See answer-drag.tsx.
+   *
+   * Read through a ref, and registered BEFORE the unbound-gap check below,
+   * because both the binding and its presence change between renders and a hook
+   * may not: `resolve()` builds a fresh binding on every keystroke in the paper,
+   * and a gap the layout cannot bind yet has none at all.
+   */
+  const live = useRef(binding);
+  live.current = binding;
+  const drop = useAnswerTarget(
+    (text) => live.current?.onChange(text),
+    usePhraseDrag() && Boolean(binding && !binding.disabled),
+  );
+
   // A gap with no question behind it means the layout and the question rows
   // disagree; show the marker rather than silently swallowing it.
   if (!binding) {
@@ -63,6 +80,7 @@ export function GapField({
     // this exact gap. `scroll-mt` keeps it clear of the sticky exam header.
     <span id={`mq-${number}`} data-qnum={number} className="mx-1 inline-flex scroll-mt-28 flex-col align-middle">
       <span
+        {...drop.dropProps}
         className={cn(
           "inline-flex items-center gap-1.5 rounded-md border bg-paper-elev px-1.5 py-1 transition-colors",
           "focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/20",
@@ -70,6 +88,11 @@ export function GapField({
           state === "correct" && "border-success/50 bg-success-soft",
           state === "incorrect" && "border-danger/50 bg-danger-soft",
           state === "review" && "border-info/50 bg-info-soft",
+          // Last, so they win over the state colours: while a phrase is in hand
+          // every box says it will take one, and the one under the pointer says
+          // it is the one that will get it.
+          drop.armed && "border-dashed border-brand/60 bg-brand-soft/40",
+          drop.over && "border-solid border-brand bg-brand-soft ring-2 ring-brand/30",
         )}
       >
         <span

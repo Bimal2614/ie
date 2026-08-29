@@ -10,6 +10,13 @@ import {
   useState,
 } from "react";
 import { Highlighter, StickyNote, Trash2, X } from "lucide-react";
+import {
+  armPhraseDrag,
+  hasAnswerTargets,
+  phraseDragJustEnded,
+  PhraseDragScope,
+  tidyPhrase,
+} from "./answer-drag";
 
 /**
  * The highlighter and notes the real test provides — on ANY text on the page.
@@ -36,10 +43,18 @@ import { Highlighter, StickyNote, Trash2, X } from "lucide-react";
  * against the AUTHORED text, so typing into a gap that sits mid-sentence moves
  * nothing: an <input> contributes no characters.
  *
- * COPY PROTECTION SURVIVES. Selection has to be allowed for any of this to
- * work, so it is — but `onCopy` is refused and the browser's own context menu
- * is replaced by ours, everywhere except inside a field the candidate is
- * writing their own answer into.
+ * COPY PROTECTION, AND THE ONE PAPER THAT IS EXEMPT. Selection has to be
+ * allowed for any of this to work, so it is — and `onCopy` is otherwise refused,
+ * with the browser's own context menu replaced by ours, everywhere except
+ * inside a field the candidate is writing their own answer into.
+ *
+ * READING IS THE EXEMPTION, because the real test makes it one: computer-
+ * delivered IELTS Reading lets a candidate copy a phrase out of the passage
+ * with Ctrl+C and paste it into the answer box with Ctrl+V, and it is the
+ * standard way of avoiding a typo in a word the paper says to take verbatim.
+ * Refusing it here would be practising a different test. `phrases` is that
+ * exemption, and it also switches on the drag in answer-drag.tsx; Listening,
+ * and any graded paper, stay locked.
  */
 
 export type Annotation = {
@@ -250,6 +265,24 @@ function isEditable(target: EventTarget | null): boolean {
   return Boolean(el?.closest?.("input, textarea, [contenteditable=true]"));
 }
 
+/**
+ * Whether a press landed ON the selection — which is what makes it the start of
+ * a drag rather than the start of a new selection.
+ *
+ * Measured against the selection's own client rectangles, one per line it
+ * covers, because a selection is a shape and not a box: hit-testing its bounding
+ * rectangle would claim the empty space to the right of a short last line, and
+ * pressing there would refuse to start a fresh selection.
+ */
+function pressedOnSelection(x: number, y: number): boolean {
+  const sel = window.getSelection();
+  if (!sel || sel.isCollapsed || sel.rangeCount === 0) return false;
+  for (const r of sel.getRangeAt(0).getClientRects()) {
+    if (x >= r.left - 2 && x <= r.right + 2 && y >= r.top - 2 && y <= r.bottom + 2) return true;
+  }
+  return false;
+}
+
 /* ------------------------------------------------------------------ *
  * The layer
  * ------------------------------------------------------------------ */
@@ -270,6 +303,7 @@ export function AnnotationProvider({
   scope,
   slot = "all",
   enabled = true,
+  phrases = false,
   children,
 }: {
   /** Identity of the screen — what the annotations are filed under (the part). */
@@ -280,9 +314,19 @@ export function AnnotationProvider({
   slot?: string;
   /** Off once the paper is graded: the marks are then history, not a tool. */
   enabled?: boolean;
+  /**
+   * READING ONLY. Lets a phrase move out of the text and into an answer box —
+   * by Ctrl+C / Ctrl+V, which is what the real computer-delivered test gives,
+   * and by dragging it there. Both are meaningless on the other papers: a
+   * Listening answer comes out of the recording, so the only words on screen to
+   * copy are the question's own.
+   */
+  phrases?: boolean;
   children: React.ReactNode;
 }) {
   const on = Boolean(enabled && id && scope);
+  /** Both routes stop dead once the paper is graded, like the highlighter. */
+  const lift = phrases && on;
   const ref = useRef<HTMLDivElement | null>(null);
   const [sheet, setSheet] = useState<Sheet>({});
   const [menu, setMenu] = useState<Menu | null>(null);
@@ -386,15 +430,39 @@ export function AnnotationProvider({
         className="contents"
         // Selection is REQUIRED for highlighting, so it stays on — but copying
         // is refused. Never inside a field: cut and paste in the answer box is
-        // the candidate's own writing, which the real test allows.
+        // the candidate's own writing, which the real test allows. And never on
+        // a Reading paper, where copying the passage IS one of the tools the
+        // real test hands out — see `phrases` above.
         onCopy={(e) => {
-          if (!isEditable(e.target)) e.preventDefault();
+          if (!lift && !isEditable(e.target)) e.preventDefault();
         }}
         onCut={(e) => {
           if (!isEditable(e.target)) e.preventDefault();
         }}
+        // A press on the selection is a phrase being picked up, not a click:
+        // the default is refused so the browser neither collapses the selection
+        // nor starts a drag of its own, and the gesture becomes ours. Refusing
+        // it also leaves the selection standing after the drop, so the same
+        // phrase can be dropped into a second gap without re-selecting it.
+        onMouseDown={(e) => {
+          if (!lift || e.button !== 0 || !hasAnswerTargets()) return;
+          const el = e.target as HTMLElement | null;
+          // Two exemptions. A field the candidate is writing in, where a press
+          // places their caret. And anything explicitly draggable — the
+          // matching board and the option bank move their lettered cards with
+          // the browser's own drag, which refusing this default would kill.
+          if (isEditable(el) || el?.closest?.("[draggable=true]")) return;
+          if (!pressedOnSelection(e.clientX, e.clientY)) return;
+          const text = tidyPhrase(window.getSelection()?.toString() ?? "");
+          if (!text) return;
+          e.preventDefault();
+          armPhraseDrag(text, e.clientX, e.clientY);
+        }}
         onMouseUp={(e) => {
           if (isEditable(e.target)) return;
+          // A drop ends in a mouse-up like any other gesture. Without this the
+          // highlight menu would open over the box just answered.
+          if (phraseDragJustEnded()) return;
           openSelectionMenu();
         }}
         onContextMenu={(e) => {
@@ -405,7 +473,11 @@ export function AnnotationProvider({
           openSelectionMenu();
         }}
       >
-        {children}
+        {/* Tells the answer fields in this tree that they may take a dropped
+            phrase. It has to be a context and not another module-level flag,
+            because "is this Reading" is a property of the tree, not of the
+            page — and the two panes are two trees. */}
+        <PhraseDragScope on={lift}>{children}</PhraseDragScope>
         {count > 0 && (
           <button
             type="button"
