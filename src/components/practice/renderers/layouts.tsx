@@ -13,14 +13,24 @@ import type {
   OptionsLayout,
 } from "@/lib/question-content";
 import { GapField, GapText, type GapResolver } from "./gap-field";
+import { AnnotatedText } from "./annotations";
 import { ChoiceBank, ChoiceBankProvider, ChoiceSlot } from "./choice-bank";
 
+/**
+ * Every layout renderer takes the same three things.
+ *
+ * `run` is the id its annotations are filed under — one per authored string,
+ * derived from where the string sits in the layout so it is the same id on
+ * every render. See annotations.tsx.
+ */
+type LayoutProps<T> = { layout: T; resolve: GapResolver; run: string };
+
 /** Heading used above every structured layout — matches the printed paper. */
-function LayoutHeading({ children }: { children?: string }) {
+function LayoutHeading({ children, run }: { children?: string; run?: string }) {
   if (!children) return null;
   return (
     <p className="mb-4 text-center text-sm font-semibold uppercase tracking-[0.12em] text-ink-strong">
-      {children}
+      <AnnotatedText run={run} text={children} />
     </p>
   );
 }
@@ -36,14 +46,14 @@ function Sheet({ className, children }: { className?: string; children: React.Re
  * Summary / sentence completion — prose with gaps in it
  * ------------------------------------------------------------------ */
 
-function InlineBlanks({ layout, resolve }: { layout: InlineBlanksLayout; resolve: GapResolver }) {
+function InlineBlanks({ layout, resolve, run }: LayoutProps<InlineBlanksLayout>) {
   return (
     <Sheet>
-      <LayoutHeading>{layout.heading}</LayoutHeading>
+      <LayoutHeading run={`${run}:h`}>{layout.heading}</LayoutHeading>
       <div className="space-y-3">
         {layout.blocks.map((block, i) => (
           <p key={i} className="text-sm text-ink-soft">
-            <GapText text={block} resolve={resolve} />
+            <GapText text={block} resolve={resolve} run={`${run}:b${i}`} />
           </p>
         ))}
       </div>
@@ -55,7 +65,7 @@ function InlineBlanks({ layout, resolve }: { layout: InlineBlanksLayout; resolve
  * Note completion — indented outline, as candidates see while listening
  * ------------------------------------------------------------------ */
 
-function Notes({ layout, resolve }: { layout: NotesLayout; resolve: GapResolver }) {
+function Notes({ layout, resolve, run }: LayoutProps<NotesLayout>) {
   return (
     <Sheet>
       {/* The paper's own hierarchy, in the paper's own order: a title, the
@@ -64,7 +74,7 @@ function Notes({ layout, resolve }: { layout: NotesLayout; resolve: GapResolver 
           the first two things to fill in. */}
       {layout.heading && (
         <p className="mb-4 border-b border-line pb-2.5 text-[15px] font-bold tracking-wide text-ink-strong">
-          {layout.heading}
+          <AnnotatedText run={`${run}:h`} text={layout.heading} />
         </p>
       )}
 
@@ -75,7 +85,9 @@ function Notes({ layout, resolve }: { layout: NotesLayout; resolve: GapResolver 
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-muted">
             Example
           </p>
-          <p className="mt-1 text-sm italic leading-relaxed text-ink-muted">{layout.example}</p>
+          <p className="mt-1 text-sm italic leading-relaxed text-ink-muted">
+            <AnnotatedText run={`${run}:ex`} text={layout.example} />
+          </p>
         </div>
       )}
 
@@ -87,7 +99,7 @@ function Notes({ layout, resolve }: { layout: NotesLayout; resolve: GapResolver 
               // to the notes beneath it, which a long page of sections needs.
               <p className="mb-2.5 border-l-2 border-brand/60 pl-2.5 text-sm font-bold text-ink-strong">
                 {/* A heading can hold a gap, so it renders through GapText too. */}
-                <GapText text={group.title} resolve={resolve} />
+                <GapText text={group.title} resolve={resolve} run={`${run}:t${gi}`} />
               </p>
             )}
             <ul className={cn("space-y-2.5", group.title && "pl-3")}>
@@ -96,7 +108,7 @@ function Notes({ layout, resolve }: { layout: NotesLayout; resolve: GapResolver 
                   key={ii}
                   className="relative pl-4 text-sm leading-relaxed text-ink before:absolute before:left-0 before:top-[0.6em] before:size-1.5 before:rounded-full before:bg-ink-muted/50"
                 >
-                  <GapText text={item} resolve={resolve} />
+                  <GapText text={item} resolve={resolve} run={`${run}:i${gi}.${ii}`} />
                 </li>
               ))}
             </ul>
@@ -111,12 +123,12 @@ function Notes({ layout, resolve }: { layout: NotesLayout; resolve: GapResolver 
  * Table completion — an actual grid
  * ------------------------------------------------------------------ */
 
-function TableCompletion({ layout, resolve }: { layout: TableLayout; resolve: GapResolver }) {
+function TableCompletion({ layout, resolve, run }: LayoutProps<TableLayout>) {
   return (
     <Sheet className="p-0">
       {layout.heading && (
         <div className="border-b border-line px-5 pb-4 pt-5">
-          <LayoutHeading>{layout.heading}</LayoutHeading>
+          <LayoutHeading run={`${run}:h`}>{layout.heading}</LayoutHeading>
         </div>
       )}
       {/* Tables are the one stimulus that can genuinely outgrow the column. */}
@@ -130,7 +142,7 @@ function TableCompletion({ layout, resolve }: { layout: TableLayout; resolve: Ga
                   scope="col"
                   className="border-b border-line bg-paper-sunken px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-ink-strong"
                 >
-                  {col}
+                  <AnnotatedText run={`${run}:c${i}`} text={col} />
                 </th>
               ))}
             </tr>
@@ -145,11 +157,16 @@ function TableCompletion({ layout, resolve }: { layout: TableLayout; resolve: Ga
                       scope="row"
                       className="bg-paper-sunken/60 px-4 py-3 text-left align-top font-semibold text-ink-strong"
                     >
-                      {cell.text}
+                      <AnnotatedText run={`${run}:r${ri}.${ci}`} text={cell.text} />
                     </th>
                   ) : (
                     <td key={ci} className="px-4 py-3 align-top text-ink-soft">
-                      <GapText text={cell.text} resolve={resolve} width="sm" />
+                      <GapText
+                        text={cell.text}
+                        resolve={resolve}
+                        width="sm"
+                        run={`${run}:r${ri}.${ci}`}
+                      />
                     </td>
                   ),
                 )}
@@ -166,16 +183,18 @@ function TableCompletion({ layout, resolve }: { layout: TableLayout; resolve: Ga
  * Form completion — Label: ______ rows
  * ------------------------------------------------------------------ */
 
-function FormCompletion({ layout, resolve }: { layout: FormLayout; resolve: GapResolver }) {
+function FormCompletion({ layout, resolve, run }: LayoutProps<FormLayout>) {
   return (
     <Sheet>
-      <LayoutHeading>{layout.heading}</LayoutHeading>
+      <LayoutHeading run={`${run}:h`}>{layout.heading}</LayoutHeading>
       <dl className="space-y-3">
         {layout.rows.map((row, i) => (
           <div key={i} className="grid grid-cols-[minmax(6rem,10rem)_1fr] items-baseline gap-4">
-            <dt className="text-sm font-medium text-ink-strong">{row.label}</dt>
+            <dt className="text-sm font-medium text-ink-strong">
+              <AnnotatedText run={`${run}:l${i}`} text={row.label} />
+            </dt>
             <dd className="text-sm text-ink-soft">
-              <GapText text={row.value} resolve={resolve} />
+              <GapText text={row.value} resolve={resolve} run={`${run}:v${i}`} />
             </dd>
           </div>
         ))}
@@ -200,7 +219,7 @@ function firstGapDisabled(layout: FlowchartLayout, resolve: GapResolver): boolea
   return m ? (resolve(Number(m[1]))?.disabled ?? false) : false;
 }
 
-function Flowchart({ layout, resolve }: { layout: FlowchartLayout; resolve: GapResolver }) {
+function Flowchart({ layout, resolve, run }: LayoutProps<FlowchartLayout>) {
   const chart = (
     <ol className="mx-auto flex w-full max-w-md flex-col items-stretch">
       {layout.steps.map((step, i) => (
@@ -209,6 +228,7 @@ function Flowchart({ layout, resolve }: { layout: FlowchartLayout; resolve: GapR
             <GapText
               text={step}
               resolve={resolve}
+              run={`${run}:s${i}`}
               renderGap={layout.choices ? (binding) => <ChoiceSlot binding={binding} /> : undefined}
             />
           </div>
@@ -236,7 +256,7 @@ function Flowchart({ layout, resolve }: { layout: FlowchartLayout; resolve: GapR
   if (!layout.choices) {
     return (
       <Sheet>
-        <LayoutHeading>{layout.heading}</LayoutHeading>
+        <LayoutHeading run={`${run}:h`}>{layout.heading}</LayoutHeading>
         {chart}
       </Sheet>
     );
@@ -255,7 +275,7 @@ function Flowchart({ layout, resolve }: { layout: FlowchartLayout; resolve: GapR
    */
   return (
     <Sheet>
-      <LayoutHeading>{layout.heading}</LayoutHeading>
+      <LayoutHeading run={`${run}:h`}>{layout.heading}</LayoutHeading>
       {/* Read the graded state off a REAL gap. Resolving a made-up number
           returns null, which would leave the box draggable after submission. */}
       <ChoiceBankProvider choices={layout.choices} disabled={firstGapDisabled(layout, resolve)}>
@@ -273,18 +293,15 @@ function Flowchart({ layout, resolve }: { layout: FlowchartLayout; resolve: GapR
 function Diagram({
   layout,
   resolve,
+  run,
   fallbackImage,
-}: {
-  layout: DiagramLayout;
-  resolve: GapResolver;
-  fallbackImage: string | null;
-}) {
+}: LayoutProps<DiagramLayout> & { fallbackImage: string | null }) {
   const src = layout.imageUrl ?? fallbackImage;
   if (!src) return null;
 
   return (
     <Sheet>
-      <LayoutHeading>{layout.heading}</LayoutHeading>
+      <LayoutHeading run={`${run}:h`}>{layout.heading}</LayoutHeading>
 
       <div className="relative overflow-hidden rounded-lg border border-line">
         <Image
@@ -403,17 +420,21 @@ function LetterSelect({
  * question carried its own copy of the list.
  * ------------------------------------------------------------------ */
 
-export function OptionsBox({ layout }: { layout: OptionsLayout }) {
+export function OptionsBox({ layout, run }: { layout: OptionsLayout; run?: string }) {
   return (
     <Sheet className="bg-paper-sunken">
-      <p className="mb-3 text-sm font-semibold text-ink-strong">{layout.title}</p>
+      <p className="mb-3 text-sm font-semibold text-ink-strong">
+        <AnnotatedText run={run && `${run}:h`} text={layout.title} />
+      </p>
       <ul className="space-y-1.5">
         {layout.options.map((o) => (
           <li key={o.key} className="flex gap-3 text-sm text-ink-soft">
             <span className="w-6 shrink-0 font-mono text-xs font-semibold text-ink-strong">
               {o.key}
             </span>
-            <span>{o.text}</span>
+            <span>
+              <AnnotatedText run={run && `${run}:o${o.key}`} text={o.text} />
+            </span>
           </li>
         ))}
       </ul>
@@ -433,27 +454,34 @@ export function SetLayoutRenderer({
   layout,
   resolve,
   fallbackImage = null,
+  run = "layout",
 }: {
   layout: SetLayout | null;
   resolve: GapResolver;
   fallbackImage?: string | null;
+  /**
+   * Prefix for this layout's annotation runs. One per GROUP, because a part
+   * can carry a note sheet and a table under the same recording and their
+   * rows would otherwise be filed under the same ids.
+   */
+  run?: string;
 }) {
   if (!layout) return null;
   switch (layout.kind) {
     case "inline_blanks":
-      return <InlineBlanks layout={layout} resolve={resolve} />;
+      return <InlineBlanks layout={layout} resolve={resolve} run={run} />;
     case "notes":
-      return <Notes layout={layout} resolve={resolve} />;
+      return <Notes layout={layout} resolve={resolve} run={run} />;
     case "table":
-      return <TableCompletion layout={layout} resolve={resolve} />;
+      return <TableCompletion layout={layout} resolve={resolve} run={run} />;
     case "form":
-      return <FormCompletion layout={layout} resolve={resolve} />;
+      return <FormCompletion layout={layout} resolve={resolve} run={run} />;
     case "flowchart":
-      return <Flowchart layout={layout} resolve={resolve} />;
+      return <Flowchart layout={layout} resolve={resolve} run={run} />;
     case "diagram":
-      return <Diagram layout={layout} resolve={resolve} fallbackImage={fallbackImage} />;
+      return <Diagram layout={layout} resolve={resolve} run={run} fallbackImage={fallbackImage} />;
     case "options":
-      return <OptionsBox layout={layout} />;
+      return <OptionsBox layout={layout} run={run} />;
     default:
       return null;
   }

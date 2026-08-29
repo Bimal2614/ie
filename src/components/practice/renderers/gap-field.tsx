@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { parseGaps, isGap } from "@/lib/question-content";
+import { AnnotatedText } from "./annotations";
 
 /**
  * A gap is a question. The layout renderers below don't know about question
@@ -127,6 +128,7 @@ export function GapText({
   width = "md",
   className,
   renderGap,
+  run,
 }: {
   text: string;
   resolve: GapResolver;
@@ -135,25 +137,36 @@ export function GapText({
   /** Substitutes the text box — a flow-chart answered from a lettered box
    *  needs the same buttons a map does, not a free-text field. */
   renderGap?: (binding: ReturnType<GapResolver>) => ReactNode;
+  /**
+   * Makes this line highlightable, under this run id. The gaps between the
+   * prose are not part of the run's text — an <input> has no characters — so
+   * the offsets a mark is stored at are offsets into the AUTHORED sentence and
+   * survive every keystroke typed into it.
+   */
+  run?: string;
 }) {
   const segments = parseGaps(text);
+  // Offsets are into the run, not the piece: each prose segment starts where
+  // the segments before it ended, with the `[[n]]` markers contributing nothing.
+  let base = 0;
   return (
     // pre-line: a real exam table cell stacks several lines against one gap
     // ("basic theory e.g. understanding the ___ / and tides"). Authoring that
     // as `\n` keeps the content readable; without this the browser would
     // collapse it onto one line.
     <span className={cn("whitespace-pre-line leading-loose", className)}>
-      {segments.map((seg, i) =>
-        isGap(seg) ? (
-          renderGap ? (
+      {segments.map((seg, i) => {
+        if (isGap(seg)) {
+          return renderGap ? (
             <span key={i}>{renderGap(resolve(seg.gap))}</span>
           ) : (
             <GapField key={i} binding={resolve(seg.gap)} width={width} />
-          )
-        ) : (
-          <span key={i}>{seg}</span>
-        ),
-      )}
+          );
+        }
+        const at = base;
+        base += seg.length;
+        return <AnnotatedText key={i} run={run} text={seg} base={at} />;
+      })}
     </span>
   );
 }

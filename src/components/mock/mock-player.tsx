@@ -17,7 +17,7 @@ import { ConfirmSubmit } from "@/components/exam/confirm-submit";
 import { ExamShell, type StripPart } from "@/components/exam/exam-shell";
 import { SplitPane } from "@/components/exam/split-pane";
 import { SectionBody, type ClientSectionView } from "@/components/practice/section-body";
-import { clearAnnotations } from "@/components/practice/renderers/highlightable-passage";
+import { clearAnnotations } from "@/components/practice/renderers/annotations";
 import { ListeningTape, type Tape } from "./listening-tape";
 
 /**

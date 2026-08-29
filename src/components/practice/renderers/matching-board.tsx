@@ -5,6 +5,7 @@ import { Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { OptionsLayout } from "@/lib/question-content";
 import type { QuestionState } from "./question-input";
+import { AnnotatedText } from "./annotations";
 
 /**
  * Matching questions, the way the computer-delivered IELTS test presents them:
@@ -35,6 +36,8 @@ export type MatchingItem = {
   /** Number shown on the blank. */
   n: number;
   prompt?: string;
+  /** Makes the stem highlightable, under this run id. See annotations.tsx. */
+  run?: string;
   /**
    * Plays just the stretch of the recording where this item is answered. Set
    * only for listening; the board is also used for reading, where there is no
@@ -104,7 +107,9 @@ export function MatchingBoard({
 
           return (
             <li key={item.n} id={`sq-${item.n}`} className="flex items-center gap-3 scroll-mt-28">
-              <span className="min-w-0 flex-1 text-sm text-ink-soft">{item.prompt}</span>
+              <span className="min-w-0 flex-1 text-sm text-ink-soft">
+                <AnnotatedText run={item.run} text={item.prompt ?? ""} />
+              </span>
               {item.onPlayClip && (
                 <button
                   type="button"

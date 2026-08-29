@@ -14,7 +14,7 @@ import { LabelMatrix } from "./renderers/label-matrix";
 import { MatchingBoard } from "./renderers/matching-board";
 import { SpeakingInterview } from "./renderers/speaking-interview";
 import type { GapBinding, GapResolver } from "./renderers/gap-field";
-import { HighlightablePassage } from "./renderers/highlightable-passage";
+import { AnnotationProvider, AnnotatedText } from "./renderers/annotations";
 
 /**
  * The one renderer for a page of IELTS questions.
@@ -170,17 +170,17 @@ export type BodyConfig = {
   flagged?: Set<string>;
   onToggleFlag?: (key: string) => void;
   /**
-   * Identity the passage's highlights and notes are stored against — the part
-   * id. Supplying it turns the highlighter on; it is off during review, where
-   * the marks are history rather than a working tool.
+   * Identity the highlights and notes on this screen are stored against — the
+   * part id. Supplying it turns the highlighter on; it is off during review,
+   * where the marks are history rather than a working tool.
    */
-  passageId?: string;
+  annotationId?: string;
   /**
-   * Which attempt the passage's highlights belong to — one mock sitting, or one
+   * Which attempt those highlights belong to — one mock sitting, or one
    * practice attempt. Both are required to offer the highlighter; see
-   * `storageKey` in highlightable-passage.tsx for why the scope exists.
+   * `storageKey` in renderers/annotations.tsx for why the scope exists.
    */
-  passageScope?: string;
+  annotationScope?: string;
 };
 
 /* ------------------------------------------------------------------ *
@@ -362,6 +362,38 @@ export function QuestionBody({
     } satisfies GapBinding;
   };
 
+  /**
+   * Whether this screen gets the highlighter.
+   *
+   * LISTENING AND READING ONLY. Those are the papers the real test gives the
+   * tool on, and they are the ones where it does something: you mark the line
+   * you are waiting for, or the sentence that answered the question. A Writing
+   * task is one prompt and an editor, and a highlighter over a Speaking cue
+   * card would only be one more thing to fiddle with while the clock runs.
+   *
+   * Only while the paper is live, too: once it is graded the text is evidence,
+   * and a highlighter over the top of it is just something else to misread.
+   */
+  const annotate =
+    !disabled &&
+    (doc.sectionType === "listening" || doc.sectionType === "reading") &&
+    Boolean(config.annotationId && config.annotationScope);
+
+  /**
+   * The exam layout draws the two panes as two separate trees, so each gets its
+   * own layer — and its own sheet, keyed by slot. See `storageKey`.
+   */
+  const annotated = (node: React.ReactNode) => (
+    <AnnotationProvider
+      enabled={annotate}
+      id={config.annotationId}
+      scope={config.annotationScope}
+      slot={config.slot ?? "all"}
+    >
+      {node}
+    </AnnotationProvider>
+  );
+
   const stimulus = (
     <Stimulus
       doc={doc}
@@ -369,15 +401,11 @@ export function QuestionBody({
       sticky={config.stickyAudio}
       showImage={config.stimulusImage !== false}
       fit={config.fitStimulus}
-      // Only while the paper is live: once it is graded the passage is evidence,
-      // and a highlighter over the top of it is just something else to misread.
-      annotate={!disabled}
-      passageId={config.passageId}
-      passageScope={config.passageScope}
+      annotate={annotate}
     />
   );
 
-  if (config.slot === "stimulus") return stimulus;
+  if (config.slot === "stimulus") return annotated(stimulus);
 
   /* Speaking Parts 1 & 3 are an interview, not a list. */
   if (config.sequential) {
@@ -424,9 +452,9 @@ export function QuestionBody({
     </div>
   );
 
-  if (config.slot === "questions") return questionBlocks;
+  if (config.slot === "questions") return annotated(questionBlocks);
 
-  return (
+  return annotated(
     <div className="space-y-5">
       <InstructionBar text={config.instructionText} section={doc.sectionType} />
 
@@ -445,7 +473,7 @@ export function QuestionBody({
           {questionBlocks}
         </>
       )}
-    </div>
+    </div>,
   );
 }
 
@@ -513,6 +541,10 @@ function GroupBlock({
 
   const range =
     group.from === group.to ? `Question ${group.from}` : `Questions ${group.from}-${group.to}`;
+  // Annotation runs are keyed by the question range rather than the array
+  // index: a part can carry a note sheet and a table under one recording, and
+  // their rows would otherwise be filed under the same ids.
+  const run = `g${group.from}-${group.to}`;
 
   return (
     <section className={cn("space-y-4", config.fillHeight && "flex min-h-0 flex-1 flex-col")}>
@@ -534,7 +566,10 @@ function GroupBlock({
             showsInstruction(group.questionType) &&
             (group.instruction ?? meta?.instruction) && (
               <p className="px-4 py-3 text-sm text-ink-strong">
-                {group.instruction ?? meta?.instruction}
+                <AnnotatedText
+                  run={`${run}:instr`}
+                  text={group.instruction ?? meta?.instruction ?? ""}
+                />
               </p>
             )}
         </div>
@@ -575,6 +610,7 @@ function GroupBlock({
               id: i.key,
               n: i.n,
               prompt: i.prompt ?? undefined,
+              run: `q${i.key}:p`,
               ...(clip ? { onPlayClip: () => playClip(clip) } : {}),
             };
           })}
@@ -597,6 +633,7 @@ function GroupBlock({
               layout={group.layout}
               resolve={resolve}
               fallbackImage={config.layoutFallbackImage ?? null}
+              run={run}
             />
           )}
 
@@ -726,7 +763,9 @@ function ItemRow({
         )}
         <div className={cn("min-w-0 flex-1 space-y-3", config.fillHeight && "flex min-h-0 flex-col")}>
           {item.prompt && config.itemPrompts !== false && (
-            <p className="text-sm font-medium text-ink">{item.prompt}</p>
+            <p className="text-sm font-medium text-ink">
+              <AnnotatedText run={`q${item.key}:p`} text={item.prompt} />
+            </p>
           )}
           {clip && (
             <button
@@ -908,7 +947,9 @@ export function InstructionBar({ text, section }: { text: string | null | undefi
       >
         Q
       </span>
-      <p className="min-w-0 text-sm text-ink-strong">{text}</p>
+      <p className="min-w-0 text-sm text-ink-strong">
+        <AnnotatedText run="instruction" text={text} />
+      </p>
     </div>
   );
 }
@@ -921,8 +962,6 @@ function Stimulus({
   showImage = true,
   fit = false,
   annotate = false,
-  passageId,
-  passageScope,
 }: {
   doc: BodyDoc;
   audioRef: React.RefObject<HTMLAudioElement | null>;
@@ -933,10 +972,6 @@ function Stimulus({
   fit?: boolean;
   /** Offer the highlighter. Off once the paper is graded — see BodyConfig. */
   annotate?: boolean;
-  /** What the annotations are filed under; required to offer them. */
-  passageId?: string;
-  /** Which attempt they belong to. Also required — see BodyConfig. */
-  passageScope?: string;
 }) {
   const image = showImage ? doc.imageSrc : null;
   if (!doc.audioSrc && !image && !doc.passageText) return null;
@@ -992,10 +1027,13 @@ function Stimulus({
       )}
 
       {doc.passageText &&
-        (annotate && passageId && passageScope ? (
+        (annotate ? (
           // Selection is enabled here so the highlighter can work; copying is
-          // still refused and the browser's own menu still suppressed.
-          <HighlightablePassage id={passageId} scope={passageScope} text={doc.passageText} />
+          // still refused and the browser's own menu still suppressed — the
+          // annotation layer wrapping this tree does both.
+          <article className="whitespace-pre-line rounded-xl border border-line bg-paper-elev p-5 text-sm leading-relaxed text-ink-soft">
+            <AnnotatedText run="passage" text={doc.passageText} />
+          </article>
         ) : (
           // Copy-protected: auth-gated practice content only (never on indexed
           // pages). Read-only review keeps the stricter, unselectable version.

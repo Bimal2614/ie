@@ -212,8 +212,8 @@ export function SetBody({
         // `question_sets` ids are a different table from `practice_sections`, so
         // this can never collide with a mock's — but it is scoped anyway, so the
         // rule is one rule everywhere rather than a coincidence to rely on.
-        passageId: set.id,
-        passageScope: "practice-set",
+        annotationId: set.id,
+        annotationScope: "practice-set",
         // Reading puts the passage beside the questions. In the exam layout the
         // player draws that divider instead, and a drag-resizable SplitPane and
         // this fixed grid would otherwise both try to split the same content.

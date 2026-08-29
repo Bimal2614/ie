@@ -22,7 +22,7 @@ import { ConfirmSubmit } from "@/components/exam/confirm-submit";
 import { ExamShell, type StripPart } from "@/components/exam/exam-shell";
 import { SplitPane } from "@/components/exam/split-pane";
 import { SectionBody, type ClientSectionView } from "./section-body";
-import { clearAnnotations } from "./renderers/highlightable-passage";
+import { clearAnnotations } from "./renderers/annotations";
 import { AttemptFeedback } from "./attempt-feedback";
 
 /**

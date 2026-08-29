@@ -225,8 +225,8 @@ export function SectionBody({
         anchorPrefix: "sq",
         // Highlights are filed against the part, so they survive a re-render and
         // a move away and back within the same paper.
-        passageId: section.id,
-        passageScope: annotationScope,
+        annotationId: section.id,
+        annotationScope,
         // One recording serves every group below it, so it has to stay reachable.
         stickyAudio: true,
         // Lettered labelling gets the answer grid the real sheet uses.

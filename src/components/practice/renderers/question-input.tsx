@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { QUESTION_TYPES, type QuestionTypeKey } from "@/lib/ielts";
 import type { Answer, OptionsLayout } from "@/lib/question-content";
 import { GapField, type GapBinding } from "./gap-field";
+import { AnnotatedText } from "./annotations";
 
 export type RenderQuestion = {
   id: string;
@@ -51,6 +52,7 @@ function ChoiceRow({
   multi,
   state,
   onSelect,
+  run,
 }: {
   letter: string;
   text: string;
@@ -59,6 +61,8 @@ function ChoiceRow({
   multi: boolean;
   state: QuestionState;
   onSelect: () => void;
+  /** Makes the option text highlightable. See annotations.tsx. */
+  run?: string;
 }) {
   // After grading, the SELECTED option reflects correctness (green/red);
   // while answering it's the neutral brand highlight.
@@ -73,6 +77,17 @@ function ChoiceRow({
 
   return (
     <label
+      // DRAGGING ACROSS THE OPTION IS A HIGHLIGHT, NOT AN ANSWER. Selecting
+      // text inside a <label> still activates its control on mouse-up, so
+      // marking an option would have silently chosen it. A live selection that
+      // started in this row means the gesture was a highlight; swallow the
+      // activation and leave the answer alone.
+      onClick={(e) => {
+        const sel = window.getSelection();
+        if (sel && !sel.isCollapsed && sel.anchorNode && e.currentTarget.contains(sel.anchorNode)) {
+          e.preventDefault();
+        }
+      }}
       className={cn(
         "relative flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 text-sm transition-colors",
         selected ? selectedRow : "border-line hover:bg-paper-sunken",
@@ -94,7 +109,9 @@ function ChoiceRow({
       >
         {letter}
       </span>
-      <span className="text-ink-soft">{text}</span>
+      <span className="text-ink-soft">
+        <AnnotatedText run={run} text={text} />
+      </span>
     </label>
   );
 }
@@ -114,6 +131,7 @@ function SingleChoice({ question, value, disabled, state, onChange }: InputProps
           multi={false}
           state={state}
           onSelect={() => onChange({ index: i })}
+          run={`q${question.id}:o${i}`}
         />
       ))}
     </div>
@@ -149,6 +167,7 @@ function MultiChoice({ question, value, disabled, state, onChange }: InputProps)
           multi
           state={state}
           onSelect={() => toggle(i)}
+          run={`q${question.id}:o${i}`}
         />
       ))}
     </div>
