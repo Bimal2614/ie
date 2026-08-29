@@ -11,7 +11,7 @@ export const metadata = pageMeta({
   keywords: ["IELTSVega support", "IELTS practice support", "contact IELTS platform"],
 });
 
-const SUPPORT_EMAIL = "support@ieltsvega.com";
+const SUPPORT_EMAIL = "hello@ieltsvega.com";
 
 const CHANNELS = [
   { Icon: Mail, title: "Email us", body: SUPPORT_EMAIL, href: `mailto:${SUPPORT_EMAIL}` },

@@ -18,7 +18,7 @@ export type LegalDoc = {
 const UPDATED = "Last updated: 21 July 2026";
 const COMPANY = "[Company Legal Name]";
 const JURISDICTION = "[Jurisdiction / country of incorporation]";
-const CONTACT = "support@ieltsvega.com";
+const CONTACT = "hello@ieltsvega.com";
 
 export const TERMS: LegalDoc = {
   key: "terms",

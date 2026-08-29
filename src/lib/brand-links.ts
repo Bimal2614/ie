@@ -87,4 +87,4 @@ export const SAME_AS: readonly string[] = SOCIAL_PROFILES.filter((p) => p.verifi
 );
 
 /** Where support email goes. Also the Organization contactPoint. */
-export const SUPPORT_EMAIL = "support@ieltsvega.com";
+export const SUPPORT_EMAIL = "hello@ieltsvega.com";
