@@ -18,6 +18,7 @@ export default async function VerifyStudentsLayout({ children }: { children: Rea
     <AppShell
       user={{ name: user.name, email: user.email, targetModule: user.targetModule }}
       isAdmin
+      plan={user.plan}
       logoutAction={logout}
     >
       {children}

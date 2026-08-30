@@ -24,6 +24,7 @@ import {
   BadgeCheck,
 } from "lucide-react";
 import { LogoMark } from "@/components/ui/logo";
+import { type PlanKey } from "@/lib/plans";
 import { cn } from "@/lib/utils";
 
 type NavChild = { href: string; label: string; icon?: React.ComponentType<{ className?: string }> };
@@ -107,11 +108,16 @@ interface SidebarProps {
   showCloseButton?: boolean;
   onClose?: () => void;
   isAdmin?: boolean;
+  /** From the session. Drives which items still read as locked. */
+  plan?: PlanKey | null;
 }
 
-export function Sidebar({ onNavigate, showCloseButton, onClose, isAdmin }: SidebarProps) {
+export function Sidebar({ onNavigate, showCloseButton, onClose, isAdmin, plan }: SidebarProps) {
   const pathname = usePathname();
   const groups = isAdmin ? [...GROUPS, ADMIN_GROUP] : GROUPS;
+  // The "Premium" badge marks a locked feature. To someone who has it, the same
+  // badge reads as a wall they have already paid to get past.
+  const showsLocks = !plan || plan === "free";
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const navRef = useRef<HTMLElement>(null);
   // The shell hides its scrollbars, so on a short viewport the tail of the nav
@@ -209,7 +215,7 @@ export function Sidebar({ onNavigate, showCloseButton, onClose, isAdmin }: Sideb
                         <Link href={item.href} className="sidebar-item" data-active={parentActive} onClick={onNavigate}>
                           <item.icon className="h-4 w-4 shrink-0 opacity-80" />
                           <span className="flex-1 truncate">{item.label}</span>
-                          {item.badge && (
+                          {item.badge && showsLocks && (
                             <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-white">
                               {item.badge}
                             </span>

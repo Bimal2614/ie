@@ -1,10 +1,10 @@
-import Link from "next/link";
-import { Check, X, ArrowRight } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { LandingNav } from "@/components/marketing/landing-nav";
+import { PlanCta } from "@/components/marketing/plan-cta";
 import { LandingFooter } from "@/components/marketing/landing-footer";
 import { Reveal } from "@/components/marketing/motion";
 import { cn } from "@/lib/utils";
-import { formatPrice, PLANS as PLAN_ENTITLEMENTS } from "@/lib/plans";
+import { formatPrice, PLANS as PLAN_ENTITLEMENTS, type PlanKey } from "@/lib/plans";
 import { KEYWORDS, pageMeta } from "@/lib/seo";
 
 export const metadata = pageMeta({
@@ -31,6 +31,7 @@ export const metadata = pageMeta({
 const PLANS = [
   {
     name: "Free",
+    tier: "free" as PlanKey,
     price: formatPrice(PLAN_ENTITLEMENTS.free.priceCents),
     cadence: "forever",
     tagline: "Get a feel for how IELTSVega practice works.",
@@ -48,6 +49,7 @@ const PLANS = [
   },
   {
     name: "Premium",
+    tier: "premium" as PlanKey,
     price: formatPrice(PLAN_ENTITLEMENTS.premium.priceCents),
     cadence: "per month",
     tagline: "Serious prep, with a plan built around your weak spots.",
@@ -117,17 +119,7 @@ export default function PricingPage() {
                   <span className="text-sm text-ink-muted">/ {p.cadence}</span>
                 </div>
 
-                <Link
-                  href={p.href}
-                  className={cn(
-                    "mt-6 inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold transition-[filter,background-color]",
-                    p.featured
-                      ? "bg-green text-green-ink hover:brightness-105"
-                      : "border border-line text-ink hover:bg-paper-sunken",
-                  )}
-                >
-                  {p.cta} <ArrowRight className="size-4" />
-                </Link>
+                <PlanCta plan={p.tier} label={p.cta} href={p.href} featured={p.featured} />
 
                 <ul className="mt-7 space-y-3 border-t border-line pt-6 text-sm">
                   {p.features.map((f) => (

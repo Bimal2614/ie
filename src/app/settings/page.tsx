@@ -103,9 +103,16 @@ export default async function SettingsPage() {
               </p>
             )}
           </div>
-          <Link href="/pricing" className="inline-flex items-center gap-2 rounded-lg bg-green px-5 py-2.5 text-sm font-semibold text-green-ink transition-[filter] hover:brightness-105">
-            {authed.plan === "free" ? "View plans" : "Change plan"} <ArrowRight className="size-4" />
-          </Link>
+          {/*
+            Only a free account has somewhere to go. "Change plan" pointed a
+            paying customer at a page whose every card they already own — an
+            upsell with nothing to sell.
+          */}
+          {authed.plan === "free" && (
+            <Link href="/pricing" className="inline-flex items-center gap-2 rounded-lg bg-green px-5 py-2.5 text-sm font-semibold text-green-ink transition-[filter] hover:brightness-105">
+              View plans <ArrowRight className="size-4" />
+            </Link>
+          )}
         </div>
       </Card>
 

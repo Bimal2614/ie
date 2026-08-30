@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Menu, ChevronRight, User as UserIcon, Settings as SettingsIcon, LogOut } from "lucide-react";
 import { LogoMark } from "@/components/ui/logo";
+import { clearAuthCache } from "@/lib/auth-cache";
+import { type PlanKey } from "@/lib/plans";
 import { cn } from "@/lib/utils";
 
 type TopbarUser = { name: string; email: string; targetModule: "academic" | "general" };
@@ -34,14 +36,19 @@ function pageLabelFor(path: string): string {
 
 interface TopbarProps {
   user: TopbarUser;
+  /** From the session, not the browser — `null` only if a caller omits it. */
+  plan?: PlanKey | null;
   onOpenSidebar: () => void;
   logoutAction: () => void | Promise<void>;
 }
 
-export function Topbar({ user, onOpenSidebar, logoutAction }: TopbarProps) {
+export function Topbar({ user, plan, onOpenSidebar, logoutAction }: TopbarProps) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const pageLabel = pageLabelFor(pathname);
+  // Nothing left to sell someone who already bought. Free (and an unknown plan,
+  // which only happens if a caller forgets the prop) still sees the pill.
+  const canUpgrade = !plan || plan === "free";
   const initial = (user.name?.[0] || user.email?.[0] || "U").toUpperCase();
 
   return (
@@ -77,12 +84,14 @@ export function Topbar({ user, onOpenSidebar, logoutAction }: TopbarProps) {
           {user.targetModule === "general" ? "General Training" : "Academic"}
         </span>
 
-        <Link
-          href="/pricing"
-          className="hidden h-8 items-center rounded-full bg-accent px-4 text-xs font-semibold text-accent-foreground hover:bg-accent-hover sm:inline-flex"
-        >
-          Upgrade
-        </Link>
+        {canUpgrade && (
+          <Link
+            href="/pricing"
+            className="hidden h-8 items-center rounded-full bg-accent px-4 text-xs font-semibold text-accent-foreground hover:bg-accent-hover sm:inline-flex"
+          >
+            Upgrade
+          </Link>
+        )}
 
         <div className="relative">
           <button
@@ -124,7 +133,7 @@ export function Topbar({ user, onOpenSidebar, logoutAction }: TopbarProps) {
                   <SettingsIcon className="h-4 w-4" /> Settings
                 </Link>
                 <div className="my-1 h-px bg-line" />
-                <form action={logoutAction}>
+                <form action={logoutAction} onSubmit={() => clearAuthCache()}>
                   <button
                     type="submit"
                     className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-danger hover:bg-danger-soft"
