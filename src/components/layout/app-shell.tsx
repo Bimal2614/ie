@@ -10,6 +10,12 @@ type ShellUser = { name: string; email: string; targetModule: "academic" | "gene
 interface AppShellProps {
   user: ShellUser;
   /**
+   * Reveals the admin group in the nav. Cosmetic only — every admin route
+   * gates itself with `requireAdmin()`, so a forged `true` here shows a link
+   * that redirects straight back to /dashboard.
+   */
+  isAdmin?: boolean;
+  /**
    * The account has no phone number on file — i.e. a Google sign-in, since
    * email signup collects one. Blocks the shell with a prompt until it's given.
    * Lives here rather than in each layout so every authed route inherits it.
@@ -19,14 +25,14 @@ interface AppShellProps {
   children: ReactNode;
 }
 
-export function AppShell({ user, needsPhone, logoutAction, children }: AppShellProps) {
+export function AppShell({ user, isAdmin, needsPhone, logoutAction, children }: AppShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <div className="app-shell">
       {/* Desktop sidebar */}
       <div className="hidden lg:block">
-        <Sidebar />
+        <Sidebar isAdmin={isAdmin} />
       </div>
 
       {/* Mobile drawer */}
@@ -40,6 +46,7 @@ export function AppShell({ user, needsPhone, logoutAction, children }: AppShellP
           />
           <div className="fixed inset-y-0 left-0 z-50 w-[280px] lg:hidden">
             <Sidebar
+              isAdmin={isAdmin}
               showCloseButton
               onClose={() => setMobileOpen(false)}
               onNavigate={() => setMobileOpen(false)}

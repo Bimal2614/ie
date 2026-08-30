@@ -7,6 +7,7 @@ export default async function PracticeLayout({ children }: { children: React.Rea
   return (
     <AppShell
       user={{ name: user.name, email: user.email, targetModule: user.targetModule }}
+      isAdmin={user.role === "admin"}
       needsPhone={!user.phone}
       logoutAction={logout}
     >

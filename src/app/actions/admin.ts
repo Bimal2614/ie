@@ -1,11 +1,19 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
+import { z } from "zod";
 import { db } from "@/db";
 import { users, auditLog } from "@/db/schema";
 import { requireAdmin } from "@/lib/dal";
-import { PLANS, type PlanKey } from "@/lib/plans";
-import { grantPlan, revokePlan, subscriptionHistory, billingLog } from "@/lib/subscriptions";
+import { PLANS, DEFAULT_OFFERED_PLAN, isOfferedPlan, type PlanKey } from "@/lib/plans";
+import {
+  grantPlan,
+  revokePlan,
+  periodEndFor,
+  subscriptionHistory,
+  billingLog,
+} from "@/lib/subscriptions";
 
 /**
  * Reactivate an account that was disabled (e.g. by automatic rate-limit
@@ -83,4 +91,88 @@ export async function adminBillingFor(userId: string) {
   await requireAdmin();
   const [subs, log] = await Promise.all([subscriptionHistory(userId), billingLog(userId)]);
   return { subscriptions: subs, log };
+}
+
+/* ------------------------------------------------------------------ *
+ * /verify-students
+ *
+ * The stand-in for a payment gateway. Until checkout exists, a candidate who
+ * has paid for a class is put on a plan by hand from that screen, and these
+ * two actions are what the buttons call.
+ *
+ * They are `adminGrantPlan`/`adminRevokePlan` with three differences that
+ * matter for that screen: the input is re-validated here because a Server
+ * Action is a public endpoint (the <select>s are UX, not the gate), nothing is
+ * charged — `priceCents: null`, since whatever the student paid changed hands
+ * off-platform and recording the list price would put revenue in the ledger
+ * that was never collected — and the page is revalidated so the row moves
+ * between the two tabs without a reload.
+ * ------------------------------------------------------------------ */
+
+const verifySchema = z.object({
+  userId: z.uuid(),
+  /**
+   * Omitted by the screen, which offers one tier. Validated against what is on
+   * sale rather than against the database enum, so a crafted POST cannot put a
+   * student on a tier the business has withdrawn.
+   */
+  plan: z
+    .enum(["pro", "premium"])
+    .default(DEFAULT_OFFERED_PLAN)
+    .refine(isOfferedPlan, "That plan is not on sale."),
+  /** 0 means "never lapses"; anything else is that many months from now. */
+  months: z.number().int().min(0).max(24),
+});
+
+export type VerifyStudentInput = z.input<typeof verifySchema>;
+export type AdminActionResult =
+  | { ok: true; expiresAt: string | null }
+  | { ok: false; error: string };
+
+/** Put a student on a paid plan because a human confirmed they should be on it. */
+export async function verifyStudent(input: VerifyStudentInput): Promise<AdminActionResult> {
+  const admin = await requireAdmin();
+
+  const parsed = verifySchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "That request wasn't valid." };
+  const { userId, plan, months } = parsed.data;
+
+  const [target] = await db
+    .select({ role: users.role })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  if (!target) return { ok: false, error: "That account no longer exists." };
+  // Admins already bypass the plan gates; granting one a subscription would
+  // only put a purchase in the ledger that buys nothing.
+  if (target.role === "admin") return { ok: false, error: "Admin accounts don't need verifying." };
+
+  const sub = await grantPlan({
+    userId,
+    plan,
+    periodEnd: months === 0 ? null : periodEndFor(new Date(), months),
+    priceCents: null,
+    actor: "admin",
+    actorUserId: admin.id,
+    note: `Verified by ${admin.email} — manual grant, no payment gateway yet`,
+    metadata: { via: "verify-students", months },
+  });
+
+  revalidatePath("/verify-students");
+  return { ok: true, expiresAt: sub.currentPeriodEnd?.toISOString() ?? null };
+}
+
+/** Undo a verification: end the plan now and drop the account back to free. */
+export async function unverifyStudent(userId: string): Promise<AdminActionResult> {
+  const admin = await requireAdmin();
+  if (!z.uuid().safeParse(userId).success) return { ok: false, error: "That request wasn't valid." };
+
+  await revokePlan(userId, {
+    reason: `Verification removed by ${admin.email}`,
+    actor: "admin",
+    actorUserId: admin.id,
+  });
+
+  revalidatePath("/verify-students");
+  return { ok: true, expiresAt: null };
 }
