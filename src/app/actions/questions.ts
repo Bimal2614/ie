@@ -25,6 +25,8 @@ export type SetQuestion = {
   speakSeconds: number | null;
   orderIndex: number;
   marks: number;
+  /** OUR gated path to the examiner asking it, or null. Never `s3://`. */
+  promptAudioUrl: string | null;
 };
 
 export type PaginatedSet = {
@@ -129,6 +131,7 @@ export async function getSetPaginated(
       wordLimitMin: questions.wordLimitMin,
       prepSeconds: questions.prepSeconds,
       speakSeconds: questions.speakSeconds,
+      promptAudioUrl: questions.promptAudioUrl,
       orderIndex: questions.orderIndex,
       marks: questions.marks,
     })
@@ -165,6 +168,7 @@ export async function getSetPaginated(
         speakSeconds: q.speakSeconds,
         orderIndex: q.orderIndex,
         marks: q.marks,
+        promptAudioUrl: mediaUrl.questionPromptAudio(q.id, q.promptAudioUrl),
       })),
     },
     totalSets,

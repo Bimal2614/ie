@@ -50,6 +50,7 @@ export type PlayerQuestion = {
   wordLimitMin: number | null;
   prepSeconds: number | null;
   speakSeconds: number | null;
+  promptAudioUrl?: string | null;
 };
 
 export type PlayerResult = {
@@ -168,6 +169,7 @@ export function SetBody({
             wordLimitMin: q.wordLimitMin,
             prepSeconds: q.prepSeconds,
             speakSeconds: q.speakSeconds,
+            promptAudioSrc: q.promptAudioUrl ?? null,
           })),
         },
       ],

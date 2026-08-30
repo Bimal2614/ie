@@ -1,6 +1,10 @@
 import "server-only";
 
 import { getObjectStream, keyFromUrl } from "@/lib/speech/s3";
+import { guardMedia, RateLimitError } from "@/lib/security/rate-guard";
+
+/** Every media route is addressed by uuid; a malformed one never reaches the db. */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Serving exam audio so it can be HEARD but not KEPT.
@@ -212,4 +216,50 @@ export async function streamProtectedAudio(req: Request, stored: string): Promis
     contentLength: len ? Number(len) : null,
     contentRange: upstream.headers.get("content-range"),
   });
+}
+
+/**
+ * The gate every media route puts in front of `streamProtectedAudio`.
+ *
+ * WHY THIS EXISTS. Seven routes under /api were each opening with the same
+ * thirteen lines — session, rate limit, uuid shape, 404 on a row with no media
+ * — and the only thing that differed was the one query in the middle. That is
+ * the sort of duplication where a fix lands in six files and gets missed in the
+ * seventh, and the missed one is a route serving paid content without a check.
+ *
+ * The caller supplies only what is genuinely its own: how to find the stored
+ * `s3://` value. Returning null means "nothing to play", which becomes a 404 —
+ * so a route never has to remember to write that branch.
+ */
+export async function serveProtectedAudio(
+  req: Request,
+  opts: {
+    userId: string | null;
+    /** Path segments that must look like uuids before any query runs. */
+    uuids?: Array<string | undefined>;
+    /** The stored `s3://bucket/key`, or null if this row has no media. */
+    locate: () => Promise<string | null | undefined>;
+  },
+): Promise<Response> {
+  if (!opts.userId) return new Response("Unauthorized", { status: 401 });
+
+  try {
+    await guardMedia(opts.userId);
+  } catch (e) {
+    if (e instanceof RateLimitError) {
+      return new Response("Too many requests: slow down.", { status: 429 });
+    }
+    throw e;
+  }
+
+  // Shape-check before touching the database: a malformed id is a 404, not a
+  // query, and certainly not a cast error surfacing as a 500.
+  for (const id of opts.uuids ?? []) {
+    if (!id || !UUID.test(id)) return new Response("Not found", { status: 404 });
+  }
+
+  const stored = await opts.locate();
+  if (!stored) return new Response("Not found", { status: 404 });
+
+  return streamProtectedAudio(req, stored);
 }

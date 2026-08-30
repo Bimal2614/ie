@@ -20,6 +20,8 @@ export type RenderQuestion = {
   wordLimitMin: number | null;
   prepSeconds: number | null;
   speakSeconds: number | null;
+  /** Gated path to the examiner asking it; speaking only. */
+  promptAudioSrc?: string | null;
 };
 
 export type QuestionState = "idle" | "correct" | "incorrect" | "review";

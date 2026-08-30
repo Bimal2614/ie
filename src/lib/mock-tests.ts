@@ -380,6 +380,10 @@ export function toClientMockPart(part: MockPart) {
           prepSeconds: i.prepSeconds,
           speakSeconds: i.speakSeconds,
           cueCard: i.cueCard,
+          // `i.n`, NOT the shifted number: the route looks the item up inside
+          // the stored section, which numbers it within its part. The shift
+          // above is this paper's answer-sheet numbering and stops at the UI.
+          promptAudioUrl: mediaUrl.sectionPromptAudio(part.sectionId, i.n, i.promptAudioUrl),
         })),
       })),
     },

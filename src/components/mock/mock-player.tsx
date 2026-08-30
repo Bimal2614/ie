@@ -440,6 +440,9 @@ export function MockPlayer({ sitting }: Props) {
       slot="questions"
       focusNumber={focus}
       groupHeaders={view.questions.groups.length > 1}
+      // On test day a Speaking question is spoken and never printed, so the
+      // paper plays it and hides the text. Section practice does the opposite.
+      spokenPromptOnly
     />
   );
 

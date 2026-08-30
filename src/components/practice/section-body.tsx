@@ -41,6 +41,7 @@ export type ClientGroup = {
     wordLimitMin?: number;
     prepSeconds?: number;
     speakSeconds?: number;
+    promptAudioUrl?: string | null;
     cueCard?: { topic: string; bullets: string[] };
   }[];
 };
@@ -70,6 +71,7 @@ export function SectionBody({
   focusNumber,
   groupHeaders = true,
   instructions = "full",
+  spokenPromptOnly = false,
   answerScope,
   flagged,
   onToggleFlag,
@@ -135,6 +137,12 @@ export function SectionBody({
    * controls goes — see `practiceInstruction`.
    */
   instructions?: "full" | "trimmed";
+  /**
+   * Speaking Parts 1 and 3: play the question rather than print it. The mock
+   * passes this; section practice does not. Kept separate from `instructions`
+   * because they are two different decisions that happen to agree today.
+   */
+  spokenPromptOnly?: boolean;
 }) {
   /**
    * A map answers exactly one task, so it is drawn inside that group rather
@@ -199,6 +207,7 @@ export function SectionBody({
           wordLimitMin: i.wordLimitMin ?? null,
           prepSeconds: i.prepSeconds ?? null,
           speakSeconds: i.speakSeconds ?? null,
+          promptAudioSrc: i.promptAudioUrl ?? null,
         })),
       })),
     }),
@@ -257,6 +266,7 @@ export function SectionBody({
         // does the stimulus block stand down.
         matrixImage: figureOwner >= 0 ? section.imageUrl : null,
         stimulusImage: figureOwner < 0,
+        spokenPromptOnly,
       }}
     />
   );

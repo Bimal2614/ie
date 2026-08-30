@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { questionSets, questions } from "@/db/schema";
 import { QUESTION_TYPES, SECTIONS, type QuestionTypeKey, type SectionKey } from "@/lib/ielts";
+import { mediaUrl } from "@/lib/media-urls";
 import type { SetLayout } from "@/lib/question-content";
 import { QuestionPlayer, type PlayerSet, type PlayerQuestion } from "@/components/practice/question-player";
 
@@ -27,8 +28,12 @@ export default async function PracticeSetPage({ params }: { params: Promise<{ id
     section: set.section as SectionKey,
     questionType: set.questionType as QuestionTypeKey,
     passageText: set.passageText,
-    audioUrl: set.audioUrl,
-    imageUrl: set.imageUrl,
+    // OUR gated paths, never the stored `s3://` value. This page used to pass
+    // the raw column through: that publishes the bucket and key to anyone
+    // reading the RSC payload, and an `s3://` URL is not one a browser can load
+    // anyway, so the recording never played. See src/lib/media-urls.ts.
+    audioUrl: mediaUrl.setAudio(set.id, set.audioUrl),
+    imageUrl: mediaUrl.setImage(set.id, set.imageUrl),
     layout: (set.layout as SetLayout | null) ?? null,
     startNumber: set.startNumber,
   };
@@ -40,6 +45,7 @@ export default async function PracticeSetPage({ params }: { params: Promise<{ id
     wordLimitMin: q.wordLimitMin,
     prepSeconds: q.prepSeconds,
     speakSeconds: q.speakSeconds,
+    promptAudioUrl: mediaUrl.questionPromptAudio(q.id, q.promptAudioUrl),
   }));
 
   // No page chrome: <QuestionPlayer/> renders the exam shell, which is fixed to

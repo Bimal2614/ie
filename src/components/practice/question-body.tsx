@@ -40,6 +40,19 @@ import { AnnotationProvider, AnnotatedText } from "./renderers/annotations";
  * so nothing had to be flattened to make it fit.
  */
 
+/**
+ * The examiner asking one speaking question, on the row surface.
+ *
+ * Wraps AudioStimulus — the same player listening uses — rather than an
+ * `<audio controls>`, which is a download button with a waveform attached (see
+ * audio-stimulus.tsx). No autoplay here: a section can show several questions
+ * at once, and starting them all would be a chorus.
+ */
+function PromptAudio({ src }: { src: string }) {
+  const ref = useRef<HTMLAudioElement | null>(null);
+  return <AudioStimulus src={src} audioRef={ref} />;
+}
+
 /* ------------------------------------------------------------------ *
  * The shape both surfaces map into
  * ------------------------------------------------------------------ */
@@ -57,6 +70,13 @@ export type BodyItem = {
   wordLimitMin: number | null;
   prepSeconds: number | null;
   speakSeconds: number | null;
+  /**
+   * The examiner asking this question, as OUR gated path — never `s3://`.
+   *
+   * Speaking only. In the mock this is the entire question: the text is hidden
+   * there, exactly as on test day, so the clip is what the candidate gets.
+   */
+  promptAudioSrc?: string | null;
 };
 
 export type BodyGroup = {
@@ -124,6 +144,16 @@ export type BodyConfig = {
   splitStimulus?: boolean;
   /** Speaking Parts 1 and 3: an interview, one question at a time. */
   sequential?: boolean;
+  /**
+   * Speaking Parts 1 and 3: play the question instead of printing it.
+   *
+   * The mock sets this because on test day the question is only ever heard —
+   * understanding a spoken question in real time is part of what is being
+   * tested. Practice and section practice leave it off and show both, which is
+   * where a candidate looks up the word they missed. Falls back to showing the
+   * text when a question has no clip, so an unvoiced item is never a blank card.
+   */
+  spokenPromptOnly?: boolean;
   /** Where the report-a-problem button goes. */
   reportOn?: "row" | "feedback" | "none";
   /**
@@ -422,6 +452,7 @@ export function QuestionBody({
           questions={allItems.map(toRenderQuestion)}
           answers={answers}
           disabled={disabled}
+          spokenOnly={config.spokenPromptOnly}
           onAnswer={onAnswer}
         />
       </div>
@@ -492,6 +523,7 @@ function toRenderQuestion(item: BodyItem): RenderQuestion {
     wordLimitMin: item.wordLimitMin,
     prepSeconds: item.prepSeconds,
     speakSeconds: item.speakSeconds,
+    promptAudioSrc: item.promptAudioSrc ?? null,
   };
 }
 
@@ -788,12 +820,19 @@ function ItemRow({
               card, and lines wrapped that would otherwise have fitted. Here
               they cost one line's width, once. */}
           <div className="flex items-start gap-3">
-            <div className="min-w-0 flex-1">
-              {item.prompt && config.itemPrompts !== false && (
-                <p className="text-sm font-medium text-ink">
-                  <AnnotatedText run={`q${item.key}:p`} text={item.prompt} />
-                </p>
-              )}
+            <div className="min-w-0 flex-1 space-y-2">
+              {/* Speaking: the examiner asks it aloud. Section practice hears
+                  AND reads; the mock only hears — see `spokenPromptOnly`. The
+                  interview surface (SpeakingInterview) draws its own player, so
+                  this is the row path only. */}
+              {item.promptAudioSrc && <PromptAudio src={item.promptAudioSrc} />}
+              {item.prompt &&
+                config.itemPrompts !== false &&
+                !(config.spokenPromptOnly && item.promptAudioSrc) && (
+                  <p className="text-sm font-medium text-ink">
+                    <AnnotatedText run={`q${item.key}:p`} text={item.prompt} />
+                  </p>
+                )}
             </div>
             <div className="flex shrink-0 items-center gap-1">
               {result && state !== "review" && (

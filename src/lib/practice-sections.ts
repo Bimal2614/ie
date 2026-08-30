@@ -360,6 +360,10 @@ export function toClientSection(s: OpenSection) {
           prepSeconds: i.prepSeconds,
           speakSeconds: i.speakSeconds,
           cueCard: i.cueCard,
+          // Resolved here for the same reason the section's own audio is: the
+          // stored value is `s3://bucket/<key>`, and shipping that publishes
+          // the bucket and its layout to anyone reading the RSC payload.
+          promptAudioUrl: mediaUrl.sectionPromptAudio(s.id, i.n, i.promptAudioUrl),
         })),
       })),
     },

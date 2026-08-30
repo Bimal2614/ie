@@ -362,6 +362,8 @@ async function main() {
             wordLimitMax: null,
             prepSeconds: item.prepSeconds ?? null,
             speakSeconds: item.speakSeconds ?? null,
+            promptAudioUrl: item.promptAudioUrl ?? null,
+            promptVoiceId: item.promptVoiceId ?? null,
             isActive: true,
           };
         });
@@ -441,6 +443,8 @@ async function main() {
           wordLimitMax: sql`excluded.word_limit_max`,
           prepSeconds: sql`excluded.prep_seconds`,
           speakSeconds: sql`excluded.speak_seconds`,
+          promptAudioUrl: sql`excluded.prompt_audio_url`,
+          promptVoiceId: sql`excluded.prompt_voice_id`,
           isActive: sql`excluded.is_active`,
         },
       });

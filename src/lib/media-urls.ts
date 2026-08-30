@@ -46,6 +46,25 @@ export const mediaUrl = {
     pathIf(stored, `/api/practice/image/${sectionId}`),
 
   /**
+   * The examiner asking one speaking question. → /api/media/prompt/[questionId]
+   *
+   * Per QUESTION, not per set: a speaking part is a run of separate questions
+   * with a clip each, where a listening part is one recording for all of them.
+   */
+  questionPromptAudio: (questionId: string, stored: string | null | undefined) =>
+    pathIf(stored, `/api/media/prompt/${questionId}`),
+
+  /**
+   * The same clip for a `practice_sections` row. → /api/practice/prompt/[id]/[n]
+   *
+   * Keyed by exam number because a section holds its items as jsonb, so there
+   * is no question uuid to address — the same reason `user_responses` falls
+   * back to (set_id, n) for this content.
+   */
+  sectionPromptAudio: (sectionId: string, n: number, stored: string | null | undefined) =>
+    pathIf(stored, `/api/practice/prompt/${sectionId}/${n}`),
+
+  /**
    * A candidate's OWN speaking recording. → /api/practice/recording/[id]
    *
    * Keyed by the ANSWER row's id — a `user_responses` id for practice, a

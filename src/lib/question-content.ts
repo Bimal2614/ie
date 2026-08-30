@@ -288,6 +288,16 @@ export type QuestionItem = {
   prepSeconds?: number;
   speakSeconds?: number;
   cueCard?: { topic: string; bullets: string[] };
+  /**
+   * The examiner asking this question aloud, `s3://bucket/<key>`. Authored by
+   * `npm run db:build:speaking-audio` rather than by hand, but it lives in the
+   * content document for the same reason listening's `audioUrl` does: the
+   * import is what carries it to both reading paths, so one re-import keeps
+   * `practice_sections` and `questions` saying the same thing.
+   */
+  promptAudioUrl?: string;
+  /** Which ElevenLabs voice spoke it — one examiner per Cambridge book. */
+  promptVoiceId?: string;
 };
 
 /** A run of consecutive questions sharing one task type and one layout. */

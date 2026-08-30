@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AudioStimulus } from "@/components/practice/audio-stimulus";
 import { cn } from "@/lib/utils";
 import { isAnswered } from "@/lib/question-content";
 import type { Answer } from "@/lib/question-content";
@@ -15,18 +16,28 @@ import { QuestionInput, type RenderQuestion } from "./question-input";
  * once would let a candidate read ahead and rehearse, which is exactly the
  * habit the real test punishes. So only the current question is on screen, and
  * answered ones collapse to a strip you can step back through.
+ *
+ * THE QUESTION IS HEARD, NOT READ. On test day nothing is printed: the examiner
+ * speaks and the candidate answers. `spokenOnly` is the mock, which hides the
+ * text and plays the clip — decoding an accent in real time is part of what is
+ * being tested, and a mock that prints the question rehearses the wrong skill.
+ * Practice and section practice show both, because that is where you look up
+ * the word you missed.
  */
 export function SpeakingInterview({
   topic,
   questions,
   answers,
   disabled,
+  spokenOnly = false,
   onAnswer,
 }: {
   topic: string;
   questions: RenderQuestion[];
   answers: Record<string, Answer>;
   disabled: boolean;
+  /** Mock: play the question instead of printing it. */
+  spokenOnly?: boolean;
   onAnswer: (questionId: string, value: Answer) => void;
 }) {
   const [index, setIndex] = useState(0);
@@ -36,6 +47,14 @@ export function SpeakingInterview({
   const atLast = index === questions.length - 1;
 
   if (!current) return null;
+
+  /**
+   * Hiding the text is conditional on there BEING a clip. A question with
+   * neither — content still being voiced, or a failed upload — would otherwise
+   * be a blank card the candidate cannot answer, which is worse than a mock
+   * that prints one question.
+   */
+  const hideText = spokenOnly && Boolean(current.promptAudioSrc);
 
   return (
     <div className="space-y-4">
@@ -81,7 +100,25 @@ export function SpeakingInterview({
         <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
           Question {index + 1}
         </p>
-        <p className="mt-1.5 text-base font-medium text-ink">{current.prompt}</p>
+
+        {current.promptAudioSrc ? (
+          <ExaminerAudio
+            // Remounting per question resets the player and re-arms the single
+            // automatic play; one shared element would keep the previous
+            // question's progress and its "already played" state.
+            key={current.id}
+            src={current.promptAudioSrc}
+          />
+        ) : null}
+
+        {hideText ? (
+          <p className="mt-3 text-sm text-ink-muted">
+            The examiner asks this question aloud, as in the real test. Play it as many times as
+            you need, then record your answer.
+          </p>
+        ) : (
+          <p className="mt-3 text-base font-medium text-ink">{current.prompt}</p>
+        )}
 
         <div className="mt-4">
           <QuestionInput
@@ -120,4 +157,28 @@ export function SpeakingInterview({
       </div>
     </div>
   );
+}
+
+/**
+ * The examiner asking one question — the listening player, not a second one.
+ *
+ * AudioStimulus already draws its own controls rather than the browser's, for
+ * the reason set out in that file: `<audio controls>` is a download button with
+ * a waveform attached. Reusing it means one player to maintain, one set of
+ * no-download rules, and a volume the candidate set on a listening part still
+ * holding here.
+ */
+function ExaminerAudio({ src }: { src: string }) {
+  const ref = useRef<HTMLAudioElement | null>(null);
+
+  /**
+   * Ask once, unprompted — that is the examiner speaking without being invited
+   * to. Browsers refuse autoplay until the page has been interacted with, so
+   * this is best-effort and the player's own button is what guarantees it.
+   */
+  useEffect(() => {
+    ref.current?.play().catch(() => {});
+  }, []);
+
+  return <AudioStimulus src={src} audioRef={ref} className="mt-3" />;
 }
