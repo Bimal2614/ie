@@ -4,7 +4,12 @@ import { PlanCta } from "@/components/marketing/plan-cta";
 import { LandingFooter } from "@/components/marketing/landing-footer";
 import { Reveal } from "@/components/marketing/motion";
 import { cn } from "@/lib/utils";
-import { formatPrice, PLANS as PLAN_ENTITLEMENTS, type PlanKey } from "@/lib/plans";
+import {
+  billingPeriodLabel,
+  formatPrice,
+  PLANS as PLAN_ENTITLEMENTS,
+  type PlanKey,
+} from "@/lib/plans";
 import { KEYWORDS, pageMeta } from "@/lib/seo";
 
 export const metadata = pageMeta({
@@ -18,10 +23,11 @@ export const metadata = pageMeta({
 /*
  * The cards.
  *
- * PRICES ARE NOT WRITTEN HERE. They come from src/lib/plans.ts, which is also
- * what every gate on every submit reads — so a page promising $15 and a server
- * enforcing a different tier cannot happen. The copy below (taglines, feature
- * lines) is marketing's, and stays.
+ * PRICES AND TERMS ARE NOT WRITTEN HERE. Both come from src/lib/plans.ts, which
+ * is also what every gate on every submit reads, and what the subscription
+ * writer computes an expiry from — so a page promising one price for one
+ * stretch of time while the server grants another cannot happen. The copy below
+ * (taglines, feature lines) is marketing's, and stays.
  *
  * ONE PAID TIER IS SOLD. Pro is still defined in src/lib/plans.ts — an account
  * granted it must keep resolving to what it was sold — but it has no card here,
@@ -33,7 +39,7 @@ const PLANS = [
     name: "Free",
     tier: "free" as PlanKey,
     price: formatPrice(PLAN_ENTITLEMENTS.free.priceCents),
-    cadence: "forever",
+    cadence: billingPeriodLabel("free"),
     tagline: "Get a feel for how IELTSVega practice works.",
     cta: "Start free",
     href: "/signup",
@@ -51,7 +57,9 @@ const PLANS = [
     name: "Premium",
     tier: "premium" as PlanKey,
     price: formatPrice(PLAN_ENTITLEMENTS.premium.priceCents),
-    cadence: "per month",
+    // "3 months" — one payment covers the whole term. `billingMonths` in
+    // src/lib/plans.ts is what both this and the granted window read from.
+    cadence: billingPeriodLabel("premium"),
     tagline: "Serious prep, with a plan built around your weak spots.",
     cta: "Go Premium",
     href: "/signup",

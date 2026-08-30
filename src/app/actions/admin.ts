@@ -47,11 +47,11 @@ export async function reactivateAccount(userId: string): Promise<{ ok: boolean }
  * `users.plan` directly is exactly the drift that file exists to prevent.
  * ------------------------------------------------------------------ */
 
-/** Put an account on a paid plan for one month (or until `periodEnd`). */
+/** Put an account on a paid plan for the tier's own term (or until `periodEnd`). */
 export async function adminGrantPlan(input: {
   userId: string;
   plan: Exclude<PlanKey, "free">;
-  /** ISO date. Omit for one month from now; `null` for an account that never lapses. */
+  /** ISO date. Omit for the plan's own term; `null` for an account that never lapses. */
   periodEnd?: string | null;
   note?: string;
 }): Promise<{ ok: boolean; expiresAt: string | null }> {

@@ -4,7 +4,7 @@ import { and, desc, eq, inArray, isNotNull, lte, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { subscriptionLogs, subscriptions, users } from "@/db/schema";
 import type { Subscription } from "@/db/schema";
-import { effectivePlan, planRank, toPlanKey, type PlanKey } from "@/lib/plans";
+import { effectivePlan, planRank, PLANS, toPlanKey, type PlanKey } from "@/lib/plans";
 
 /**
  * The ONLY writer for what a candidate is entitled to.
@@ -31,15 +31,19 @@ const LIVE_STATUSES = ["active", "cancelling", "past_due"] as const;
 /**
  * When a period that starts at `from` runs out.
  *
- * Both paid tiers are monthly, so the plan itself is the cadence and there is
- * no interval to pass. Calendar arithmetic, not "+30 days": a candidate who
- * buys on the 31st of January should renew on the last day of February, and
- * JS's Date already rolls an overflowing day into the next month.
+ * `months` IS REQUIRED, and that is the point. It used to default to 1, which
+ * held only while every tier was monthly — the moment Premium became a 3-month
+ * plan, that default would have sold a quarter and granted a month. The term
+ * now comes from `PLANS[plan].billingMonths` at each call, so changing a tier's
+ * length is a one-line edit in src/lib/plans.ts and nothing here has to
+ * remember to change with it. Pass an explicit figure only for the arrangements
+ * a human drives - a support credit, a deal agreed off-platform.
  *
- * `months` exists for the open-ended cases a human drives - a support credit,
- * an annual deal agreed off-platform - not as a product option.
+ * Calendar arithmetic, not "+30 days": a candidate who buys on the 30th of
+ * November should run to the last day of February, and JS's Date already rolls
+ * an overflowing day into the next month.
  */
-export function periodEndFor(from: Date, months = 1): Date {
+export function periodEndFor(from: Date, months: number): Date {
   const end = new Date(from.getTime());
   end.setUTCMonth(end.getUTCMonth() + months);
   return end;
@@ -154,8 +158,9 @@ export type GrantInput = {
   /** Defaults to now. A payment callback passes the moment it was paid. */
   startsAt?: Date;
   /**
-   * Defaults to one month from `startsAt`. Pass an explicit date for a longer
-   * arrangement, or `null` for an account that never lapses.
+   * Defaults to the plan's own term (`billingMonths`) from `startsAt`. Pass an
+   * explicit date for a longer arrangement, or `null` for an account that never
+   * lapses.
    */
   periodEnd?: Date | null;
   /** What was charged, in minor units. Omit for a free grant. */
@@ -181,7 +186,11 @@ export type GrantInput = {
 export async function grantPlan(input: GrantInput): Promise<Subscription> {
   const now = new Date();
   const startsAt = input.startsAt ?? now;
-  const periodEnd = input.periodEnd !== undefined ? input.periodEnd : periodEndFor(startsAt);
+  // The term is the PLAN's, not a fixed month: Premium sells three at a time.
+  const periodEnd =
+    input.periodEnd !== undefined
+      ? input.periodEnd
+      : periodEndFor(startsAt, PLANS[input.plan].billingMonths);
 
   return db.transaction(async (tx) => {
     const [user] = await tx
@@ -292,7 +301,12 @@ export async function renewSubscription(
       sub.currentPeriodEnd && sub.currentPeriodEnd.getTime() > now.getTime()
         ? sub.currentPeriodEnd
         : now;
-    const periodEnd = opts.periodEnd !== undefined ? opts.periodEnd : periodEndFor(base);
+    // Renews for another of whatever the plan sells, so a quarterly tier rolls
+    // forward a quarter rather than quietly becoming monthly on renewal.
+    const periodEnd =
+      opts.periodEnd !== undefined
+        ? opts.periodEnd
+        : periodEndFor(base, PLANS[toPlanKey(sub.plan)].billingMonths);
 
     await tx
       .update(subscriptions)
@@ -338,7 +352,7 @@ export async function renewSubscription(
  * Cancel at the end of the paid period — what a candidate clicking "cancel"
  * gets.
  *
- * NOTHING IS TAKEN AWAY HERE. They paid to the end of the month, so they keep
+ * NOTHING IS TAKEN AWAY HERE. They paid to the end of the term, so they keep
  * the tier until `current_period_end` and the sweep is what withdraws it. This
  * only records the intent, which is also what stops the renewal.
  */

@@ -11,7 +11,13 @@ import {
   UserRound,
 } from "lucide-react";
 import { verifyStudent, unverifyStudent } from "@/app/actions/admin";
-import { PLANS, DEFAULT_OFFERED_PLAN, formatPrice, type PlanKey } from "@/lib/plans";
+import {
+  PLANS,
+  DEFAULT_OFFERED_PLAN,
+  billingPeriodLabel,
+  formatPrice,
+  type PlanKey,
+} from "@/lib/plans";
 import { cardClass } from "@/components/dashboard/ui";
 import { cn } from "@/lib/utils";
 
@@ -239,7 +245,8 @@ export function VerifyStudents({
           There is no payment gateway yet, so paid access is granted by hand here. Verifying a
           student puts their account on{" "}
           <strong className="font-semibold text-ink">
-            {GRANTED.label} ({formatPrice(GRANTED.priceCents)}/month)
+            {GRANTED.label} ({formatPrice(GRANTED.priceCents)} /{" "}
+            {billingPeriodLabel(DEFAULT_OFFERED_PLAN)})
           </strong>{" "}
           straight away — the same entitlement a checkout would buy — and every grant is recorded
           in the billing ledger against your account.

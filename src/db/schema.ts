@@ -212,10 +212,11 @@ export const subscriptions = pgTable(
     startsAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     currentPeriodStart: timestamp({ withTimezone: true }).notNull().defaultNow(),
     /**
-     * When this paid window closes. Both paid tiers bill monthly, so the writer
-     * computes it as one calendar month from the start - there is no cadence
-     * column, because the plan already says what was bought. NULL means "does
-     * not lapse", which is how an admin grants an open-ended account.
+     * When this paid window closes. There is no cadence column because the plan
+     * already says what was bought: the writer computes this from that tier's
+     * `billingMonths` in src/lib/plans.ts - Premium sells three months at a
+     * time, Pro one. NULL means "does not lapse", which is how an admin grants
+     * an open-ended account.
      */
     currentPeriodEnd: timestamp({ withTimezone: true }),
     endsAt: timestamp({ withTimezone: true }),

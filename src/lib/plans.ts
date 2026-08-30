@@ -22,8 +22,21 @@ export type SectionKey = "listening" | "reading" | "writing" | "speaking";
 export type Entitlements = {
   /** Display name, as the pricing page and upgrade prompts say it. */
   label: string;
-  /** Monthly price in minor units (cents). 0 for free. */
+  /** What ONE payment costs, in minor units (cents). 0 for free. */
   priceCents: number;
+  /**
+   * How long that one payment buys, in months.
+   *
+   * THE BILLING TERM, NOT AN ALLOWANCE. The monthly quotas below still reset on
+   * the calendar month inside it — a quarterly plan does not hand over three
+   * months of questions on day one. `subscriptions.current_period_end` is
+   * computed from this, so a tier sold by the quarter grants a quarter; the
+   * flat "one month from the start" this replaces is precisely how a 3-month
+   * sale ends up with a 1-month window.
+   *
+   * 0 for free, which is the absence of a subscription rather than a term.
+   */
+  billingMonths: number;
   /**
    * Practice answers a candidate may record per calendar month.
    * `null` = unlimited. Counted in ANSWERS (one row per gap), because that is
@@ -53,6 +66,7 @@ export const PLANS: Record<PlanKey, Entitlements> = {
   free: {
     label: "Free",
     priceCents: 0,
+    billingMonths: 0,
     monthlyPracticeAnswers: 50,
     practiceSections: ["reading", "listening"],
     aiScoring: false,
@@ -63,6 +77,11 @@ export const PLANS: Record<PlanKey, Entitlements> = {
   pro: {
     label: "Pro",
     priceCents: 1500,
+    // Pro is HIDDEN, not retired — see OFFERED_PLANS below, and the card it
+    // still needs on the pricing page. One month is the term it has always been
+    // sold on, so accounts already holding it keep the window they bought;
+    // change this only if it goes back on sale with a different term.
+    billingMonths: 1,
     monthlyPracticeAnswers: null,
     practiceSections: ["reading", "listening", "writing", "speaking"],
     aiScoring: true,
@@ -73,6 +92,7 @@ export const PLANS: Record<PlanKey, Entitlements> = {
   premium: {
     label: "Premium",
     priceCents: 3500,
+    billingMonths: 3,
     monthlyPracticeAnswers: null,
     practiceSections: ["reading", "listening", "writing", "speaking"],
     aiScoring: true,
@@ -210,6 +230,20 @@ export function cheapestPlanWith(feature: (e: Entitlements) => boolean): PlanKey
  */
 export function monthStart(now: Date = new Date()): Date {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+}
+
+/**
+ * The denominator in "$35 / 3 months" — what one payment buys, in words.
+ *
+ * Here and not in the page's copy, because it is a term of sale rather than
+ * marketing: the card, the payment dialog and the admin grant screen all say it
+ * about the same purchase, and the one that drifts is the one that becomes a
+ * false promise. Free has no term, and reads "forever".
+ */
+export function billingPeriodLabel(plan: PlanKey): string {
+  const months = PLANS[plan].billingMonths;
+  if (months <= 0) return "forever";
+  return months === 1 ? "month" : `${months} months`;
 }
 
 /** "$15" / "$0" — the pricing page's format, from the one stored number. */
