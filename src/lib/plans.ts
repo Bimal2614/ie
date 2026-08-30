@@ -121,6 +121,32 @@ export function isPlanBlock(value: unknown): value is PlanBlock {
   return typeof value === "object" && value !== null && (value as PlanBlock).blocked === true;
 }
 
+/* ------------------------------------------------------------------ *
+ * What is actually on sale
+ * ------------------------------------------------------------------ */
+
+/**
+ * The paid tiers a candidate can be put on today, cheapest first.
+ *
+ * ONLY PREMIUM IS SOLD. Pro stays defined in `PLANS` above rather than being
+ * deleted: `users.plan` is a database enum and a subscription that was granted
+ * on Pro must still resolve to the entitlements it was sold with, or an old row
+ * would silently read as `free`. What this list controls is the FUTURE — the
+ * tiers the pricing page offers, the tiers an admin can grant, and the tier
+ * every "upgrade to X" prompt names. Selling Pro again is adding it back here,
+ * not editing the gates.
+ */
+export const OFFERED_PLANS = ["premium"] as const satisfies readonly Exclude<PlanKey, "free">[];
+
+export type OfferedPlan = (typeof OFFERED_PLANS)[number];
+
+/** The tier a purchase or a manual grant lands on when none is named. */
+export const DEFAULT_OFFERED_PLAN: OfferedPlan = OFFERED_PLANS[0];
+
+export function isOfferedPlan(value: unknown): value is OfferedPlan {
+  return (OFFERED_PLANS as readonly string[]).includes(String(value));
+}
+
 /** Ranking, for "is this at least Pro?" questions and for upgrade/downgrade logs. */
 const RANK: Record<PlanKey, number> = { free: 0, pro: 1, premium: 2 };
 
@@ -163,9 +189,15 @@ export function effectivePlan(
   return ends.getTime() > now.getTime() ? plan : "free";
 }
 
-/** The cheapest plan that grants `feature`, for "upgrade to X" prompts. */
+/**
+ * The cheapest plan that grants `feature`, for "upgrade to X" prompts.
+ *
+ * Searches what is ON SALE, not every tier that exists. Ranking Pro first here
+ * would send a candidate who wants AI scoring to a plan with nothing to click.
+ */
 export function cheapestPlanWith(feature: (e: Entitlements) => boolean): PlanKey {
-  return PLAN_KEYS.find((k) => feature(PLANS[k])) ?? "premium";
+  const onSale: readonly PlanKey[] = ["free", ...OFFERED_PLANS];
+  return onSale.find((k) => feature(PLANS[k])) ?? DEFAULT_OFFERED_PLAN;
 }
 
 /**

@@ -11,6 +11,7 @@ export default async function SectionPracticeLayout({
   return (
     <AppShell
       user={{ name: user.name, email: user.email, targetModule: user.targetModule }}
+      isAdmin={user.role === "admin"}
       needsPhone={!user.phone}
       logoutAction={logout}
     >

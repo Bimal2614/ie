@@ -9,6 +9,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <AppShell
       user={{ name: user.name, email: user.email, targetModule: user.targetModule }}
+      isAdmin={user.role === "admin"}
       needsPhone={!user.phone}
       logoutAction={logout}
     >

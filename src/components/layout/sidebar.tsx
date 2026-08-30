@@ -21,6 +21,7 @@ import {
   History,
   Library,
   Mail,
+  BadgeCheck,
 } from "lucide-react";
 import { LogoMark } from "@/components/ui/logo";
 import { cn } from "@/lib/utils";
@@ -86,6 +87,15 @@ const GROUPS: Group[] = [
 ];
 
 /**
+ * Appended only for admins. Not a security boundary — /verify-students calls
+ * `requireAdmin()` itself; this is just how an admin finds the screen.
+ */
+const ADMIN_GROUP: Group = {
+  label: "Admin",
+  items: [{ href: "/verify-students", label: "Verify Students", icon: BadgeCheck }],
+};
+
+/**
  * The nav's own `pb-10`, in px. It keeps the last item clear of the "More"
  * pill, so it must not count as scrollable content when deciding whether the
  * list actually runs past the fold.
@@ -96,10 +106,12 @@ interface SidebarProps {
   onNavigate?: () => void;
   showCloseButton?: boolean;
   onClose?: () => void;
+  isAdmin?: boolean;
 }
 
-export function Sidebar({ onNavigate, showCloseButton, onClose }: SidebarProps) {
+export function Sidebar({ onNavigate, showCloseButton, onClose, isAdmin }: SidebarProps) {
   const pathname = usePathname();
+  const groups = isAdmin ? [...GROUPS, ADMIN_GROUP] : GROUPS;
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const navRef = useRef<HTMLElement>(null);
   // The shell hides its scrollbars, so on a short viewport the tail of the nav
@@ -164,7 +176,7 @@ export function Sidebar({ onNavigate, showCloseButton, onClose }: SidebarProps) 
 
       <div className="relative min-h-0 flex-1">
         <nav ref={navRef} onScroll={syncOverflow} className="h-full overflow-y-auto px-3 pb-10">
-          {GROUPS.map((group) => (
+          {groups.map((group) => (
             <div key={group.label} className="mt-4 first:mt-2">
               <p className="sidebar-group-label">{group.label}</p>
               <ul className="space-y-0.5">

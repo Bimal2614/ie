@@ -8,6 +8,8 @@ import {
   entitlements,
   monthStart,
   PLANS,
+  OFFERED_PLANS,
+  DEFAULT_OFFERED_PLAN,
   toPlanKey,
   type PlanBlock,
   type PlanBlockCode,
@@ -113,9 +115,16 @@ export async function planUsage(user: AuthenticatedUser) {
  * The gates
  * ------------------------------------------------------------------ */
 
-/** The cheapest plan whose entitlements satisfy `want`. */
+/**
+ * The cheapest plan whose entitlements satisfy `want`.
+ *
+ * Searches only what is on sale. Pro entitles most of what these gates ask
+ * about, so a hard-coded ["free", "pro", "premium"] would put "upgrade to Pro"
+ * in the refusal message of a candidate who has no way to buy Pro.
+ */
 function cheapestWith(want: (e: (typeof PLANS)[PlanKey]) => boolean): PlanKey {
-  return (["free", "pro", "premium"] as const).find((k) => want(PLANS[k])) ?? "premium";
+  const onSale: readonly PlanKey[] = ["free", ...OFFERED_PLANS];
+  return onSale.find((k) => want(PLANS[k])) ?? DEFAULT_OFFERED_PLAN;
 }
 
 /**

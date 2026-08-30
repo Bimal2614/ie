@@ -22,6 +22,11 @@ export const metadata = pageMeta({
  * what every gate on every submit reads — so a page promising $15 and a server
  * enforcing a different tier cannot happen. The copy below (taglines, feature
  * lines) is marketing's, and stays.
+ *
+ * ONE PAID TIER IS SOLD. Pro is still defined in src/lib/plans.ts — an account
+ * granted it must keep resolving to what it was sold — but it has no card here,
+ * so Premium is the only thing a visitor can buy and the only thing an upgrade
+ * prompt names. Bringing it back is a card here plus `OFFERED_PLANS` there.
  */
 const PLANS = [
   {
@@ -42,34 +47,22 @@ const PLANS = [
     excludes: ["AI band scoring on Writing & Speaking"],
   },
   {
-    name: "Pro",
-    price: formatPrice(PLAN_ENTITLEMENTS.pro.priceCents),
-    cadence: "per month",
-    tagline: "Everything you need to reach your target band.",
-    cta: "Start Pro",
-    href: "/signup",
-    featured: true,
-    features: [
-      "Unlimited practice questions",
-      "AI band scoring on Writing & Speaking",
-      "Unlimited full mock tests",
-      "Full history & progress tracking",
-      "All 4 skills, every task type",
-    ],
-  },
-  {
     name: "Premium",
     price: formatPrice(PLAN_ENTITLEMENTS.premium.priceCents),
     cadence: "per month",
     tagline: "Serious prep, with a plan built around your weak spots.",
     cta: "Go Premium",
     href: "/signup",
-    featured: false,
+    featured: true,
     features: [
-      "Everything in Pro",
+      "Unlimited practice questions",
+      "AI band scoring on Writing & Speaking",
+      "Unlimited full mock tests",
+      "All 4 skills, every task type",
       "Priority AI scoring",
       "Personalised weekly study plan from your weakest criteria",
       "Band-prediction reports",
+      "Full history & progress tracking",
       "Priority support",
     ],
   },
@@ -100,7 +93,7 @@ export default function PricingPage() {
         </Reveal>
 
         {/* Plans */}
-        <div className="mt-14 grid items-start gap-6 lg:grid-cols-3">
+        <div className="mx-auto mt-14 grid max-w-3xl items-start gap-6 sm:grid-cols-2">
           {PLANS.map((p, i) => (
             <Reveal key={p.name} delay={i * 0.1} className="h-full">
               <div

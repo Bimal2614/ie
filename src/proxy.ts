@@ -20,7 +20,17 @@ const isDev = process.env.NODE_ENV === "development";
 const SESSION_COOKIE = isDev ? "ielts_session" : "__Host-ielts_session";
 
 // Anything under these prefixes requires a session.
-const PROTECTED_PREFIXES = ["/dashboard", "/practice", "/mock", "/profile", "/settings", "/admin"];
+const PROTECTED_PREFIXES = [
+  "/dashboard",
+  "/practice",
+  "/mock",
+  "/profile",
+  "/settings",
+  "/admin",
+  // Admin-only in practice — this list routes on cookie presence alone, so
+  // requireAdmin() in the route's layout is what keeps candidates out.
+  "/verify-students",
+];
 // Auth pages a logged-in user shouldn't see.
 const AUTH_ROUTES = ["/login", "/signup"];
 
