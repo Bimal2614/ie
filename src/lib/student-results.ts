@@ -143,10 +143,10 @@ export const STUDENT_RESULTS: StudentResult[] = [
     place: "Surat, IN",
     from: 5.0,
     to: 6.5,
-    module: "General",
+    module: "Academic",
     quote:
       "Seeing all four Writing criteria showed me Lexical Resource, not grammar, held me back.",
-    photo: `${S3_STUDENTS}/jay-suhagiya.jpeg`,
+    photo: `${S3_STUDENTS}/Jay+Suhagiya+6.5.jpeg`,
   },
   {
     name: "Lena Müller",
