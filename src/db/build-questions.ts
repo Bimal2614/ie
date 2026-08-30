@@ -42,6 +42,21 @@ import { practiceSections, questionSets, questions } from "./schema";
 import type { QuestionGroup, QuestionItem } from "../lib/question-content";
 
 const SOURCE = "cambridge";
+
+/**
+ * The book's identity inside an external key.
+ *
+ * Cambridge books are numbered, and their keys already read "cambridge:11:...",
+ * so a numbered book keeps its digits and every existing key stays byte for
+ * byte the same — changing one would orphan the set it points at. A series with
+ * no number in its name ("Barron's Practice Exams") would otherwise strip to an
+ * empty string and collide with every other such series, so it slugs instead.
+ */
+function bookKey(book: string | null): string {
+  const digits = (book ?? "").replace(/\D/g, "");
+  if (digits) return digits;
+  return (book ?? "unknown").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
 const EXPL_PATH = join("tools", "cambridge", "explanations.json");
 /** Char-offset -> seconds pins per part, from tools/cambridge/align.py. */
 const TIMINGS_PATH = join("tools", "cambridge", "timings.json");
@@ -234,8 +249,10 @@ async function main() {
   let qCount = 0;
   let withExpl = 0;
   let withAudio = 0;
+  const builtSources = new Set<string>();
 
   for (const part of parts) {
+    builtSources.add(part.source ?? SOURCE);
     const bookNo = parseInt((part.book ?? "").replace(/\D/g, ""), 10);
     const expl = explanations[`${bookNo}|${part.sectionType}|${part.testNumber}`] ?? {};
     const groups = (part.questions?.groups ?? []) as QuestionGroup[];
@@ -265,8 +282,8 @@ async function main() {
         // one silently overwrites the other. "both" is carried explicitly so
         // the key stays stable rather than depending on a default.
         const externalKey = [
-          SOURCE,
-          bookNo,
+          part.source ?? SOURCE,
+          bookKey(part.book),
           part.sectionType,
           part.testNumber,
           part.partNumber,
@@ -300,7 +317,7 @@ async function main() {
             ? Math.max(1, Math.round((part.estimatedMinutes * items.length) / totalItems))
             : null,
           tags: [...(part.tags ?? []), group.questionType],
-          source: SOURCE,
+          source: part.source ?? SOURCE,
           externalKey,
           isActive: part.isActive,
           updatedAt: new Date(),
@@ -454,7 +471,10 @@ async function main() {
   const stale = await db
     .delete(questionSets)
     .where(
-      and(eq(questionSets.source, SOURCE), notInArray(questionSets.externalKey, seenKeys)),
+      // Scoped to the sources this run actually rebuilt. Hardcoding "cambridge"
+      // would leave another series' dropped sets behind forever, and widening it
+      // to every source would delete the sets the user authored by hand.
+      and(inArray(questionSets.source, [...builtSources]), notInArray(questionSets.externalKey, seenKeys)),
     )
     .returning({ id: questionSets.id });
 

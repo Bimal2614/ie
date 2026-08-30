@@ -40,6 +40,8 @@ type PartDoc = {
   module: "academic" | "general" | "both";
   sectionType: "listening" | "reading" | "writing" | "speaking";
   book: string;
+  /** Publisher key. Defaults to "cambridge" — every other series names itself. */
+  source?: string;
   testNumber: number;
   partNumber: number;
   title: string;
@@ -190,7 +192,7 @@ async function main() {
       book: part.book,
       testNumber: part.testNumber,
       partNumber: part.partNumber,
-      source: "cambridge",
+      source: part.source ?? "cambridge",
       title: part.title,
       instructions: part.instructions ?? part.groups[0]?.instruction ?? null,
       difficulty: (part.difficulty ?? "medium") as "easy" | "medium" | "hard",
