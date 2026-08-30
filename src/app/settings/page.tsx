@@ -5,6 +5,8 @@ import { ArrowRight } from "lucide-react";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { requireUser } from "@/lib/dal";
+import { entitlements } from "@/lib/plans";
+import { planUsage } from "@/lib/security/plan-guard";
 import { cardClass } from "@/components/dashboard/ui";
 import { cn } from "@/lib/utils";
 import { ProfileForm, PasswordForm } from "@/components/settings/settings-forms";
@@ -45,6 +47,15 @@ export default async function SettingsPage() {
 
   const examDate = u?.examDate ? u.examDate.toISOString().slice(0, 10) : "";
 
+  // The card below used to say "Free plan" to everyone, including paying
+  // customers. It now reads the same entitlements the gates enforce, so what a
+  // candidate is told they have is what a submit will actually allow.
+  const usage = await planUsage(authed);
+  const plan = entitlements(authed.plan);
+  const renews = authed.planExpiresAt
+    ? authed.planExpiresAt.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
+    : null;
+
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6">
       <div>
@@ -73,11 +84,27 @@ export default async function SettingsPage() {
       <Card title="Subscription" desc="Your current plan.">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="font-medium text-ink">Free plan</p>
-            <p className="text-sm text-ink-muted">Upgrade for unlimited AI band scoring and mock tests.</p>
+            <p className="font-medium text-ink">{plan.label} plan</p>
+            <p className="text-sm text-ink-muted">
+              {authed.plan === "free"
+                ? "Reading and Listening practice, marked instantly. Upgrade for AI band scoring on Writing and Speaking, and full mock tests."
+                : renews
+                  ? `Renews on ${renews}.`
+                  : "Active."}
+            </p>
+            {/* Only a capped plan has a count worth showing. */}
+            {usage.practiceLimit !== null && (
+              <p className="mt-2 text-sm text-ink-soft">
+                <span className="font-medium text-ink">
+                  {usage.practiceUsed} of {usage.practiceLimit}
+                </span>{" "}
+                practice questions used this month
+                {usage.practiceRemaining === 0 && " — your allowance resets on the 1st"}
+              </p>
+            )}
           </div>
           <Link href="/pricing" className="inline-flex items-center gap-2 rounded-lg bg-green px-5 py-2.5 text-sm font-semibold text-green-ink transition-[filter] hover:brightness-105">
-            View plans <ArrowRight className="size-4" />
+            {authed.plan === "free" ? "View plans" : "Change plan"} <ArrowRight className="size-4" />
           </Link>
         </div>
       </Card>

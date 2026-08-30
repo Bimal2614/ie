@@ -558,7 +558,12 @@ function Speaking({ question, value, disabled, onChange }: InputProps) {
             // shut forever. The answer stays without a URL, which the report
             // screen shows as "Not scored" rather than waiting on it.
             report({ recorded: true, durationSec, uploadFailed: true });
-            if (onScreen()) setError(`Couldn't save the recording: ${res.error}`);
+            if (onScreen()) {
+              // A plan block is not a broken upload, and must not be dressed as
+              // one: nothing went wrong, the recording simply has nowhere to be
+              // marked. The server's sentence already says so.
+              setError(res.blocked ? res.error : `Couldn't save the recording: ${res.error}`);
+            }
           } else {
             report({ recorded: true, durationSec, audioUrl: res.audioUrl });
           }

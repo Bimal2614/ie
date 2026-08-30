@@ -11,6 +11,10 @@ export default async function MockTestPage({ params }: { params: Promise<{ id: s
   const { id } = await params;
   if (!UUID.test(id)) redirect("/mock-tests");
 
+  // A sitting under way is NEVER interrupted by a plan check. Starting one is
+  // gated (see startMock, where nothing has been written yet); three hours in,
+  // a lapsed subscription leaves the AI-scored modules unscored on the report
+  // rather than throwing away the paper.
   const sitting = await getMockSitting(id);
 
   // A finished sitting has a report; one that is not this candidate's has

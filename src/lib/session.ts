@@ -3,6 +3,7 @@ import "server-only";
 import { cookies, headers } from "next/headers";
 import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import { db } from "@/db";
+import { effectivePlan, toPlanKey, type PlanKey } from "@/lib/plans";
 import { sessions, users } from "@/db/schema";
 import { generateToken, hashToken } from "@/lib/security/tokens";
 import { isProd } from "@/lib/env";
@@ -115,6 +116,20 @@ export type AuthenticatedUser = {
   targetModule: "academic" | "general";
   targetBand: string | null;
   examDate: Date | null;
+
+  /**
+   * The tier the account is entitled to RIGHT NOW.
+   *
+   * Already resolved against the expiry, so callers never repeat that check and
+   * cannot forget it: a lapsed Pro account reads as "free" here even in the
+   * window before the nightly sweep rewrites the column. Every gate in
+   * src/lib/security/plan-guard.ts reads this field.
+   */
+  plan: PlanKey;
+  /** When the paid period runs out. NULL on free, and on plans that never lapse. */
+  planExpiresAt: Date | null;
+  /** The tier stored on the row, before expiry was applied — for support/UI. */
+  storedPlan: PlanKey;
 };
 
 /**
@@ -140,6 +155,10 @@ export async function validateSession(): Promise<AuthenticatedUser | null> {
       targetBand: users.targetBand,
       // Drives the dashboard's exam countdown.
       examDate: users.examDate,
+      // Entitlement travels WITH the session: every gated action already loads
+      // this row to authenticate, so gating costs no extra query.
+      plan: users.plan,
+      planExpiresAt: users.planExpiresAt,
     })
     .from(sessions)
     .innerJoin(users, eq(sessions.userId, users.id))
@@ -155,7 +174,16 @@ export async function validateSession(): Promise<AuthenticatedUser | null> {
     )
     .limit(1);
 
-  return rows[0] ?? null;
+  const row = rows[0];
+  if (!row) return null;
+
+  const storedPlan = toPlanKey(row.plan);
+  return {
+    ...row,
+    storedPlan,
+    // Resolved here, once, rather than at each call site.
+    plan: effectivePlan(storedPlan, row.planExpiresAt),
+  };
 }
 
 /**

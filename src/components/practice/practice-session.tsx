@@ -17,6 +17,8 @@ import {
 import { anyUploadPending, isAnswered, type Answer, type SetLayout } from "@/lib/question-content";
 import { getSetPaginated, type PaginatedSetResult } from "@/app/actions/questions";
 import { submitPractice, type SetSubmissionResult } from "@/app/actions/practice";
+import { isPlanBlock, type PlanBlock } from "@/lib/plans";
+import { PlanBlockDialog } from "./plan-block-dialog";
 import { FullscreenButton } from "@/components/exam/fullscreen-button";
 import { TextSizeControl } from "@/components/exam/text-size-control";
 import { SplitPane } from "@/components/exam/split-pane";
@@ -59,6 +61,8 @@ export function PracticeSession({
   const [result, setResult] = useState<SetSubmissionResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  /** Set when the plan refused the submit. The answers stay on screen. */
+  const [blocked, setBlocked] = useState<PlanBlock | null>(null);
   /** "Clear all" is armed by the first click and fires on the second. */
   const [confirmClear, setConfirmClear] = useState(false);
 
@@ -209,8 +213,15 @@ export function PracticeSession({
     if (!currentSet) return;
     setSubmitting(true);
     setNotice(null);
+    setBlocked(null);
     try {
       const res = await submitPractice(currentSet.id, answers);
+      // A plan limit is not a throttle and not a failure: it gets its own
+      // notice, keeps the draft, and does not mark the set as attempted.
+      if (isPlanBlock(res)) {
+        setBlocked(res);
+        return;
+      }
       setResult(res);
       try { localStorage.removeItem(`ielts:draft:${currentSet.id}`); } catch {}
       setAttemptedSets((prev) => new Set([...prev, currentSetIndex]));
@@ -344,6 +355,7 @@ export function PracticeSession({
 
   return (
     <div className="practice-root mx-auto w-full max-w-6xl" ref={topRef}>
+      <PlanBlockDialog block={blocked} onClose={() => setBlocked(null)} />
       {notice && (
         <div className="mb-3 rounded-lg border border-warning/40 bg-warning-soft px-4 py-2.5 text-sm text-ink-soft">
           {notice}

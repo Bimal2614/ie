@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { Check, ArrowRight } from "lucide-react";
+import { Check, X, ArrowRight } from "lucide-react";
 import { LandingNav } from "@/components/marketing/landing-nav";
 import { LandingFooter } from "@/components/marketing/landing-footer";
 import { Reveal } from "@/components/marketing/motion";
 import { cn } from "@/lib/utils";
+import { formatPrice, PLANS as PLAN_ENTITLEMENTS } from "@/lib/plans";
 import { KEYWORDS, pageMeta } from "@/lib/seo";
 
 export const metadata = pageMeta({
@@ -14,26 +15,35 @@ export const metadata = pageMeta({
   keywords: [...KEYWORDS.core, "IELTS practice price", "IELTS course cost", "IELTS preparation online cost", "IELTS practice subscription"],
 });
 
-/* ---- Placeholder pricing — swap prices/features for the real plan before launch. ---- */
+/*
+ * The cards.
+ *
+ * PRICES ARE NOT WRITTEN HERE. They come from src/lib/plans.ts, which is also
+ * what every gate on every submit reads — so a page promising $15 and a server
+ * enforcing a different tier cannot happen. The copy below (taglines, feature
+ * lines) is marketing's, and stays.
+ */
 const PLANS = [
   {
     name: "Free",
-    price: "$0",
+    price: formatPrice(PLAN_ENTITLEMENTS.free.priceCents),
     cadence: "forever",
-    tagline: "Get a feel for how IELTSVega marks.",
+    tagline: "Get a feel for how IELTSVega practice works.",
     cta: "Start free",
     href: "/signup",
     featured: false,
     features: [
-      "50 practice questions / month",
-      "1 full mock test / month",
-      "Basic band estimate",
+      "50 Reading & Listening practice questions / month",
+      "Instant answers and explanations",
       "Academic & General content",
     ],
+    // Rendered with a muted cross, so the free tier's ceiling is stated rather
+    // than left for the reader to infer from an absence.
+    excludes: ["AI band scoring on Writing & Speaking"],
   },
   {
     name: "Pro",
-    price: "$19",
+    price: formatPrice(PLAN_ENTITLEMENTS.pro.priceCents),
     cadence: "per month",
     tagline: "Everything you need to reach your target band.",
     cta: "Start Pro",
@@ -49,16 +59,16 @@ const PLANS = [
   },
   {
     name: "Premium",
-    price: "$39",
+    price: formatPrice(PLAN_ENTITLEMENTS.premium.priceCents),
     cadence: "per month",
-    tagline: "Serious prep with expert guidance.",
+    tagline: "Serious prep, with a plan built around your weak spots.",
     cta: "Go Premium",
     href: "/signup",
     featured: false,
     features: [
       "Everything in Pro",
       "Priority AI scoring",
-      "Human feedback on 4 essays / month",
+      "Personalised weekly study plan from your weakest criteria",
       "Band-prediction reports",
       "Priority support",
     ],
@@ -130,6 +140,12 @@ export default function PricingPage() {
                   {p.features.map((f) => (
                     <li key={f} className="flex gap-2.5 text-ink-soft">
                       <Check className="mt-0.5 size-4 shrink-0 text-green" />
+                      {f}
+                    </li>
+                  ))}
+                  {p.excludes?.map((f) => (
+                    <li key={f} className="flex gap-2.5 text-ink-muted">
+                      <X className="mt-0.5 size-4 shrink-0 text-ink-muted" />
                       {f}
                     </li>
                   ))}

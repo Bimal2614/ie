@@ -69,6 +69,11 @@ const EnvSchema = z.object({
   // Window over which violations accumulate toward deactivation.
   RATE_LIMIT_VIOLATION_WINDOW_DAYS: z.coerce.number().int().positive().default(30),
 
+  // --- Scheduled jobs. The subscription sweep (/api/cron/subscriptions)
+  //     authenticates with this. Optional, and the route stays CLOSED while it
+  //     is unset: an unauthenticated sweep would let anyone churn the ledger. ---
+  CRON_SECRET: z.string().min(16, "CRON_SECRET must be at least 16 characters").optional(),
+
   // --- S3 (speaking audio storage). Optional for the same reason. ---
   AWS_ACCESS_KEY_ID: z.string().optional(),
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
@@ -100,6 +105,7 @@ export const env = EnvSchema.parse({
   RATE_LIMIT_AI_ACCOUNT_WINDOW_DAYS: process.env.RATE_LIMIT_AI_ACCOUNT_WINDOW_DAYS,
   RATE_LIMIT_VIOLATIONS_BEFORE_DEACTIVATE: process.env.RATE_LIMIT_VIOLATIONS_BEFORE_DEACTIVATE,
   RATE_LIMIT_VIOLATION_WINDOW_DAYS: process.env.RATE_LIMIT_VIOLATION_WINDOW_DAYS,
+  CRON_SECRET: process.env.CRON_SECRET,
   AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
   AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
   AWS_REGION: process.env.AWS_REGION,
@@ -128,6 +134,11 @@ export function isWritingAiConfigured(): boolean {
 /** True when SMTP is configured to actually send email. */
 export function isEmailConfigured(): boolean {
   return Boolean(env.SMTP_HOST && env.SMTP_PORT && env.SMTP_USER && env.SMTP_PASS && env.EMAIL_FROM);
+}
+
+/** True when the scheduled subscription sweep can authenticate callers. */
+export function isCronConfigured(): boolean {
+  return Boolean(env.CRON_SECRET);
 }
 
 /** True when Google OAuth is configured. */

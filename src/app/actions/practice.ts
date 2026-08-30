@@ -9,6 +9,8 @@ import { scheduleAttemptScoring } from "@/lib/scoring/background";
 import { QUESTION_TYPES, isObjective, type QuestionTypeKey } from "@/lib/ielts";
 import { gradeMarks } from "@/lib/grading";
 import { guardGeneral } from "@/lib/security/rate-guard";
+import { checkPracticeAccess, type PlanBlock } from "@/lib/security/plan-guard";
+import type { SectionKey } from "@/lib/plans";
 
 /**
  * The ONE way a set of practice answers is graded and recorded.
@@ -64,11 +66,20 @@ export type PracticeResult = {
 /** Kept for the paginated player, which imported this name from questions.ts. */
 export type SetSubmissionResult = PracticeResult;
 
+/**
+ * Either the graded attempt, or the reason the plan would not take it.
+ *
+ * A block is RETURNED rather than thrown because Next redacts thrown server
+ * errors in production, and "an error occurred" is useless to someone who has
+ * simply run out of their monthly allowance. Callers narrow with `isPlanBlock`.
+ */
+export type PracticeSubmission = PracticeResult | PlanBlock;
+
 export async function submitPractice(
   setId: string,
   answers: AnswerMap,
   timeSpentSec?: number,
-): Promise<PracticeResult> {
+): Promise<PracticeSubmission> {
   const user = await requireUser();
   await guardGeneral(user.id);
 
@@ -102,6 +113,12 @@ export async function submitPractice(
     .orderBy(questionsT.orderIndex);
 
   if (qs.length === 0) throw new Error("Set not found");
+
+  // The plan gate, BEFORE anything is graded or written. The skills are read
+  // from the set we just loaded, never from the request — a client cannot claim
+  // a writing set is a reading one to slip past the free tier's limits.
+  const gate = await checkPracticeAccess(user, qs.map((q) => q.section as SectionKey));
+  if (gate) return gate;
 
   // One id for the whole submit, so history can show "3 / 4 correct" instead of
   // four unrelated one-question attempts.

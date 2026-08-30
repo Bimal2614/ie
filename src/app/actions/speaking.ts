@@ -5,6 +5,7 @@ import { uploadSpeakingAudio } from "@/lib/speech/s3";
 import { toWav16kMono, wavDurationSeconds } from "@/lib/speech/transcode";
 import { scoreAttemptSpeakingFor } from "@/lib/scoring/score-attempt";
 import { guardAi, RateLimitError } from "@/lib/security/rate-guard";
+import { checkAiScoring } from "@/lib/security/plan-guard";
 
 /**
  * Speaking answers: store the recording, then score it server-side.
@@ -26,8 +27,17 @@ const MAX_RECORDING_SECONDS = 125;
  * Called when a recording stops. Normalises the audio, stores it, and returns
  * only its location — the answer payload carries the URL, never a score.
  */
-export async function storeSpeakingRecording(form: FormData): Promise<{ audioUrl: string } | { error: string }> {
+export async function storeSpeakingRecording(
+  form: FormData,
+): Promise<{ audioUrl: string } | { error: string; blocked?: boolean }> {
   const user = await requireUser();
+
+  // A plan that cannot have this scored does not upload it either: transcoding
+  // and storing audio no examiner will ever hear is pure cost. `blocked` tells
+  // the recorder this is a plan matter, not a failure — the candidate keeps
+  // practising, and the dialog at submit explains what a plan would buy.
+  const gate = checkAiScoring(user);
+  if (gate) return { error: gate.message, blocked: true };
 
   const file = form.get("audio");
   if (!(file instanceof Blob)) return { error: "No audio supplied." };
@@ -87,6 +97,9 @@ export async function scoreAttemptSpeaking(
   attemptId: string,
 ): Promise<{ scored: number; limited?: boolean; message?: string }> {
   const user = await requireUser();
+
+  const gate = checkAiScoring(user);
+  if (gate) return { scored: 0, limited: true, message: gate.message };
 
   try {
     await guardAi(user.id);

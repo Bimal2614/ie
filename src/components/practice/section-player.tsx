@@ -14,6 +14,8 @@ import {
   SECTIONS,
   type SectionKey,
 } from "@/lib/ielts";
+import { isPlanBlock, type PlanBlock } from "@/lib/plans";
+import { PlanBlockDialog } from "./plan-block-dialog";
 import {
   submitSectionPractice,
   type SectionPracticeResult,
@@ -54,6 +56,8 @@ export function SectionPlayer({
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState<SectionPracticeResult | null>(null);
+  /** Set when the plan refused the submit. The answers stay on screen. */
+  const [blocked, setBlocked] = useState<PlanBlock | null>(null);
   const [current, setCurrent] = useState<number | null>(null);
   /** Questions marked to come back to — the real paper's flag column. */
   const [flagged, setFlagged] = useState<Set<string>>(new Set());
@@ -154,8 +158,15 @@ export function SectionPlayer({
 
   const onSubmit = async () => {
     setPending(true);
+    setBlocked(null);
     try {
-      setResult(await submitSectionPractice(section.id, answers));
+      const res = await submitSectionPractice(section.id, answers);
+      // Nothing graded and nothing cleared — see PlanBlockNotice.
+      if (isPlanBlock(res)) {
+        setBlocked(res);
+        return;
+      }
+      setResult(res);
       setCurrent(null);
       // The attempt is over: the marks on the passage go with it, so a return
       // visit starts from a clean page rather than last time's findings.
@@ -167,6 +178,7 @@ export function SectionPlayer({
 
   const reset = () => {
     setResult(null);
+    setBlocked(null);
     setAnswers({});
     setCurrent(null);
     // A flag says "come back to this before you submit". Carrying it into a
@@ -368,6 +380,7 @@ export function SectionPlayer({
         }}
         onCancel={() => setConfirming(false)}
       />
+      <PlanBlockDialog block={blocked} onClose={() => setBlocked(null)} />
     </ExamShell>
   );
 }

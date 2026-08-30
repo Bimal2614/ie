@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 import { anyUploadPending, isAnswered, type Answer } from "@/lib/question-content";
 import { QUESTION_TYPES, SECTIONS, hasSideStimulus, isAiScored } from "@/lib/ielts";
 import { submitPractice, type PracticeResult } from "@/app/actions/practice";
+import { isPlanBlock, type PlanBlock } from "@/lib/plans";
+import { PlanBlockDialog } from "./plan-block-dialog";
 import { ExamShell, type StripPart } from "@/components/exam/exam-shell";
 import { SplitPane } from "@/components/exam/split-pane";
 import { SetBody, taskHeading, type PlayerSet, type PlayerQuestion } from "./set-body";
@@ -43,6 +45,8 @@ export function QuestionPlayer({
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState<PracticeResult | null>(null);
+  /** Set when the plan refused the submit. The answers stay on screen. */
+  const [blocked, setBlocked] = useState<PlanBlock | null>(null);
   const [current, setCurrent] = useState<number | null>(null);
 
   const handleAnswer = useCallback((qid: string, value: Answer) => {
@@ -105,8 +109,15 @@ export function QuestionPlayer({
 
   const onSubmit = async () => {
     setPending(true);
+    setBlocked(null);
     try {
       const res = await submitPractice(set.id, answers);
+      // A plan limit is not a failure: nothing is graded, nothing is cleared,
+      // and the candidate keeps every answer they typed.
+      if (isPlanBlock(res)) {
+        setBlocked(res);
+        return;
+      }
       setResult(res);
       setCurrent(null);
       // Nothing to kick off: submitPractice schedules AI scoring server-side
@@ -118,6 +129,7 @@ export function QuestionPlayer({
 
   const reset = () => {
     setResult(null);
+    setBlocked(null);
     setAnswers({});
     setCurrent(null);
   };
@@ -261,6 +273,8 @@ export function QuestionPlayer({
       }
     >
       {body}
+      {/* Over the paper, not in place of it: the answers stay visible behind. */}
+      <PlanBlockDialog block={blocked} onClose={() => setBlocked(null)} />
     </ExamShell>
   );
 }

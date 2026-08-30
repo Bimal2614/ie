@@ -46,6 +46,7 @@ import { resolvePrompts } from "@/lib/scoring/prompts";
 import { speakingFeedback, unscorableFeedback } from "@/lib/scoring/speaking-feedback";
 import { mapWithConcurrency } from "@/lib/scoring/concurrency";
 import { guardAi, guardGeneral, RateLimitError } from "@/lib/security/rate-guard";
+import { checkAiScoring, checkMockAccess } from "@/lib/security/plan-guard";
 import { mediaUrl } from "@/lib/media-urls";
 
 /**
@@ -185,6 +186,12 @@ export async function getMockCatalogue(
 export async function startMock(formData: FormData): Promise<void> {
   const user = await requireUser();
   await guardGeneral(user.id);
+
+  // Full papers are a paid feature. A form action cannot hand a message back,
+  // so a blocked candidate goes to the pricing page with the reason in the URL
+  // rather than being bounced silently to a catalogue they cannot use.
+  const gate = await checkMockAccess(user);
+  if (gate) redirect(`/pricing?blocked=mock&plan=${gate.requiredPlan}`);
 
   const mockTestId = String(formData.get("mockTestId") ?? "");
   if (!mockTestId) redirect("/mock-tests");
@@ -664,6 +671,9 @@ async function submitSitting(
  */
 export async function scoreMockSpeaking(sessionId: string): Promise<{ scored: number }> {
   const user = await requireUser();
+  // Defence in depth: starting the sitting was already gated, but a plan can
+  // lapse between hand-in and the report being opened.
+  if (checkAiScoring(user)) return { scored: 0 };
 
   const [session] = await db
     .select({ id: mockTestSessions.id })
@@ -799,6 +809,7 @@ export async function scoreMockSpeaking(sessionId: string): Promise<{ scored: nu
  */
 export async function scoreMockWriting(sessionId: string): Promise<{ scored: number }> {
   const user = await requireUser();
+  if (checkAiScoring(user)) return { scored: 0 };
 
   const [session] = await db
     .select({ id: mockTestSessions.id })

@@ -21,6 +21,12 @@ import type { SectionQuestions } from "../lib/question-content";
 export const userRole = pgEnum("user_role", ["user", "admin"]);
 // IELTS comes in two streams; a user studies toward one (can change later).
 export const ieltsModule = pgEnum("ielts_module", ["academic", "general"]);
+/**
+ * What a candidate has paid for. The entitlements each one buys live in
+ * src/lib/plans.ts — this column is only the identity, so a change of price or
+ * of what a tier includes never needs a migration.
+ */
+export const userPlan = pgEnum("user_plan", ["free", "pro", "premium"]);
 
 /* ------------------------------------------------------------------ *
  * Users
@@ -49,6 +55,20 @@ export const users = pgTable(
     // before we have a number, and the app shell then prompts for one.
     phone: text(),
     role: userRole().notNull().default("user"),
+
+    /**
+     * Subscription tier. The SERVER's copy — every gate reads this column (via
+     * the session), never anything the client sent.
+     *
+     * There is no billing integration yet, so nothing in the app promotes an
+     * account: a paid plan is set out of band (admin/DB, later a payment
+     * webhook) and every account starts on `free`. `planExpiresAt` is what a
+     * lapsed subscription sets — a past timestamp reads as `free` without
+     * rewriting the tier, so a renewal restores the old one and history keeps
+     * showing what the candidate actually had. NULL means "does not expire".
+     */
+    plan: userPlan().notNull().default("free"),
+    planExpiresAt: timestamp({ withTimezone: true }),
 
     // IELTS study profile
     targetModule: ieltsModule().notNull().default("academic"),
@@ -138,6 +158,178 @@ export const authTokens = pgTable(
   ],
 );
 
+/* ================================================================== *
+ * BILLING
+ *
+ *   subscriptions      one PURCHASED PERIOD of a plan - what was bought, when
+ *                      it runs from, when it lapses, and how it ended
+ *   subscription_logs  append-only history of everything that happened to a
+ *                      subscription (and to a user's tier), for support and
+ *                      for reconstructing "what did they have on the 3rd?"
+ *
+ * WHY `users.plan` STILL EXISTS ALONGSIDE THESE.
+ * Every gated action has to know the tier, and it already loads the user row to
+ * authenticate the request. Deriving the tier from `subscriptions` instead would
+ * add a join to the hot path of every submit. So `users.plan` +
+ * `users.plan_expires_at` are the cached answer, `subscriptions` is the record
+ * of truth, and one writer (src/lib/subscriptions.ts) is the only thing allowed
+ * to move them - never a route by hand.
+ * ================================================================== */
+
+export const subscriptionStatus = pgEnum("subscription_status", [
+  /** Paid and inside its period. */
+  "active",
+  /** Cancellation requested; still entitled until `current_period_end`. */
+  "cancelling",
+  /** Ran to its end without renewing - what the cron sweep writes. */
+  "expired",
+  /** Ended early: an admin revoke or a refund. */
+  "cancelled",
+  /** Renewal payment failed; entitlement held during the grace window. */
+  "past_due",
+]);
+
+export const subscriptions = pgTable(
+  "subscriptions",
+  {
+    id: uuid().defaultRandom().primaryKey(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+
+    /** The tier this period grants. Never "free" - free is the absence of one. */
+    plan: userPlan().notNull(),
+    status: subscriptionStatus().notNull().default("active"),
+
+    /**
+     * The period's clock.
+     *
+     * `startsAt` is when this subscription first began and is kept across
+     * renewals, so "customer since" survives; the CURRENT paid window is
+     * `currentPeriodStart` -> `currentPeriodEnd`, which a renewal rolls forward
+     * on the same row. `endsAt` is written once, when it truly stops.
+     */
+    startsAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    currentPeriodStart: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    /**
+     * When this paid window closes. Both paid tiers bill monthly, so the writer
+     * computes it as one calendar month from the start - there is no cadence
+     * column, because the plan already says what was bought. NULL means "does
+     * not lapse", which is how an admin grants an open-ended account.
+     */
+    currentPeriodEnd: timestamp({ withTimezone: true }),
+    endsAt: timestamp({ withTimezone: true }),
+
+    /**
+     * Set the moment a candidate asks to cancel. Entitlement is NOT withdrawn
+     * here - they paid to the end of the period, so the sweep is what takes it
+     * away at `current_period_end`.
+     */
+    cancelAtPeriodEnd: boolean().notNull().default(false),
+    cancelledAt: timestamp({ withTimezone: true }),
+    cancelReason: text(),
+
+    /** Minor units (cents/paise) - never a float, money must not round. */
+    priceCents: integer(),
+    currency: text().notNull().default("USD"),
+
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("subscriptions_user_idx").on(t.userId),
+    /**
+     * The sweep's index: "everything still entitled whose window has closed".
+     * Status first, then the date, so the scan touches only live rows.
+     */
+    index("subscriptions_status_period_end_idx").on(t.status, t.currentPeriodEnd),
+  ],
+);
+
+/** What happened. One value per state change a subscription can undergo. */
+export const subscriptionEventType = pgEnum("subscription_event_type", [
+  "created",
+  "activated",
+  "renewed",
+  "upgraded",
+  "downgraded",
+  "cancel_requested",
+  "cancelled",
+  "expired",
+  "reactivated",
+  "payment_succeeded",
+  "payment_failed",
+  "refunded",
+  "plan_granted",
+  "plan_revoked",
+]);
+
+/** Who caused it - a candidate, an admin, a provider webhook, or the sweep. */
+export const subscriptionActor = pgEnum("subscription_actor", ["user", "admin", "system", "webhook"]);
+
+/**
+ * Everything that has ever happened to a user's billing, append-only.
+ *
+ * Kept SEPARATE from `audit_log`: that one is security forensics (logins, rate
+ * limits) keyed by a free-text event, and folding money into it means support
+ * has to grep. This is the billing ledger - one row per state change, each
+ * carrying the tier on both sides of it, so "when did they lose Pro, and who
+ * took it" is one indexed read rather than an inference from a diff.
+ *
+ * Nothing here is ever updated or deleted. A mistake is corrected by writing the
+ * correcting event, exactly as a ledger works.
+ */
+export const subscriptionLogs = pgTable(
+  "subscription_logs",
+  {
+    id: uuid().defaultRandom().primaryKey(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    /**
+     * SET NULL, not CASCADE: a subscription row may be pruned one day, and the
+     * ledger of what a candidate was charged has to outlive it.
+     */
+    subscriptionId: uuid().references(() => subscriptions.id, { onDelete: "set null" }),
+
+    event: subscriptionEventType().notNull(),
+    actor: subscriptionActor().notNull().default("system"),
+    /** The admin who acted, when `actor` is "admin". */
+    actorUserId: uuid().references(() => users.id, { onDelete: "set null" }),
+
+    /** The tier on each side of the event - "free" is a legitimate value here. */
+    fromPlan: userPlan(),
+    toPlan: userPlan(),
+    /** The subscription's status after the event, so a replay needs no joins. */
+    status: subscriptionStatus(),
+
+    /** When the entitlement started and stopped, as of this event. */
+    effectiveAt: timestamp({ withTimezone: true }),
+    expiresAt: timestamp({ withTimezone: true }),
+
+    amountCents: integer(),
+    currency: text(),
+
+    /** Human-readable reason, shown to support. Never a stack trace. */
+    note: text(),
+    /**
+     * Anything else worth keeping, unindexed: a payment id, a gateway's raw
+     * callback, the admin's ticket number. Deliberately open - when a payment
+     * gateway is wired in, its references land here rather than costing a
+     * migration and a column nothing else reads.
+     */
+    metadata: jsonb(),
+
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    // Support reads one user's billing story newest-first.
+    index("subscription_logs_user_created_idx").on(t.userId, t.createdAt),
+    index("subscription_logs_subscription_idx").on(t.subscriptionId),
+    index("subscription_logs_event_idx").on(t.event),
+  ],
+);
+
 /* ------------------------------------------------------------------ *
  * Rate limiting (DB-backed sliding window)
  *
@@ -178,6 +370,10 @@ export const auditLog = pgTable(
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Session = typeof sessions.$inferSelect;
+export type Subscription = typeof subscriptions.$inferSelect;
+export type NewSubscription = typeof subscriptions.$inferInsert;
+export type SubscriptionLog = typeof subscriptionLogs.$inferSelect;
+export type NewSubscriptionLog = typeof subscriptionLogs.$inferInsert;
 
 /* ================================================================== *
  * CONTENT, PRACTICE & MOCK TESTS

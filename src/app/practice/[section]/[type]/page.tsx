@@ -29,6 +29,11 @@ export default async function PracticeTypePage({
   if (!SECTION_ORDER.includes(section as SectionKey)) notFound();
   if (!(type in QUESTION_TYPES)) notFound();
 
+  // NO PLAN GATE HERE, deliberately. Practising is free on every tier; what a
+  // plan buys is the AI examiner's band. Turning someone away at the door means
+  // they cannot even read a Task 2 prompt, and a candidate who has not seen the
+  // work has no reason to pay for it. submitPractice is where the plan answers.
+
   // Prefetch first SET (passage + all questions) + attempted set indices
   const [initialData, initialAttempted] = await Promise.all([
     getSetPaginated(section, type, 1),

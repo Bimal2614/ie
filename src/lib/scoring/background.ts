@@ -5,6 +5,7 @@ import { and, eq, inArray, isNull } from "drizzle-orm";
 import { db } from "@/db";
 import { userResponses } from "@/db/schema";
 import { guardAi, RateLimitError } from "@/lib/security/rate-guard";
+import { userMayUseAiScoring } from "@/lib/security/plan-guard";
 import { scoreAttemptSpeakingFor, scoreAttemptWritingFor } from "./score-attempt";
 
 /**
@@ -51,6 +52,13 @@ export function scheduleAttemptScoring(userId: string, attemptId: string): void 
           ),
         );
       if (pending.length === 0) return;
+
+      // The last check before money is spent. The submit that scheduled this
+      // was already gated, but this callback outlives its request: a plan can
+      // lapse in between, and a row written while entitled must not pull a
+      // scoring call afterwards. Reads the tier from the row, since there is no
+      // session here. Rows stay band-less, exactly as an outage leaves them.
+      if (!(await userMayUseAiScoring(userId))) return;
 
       const sections = new Set(pending.map((p) => p.section));
       await guardAi(userId);

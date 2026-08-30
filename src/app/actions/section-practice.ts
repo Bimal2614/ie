@@ -8,6 +8,8 @@ import { openSection } from "@/lib/practice-sections";
 import { QUESTION_TYPES, isObjective, type QuestionTypeKey } from "@/lib/ielts";
 import { gradeMarks } from "@/lib/grading";
 import { guardGeneral } from "@/lib/security/rate-guard";
+import { checkPracticeAccess, type PlanBlock } from "@/lib/security/plan-guard";
+import type { SectionKey } from "@/lib/plans";
 import { scheduleAttemptScoring } from "@/lib/scoring/background";
 
 /** Answers arrive keyed by exam number — the only id a jsonb item has. */
@@ -45,15 +47,23 @@ export type SectionPracticeResult = {
  * answer is the only thing it can tell us. Marks are per item: one gap, one
  * mark, exactly as the answer sheet works.
  */
+export type SectionPracticeSubmission = SectionPracticeResult | PlanBlock;
+
 export async function submitSectionPractice(
   sectionId: string,
   answers: AnswerMap,
-): Promise<SectionPracticeResult> {
+): Promise<SectionPracticeSubmission> {
   const user = await requireUser();
   await guardGeneral(user.id);
 
   const section = await openSection(sectionId);
   if (!section) throw new Error("Section not found");
+
+  // Same gate as the question-practice path, on the skill this part actually
+  // is — a Writing part cannot be submitted from a plan that doesn't include
+  // Writing, however the candidate reached it.
+  const gate = await checkPracticeAccess(user, [section.sectionType as SectionKey]);
+  if (gate) return gate;
 
   const attemptId = randomUUID();
   const results: SectionItemResult[] = [];
