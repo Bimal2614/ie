@@ -79,8 +79,8 @@ const S3_STUDENTS = "https://ielts-ace-files.s3.us-east-1.amazonaws.com/students
 
 export const STUDENT_RESULTS: StudentResult[] = [
   {
-    name: "Aman Pandey",
-    place: "Rajkot, IN",
+    name: "Aman Solanki",
+    place: "Navsari, IN",
     from: 6.0,
     to: 7.5,
     module: "Academic",
@@ -92,7 +92,7 @@ export const STUDENT_RESULTS: StudentResult[] = [
     name: "Ayan Shah",
     place: "Ahmedabad, IN",
     from: 7.0,
-    to: 8.5,
+    to: 8.0,
     module: "Academic",
     quote:
       "Full mock tests under real timing were the difference. By exam day nothing felt new.",
@@ -108,29 +108,29 @@ export const STUDENT_RESULTS: StudentResult[] = [
       "I kept missing True/False/Not Given until I drilled them daily. Reading went up a full band.",
     photo: `${S3_STUDENTS}/bhavya-kakadiya.jpeg`,
   },
-  {
-    name: "Chen Yuting",
-    place: "Shanghai, CN",
-    from: 6.5,
-    to: 7.5,
-    module: "Academic",
-    quote:
-      "An instant band on Fluency and Pronunciation showed me habits I didn't know I had.",
-    photo: `${S3_STUDENTS}/chen-yuting.jpg`,
-  },
-  {
-    name: "Chioma Okonkwo",
-    place: "Lagos, NG",
-    from: 6.5,
-    to: 8.0,
-    module: "General",
-    quote:
-      "The band calculator kept my target honest instead of guessing. I landed well past it.",
-    photo: `${S3_STUDENTS}/chioma-okonkwo.jpg`,
-  },
+  // {
+  //   name: "Chen Yuting",
+  //   place: "Chengdu, CN",
+  //   from: 6.5,
+  //   to: 7.5,
+  //   module: "Academic",
+  //   quote:
+  //     "An instant band on Fluency and Pronunciation showed me habits I didn't know I had.",
+  //   photo: `${S3_STUDENTS}/chen-yuting.jpg`,
+  // },
+//  {
+//     name: "Chioma Okonkwo",
+//     place: "Lagos, NG",
+//     from: 6.5,
+//     to: 8.0,
+//     module: "General",
+//     quote:
+//       "The band calculator kept my target honest instead of guessing. I landed well past it.",
+//     photo: `${S3_STUDENTS}/chioma-okonkwo.jpg`,
+//   }, 
   {
     name: "Harshit Kankotiya",
-    place: "Rajkot, IN",
+    place: "Surat, IN",
     from: 5.5,
     to: 6.5,
     module: "General",
@@ -148,51 +148,51 @@ export const STUDENT_RESULTS: StudentResult[] = [
       "Seeing all four Writing criteria showed me Lexical Resource, not grammar, held me back.",
     photo: `${S3_STUDENTS}/Jay+Suhagiya+6.5.jpeg`,
   },
-  {
-    name: "Lena Müller",
-    place: "Berlin, DE",
-    from: 6.5,
-    to: 7.5,
-    module: "Academic",
-    quote:
-      "The AI marked every hesitation. I had no idea I was pausing that much in Part 3.",
-    photo: `${S3_STUDENTS}/lena-muller.jpg`,
-  },
-  {
-    name: "Li Meiling",
-    place: "Beijing, CN",
-    from: 7.0,
-    to: 8.5,
-    module: "Academic",
-    quote:
-      "Practising the exact question types I kept failing is what pushed me past 8.",
-    photo: `${S3_STUDENTS}/li-meiling.jpg`,
-  },
-  {
-    name: "Mandeep Singh",
-    place: "Amritsar, IN",
-    from: 6.5,
-    to: 8.0,
-    module: "Academic",
-    quote:
-      "The Task 1 templates gave me a structure I could rely on under time pressure.",
-    photo: `${S3_STUDENTS}/mandeep-singh.jpg`,
-  },
-  {
-    name: "Mehmet Yılmaz",
-    place: "Istanbul, TR",
-    from: 6.0,
-    to: 7.5,
-    module: "Academic",
-    quote:
-      "Every Speaking answer came back with a band and specific feedback in seconds.",
-    photo: `${S3_STUDENTS}/mehmet-yilmaz.jpg`,
-  },
+  // {
+  //   name: "Lena Müller",
+  //   place: "Berlin, DE",
+  //   from: 6.5,
+  //   to: 7.5,
+  //   module: "Academic",
+  //   quote:
+  //     "The AI marked every hesitation. I had no idea I was pausing that much in Part 3.",
+  //   photo: `${S3_STUDENTS}/lena-muller.jpg`,
+  // },
+  // {
+  //   name: "Li Meiling",
+  //   place: "Beijing, CN",
+  //   from: 7.0,
+  //   to: 8.5,
+  //   module: "Academic",
+  //   quote:
+  //     "Practising the exact question types I kept failing is what pushed me past 8.",
+  //   photo: `${S3_STUDENTS}/li-meiling.jpg`,
+  // },
+  // {
+  //   name: "Mandeep Sidhu",
+  //   place: "Jalandhar, IN",
+  //   from: 6.5,
+  //   to: 8.0,
+  //   module: "Academic",
+  //   quote:
+  //     "The Task 1 templates gave me a structure I could rely on under time pressure.",
+  //   photo: `${S3_STUDENTS}/mandeep-singh.jpg`,
+  // },
+  // {
+  //   name: "Mehmet Yılmaz",
+  //   place: "Istanbul, TR",
+  //   from: 6.0,
+  //   to: 7.5,
+  //   module: "Academic",
+  //   quote:
+  //     "Every Speaking answer came back with a band and specific feedback in seconds.",
+  //   photo: `${S3_STUDENTS}/mehmet-yilmaz.jpg`,
+  // },
   {
     name: "Neil Patel",
     place: "Vadodara, IN",
     from: 6.5,
-    to: 8.0,
+    to: 7.5,
     module: "Academic",
     quote:
       "Grammar was quietly capping my Writing score. The criteria breakdown made the fix obvious.",
@@ -220,7 +220,7 @@ export const STUDENT_RESULTS: StudentResult[] = [
   },
   {
     name: "Subham Shekhada",
-    place: "Rajkot, IN",
+    place: "Surat, IN",
     from: 5.0,
     to: 6.5,
     module: "Academic",
@@ -228,16 +228,16 @@ export const STUDENT_RESULTS: StudentResult[] = [
       "I finally understood what examiners reward instead of just speaking fluently.",
     photo: `${S3_STUDENTS}/subham-shekhada.jpeg`,
   },
-  {
-    name: "Wang Xiaoli",
-    place: "Guangzhou, CN",
-    from: 6.5,
-    to: 8.0,
-    module: "Academic",
-    quote:
-      "Four full mocks on 2026 timing meant exam day was a repeat, not a surprise.",
-    photo: `${S3_STUDENTS}/wang-xiaoli.jpg`,
-  },
+  // {
+  //   name: "Wang Xiaoli",
+  //   place: "Guangzhou, CN",
+  //   from: 6.5,
+  //   to: 8.0,
+  //   module: "Academic",
+  //   quote:
+  //     "Four full mocks on 2026 timing meant exam day was a repeat, not a surprise.",
+  //   photo: `${S3_STUDENTS}/wang-xiaoli.jpg`,
+  // },
 ];
 
 /**
