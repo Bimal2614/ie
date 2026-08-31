@@ -20,6 +20,16 @@ export const metadata = pageMeta({
   keywords: [...KEYWORDS.core, "IELTS practice price", "IELTS course cost", "IELTS preparation online cost", "IELTS practice subscription"],
 });
 
+/**
+ * "$50" for a plan that now costs $35 — the pre-discount price, or `null` for a
+ * tier that isn't discounted. Read from the same table as the price beside it,
+ * so a promotion that ends cannot leave a struck-out figure behind on the card.
+ */
+function listPrice(tier: PlanKey): string | null {
+  const cents = PLAN_ENTITLEMENTS[tier].listPriceCents;
+  return cents === null ? null : formatPrice(cents);
+}
+
 /*
  * The cards.
  *
@@ -39,6 +49,7 @@ const PLANS = [
     name: "Free",
     tier: "free" as PlanKey,
     price: formatPrice(PLAN_ENTITLEMENTS.free.priceCents),
+    was: listPrice("free"),
     cadence: billingPeriodLabel("free"),
     tagline: "Get a feel for how IELTSVega practice works.",
     cta: "Start free",
@@ -57,6 +68,7 @@ const PLANS = [
     name: "Premium",
     tier: "premium" as PlanKey,
     price: formatPrice(PLAN_ENTITLEMENTS.premium.priceCents),
+    was: listPrice("premium"),
     // "3 months" — one payment covers the whole term. `billingMonths` in
     // src/lib/plans.ts is what both this and the granted window read from.
     cadence: billingPeriodLabel("premium"),
@@ -122,8 +134,22 @@ export default function PricingPage() {
                 </div>
                 <p className="mt-2 text-sm text-ink-muted">{p.tagline}</p>
 
-                <div className="mt-6 flex items-baseline gap-1.5">
-                  <span className="font-serif text-5xl tracking-tight text-ink">{p.price}</span>
+                {/* The struck price is the tier's own `listPriceCents`, never a
+                    number typed here, and it simply doesn't render on a tier
+                    that isn't discounted. "Was"/"now" are spoken but not shown:
+                    line-through is a visual convention a screen reader gives no
+                    hint of, so without them both figures read as one price. */}
+                <div className="mt-6 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                  {p.was && (
+                    <span className="font-serif text-2xl tracking-tight text-ink-muted line-through">
+                      <span className="sr-only">Was </span>
+                      {p.was}
+                    </span>
+                  )}
+                  <span className="font-serif text-5xl tracking-tight text-ink">
+                    {p.was && <span className="sr-only">now </span>}
+                    {p.price}
+                  </span>
                   <span className="text-sm text-ink-muted">/ {p.cadence}</span>
                 </div>
 

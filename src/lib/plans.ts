@@ -25,6 +25,18 @@ export type Entitlements = {
   /** What ONE payment costs, in minor units (cents). 0 for free. */
   priceCents: number;
   /**
+   * What the tier cost BEFORE the current discount, in minor units.
+   * `null` when it is not discounted — and on free, which has no price to cut.
+   *
+   * SHOWN STRUCK THROUGH, NEVER CHARGED. `priceCents` above remains the single
+   * number a payment, a subscription row and every gate read; this one is copy.
+   * It lives here rather than in the pricing page's markup for the same reason
+   * the real price does: a "was $50" typed into a card is a claim about a
+   * purchase, and the hand-written one is what drifts. Ending the promotion is
+   * setting this back to `null`, not editing figures in a page.
+   */
+  listPriceCents: number | null;
+  /**
    * How long that one payment buys, in months.
    *
    * THE BILLING TERM, NOT AN ALLOWANCE. The monthly quotas below still reset on
@@ -66,6 +78,7 @@ export const PLANS: Record<PlanKey, Entitlements> = {
   free: {
     label: "Free",
     priceCents: 0,
+    listPriceCents: null,
     billingMonths: 0,
     monthlyPracticeAnswers: 50,
     practiceSections: ["reading", "listening"],
@@ -77,6 +90,9 @@ export const PLANS: Record<PlanKey, Entitlements> = {
   pro: {
     label: "Pro",
     priceCents: 1500,
+    // $20 before the launch discount. Kept in step with the hidden card: if Pro
+    // goes back on sale it is already priced, discount and all.
+    listPriceCents: 2000,
     // Pro is HIDDEN, not retired — see OFFERED_PLANS below, and the card it
     // still needs on the pricing page. One month is the term it has always been
     // sold on, so accounts already holding it keep the window they bought;
@@ -92,6 +108,7 @@ export const PLANS: Record<PlanKey, Entitlements> = {
   premium: {
     label: "Premium",
     priceCents: 3500,
+    listPriceCents: 5000,
     billingMonths: 3,
     monthlyPracticeAnswers: null,
     practiceSections: ["reading", "listening", "writing", "speaking"],
