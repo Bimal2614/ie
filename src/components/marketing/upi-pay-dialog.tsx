@@ -124,7 +124,7 @@ export function UpiPayDialog({
             Scan to pay
           </h2>
           <p className="mt-1 flex items-baseline gap-1.5 text-sm">
-            <span className="text-lg font-semibold text-ink">{price}</span> + GST
+            <span className="text-lg font-semibold text-ink">{price}</span>
             <span className="text-ink-muted">/ {billingPeriodLabel(plan)}</span>
           </p>
         </div>
