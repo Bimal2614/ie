@@ -11,8 +11,6 @@ import { SITE_URL as BASE } from "@/lib/site";
  * (see robots.ts).
  */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date();
-
   const staticPaths = [
     "", // home
     "/pricing",
@@ -72,13 +70,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
    * per-request timestamp described above. Undated posts now ship no `lastmod`
    * rather than a false one.
    *
-   * Posts dated in the future are dropped entirely. A `lastmod` ahead of the
-   * crawl time is a malformed signal, and the post is not meant to be public
-   * yet either — this keeps the sitemap and the intent in agreement.
+   * Every post is listed. There is no scheduling here — a post in POSTS is live
+   * and linked from /blog the moment it ships, so filtering the sitemap on the
+   * date would hide a reachable page from Google while leaving it crawlable.
+   * `publishedAt` must therefore never be set in the future; two posts briefly
+   * were, which is what surfaced this.
    */
-  const blogEntries: MetadataRoute.Sitemap = POSTS.filter(
-    (p) => !p.publishedAt || new Date(p.publishedAt) <= now,
-  ).map((p) => ({
+  const blogEntries: MetadataRoute.Sitemap = POSTS.map((p) => ({
     url: `${BASE}/blog/${p.slug}`,
     ...(p.publishedAt ? { lastModified: new Date(p.publishedAt) } : {}),
     changeFrequency: "weekly",

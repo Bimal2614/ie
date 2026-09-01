@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { pageMeta } from "@/lib/seo";
+import { BRAND, LOGO_URL, pageMeta } from "@/lib/seo";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Clock, ArrowRight } from "lucide-react";
@@ -59,8 +59,34 @@ function ArticleJsonLd({ post }: { post: (typeof POSTS)[number] }) {
     articleSection: post.category,
     url: `${base}/blog/${post.slug}`,
     mainEntityOfPage: { "@type": "WebPage", "@id": `${base}/blog/${post.slug}` },
-    author: { "@type": "Organization", name: "IELTSVega", url: base },
-    publisher: { "@type": "Organization", name: "IELTSVega", url: base },
+    /**
+     * `image` is the property Google's Article documentation asks for and the
+     * one every post here was shipping without — all 46 of them. The picture
+     * already exists: opengraph-image.tsx renders a 1200x630 PNG per post, and
+     * the <meta og:image> tag points at it. It was simply never named in the
+     * structured data, so Google had a card image for social and nothing for
+     * search.
+     *
+     * The og:image meta carries a cache-busting query (…/opengraph-image?ab12…)
+     * that is generated per build and cannot be reconstructed here. The bare
+     * route serves the identical PNG — verified 200 image/png, 1200x630 — so
+     * the un-suffixed URL is the stable one to publish.
+     */
+    image: [`${base}/blog/${post.slug}/opengraph-image`],
+    author: { "@type": "Organization", name: BRAND, url: base },
+    publisher: {
+      "@type": "Organization",
+      name: BRAND,
+      url: base,
+      // Google rejects a favicon here and wants a real raster mark; LOGO_URL is
+      // the 512x512 PNG the Organization schema already uses elsewhere.
+      logo: { "@type": "ImageObject", url: LOGO_URL },
+    },
+    /**
+     * Thirteen of the 46 posts leave `publishedAt` unset, so they emit no
+     * date at all rather than a fabricated one — same rule the sitemap now
+     * follows. Giving those posts real dates is a content job, not a code one.
+     */
     ...(post.publishedAt
       ? { datePublished: post.publishedAt, dateModified: post.publishedAt }
       : {}),
