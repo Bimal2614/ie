@@ -74,6 +74,46 @@ const EnvSchema = z.object({
   //     is unset: an unauthenticated sweep would let anyone churn the ledger. ---
   CRON_SECRET: z.string().min(16, "CRON_SECRET must be at least 16 characters").optional(),
 
+  // --- Razorpay (recurring subscriptions). Optional: the app boots without
+  //     them and every paid button falls back to saying checkout is
+  //     unavailable, rather than opening a checkout that cannot charge.
+  //     The KEY ID is public (the browser needs it to open Checkout) and is
+  //     handed to the client by the checkout action, not by a NEXT_PUBLIC_
+  //     variable — that way a deployment with no keys ships no key at all.
+  //     The SECRET signs API calls and verifies the handler's signature; the
+  //     WEBHOOK secret is a DIFFERENT value, set when you create the webhook
+  //     in the Razorpay dashboard. ---
+  RAZORPAY_KEY_ID: z.string().optional(),
+  RAZORPAY_KEY_SECRET: z.string().optional(),
+  RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
+  /**
+   * The currency Razorpay actually charges in.
+   *
+   * `PLANS[].priceCents` is one number in minor units and this says what those
+   * minor units ARE — cents at USD, paise at INR. It is env-configurable and
+   * not a constant because it is an ACCOUNT capability, not a code decision:
+   * a Razorpay account charges INR out of the box and refuses anything else
+   * until "International Payments" is approved for it. If plan creation starts
+   * failing with a currency error, this is the one line that moves the whole
+   * app to INR — at which point the figures in src/lib/plans.ts are paise and
+   * want re-pricing, since $35 is not ₹0.35.
+   */
+  RAZORPAY_CURRENCY: z.string().length(3).toUpperCase().default("USD"),
+  /*
+   * The `plan_…` for each paid tier, created BY HAND in the Razorpay dashboard.
+   *
+   * IN THE ENVIRONMENT, not in src/lib/plans.ts, because a plan id is not a
+   * property of the tier — it is a property of the Razorpay ACCOUNT. Test mode
+   * and live mode issue different ids for the same plan, so an id committed
+   * beside `priceCents` would work perfectly until the day the live keys went
+   * in and then fail for everyone at once.
+   *
+   * Optional per tier: a tier with no id set simply cannot be bought, and says
+   * so, rather than falling back to a plan that charges something else.
+   */
+  RAZORPAY_PLAN_PREMIUM: z.string().optional(),
+  RAZORPAY_PLAN_PRO: z.string().optional(),
+
   // --- S3 (speaking audio storage). Optional for the same reason. ---
   AWS_ACCESS_KEY_ID: z.string().optional(),
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
@@ -106,6 +146,12 @@ export const env = EnvSchema.parse({
   RATE_LIMIT_VIOLATIONS_BEFORE_DEACTIVATE: process.env.RATE_LIMIT_VIOLATIONS_BEFORE_DEACTIVATE,
   RATE_LIMIT_VIOLATION_WINDOW_DAYS: process.env.RATE_LIMIT_VIOLATION_WINDOW_DAYS,
   CRON_SECRET: process.env.CRON_SECRET,
+  RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
+  RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET,
+  RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET,
+  RAZORPAY_CURRENCY: process.env.RAZORPAY_CURRENCY,
+  RAZORPAY_PLAN_PREMIUM: process.env.RAZORPAY_PLAN_PREMIUM,
+  RAZORPAY_PLAN_PRO: process.env.RAZORPAY_PLAN_PRO,
   AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
   AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
   AWS_REGION: process.env.AWS_REGION,
@@ -139,6 +185,41 @@ export function isEmailConfigured(): boolean {
 /** True when the scheduled subscription sweep can authenticate callers. */
 export function isCronConfigured(): boolean {
   return Boolean(env.CRON_SECRET);
+}
+
+/**
+ * True when Razorpay can both open a checkout and sign an API call.
+ *
+ * BOTH keys, for the same reason the Speaking check wants both halves: a key id
+ * with no secret opens a checkout that every server call behind it answers 401,
+ * which looks configured right up to the moment someone tries to pay.
+ * The webhook secret is deliberately NOT part of this — checkout works without
+ * it (the signed handler activates the plan); what is lost is renewals, and
+ * `isRazorpayWebhookConfigured` below is what guards that.
+ */
+export function isRazorpayConfigured(): boolean {
+  return Boolean(env.RAZORPAY_KEY_ID && env.RAZORPAY_KEY_SECRET);
+}
+
+/**
+ * The dashboard-created `plan_…` for a paid tier, or undefined if none is set.
+ *
+ * Keyed by the tier's own name so adding a tier is one env var, not a code
+ * change — but read through a function rather than by string-building the
+ * variable name, so a typo is a compile error instead of a silent undefined.
+ */
+export function razorpayPlanIdFor(plan: "pro" | "premium"): string | undefined {
+  return plan === "premium" ? env.RAZORPAY_PLAN_PREMIUM : env.RAZORPAY_PLAN_PRO;
+}
+
+/**
+ * True when the Razorpay webhook can authenticate a caller.
+ *
+ * The route stays CLOSED while this is unset, exactly as the cron sweep does:
+ * an unverified webhook is an open endpoint for granting anyone a paid plan.
+ */
+export function isRazorpayWebhookConfigured(): boolean {
+  return Boolean(env.RAZORPAY_WEBHOOK_SECRET);
 }
 
 /** True when Google OAuth is configured. */

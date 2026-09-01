@@ -23,6 +23,7 @@ import { effectivePlan, planRank, PLANS, toPlanKey, type PlanKey } from "@/lib/p
  */
 
 type Actor = "user" | "admin" | "system" | "webhook";
+type PaymentProvider = "manual" | "razorpay";
 type Status = "active" | "cancelling" | "expired" | "cancelled" | "past_due";
 
 /** Statuses that still entitle the user. Anything else has stopped granting. */
@@ -60,6 +61,28 @@ export async function currentSubscription(userId: string): Promise<Subscription 
     .from(subscriptions)
     .where(and(eq(subscriptions.userId, userId), inArray(subscriptions.status, [...LIVE_STATUSES])))
     .orderBy(desc(subscriptions.createdAt))
+    .limit(1);
+  return row ?? null;
+}
+
+/**
+ * The row a gateway's handle (`sub_…`) refers to, whatever state it is in.
+ *
+ * DELIBERATELY NOT FILTERED TO LIVE STATUSES. A webhook is the one caller that
+ * knows a subscription by this id, and the events it brings are often about a
+ * row that has stopped granting — a charge that lands after the sweep expired
+ * the window, a cancellation confirmed days later. Returning null for those
+ * would send the webhook down its "no local row, create one" path and open a
+ * second subscription for a mandate that already has one, which is exactly what
+ * the unique index on this column exists to make impossible.
+ */
+export async function subscriptionByProviderId(
+  providerSubscriptionId: string,
+): Promise<Subscription | null> {
+  const [row] = await db
+    .select()
+    .from(subscriptions)
+    .where(eq(subscriptions.providerSubscriptionId, providerSubscriptionId))
     .limit(1);
   return row ?? null;
 }
@@ -171,6 +194,18 @@ export type GrantInput = {
   note?: string | null;
   /** Payment reference, gateway payload, ticket number - anything worth keeping. */
   metadata?: Record<string, unknown> | null;
+  /**
+   * Who is billing this, when it is not a human.
+   *
+   * Defaults to `manual`, which is what an admin grant and a reconciled bank
+   * transfer are. A gateway passes its own name and the handle it knows the
+   * subscription by, and that handle is the ONLY thing a later webhook has to
+   * find this row with — omit it and the renewal three months from now has
+   * nowhere to land.
+   */
+  provider?: PaymentProvider;
+  providerSubscriptionId?: string | null;
+  providerPlanId?: string | null;
 };
 
 /**
@@ -227,6 +262,9 @@ export async function grantPlan(input: GrantInput): Promise<Subscription> {
         currentPeriodEnd: periodEnd,
         priceCents: input.priceCents ?? null,
         currency: input.currency ?? "USD",
+        provider: input.provider ?? "manual",
+        providerSubscriptionId: input.providerSubscriptionId ?? null,
+        providerPlanId: input.providerPlanId ?? null,
       })
       .returning();
 
@@ -278,9 +316,24 @@ export async function renewSubscription(
   subscriptionId: string,
   opts: {
     periodEnd?: Date | null;
+    /**
+     * Where the new window BEGINS, when the payer knows better than we do.
+     *
+     * Razorpay reports `current_start`/`current_end` for the cycle it has just
+     * charged, and those are the authoritative dates — they are what the
+     * customer's bank statement will agree with. Passing both makes this
+     * function idempotent, which is what a webhook needs: a redelivered
+     * `subscription.charged` writes the same window it wrote the first time,
+     * instead of adding another term to the end of the last one.
+     *
+     * Omit it and the window is computed the old way, from where the previous
+     * one ended — still right for a renewal nobody has dated for us.
+     */
+    periodStart?: Date;
     amountCents?: number | null;
     actor?: Actor;
     note?: string | null;
+    metadata?: Record<string, unknown> | null;
   } = {},
 ): Promise<void> {
   const now = new Date();
@@ -298,9 +351,10 @@ export async function renewSubscription(
     // that closed in the past renews from today instead, so a lapsed account
     // that comes back gets a whole period rather than a backdated one.
     const base =
-      sub.currentPeriodEnd && sub.currentPeriodEnd.getTime() > now.getTime()
+      opts.periodStart ??
+      (sub.currentPeriodEnd && sub.currentPeriodEnd.getTime() > now.getTime()
         ? sub.currentPeriodEnd
-        : now;
+        : now);
     // Renews for another of whatever the plan sells, so a quarterly tier rolls
     // forward a quarter rather than quietly becoming monthly on renewal.
     const periodEnd =
@@ -342,6 +396,7 @@ export async function renewSubscription(
         amountCents: opts.amountCents ?? sub.priceCents,
         currency: sub.currency,
         note: opts.note ?? null,
+        metadata: opts.metadata ?? null,
       },
       tx,
     );

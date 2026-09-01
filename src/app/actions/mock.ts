@@ -886,6 +886,7 @@ export async function scoreMockWriting(sessionId: string): Promise<{ scored: num
         aiFeedback: {
           onTask: s.onTask,
           wordCount: s.wordCount,
+          gradedWordCount: s.gradedWordCount,
           overallFeedback: s.overallFeedback,
           criteria: s.criteria,
           corrections: s.corrections,

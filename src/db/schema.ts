@@ -70,6 +70,18 @@ export const users = pgTable(
     plan: userPlan().notNull().default("free"),
     planExpiresAt: timestamp({ withTimezone: true }),
 
+    /**
+     * This account's Razorpay customer id (`cust_…`), created on first checkout
+     * and reused forever after.
+     *
+     * ON THE USER, not on the subscription, because that is what it identifies:
+     * one person who may buy, lapse and buy again. Creating a fresh customer
+     * per purchase would scatter one candidate's payments across several
+     * records in the Razorpay dashboard, which is precisely the view support
+     * reaches for when someone says "I was charged twice".
+     */
+    razorpayCustomerId: text(),
+
     // IELTS study profile
     targetModule: ieltsModule().notNull().default("academic"),
     targetBand: text(), // e.g. "7.5" — half-band increments, stored as text
@@ -176,6 +188,18 @@ export const authTokens = pgTable(
  * to move them - never a route by hand.
  * ================================================================== */
 
+/**
+ * Who is charging the card.
+ *
+ * `manual` is every subscription that exists because a human put it there — an
+ * admin grant, a UPI transfer reconciled by hand, a support credit. Those rows
+ * have no provider id and must never be handed to a gateway API, which is the
+ * whole reason this column exists rather than being inferred from
+ * `provider_subscription_id IS NULL`: "we could not find an id" and "there was
+ * never meant to be one" want different answers when a cancel button is pressed.
+ */
+export const paymentProvider = pgEnum("payment_provider", ["manual", "razorpay"]);
+
 export const subscriptionStatus = pgEnum("subscription_status", [
   /** Paid and inside its period. */
   "active",
@@ -234,6 +258,25 @@ export const subscriptions = pgTable(
     priceCents: integer(),
     currency: text().notNull().default("USD"),
 
+    /**
+     * Who is billing this, and what they call it.
+     *
+     * `provider` defaults to `manual` so every row that predates Razorpay - and
+     * every admin grant after it - keeps describing itself correctly.
+     * `providerSubscriptionId` is the `sub_…` handle: it is how a webhook that
+     * knows nothing but a Razorpay id finds the account it belongs to, and it
+     * is what a cancel request is sent against. UNIQUE, because two of our rows
+     * pointing at one Razorpay subscription would make a renewal ambiguous -
+     * and the writer relies on that, looking a row up by this id across EVERY
+     * status rather than inserting a second one.
+     * `providerPlanId` is the `plan_…` the subscription was opened on, kept so
+     * a row still says what price and cadence it was actually sold at after
+     * src/lib/plans.ts has moved on.
+     */
+    provider: paymentProvider().notNull().default("manual"),
+    providerSubscriptionId: text(),
+    providerPlanId: text(),
+
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
@@ -244,6 +287,8 @@ export const subscriptions = pgTable(
      * Status first, then the date, so the scan touches only live rows.
      */
     index("subscriptions_status_period_end_idx").on(t.status, t.currentPeriodEnd),
+    /** The webhook's index: "which account is `sub_xyz`?". NULLs don't conflict. */
+    uniqueIndex("subscriptions_provider_sub_uq").on(t.providerSubscriptionId),
   ],
 );
 
@@ -331,6 +376,37 @@ export const subscriptionLogs = pgTable(
   ],
 );
 
+/**
+ * Every provider webhook we have already acted on.
+ *
+ * PAYMENT WEBHOOKS ARRIVE MORE THAN ONCE. Razorpay retries anything it did not
+ * get a 2xx for, and a retry of `subscription.charged` replayed blind would
+ * roll a paid window forward a second time — a free renewal, granted by a
+ * network blip. The provider's own event id goes in here inside the same
+ * transaction that acts on it, so the second delivery collides and is dropped.
+ *
+ * `payload` keeps the raw body: when a candidate disputes a charge months
+ * later, what the gateway actually said is the only account of it that is not a
+ * reconstruction.
+ */
+export const webhookEvents = pgTable(
+  "webhook_events",
+  {
+    id: uuid().defaultRandom().primaryKey(),
+    provider: paymentProvider().notNull(),
+    /** The provider's id for this delivery (Razorpay: `x-razorpay-event-id`). */
+    eventId: text().notNull(),
+    /** e.g. "subscription.charged". Kept for filtering the table by eye. */
+    eventType: text().notNull(),
+    payload: jsonb(),
+    receivedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    /** The dedupe. Scoped by provider so two gateways cannot collide on an id. */
+    uniqueIndex("webhook_events_provider_event_uq").on(t.provider, t.eventId),
+  ],
+);
+
 /* ------------------------------------------------------------------ *
  * Rate limiting (DB-backed sliding window)
  *
@@ -375,6 +451,7 @@ export type Subscription = typeof subscriptions.$inferSelect;
 export type NewSubscription = typeof subscriptions.$inferInsert;
 export type SubscriptionLog = typeof subscriptionLogs.$inferSelect;
 export type NewSubscriptionLog = typeof subscriptionLogs.$inferInsert;
+export type WebhookEvent = typeof webhookEvents.$inferSelect;
 
 /* ================================================================== *
  * CONTENT, PRACTICE & MOCK TESTS

@@ -168,6 +168,51 @@ export const QUESTION_TYPES: Record<QuestionTypeKey, QuestionTypeMeta> = {
   speaking_part3: { key: "speaking_part3", label: "Part 3: two-way discussion", family: "speaking", presentation: "sequential", instruction: "Discuss more abstract questions related to the Part 2 topic.", modules: "both", shortDescription: "Discuss abstract ideas linked to the Part 2 topic.", scoredSkills: ["Fluency", "Pronunciation", "Vocabulary", "Grammar"], aiEvaluated: true, speakSeconds: 60 },
 };
 
+/**
+ * How much of a Writing response is actually graded.
+ *
+ * Twice the task minimum: 300 words for a 150-word Task 1, 500 for a 250-word
+ * Task 2. A real response never needs more than that, and the AI examiner is
+ * billed per word, so a candidate who pastes three thousand words is graded on
+ * the first 300 or 500 and the rest is cut. The editor stops accepting input at
+ * the same number, so nobody is silently marked on half of what they wrote.
+ */
+export const WRITING_WORD_CAP_FACTOR = 2;
+/**
+ * No task is capped below this, whatever it was authored with. A section saved
+ * with a small or mistyped minimum would otherwise cut real essays in half, and
+ * a wrong number in the CMS should not quietly change how anyone is marked.
+ */
+export const WRITING_WORD_CAP_FLOOR = 300;
+
+/** The graded ceiling for one writing task, honouring an authored minimum. */
+export function writingWordCap(
+  taskType: QuestionTypeKey,
+  wordLimitMin?: number | null,
+): number {
+  const min = wordLimitMin ?? QUESTION_TYPES[taskType]?.wordLimitMin ?? 150;
+  return Math.max(min * WRITING_WORD_CAP_FACTOR, WRITING_WORD_CAP_FLOOR);
+}
+
+/**
+ * The first `max` words of `text`, with the candidate's own spacing intact.
+ * Returns the text unchanged when it is already within the cap.
+ */
+export function truncateToWords(text: string, max: number): string {
+  const word = /\S+/g;
+  let seen = 0;
+  let m: RegExpExecArray | null;
+  while ((m = word.exec(text)) !== null) {
+    if (++seen === max) return text.slice(0, m.index + m[0].length);
+  }
+  return text;
+}
+
+/** Words in a response, counted the same way everywhere: runs of non-space. */
+export function countWords(text: string): number {
+  return text.trim() ? text.trim().split(/\s+/).length : 0;
+}
+
 /** Which question types each section offers (a type can appear in two sections). */
 export const SECTION_TYPES: Record<SectionKey, QuestionTypeKey[]> = {
   listening: [

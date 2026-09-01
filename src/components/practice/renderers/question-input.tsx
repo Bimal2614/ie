@@ -6,7 +6,13 @@ import { storeSpeakingRecording } from "@/app/actions/speaking";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { QUESTION_TYPES, type QuestionTypeKey } from "@/lib/ielts";
+import {
+  countWords,
+  QUESTION_TYPES,
+  truncateToWords,
+  writingWordCap,
+  type QuestionTypeKey,
+} from "@/lib/ielts";
 import type { Answer, OptionsLayout } from "@/lib/question-content";
 import { GapField, type GapBinding } from "./gap-field";
 import { AnnotatedText } from "./annotations";
@@ -302,9 +308,20 @@ function ShortAnswer({ question, value, disabled, state, onChange }: InputProps)
 
 function Writing({ question, value, disabled, onChange, fill }: InputProps) {
   const text = (value?.text as string) ?? "";
-  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+  const words = countWords(text);
   const min = question.wordLimitMin ?? 0;
   const under = min > 0 && words < min;
+  // Nothing past this is marked: the AI examiner is sent the first `max` words
+  // and no more (see `writingWordCap`), so the box stops taking input there
+  // rather than letting someone write a thousand words no one will read. A
+  // paste over the limit is cut to it on the spot.
+  const max = writingWordCap(question.questionType, question.wordLimitMin);
+  const atMax = words >= max;
+
+  const setText = (raw: string) => {
+    const next = countWords(raw) > max ? truncateToWords(raw, max) : raw;
+    onChange({ text: next, words: countWords(next) });
+  };
 
   return (
     <div className={cn("space-y-2", fill && "flex h-full min-h-0 flex-col")}>
@@ -313,7 +330,7 @@ function Writing({ question, value, disabled, onChange, fill }: InputProps) {
         disabled={disabled}
         value={text}
         placeholder="Write your response here…"
-        onChange={(e) => onChange({ text: e.target.value, words })}
+        onChange={(e) => setText(e.target.value)}
         /*
          * NO WRITING AID OF ANY KIND. The real test gives none, and spelling and
          * grammatical accuracy are two of the four things Writing is marked on —
@@ -344,10 +361,14 @@ function Writing({ question, value, disabled, onChange, fill }: InputProps) {
         <span className={cn("font-mono tabular-nums", under ? "text-danger" : "text-ink-muted")}>
           {words} {words === 1 ? "word" : "words"}
         </span>
-        {min > 0 && (
-          <span className="text-ink-muted">
-            {under ? `${min - words} more to reach the ${min}-word minimum` : `Minimum ${min} met`}
-          </span>
+        {atMax ? (
+          <span className="text-danger">Limit reached: only the first {max} words are marked.</span>
+        ) : (
+          min > 0 && (
+            <span className="text-ink-muted">
+              {under ? `${min - words} more to reach the ${min}-word minimum` : `Minimum ${min} met`}
+            </span>
+          )
         )}
       </div>
     </div>

@@ -1,5 +1,6 @@
 import "server-only";
 import { env, isWritingAiConfigured } from "@/lib/env";
+import { countWords, truncateToWords, writingWordCap } from "@/lib/ielts";
 import task1Descriptors from "@/app/utils/writing_band_descriptor_task_1.json";
 import task2Descriptors from "@/app/utils/writing_band_descriptor_task_2.json";
 
@@ -52,7 +53,10 @@ export type TaskCompliance =
 export type WritingScore = {
   /** Overall band = mean of the four criteria, rounded to the nearest half. */
   overall: number;
+  /** Everything the candidate wrote, graded or not. */
   wordCount: number;
+  /** How much of it was actually sent to be marked — see `writingWordCap`. */
+  gradedWordCount: number;
   /** Did the response actually address the task set? */
   onTask: boolean;
   /** The specific reason a response was capped, for feedback and for support. */
@@ -81,10 +85,6 @@ export type WritingScoreResult =
 function toHalfBand(n: number): number {
   if (!Number.isFinite(n)) return 0;
   return Math.max(0, Math.min(9, Math.round(n * 2) / 2));
-}
-
-function countWords(text: string): number {
-  return text.trim().split(/\s+/).filter(Boolean).length;
 }
 
 /* ------------------------------------------------------------------ *
@@ -276,14 +276,21 @@ function buildUserPrompt(p: {
   wordMin: number;
   text: string;
   wordCount: number;
+  /** What the candidate actually wrote, when that is more than is shown. */
+  fullWordCount?: number;
 }): string {
+  const cut = p.fullWordCount !== undefined && p.fullWordCount > p.wordCount;
   return [
     `MODULE: ${p.module}`,
     `TASK MINIMUM WORD COUNT: ${p.wordMin}`,
     "",
     `QUESTION / PROMPT GIVEN TO THE CANDIDATE:\n"""${p.questionPrompt}"""`,
     "",
-    `CANDIDATE'S RESPONSE (${p.wordCount} words):\n"""${p.text}"""`,
+    // A cut response must not be marked down for stopping where we stopped it:
+    // told nothing, the model reads the missing conclusion as a Task failing.
+    cut
+      ? `CANDIDATE'S RESPONSE. They wrote ${p.fullWordCount} words, far past what this task needs; only the first ${p.wordCount} are shown and only those are marked. Mark this extract on its own terms. Do not call it unfinished, cut off, or missing a conclusion, and do not lower any criterion because it ends where it does.\n"""${p.text}"""`
+      : `CANDIDATE'S RESPONSE (${p.wordCount} words):\n"""${p.text}"""`,
   ].join("\n");
 }
 
@@ -315,9 +322,19 @@ export async function scoreWriting(params: {
 }): Promise<WritingScoreResult> {
   if (!isWritingAiConfigured()) return { ok: false, reason: "not_configured" };
 
-  const text = params.text.trim();
-  const wordCount = countWords(text);
+  const written = params.text.trim();
+  const wordCount = countWords(written);
   if (wordCount < 3) return { ok: false, reason: "bad_response", detail: "empty" };
+
+  // Only the first `cap` words are ever sent. The API bills by the token, and a
+  // candidate who pastes a dissertation into a 250-word essay box would
+  // otherwise cost many times what marking the task is worth. The cap is twice
+  // the task minimum, well past anything a real answer needs, and the editor
+  // stops accepting input at the same number — so this is the backstop for
+  // pasted, scripted or legacy input, not something normal writing will meet.
+  const cap = writingWordCap(params.taskType, params.wordMin);
+  const text = truncateToWords(written, cap);
+  const gradedWordCount = Math.min(wordCount, cap);
 
   try {
     const model = env.OPENAI_MODEL;
@@ -338,7 +355,8 @@ export async function scoreWriting(params: {
               questionPrompt: params.questionPrompt,
               wordMin: params.wordMin,
               text,
-              wordCount,
+              wordCount: gradedWordCount,
+              fullWordCount: wordCount,
             }),
           },
         ],
@@ -405,6 +423,7 @@ export async function scoreWriting(params: {
       score: {
         overall: toHalfBand(mean),
         wordCount,
+        gradedWordCount,
         onTask,
         taskCompliance: compliance,
         criteria,

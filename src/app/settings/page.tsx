@@ -10,6 +10,8 @@ import { planUsage } from "@/lib/security/plan-guard";
 import { cardClass } from "@/components/dashboard/ui";
 import { cn } from "@/lib/utils";
 import { ProfileForm, PasswordForm } from "@/components/settings/settings-forms";
+import { CancelSubscription } from "@/components/settings/cancel-subscription";
+import { currentSubscription } from "@/lib/subscriptions";
 
 export const metadata: Metadata = { title: "Settings · IELTSVega", robots: { index: false } };
 
@@ -56,6 +58,18 @@ export default async function SettingsPage() {
     ? authed.planExpiresAt.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
     : null;
 
+  /*
+   * The subscription behind the tier, which is what a cancel button acts on.
+   *
+   * Read separately from `authed.plan` because the two answer different
+   * questions: the session says what the account is entitled to RIGHT NOW,
+   * while this says whether there is a live billing arrangement to stop. An
+   * account can be Premium with nothing to cancel — an admin grant, a comped
+   * year — and offering a cancel button there would only fail at the gateway.
+   */
+  const subscription = await currentSubscription(authed.id);
+  const ending = subscription?.cancelAtPeriodEnd === true;
+
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6">
       <div>
@@ -86,11 +100,19 @@ export default async function SettingsPage() {
           <div>
             <p className="font-medium text-ink">{plan.label} plan</p>
             <p className="text-sm text-ink-muted">
+              {/* "Renews" is now a statement about a card, not about a window
+                  running out, so a subscription on its way out must not keep
+                  saying it — that reads as a charge the customer thought they
+                  had stopped. */}
               {authed.plan === "free"
                 ? "Reading and Listening practice, marked instantly. Upgrade for AI band scoring on Writing and Speaking, and full mock tests."
-                : renews
-                  ? `Renews on ${renews}.`
-                  : "Active."}
+                : ending
+                  ? renews
+                    ? `Cancelled. Your access runs until ${renews}, and you won't be charged again.`
+                    : "Cancelled. You won't be charged again."
+                  : renews
+                    ? `Renews automatically on ${renews}.`
+                    : "Active."}
             </p>
             {/* Only a capped plan has a count worth showing. */}
             {usage.practiceLimit !== null && (
@@ -114,6 +136,15 @@ export default async function SettingsPage() {
             </Link>
           )}
         </div>
+
+        {/* Only a live billing arrangement can be stopped. An admin grant has
+            no mandate behind it, and a subscription already ending has nothing
+            left to cancel. */}
+        {subscription && !ending && (
+          <div className="mt-5 border-t border-line pt-4">
+            <CancelSubscription entitledUntil={renews} />
+          </div>
+        )}
       </Card>
 
       <Card title="Notifications" desc="Email preferences.">

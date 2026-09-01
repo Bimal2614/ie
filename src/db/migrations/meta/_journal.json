@@ -113,6 +113,13 @@
       "when": 1788092532618,
       "tag": "0015_giant_luckman",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1788168171742,
+      "tag": "0016_zippy_iron_fist",
+      "breakpoints": true
     }
   ]
 }
