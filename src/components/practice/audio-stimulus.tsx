@@ -57,6 +57,8 @@ export function AudioStimulus({
   src,
   audioRef,
   className,
+  autoPlay = false,
+  onEnded,
 }: {
   src: string;
   /**
@@ -65,6 +67,18 @@ export function AudioStimulus({
    */
   audioRef: React.RefObject<HTMLAudioElement | null>;
   className?: string;
+  /**
+   * Start on mount, without being asked. A Speaking prompt is the examiner
+   * opening their mouth, so it plays itself; a Listening recording is a tape
+   * the candidate starts, and leaves this off.
+   */
+  autoPlay?: boolean;
+  /**
+   * The clip reached its end — not fired by a pause partway through, and fired
+   * whether the play was automatic or a button press. That is what makes it
+   * safe to hang "now record your answer" off it.
+   */
+  onEnded?: () => void;
 }) {
   const [playing, setPlaying] = useState(false);
   const [current, setCurrent] = useState(0);
@@ -90,6 +104,17 @@ export function AudioStimulus({
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = volume;
   }, [volume, audioRef]);
+
+  /**
+   * BEST-EFFORT, and it has to be. Browsers refuse to play audio before the
+   * page has been interacted with, so a rejected promise here is normal rather
+   * than an error — the play button below is what guarantees the clip is heard,
+   * and `onEnded` fires the same way whichever of the two started it.
+   */
+  useEffect(() => {
+    if (!autoPlay) return;
+    audioRef.current?.play().catch(() => {});
+  }, [autoPlay, audioRef]);
 
   const changeVolume = useCallback((v: number) => {
     const clamped = Math.min(1, Math.max(0, v));
@@ -213,7 +238,10 @@ export function AudioStimulus({
         onTimeUpdate={(e) => setCurrent(e.currentTarget.currentTime)}
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
-        onEnded={() => setPlaying(false)}
+        onEnded={() => {
+          setPlaying(false);
+          onEnded?.();
+        }}
         className="sr-only"
       />
     </div>

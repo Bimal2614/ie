@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { questionSets, questions } from "@/db/schema";
 import { QUESTION_TYPES, SECTIONS, type QuestionTypeKey, type SectionKey } from "@/lib/ielts";
@@ -13,10 +13,21 @@ export const metadata: Metadata = { title: "Practice task · IELTSVega", robots:
 export default async function PracticeSetPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const [set] = await db.select().from(questionSets).where(eq(questionSets.id, id)).limit(1);
+  // `is_active` matters here, not just in the library listing: a retired set
+  // still has a working URL, and a deep link is exactly how a retired question
+  // keeps being served after it was withdrawn from the catalogue.
+  const [set] = await db
+    .select()
+    .from(questionSets)
+    .where(and(eq(questionSets.id, id), eq(questionSets.isActive, true)))
+    .limit(1);
   if (!set) notFound();
 
-  const qs = await db.select().from(questions).where(eq(questions.setId, id)).orderBy(questions.orderIndex);
+  const qs = await db
+    .select()
+    .from(questions)
+    .where(and(eq(questions.setId, id), eq(questions.isActive, true)))
+    .orderBy(questions.orderIndex);
 
   const sec = SECTIONS[set.section as SectionKey];
   const meta = QUESTION_TYPES[set.questionType as QuestionTypeKey];

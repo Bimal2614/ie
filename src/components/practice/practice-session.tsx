@@ -103,10 +103,25 @@ export function PracticeSession({
     setAnswers({});
     setFlagged(new Set());
     setResult(null);
+    // The next set's interview re-announces its first question as it mounts;
+    // until then this must not point at a question from the old one.
+    setFocusQuestionId(null);
     topRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
   const closeHistory = useCallback(() => setHistoryOpen(false), []);
+
+  /**
+   * The question the Speaking interview is on, so the history panel can report
+   * on THAT question rather than on the topic it belongs to.
+   *
+   * Null for every other type, which is what keeps the panel's attempt list:
+   * a reading passage is answered and marked as one, so the attempt is the
+   * unit there. `useCallback` because it is a dependency of the interview's
+   * effect — a fresh function each render would loop it.
+   */
+  const [focusQuestionId, setFocusQuestionId] = useState<string | null>(null);
+  const handleSequentialFocus = useCallback((id: string) => setFocusQuestionId(id), []);
 
   const goBack = useCallback(() => {
     router.push(`/practice/${section}`);
@@ -335,6 +350,19 @@ export function PracticeSession({
   );
 
   /**
+   * The interviewed question, resolved against the set actually on screen.
+   *
+   * Resolving it here rather than trusting the id means a stale announcement —
+   * one that arrives from the outgoing set while the next is being fetched —
+   * simply falls back to the attempt list instead of asking the server for a
+   * question the candidate is no longer looking at.
+   */
+  const focusQuestion =
+    focusQuestionId && currentSet
+      ? (currentSet.questions.find((q) => q.id === focusQuestionId) ?? null)
+      : null;
+
+  /**
    * With the panes split, <SetBody/> is asked for the questions alone and
    * returns them without the instruction above them, so it is drawn here. For
    * Writing that line is the task prompt itself.
@@ -463,8 +491,19 @@ export function PracticeSession({
             variant="ghost"
             size="icon"
             onClick={() => setHistoryOpen(true)}
-            title="Your previous attempts and bands"
-            aria-label="Previous attempts and bands"
+            // The panel reports on what is on screen — the question in an
+            // interview, the set everywhere else — so the control must not
+            // promise the whole task type's history.
+            title={
+              focusQuestion
+                ? "Your previous answers to this question"
+                : `Your previous attempts at this ${noun.toLowerCase()}`
+            }
+            aria-label={
+              focusQuestion
+                ? "Previous answers to this question"
+                : `Previous attempts at this ${noun.toLowerCase()}`
+            }
             aria-haspopup="dialog"
             className="text-ink-soft"
           >
@@ -557,6 +596,9 @@ export function PracticeSession({
                   onClearAnswer={clearAnswer}
                   flagged={flagged}
                   onToggleFlag={toggleFlag}
+                  // Speaking Parts 1 and 3 only — every other type ignores it
+                  // and the history panel keeps its attempt list.
+                  onSequentialFocus={handleSequentialFocus}
                   exam
                 />
               )}
@@ -695,7 +737,10 @@ export function PracticeSession({
         onClose={closeHistory}
         section={section}
         questionType={questionType}
-        currentSetId={currentSet?.id ?? null}
+        setId={currentSet?.id ?? null}
+        setTitle={currentSet?.title ?? null}
+        focusQuestionId={focusQuestion?.id ?? null}
+        focusQuestionPrompt={focusQuestion?.prompt ?? null}
       />
 
       {/* ── Passage palette ── */}

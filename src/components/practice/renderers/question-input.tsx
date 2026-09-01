@@ -46,6 +46,13 @@ type InputProps = {
    * ending well short of the chart beside it.
    */
   fill?: boolean;
+  /**
+   * Speaking, mock only: open the recorder without being asked, once the
+   * examiner's question has played out. See `autoRecordAfterPrompt`.
+   */
+  autoRecord?: boolean;
+  /** That question's clip has reached its end — the cue `autoRecord` waits for. */
+  promptEnded?: boolean;
 };
 
 /* ------------------------------------------------------------------ *
@@ -379,7 +386,7 @@ function Writing({ question, value, disabled, onChange, fill }: InputProps) {
  * Speaking
  * ------------------------------------------------------------------ */
 
-function Speaking({ question, value, disabled, onChange }: InputProps) {
+function Speaking({ question, value, disabled, autoRecord, promptEnded, onChange }: InputProps) {
   const cue = question.content?.cueCard as { topic: string; bullets: string[] } | undefined;
   const [recording, setRecording] = useState(false);
   const [recorded, setRecorded] = useState(false);
@@ -629,6 +636,30 @@ function Speaking({ question, value, disabled, onChange }: InputProps) {
   // Part 2 gives a preparation minute; Parts 1/3 (no cue card / no prep) don't.
   const hasPrep = prep > 0 && !!cue;
 
+  /**
+   * THE MOCK HANDS YOU NO BUTTON. The examiner asks, the question ends, and you
+   * are expected to be speaking — so the recorder opens itself. Part 2 goes to
+   * its preparation minute instead, which is what the cue card means on test
+   * day; `startPrep` starts the recording when that runs out.
+   *
+   * ONCE PER QUESTION, and never over an answer that already exists. Replaying
+   * the question fires `ended` again, and without the guard the second one
+   * would open a recorder on top of the take just given — throwing that answer
+   * away to record the candidate's surprise.
+   */
+  const autoStartedFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (!autoRecord || !promptEnded) return;
+    if (autoStartedFor.current === question.id) return;
+    if (disabled || recording || recorded || uploading || preparing) return;
+    autoStartedFor.current = question.id;
+    if (hasPrep) startPrep();
+    else void start();
+    // `start` and `startPrep` are rebuilt every render; listing them would re-run
+    // this on each one. The clip ending is the only cue that should trigger it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRecord, promptEnded, question.id, disabled, recording, recorded, uploading, preparing]);
+
   return (
     <div className="space-y-3">
       {cue && (
@@ -679,6 +710,15 @@ function Speaking({ question, value, disabled, onChange }: InputProps) {
               {recorded ? "Re-record" : hasPrep ? `Prepare (${mmss(prep)})` : "Record answer"}
             </Button>
           )
+        )}
+        {/* Say so before it happens: a recorder that opens by itself is only
+            fair if the candidate knew it was coming. Gone the moment it does. */}
+        {autoRecord && !recording && !preparing && !recorded && (
+          <span className="text-xs text-ink-muted">
+            {hasPrep
+              ? "Preparation time starts when the examiner finishes."
+              : "Recording starts when the examiner finishes."}
+          </span>
         )}
         {uploading && (
           <span className="inline-flex items-center gap-1.5 text-xs text-ink-muted">

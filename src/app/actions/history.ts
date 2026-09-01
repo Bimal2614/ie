@@ -604,17 +604,59 @@ export async function getLatestActiveDate(tzOffsetMinutes: number): Promise<stri
 }
 
 /* ------------------------------------------------------------------ *
- * Recent attempts at ONE task type — the in-player history panel
+ * Recent attempts — the in-player history panel
  *
  * The day-scoped pair above answers "what did I do on Tuesday". Mid-practice
- * the question is a different one — "how did I do at this task before" — and
- * the answer must not depend on the candidate having practised today. So this
- * one is scoped by (section, type) and bounded by a count, not a day.
+ * the question is a different one — "how did I do at THIS before" — and the
+ * answer must not depend on the candidate having practised today. So these are
+ * scoped by what is on screen and bounded by a count, not a day.
+ *
+ * "This" is the set: the passage, the recording, the task or the topic in front
+ * of them. Scoped to the type instead, the panel opened on Recording 48 and
+ * listed four other recordings — the candidate then had to read five set titles
+ * to find out whether the one they are sitting had ever been sat before, which
+ * is the single fact they opened it for. The whole type is still one click away
+ * in the footer, at /history.
  * ------------------------------------------------------------------ */
 
 /** Ceiling on the panel, whatever the caller asks for. */
 const MAX_RECENT_ATTEMPTS = 30;
 
+/** Cheap shape check: the panel's key is a uuid for sets but an exam number for
+ *  section documents, and handing Postgres the latter is a 22P02, not a miss. */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Both panel lists take the same cap, so neither can be talked past it. */
+function panelLimit(limit: number): number {
+  return Math.min(Math.max(limit, 1), MAX_RECENT_ATTEMPTS);
+}
+
+/**
+ * Every past attempt at the set on screen.
+ *
+ * `set_id` alone identifies it — it is a uuid from `question_sets` or from
+ * `practice_sections`, and the two tables cannot collide — so the section and
+ * the type would be redundant filters. Paired with the user it also lands on
+ * `user_responses_user_set_idx` rather than scanning a candidate's history.
+ */
+export async function getSetAttempts(setId: string, limit = 12): Promise<AttemptRow[]> {
+  const user = await requireUser();
+  if (!UUID.test(setId)) return [];
+
+  return rollUpAttempts(
+    and(eq(userResponses.userId, user.id), eq(userResponses.setId, setId)),
+    // Most recent first — the panel opens on what you just did.
+    { newestFirst: true, limit: panelLimit(limit) },
+  );
+}
+
+/**
+ * Every past attempt at one task type, whatever the set.
+ *
+ * The fallback for a player with no set on screen — there is nothing narrower
+ * to ask about then, and an empty panel would be a worse answer than a wider
+ * one.
+ */
 export async function getRecentAttempts(
   section: SectionKey,
   questionType: QuestionTypeKey,
@@ -628,10 +670,9 @@ export async function getRecentAttempts(
       eq(userResponses.section, section),
       eq(userResponses.questionType, questionType),
     ),
-    // Most recent first — the panel opens on what you just did — and capped by
-    // a count rather than a day, since "how did I do at this before" must not
-    // depend on having practised today.
-    { newestFirst: true, limit: Math.min(Math.max(limit, 1), MAX_RECENT_ATTEMPTS) },
+    // Capped by a count rather than a day, since "how did I do at this before"
+    // must not depend on having practised today.
+    { newestFirst: true, limit: panelLimit(limit) },
   );
 }
 
@@ -646,4 +687,121 @@ export async function getRecentAttempts(
  */
 export async function getAttemptPreview(attemptId: string): Promise<AttemptDetail | null> {
   return loadAttempt(attemptId, false);
+}
+
+/* ------------------------------------------------------------------ *
+ * Every past answer to ONE question — the sequential-speaking panel
+ *
+ * Speaking Parts 1 and 3 are an interview: the set is a TOPIC and the unit a
+ * candidate works on is a single question inside it. So "how did I do at this
+ * before", asked while looking at "Do you work or study?", means that question
+ * — not the last dozen sittings of the whole topic, where the answer being
+ * asked about is one of seven recordings buried inside each row.
+ *
+ * The attempt-shaped list above stays for everything else, where the attempt
+ * genuinely IS the unit: a reading passage is answered, and marked, as one.
+ * ------------------------------------------------------------------ */
+
+/** Ceiling on the per-question panel, whatever the caller asks for. */
+const MAX_QUESTION_ANSWERS = 30;
+
+/** One past answer to one question. */
+export type QuestionAnswerRow = {
+  responseId: string;
+  /** Its attempt, so the full review is still one click away. */
+  attemptId: string;
+  createdAt: Date;
+  isCorrect: boolean | null;
+  band: number | null;
+  response: unknown;
+  /** App-relative playback path, never the stored `s3://` location. */
+  audioUrl: string | null;
+  transcript: string | null;
+  aiFeedback: unknown;
+};
+
+export type QuestionHistory = {
+  questionId: string;
+  questionType: QuestionTypeKey;
+  prompt: string | null;
+  content: unknown;
+  correctAnswer: unknown;
+  /** The set's layout, so the answers render as they did on screen. */
+  layout: SetLayout | null;
+  answers: QuestionAnswerRow[];
+};
+
+export async function getQuestionAnswers(
+  questionId: string,
+  limit = 12,
+): Promise<QuestionHistory | null> {
+  const user = await requireUser();
+  if (!UUID.test(questionId)) return null;
+
+  /**
+   * The question ONCE, the answers separately.
+   *
+   * Prompt, content and answer key are properties of the question, not of an
+   * attempt at it — joining them onto the responses would ship the same three
+   * columns back a dozen times to render one heading.
+   */
+  const [q] = await db
+    .select({
+      id: questions.id,
+      questionType: questions.questionType,
+      prompt: questions.prompt,
+      content: questions.content,
+      correctAnswer: questions.correctAnswer,
+      // Left-joined: a question outlives nothing here, but the column lives on
+      // the set and speaking sets have no layout at all.
+      layout: questionSets.layout,
+    })
+    .from(questions)
+    .leftJoin(questionSets, eq(questions.setId, questionSets.id))
+    .where(eq(questions.id, questionId))
+    .limit(1);
+
+  if (!q) return null;
+
+  const rows = await db
+    .select({
+      responseId: userResponses.id,
+      attemptId: userResponses.attemptId,
+      createdAt: userResponses.createdAt,
+      isCorrect: userResponses.isCorrect,
+      band: userResponses.band,
+      response: userResponses.response,
+      audioUrl: userResponses.audioUrl,
+      transcript: userResponses.transcript,
+      aiFeedback: userResponses.aiFeedback,
+    })
+    .from(userResponses)
+    // Scoped to the owner first — a question id is public content, so this
+    // filter is the only thing standing between it and someone else's answers.
+    .where(and(eq(userResponses.userId, user.id), eq(userResponses.questionId, questionId)))
+    // Newest first: the panel opens on the answer just given.
+    .orderBy(desc(userResponses.createdAt))
+    .limit(Math.min(Math.max(limit, 1), MAX_QUESTION_ANSWERS));
+
+  return {
+    questionId: q.id,
+    questionType: q.questionType as QuestionTypeKey,
+    prompt: q.prompt,
+    content: q.content,
+    correctAnswer: q.correctAnswer,
+    layout: (q.layout as SetLayout | null) ?? null,
+    answers: rows.map((r) => ({
+      responseId: r.responseId,
+      attemptId: r.attemptId,
+      createdAt: r.createdAt,
+      isCorrect: r.isCorrect,
+      band: r.band === null ? null : Number(r.band),
+      response: r.response,
+      // OUR gated path, for the reason set out in loadAttempt: the stored value
+      // is `s3://bucket/<prefix>/<userId>/<uuid>.wav`.
+      audioUrl: mediaUrl.recording(r.responseId, r.audioUrl),
+      transcript: r.transcript,
+      aiFeedback: r.aiFeedback,
+    })),
+  };
 }

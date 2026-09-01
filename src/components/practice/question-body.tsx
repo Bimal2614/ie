@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { Check, X, Flag, ListChecks, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -45,12 +45,25 @@ import { AnnotationProvider, AnnotatedText } from "./renderers/annotations";
  *
  * Wraps AudioStimulus — the same player listening uses — rather than an
  * `<audio controls>`, which is a download button with a waveform attached (see
- * audio-stimulus.tsx). No autoplay here: a section can show several questions
- * at once, and starting them all would be a chorus.
+ * audio-stimulus.tsx).
+ *
+ * IT ASKS ITSELF, but only when it is the one question on screen: a stacked
+ * page of clips all starting at once would be a chorus. That condition is the
+ * caller's to judge, so `autoPlay` arrives as a prop — see `autoPlayPrompt` in
+ * QuestionBody. The player keeps its controls either way, because hearing the
+ * question again is the whole point of practising it.
  */
-function PromptAudio({ src }: { src: string }) {
+function PromptAudio({
+  src,
+  autoPlay,
+  onEnded,
+}: {
+  src: string;
+  autoPlay?: boolean;
+  onEnded?: () => void;
+}) {
   const ref = useRef<HTMLAudioElement | null>(null);
-  return <AudioStimulus src={src} audioRef={ref} />;
+  return <AudioStimulus src={src} audioRef={ref} autoPlay={autoPlay} onEnded={onEnded} />;
 }
 
 /* ------------------------------------------------------------------ *
@@ -145,6 +158,14 @@ export type BodyConfig = {
   /** Speaking Parts 1 and 3: an interview, one question at a time. */
   sequential?: boolean;
   /**
+   * Which question the interview is on, reported back to the surface above.
+   *
+   * Only fires when `sequential` is on, because it is the only mode where the
+   * document on screen is one question rather than all of them. The player uses
+   * it to point its history panel at that question.
+   */
+  onSequentialFocus?: (key: string) => void;
+  /**
    * Speaking Parts 1 and 3: play the question instead of printing it.
    *
    * The mock sets this because on test day the question is only ever heard —
@@ -154,6 +175,17 @@ export type BodyConfig = {
    * text when a question has no clip, so an unvoiced item is never a blank card.
    */
   spokenPromptOnly?: boolean;
+  /**
+   * Speaking: start recording by itself once the examiner's clip has played out.
+   *
+   * THE MOCK SETS THIS, because on test day nobody hands you a button — the
+   * examiner stops speaking and you answer. Practice and section practice leave
+   * it off: there the clip is something you replay until you have understood it,
+   * and a recorder that opened the moment it ended would be recording the
+   * silence while you think. Part 2 goes to its preparation minute first, which
+   * is what the real test does with a cue card.
+   */
+  autoRecordAfterPrompt?: boolean;
   /** Where the report-a-problem button goes. */
   reportOn?: "row" | "feedback" | "none";
   /**
@@ -374,6 +406,20 @@ export function QuestionBody({
     [config.clips, doc.audioSrc],
   );
 
+  /**
+   * Whether an examiner's question may play itself.
+   *
+   * ONLY WHEN IT IS ALONE ON SCREEN. Speaking is asked one question at a time —
+   * `focusNumber` narrows to it in the mock and in section practice, and a set
+   * whose whole document is one question (a Part 2 cue card) is the same case —
+   * so there is exactly one clip to start. A stacked page would start all of
+   * them together.
+   *
+   * Never during review: those recordings are history being read back, and a
+   * report screen that starts talking is a report screen you scramble to mute.
+   */
+  const autoPlayPrompt = !disabled && (config.focusNumber != null || allItems.length === 1);
+
   /** Gaps resolve by exam number across every group in the document. */
   const resolve: GapResolver = (number) => {
     const item = itemByNumber.get(number);
@@ -453,7 +499,9 @@ export function QuestionBody({
           answers={answers}
           disabled={disabled}
           spokenOnly={config.spokenPromptOnly}
+          autoRecord={!disabled && Boolean(config.autoRecordAfterPrompt)}
           onAnswer={onAnswer}
+          onFocusChange={config.onSequentialFocus}
         />
       </div>
     );
@@ -483,6 +531,7 @@ export function QuestionBody({
           config={config}
           clipFor={clipFor}
           playClip={playClip}
+          autoPlayPrompt={autoPlayPrompt}
         />
       ))}
     </div>
@@ -549,6 +598,7 @@ function GroupBlock({
   config,
   clipFor,
   playClip,
+  autoPlayPrompt,
 }: {
   group: BodyGroup;
   answers: Record<string, Answer>;
@@ -560,6 +610,8 @@ function GroupBlock({
   config: BodyConfig;
   clipFor: (item: BodyItem) => AudioWindow | null;
   playClip: (w: AudioWindow) => void;
+  /** The examiner's question may start itself — see QuestionBody. */
+  autoPlayPrompt: boolean;
 }) {
   const meta = QUESTION_TYPES[group.questionType];
   const optionsLayout = group.layout?.kind === "options" ? (group.layout as OptionsLayout) : null;
@@ -694,6 +746,7 @@ function GroupBlock({
                     config={config}
                     clip={clipFor(item)}
                     playClip={playClip}
+                    autoPlayPrompt={autoPlayPrompt}
                   />
                 ))}
               </ol>
@@ -754,6 +807,7 @@ function ItemRow({
   config,
   clip,
   playClip,
+  autoPlayPrompt,
 }: {
   item: BodyItem;
   result: BodyResult | undefined;
@@ -765,8 +819,16 @@ function ItemRow({
   config: BodyConfig;
   clip: AudioWindow | null;
   playClip: (w: AudioWindow) => void;
+  /** The examiner's question may start itself — see QuestionBody. */
+  autoPlayPrompt: boolean;
 }) {
   const state = stateFor(result);
+  /**
+   * The examiner has finished asking — the cue the recorder waits for when the
+   * mock is driving itself. Set by the clip reaching its end, however it was
+   * started, so a blocked autoplay the candidate pressed play on still counts.
+   */
+  const [promptEnded, setPromptEnded] = useState(false);
   // A completion gap prints its own number inside the field, so an outer badge
   // would show it twice.
   const numberInGap = QUESTION_TYPES[item.questionType]?.family === "completion";
@@ -825,7 +887,13 @@ function ItemRow({
                   AND reads; the mock only hears — see `spokenPromptOnly`. The
                   interview surface (SpeakingInterview) draws its own player, so
                   this is the row path only. */}
-              {item.promptAudioSrc && <PromptAudio src={item.promptAudioSrc} />}
+              {item.promptAudioSrc && (
+                <PromptAudio
+                  src={item.promptAudioSrc}
+                  autoPlay={autoPlayPrompt}
+                  onEnded={() => setPromptEnded(true)}
+                />
+              )}
               {item.prompt &&
                 config.itemPrompts !== false &&
                 !(config.spokenPromptOnly && item.promptAudioSrc) && (
@@ -878,6 +946,8 @@ function ItemRow({
             disabled={disabled}
             state={state}
             options={optionsLayout}
+            autoRecord={!disabled && Boolean(config.autoRecordAfterPrompt)}
+            promptEnded={promptEnded}
             onChange={(v) => {
               // Deselecting your own choice sends an empty answer. Read as a
               // clear, the question goes back to unanswered — which is what the
