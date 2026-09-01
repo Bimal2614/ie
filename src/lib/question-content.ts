@@ -82,6 +82,17 @@ export type InlineBlanksLayout = {
   heading?: string;
   /** Each block is a paragraph (or a numbered sentence) containing `[[n]]`. */
   blocks: string[];
+  /**
+   * When set, the blanks are filled from a shared lettered box rather than
+   * typed — "Complete the summary using the list of words, A-H, below".
+   *
+   * Same shape and same meaning as `choices` on the flow-chart and diagram
+   * layouts, because it is the same task: prose with gaps plus one bank of
+   * options. Without it this rubric was read as a matching task and each blank
+   * became its own row carrying a truncated sentence fragment, which is not
+   * what the paper prints.
+   */
+  choices?: { key: string; text: string }[];
 };
 
 /** Indented note-taking layout used by Listening note completion. */

@@ -47,18 +47,63 @@ function Sheet({ className, children }: { className?: string; children: React.Re
  * ------------------------------------------------------------------ */
 
 function InlineBlanks({ layout, resolve, run }: LayoutProps<InlineBlanksLayout>) {
+  const prose = (
+    <div className="space-y-3">
+      {layout.blocks.map((block, i) => (
+        <p key={i} className="text-sm leading-7 text-ink-soft">
+          <GapText
+            text={block}
+            resolve={resolve}
+            run={`${run}:b${i}`}
+            renderGap={layout.choices ? (binding) => <ChoiceSlot binding={binding} /> : undefined}
+          />
+        </p>
+      ))}
+    </div>
+  );
+
+  // Typed blanks — "Write ONE WORD from the passage" — have no box.
+  if (!layout.choices) {
+    return (
+      <Sheet>
+        <LayoutHeading run={`${run}:h`}>{layout.heading}</LayoutHeading>
+        {prose}
+      </Sheet>
+    );
+  }
+
+  /**
+   * "Complete the summary using the list of words, A-H, below" — a placement
+   * task over flowing prose, laid out exactly as the flow-chart's box is and
+   * for the same reason: the candidate reads every option before placing any,
+   * so the bank stays on screen while they work through the paragraph.
+   *
+   * The bank goes UNDER the summary rather than beside it. A summary is a
+   * paragraph of running text, and squeezing it into a narrow column to make
+   * room alongside would re-wrap it every few words.
+   */
   return (
     <Sheet>
       <LayoutHeading run={`${run}:h`}>{layout.heading}</LayoutHeading>
-      <div className="space-y-3">
-        {layout.blocks.map((block, i) => (
-          <p key={i} className="text-sm text-ink-soft">
-            <GapText text={block} resolve={resolve} run={`${run}:b${i}`} />
-          </p>
-        ))}
-      </div>
+      {/* Graded state read off a REAL gap — resolving a made-up number returns
+          null, which would leave the box draggable after submission. */}
+      <ChoiceBankProvider
+        choices={layout.choices}
+        disabled={firstBlankDisabled(layout, resolve)}
+      >
+        <div className="space-y-4">
+          {prose}
+          <ChoiceBank />
+        </div>
+      </ChoiceBankProvider>
     </Sheet>
   );
+}
+
+/** Graded state of the summary's first real blank. See Flowchart's twin. */
+function firstBlankDisabled(layout: InlineBlanksLayout, resolve: GapResolver): boolean {
+  const m = layout.blocks.join(" ").match(/\[\[(\d+)\]\]/);
+  return m ? (resolve(Number(m[1]))?.disabled ?? false) : false;
 }
 
 /* ------------------------------------------------------------------ *
