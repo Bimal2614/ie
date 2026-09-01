@@ -21,9 +21,9 @@ export const metadata = pageMeta({
 });
 
 /**
- * "$50" for a plan that now costs $35 — the pre-discount price, or `null` for a
- * tier that isn't discounted. Read from the same table as the price beside it,
- * so a promotion that ends cannot leave a struck-out figure behind on the card.
+ * "₹4,000" for a plan that now costs ₹2,499 — the pre-discount price, or `null`
+ * for a tier that isn't discounted. Read from the same table as the price beside
+ * it, so a promotion that ends cannot leave a struck-out figure on the card.
  */
 function listPrice(tier: PlanKey): string | null {
   const cents = PLAN_ENTITLEMENTS[tier].listPriceCents;
