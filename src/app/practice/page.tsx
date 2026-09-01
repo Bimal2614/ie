@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Headphones, BookOpen, PenLine, Mic, ArrowRight, Clock, Layers, Sparkles } from "lucide-react";
-import { count, eq, sql } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { questionSets, questions } from "@/db/schema";
-import { SECTIONS, SECTION_ORDER, SECTION_TYPES, QUESTION_TYPES, type SectionKey, type QuestionTypeKey } from "@/lib/ielts";
+import { questions } from "@/db/schema";
+import { SECTIONS, SECTION_ORDER, SECTION_TYPES, QUESTION_TYPES, type SectionKey } from "@/lib/ielts";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Practice · IELTSVega", robots: { index: false } };
@@ -31,14 +31,6 @@ const ACCENT_ICON_BG: Record<SectionKey, string> = {
 };
 
 export default async function PracticePage() {
-  // Count sets per section
-  const sectionRows = await db
-    .select({ section: questionSets.section, n: count() })
-    .from(questionSets)
-    .where(eq(questionSets.isActive, true))
-    .groupBy(questionSets.section);
-  const setCounts = Object.fromEntries(sectionRows.map((r) => [r.section, Number(r.n)])) as Record<string, number>;
-
   // Count total questions
   const [{ total: totalQuestions }] = await db.select({ total: count() }).from(questions).where(eq(questions.isActive, true));
 

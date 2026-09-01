@@ -5,7 +5,7 @@ import { db } from "@/db";
 import { userResponses, questions, questionSets, mockTestResults, mockTestSessions } from "@/db/schema";
 import { requireUser } from "@/lib/dal";
 import { PASS_BAND } from "@/lib/ielts";
-import type { SectionKey, QuestionTypeKey } from "@/lib/ielts";
+import type { SectionKey } from "@/lib/ielts";
 
 /* ------------------------------------------------------------------ *
  * Dashboard stats — aggregates for the main dashboard

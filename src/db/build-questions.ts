@@ -267,7 +267,10 @@ async function main() {
                 explanation: i.explanation ?? expl[String(i.n)] ?? null,
               })),
             ),
-            timings[`${bookNo}|${part.testNumber}|${part.partNumber}`] ?? null,
+            // Keyed by bookKey, not the bare number: a series with no digits in
+            // its name collapsed to "" and every one of them collided. Cambridge
+            // keys are unchanged, since bookKey gives a numbered book its digits.
+            timings[`${bookKey(part.book)}|${part.testNumber}|${part.partNumber}`] ?? null,
           )
         : new Map<number, Window>();
 
@@ -495,6 +498,8 @@ async function main() {
     `\n${setCount} set(s), ${qCount} question(s)\n` +
       `  explanations attached: ${withExpl}/${qCount}\n` +
       `  listening audio windows: ${withAudio}\n` +
+      `  sets trimmed of surplus questions: ${trimmed}
+` +
       `  stale sets removed: ${stale.length}`,
   );
   await client.end();

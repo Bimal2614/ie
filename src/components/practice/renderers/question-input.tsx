@@ -478,7 +478,7 @@ function Speaking({ question, value, disabled, autoRecord, promptEnded, onChange
   // Stop automatically at the speaking limit — the real test cuts you off.
   useEffect(() => {
     if (recording && limit > 0 && elapsed >= limit) stop();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [elapsed, recording, limit]);
 
   const startPrep = () => {
@@ -726,7 +726,7 @@ function Speaking({ question, value, disabled, autoRecord, promptEnded, onChange
           </span>
         )}
         {url && !recording && (
-          // eslint-disable-next-line jsx-a11y/media-has-caption
+           
           <audio controls src={url} className="h-9" />
         )}
       </div>
