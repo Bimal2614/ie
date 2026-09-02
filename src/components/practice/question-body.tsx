@@ -945,6 +945,7 @@ function ItemRow({
             value={value}
             disabled={disabled}
             state={state}
+            correctAnswer={result?.correctAnswer}
             options={optionsLayout}
             autoRecord={!disabled && Boolean(config.autoRecordAfterPrompt)}
             promptEnded={promptEnded}

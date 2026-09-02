@@ -39,6 +39,12 @@ type InputProps = {
   state: QuestionState;
   /** The set's shared option box, when the type matches against one. */
   options: OptionsLayout | null;
+  /**
+   * The graded answer, once there is one. Only "choose TWO" reads it: that
+   * question is marked per option, not as a whole, so the row that was left
+   * unchosen has to know it was one of the answers.
+   */
+  correctAnswer?: unknown;
   onChange: (v: Answer) => void;
   /**
    * Grow to fill the height available instead of sizing to content. Set for a
@@ -59,6 +65,9 @@ type InputProps = {
  * Choice types
  * ------------------------------------------------------------------ */
 
+/** How one option was marked, where the question is marked option by option. */
+type ChoiceTone = "correct" | "incorrect" | "missed";
+
 function ChoiceRow({
   letter,
   text,
@@ -66,6 +75,7 @@ function ChoiceRow({
   disabled,
   multi,
   state,
+  tone,
   onSelect,
   onDeselect,
   run,
@@ -76,6 +86,12 @@ function ChoiceRow({
   disabled: boolean;
   multi: boolean;
   state: QuestionState;
+  /**
+   * This option's own verdict, for a "choose TWO" that came out half right.
+   * Left unset everywhere else: a question with one answer has one verdict, so
+   * its state marks the row that was chosen and nothing else.
+   */
+  tone?: ChoiceTone | null;
   onSelect: () => void;
   /**
    * Activating the option you already chose. Rows no longer carry a "Clear"
@@ -85,16 +101,35 @@ function ChoiceRow({
   /** Makes the option text highlightable. See annotations.tsx. */
   run?: string;
 }) {
-  // After grading, the SELECTED option reflects correctness (green/red);
-  // while answering it's the neutral brand highlight.
-  const selectedRow =
-    state === "correct"
+  // After grading, the option reflects correctness (green/red); while answering
+  // it's the neutral brand highlight. Without a per-option `tone` the question's
+  // own state marks whichever row was selected, and nothing else.
+  const verdict: ChoiceTone | null =
+    tone ?? (selected && (state === "correct" || state === "incorrect") ? state : null);
+
+  const rowTone =
+    verdict === "correct"
       ? "border-success bg-success-soft"
-      : state === "incorrect"
+      : verdict === "incorrect"
         ? "border-danger bg-danger-soft"
-        : "border-brand bg-brand-soft";
-  const selectedBadge =
-    state === "correct" ? "bg-success text-white" : state === "incorrect" ? "bg-danger text-white" : "bg-brand text-white";
+        : // An answer the candidate did NOT mark, so it is outlined rather than
+          // filled: it reads as "this was also correct", not as one of theirs.
+          verdict === "missed"
+          ? "border-dashed border-success bg-transparent"
+          : selected
+            ? "border-brand bg-brand-soft"
+            : "border-line hover:bg-paper-sunken";
+
+  const badgeTone =
+    verdict === "correct"
+      ? "bg-success text-white"
+      : verdict === "incorrect"
+        ? "bg-danger text-white"
+        : verdict === "missed"
+          ? "border border-success bg-success-soft text-success"
+          : selected
+            ? "bg-brand text-white"
+            : "bg-paper-sunken text-ink-muted";
 
   return (
     <label
@@ -111,7 +146,7 @@ function ChoiceRow({
       }}
       className={cn(
         "relative flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 text-sm transition-colors",
-        selected ? selectedRow : "border-line hover:bg-paper-sunken",
+        rowTone,
         disabled && "cursor-default",
       )}
     >
@@ -131,7 +166,7 @@ function ChoiceRow({
       <span
         className={cn(
           "grid size-5 shrink-0 place-items-center rounded font-mono text-[11px] font-semibold",
-          selected ? selectedBadge : "bg-paper-sunken text-ink-muted",
+          badgeTone,
         )}
       >
         {letter}
@@ -139,6 +174,11 @@ function ChoiceRow({
       <span className="text-ink-soft">
         <AnnotatedText run={run} text={text} />
       </span>
+      {verdict === "missed" && (
+        <span className="ml-auto shrink-0 pt-0.5 text-[11px] font-medium text-success">
+          Correct answer
+        </span>
+      )}
     </label>
   );
 }
@@ -168,10 +208,25 @@ function SingleChoice({ question, value, disabled, state, onChange }: InputProps
   );
 }
 
-function MultiChoice({ question, value, disabled, state, onChange }: InputProps) {
+function MultiChoice({ question, value, disabled, state, correctAnswer, onChange }: InputProps) {
   const options = (question.content?.options as string[]) ?? [];
   const selectCount = (question.content?.selectCount as number) ?? 2;
   const chosen = (value?.indices as number[]) ?? [];
+
+  // A "choose TWO" is marked per option, not as a whole. Colouring every pick
+  // by the question's verdict painted a correct choice red whenever the OTHER
+  // one was missed — red has to mean "this pick was wrong" and nothing else.
+  const graded = state === "correct" || state === "incorrect";
+  const answer = graded
+    ? ((correctAnswer as { indices?: number[] } | null | undefined)?.indices ?? null)
+    : null;
+  const toneFor = (i: number): ChoiceTone | null => {
+    if (!answer) return null;
+    if (chosen.includes(i)) return answer.includes(i) ? "correct" : "incorrect";
+    // An answer they should have marked. Shown so the miss is visible against
+    // the options themselves, not only in the "Correct answer" line below.
+    return answer.includes(i) ? "missed" : null;
+  };
 
   const toggle = (i: number) => {
     const next = new Set(chosen);
@@ -196,6 +251,7 @@ function MultiChoice({ question, value, disabled, state, onChange }: InputProps)
           disabled={disabled || (!chosen.includes(i) && chosen.length >= selectCount)}
           multi
           state={state}
+          tone={toneFor(i)}
           onSelect={() => toggle(i)}
           run={`q${question.id}:o${i}`}
         />
