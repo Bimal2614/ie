@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { clearAuthCache } from "@/lib/auth-cache";
+import { useAuth } from "@/components/auth/auth-provider";
 import { confirmCheckout, startCheckout } from "@/app/actions/billing";
 import type { CheckoutSession } from "@/lib/payments/billing";
 
@@ -88,6 +88,9 @@ export type CheckoutState = {
 
 export function useRazorpayCheckout() {
   const router = useRouter();
+  // Re-probes /api/me. `router.refresh()` below re-renders the server tree; this
+  // is the other half — the client-side auth state the nav and the cards read.
+  const { refresh: refreshAuth } = useAuth();
   const [state, setState] = useState<CheckoutState>({
     phase: "idle",
     error: null,
@@ -148,10 +151,13 @@ export function useRazorpayCheckout() {
                 setState({ phase: "idle", error: result.error, granted: null });
                 return;
               }
-              // The provider caches the tier in localStorage to paint the right
-              // nav before its probe resolves; a stale "free" there would show
-              // an upgrade prompt to someone who just paid.
-              clearAuthCache();
+              // The plan was granted a moment ago on the server, and this page
+              // is not about to navigate — so ask for it. The provider writes
+              // the new tier into its localStorage cache, which is what stops a
+              // stale "free" showing an upgrade prompt to someone who just
+              // paid. Clearing that cache instead, as this once did, now reads
+              // as a sign-OUT and would blank the nav of a paying customer.
+              refreshAuth();
               setState({
                 phase: "done",
                 error: null,
@@ -193,7 +199,7 @@ export function useRazorpayCheckout() {
 
       checkout.open();
     },
-    [router],
+    [router, refreshAuth],
   );
 
   const dismiss = useCallback(() => {

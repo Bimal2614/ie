@@ -121,12 +121,28 @@ export function PlanCta({
   /*
    * A visitor, or a probe that has not answered yet.
    *
-   * Every card leads to /signup, paid ones included: rendering the checkout
-   * button here would open a modal that the server action behind it rejects for
-   * having no user. Signing up lands on /dashboard rather than back here — the
-   * auth actions redirect there unconditionally and do not read a `next` — so
-   * the upgrade prompts on the dashboard are what carry a new account onward.
+   * A PAID CARD SENDS THEM TO SIGN IN, carrying this page as `next` so they
+   * land back on the card and can press the same button again. Rendering the
+   * checkout button here instead would open a modal that the server action
+   * behind it rejects for having no user — and it could not do otherwise: a
+   * recurring mandate is created against an account, and the `notes.userId`
+   * stamped on it at that moment is the only thing that tells a renewal
+   * webhook, months later, whose plan to extend.
+   *
+   * The free card still goes to /signup, since starting free really is just
+   * signing up, and there is nothing to come back for.
    */
+  if (plan !== "free") {
+    return (
+      <Link
+        href={`/login?next=${encodeURIComponent("/pricing")}`}
+        className={cn(base, featured ? primary : secondary)}
+      >
+        {label} <ArrowRight className="size-4" />
+      </Link>
+    );
+  }
+
   return (
     <Link href={href} className={cn(base, featured ? primary : secondary)}>
       {label} <ArrowRight className="size-4" />

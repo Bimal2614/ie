@@ -3,8 +3,8 @@ import "server-only";
 import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { subscriptions, users } from "@/db/schema";
-import { env, razorpayPlanIdFor } from "@/lib/env";
-import { PLANS, toPlanKey, type PlanKey } from "@/lib/plans";
+import { allowPlanMismatch, env, razorpayPlanIdFor } from "@/lib/env";
+import { CURRENCY, PLANS, toPlanKey, type PlanKey } from "@/lib/plans";
 import {
   cadenceFor,
   cancelSubscription,
@@ -105,7 +105,7 @@ export async function resolvePlanTerms(plan: Exclude<PlanKey, "free">): Promise<
 
   const expected = {
     amount: entitlements.priceCents,
-    currency: env.RAZORPAY_CURRENCY,
+    currency: CURRENCY,
     cadence: cadenceFor(entitlements.billingMonths),
   };
 
@@ -134,6 +134,35 @@ export async function resolvePlanTerms(plan: Exclude<PlanKey, "free">): Promise<
   }
 
   if (mismatches.length > 0) {
+    /*
+     * The ₹1 test-plan path.
+     *
+     * Only ever reachable on TEST keys (see `allowPlanMismatch`), where no real
+     * money moves and the point is to exercise checkout, the webhook and the
+     * renewal without paying ₹2,499 a go. The ACTUAL terms are returned rather
+     * than the advertised ones, so the ledger records what was really charged
+     * instead of a price nobody paid — a test purchase should look like a ₹1
+     * test purchase in the billing history forever after, not like a full one.
+     *
+     * Logged at warn on every checkout, deliberately noisily: a mismatch left
+     * switched on is a thing you want to trip over in the logs, not discover
+     * from a customer.
+     */
+    if (allowPlanMismatch()) {
+      console.warn(
+        `[razorpay] PLAN MISMATCH ALLOWED (test keys): ${planId} will charge ` +
+          `${actual.item?.amount} ${actual.item?.currency} every ${actual.interval} ${actual.period}, ` +
+          `while /pricing advertises "${plan}" at ${expected.amount} ${expected.currency}. ` +
+          `[${mismatches.join("; ")}]`,
+      );
+      return {
+        razorpayPlanId: planId,
+        amount: actual.item.amount,
+        currency: actual.item.currency,
+        cadence: { period: actual.period as Cadence["period"], interval: actual.interval },
+      };
+    }
+
     throw new PlanConfigError(
       `Razorpay plan ${planId} does not match what /pricing advertises for "${plan}" (${mismatches.join("; ")}). ` +
         `Fix the plan in the dashboard, or the figures in src/lib/plans.ts, so the price shown is the price charged.`,
@@ -396,7 +425,7 @@ export async function activateFromRazorpay(input: {
     startsAt: start,
     periodEnd: end,
     priceCents: amountCents,
-    currency: env.RAZORPAY_CURRENCY,
+    currency: CURRENCY,
     actor: input.actor === "user" ? "user" : "webhook",
     provider: "razorpay",
     providerSubscriptionId: sub.id,
@@ -442,7 +471,7 @@ export async function recordFailedPayment(input: {
     event: "payment_failed",
     actor: "webhook",
     amountCents: input.amountCents,
-    currency: env.RAZORPAY_CURRENCY,
+    currency: CURRENCY,
     note: input.note,
     metadata: input.metadata,
   });

@@ -86,19 +86,6 @@ const EnvSchema = z.object({
   RAZORPAY_KEY_ID: z.string().optional(),
   RAZORPAY_KEY_SECRET: z.string().optional(),
   RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
-  /**
-   * The currency Razorpay actually charges in.
-   *
-   * `PLANS[].priceCents` is one number in minor units and this says what those
-   * minor units ARE — cents at USD, paise at INR. It is env-configurable and
-   * not a constant because it is an ACCOUNT capability, not a code decision:
-   * a Razorpay account charges INR out of the box and refuses anything else
-   * until "International Payments" is approved for it. If plan creation starts
-   * failing with a currency error, this is the one line that moves the whole
-   * app to INR — at which point the figures in src/lib/plans.ts are paise and
-   * want re-pricing, since $35 is not ₹0.35.
-   */
-  RAZORPAY_CURRENCY: z.string().length(3).toUpperCase().default("USD"),
   /*
    * The `plan_…` for each paid tier, created BY HAND in the Razorpay dashboard.
    *
@@ -113,6 +100,22 @@ const EnvSchema = z.object({
    */
   RAZORPAY_PLAN_PREMIUM: z.string().optional(),
   RAZORPAY_PLAN_PRO: z.string().optional(),
+  /**
+   * Let a Razorpay plan disagree with the price the pricing page advertises.
+   *
+   * FOR TESTING THE PAYMENT PATH WITH A ₹1 PLAN, and nothing else. Normally the
+   * checkout reads the plan back and refuses to sell when its amount, currency
+   * or cadence differ from src/lib/plans.ts — that check is the only thing
+   * standing between "we advertise ₹2,499" and "the card is charged something
+   * else", so it is not the kind of thing to leave switchable in production.
+   *
+   * IT IS IGNORED UNLESS THE KEY IS A TEST KEY. See `allowPlanMismatch()`: the
+   * flag alone cannot do anything: with `rzp_live_…` keys it is refused and
+   * logged, so this escaping into a production environment file weakens
+   * nothing. That belt-and-braces is deliberate — an override that protects
+   * real customers only when someone remembers to unset it is not a protection.
+   */
+  RAZORPAY_ALLOW_PLAN_MISMATCH: z.enum(["true", "false"]).default("false"),
 
   // --- S3 (speaking audio storage). Optional for the same reason. ---
   AWS_ACCESS_KEY_ID: z.string().optional(),
@@ -149,9 +152,9 @@ export const env = EnvSchema.parse({
   RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
   RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET,
   RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET,
-  RAZORPAY_CURRENCY: process.env.RAZORPAY_CURRENCY,
   RAZORPAY_PLAN_PREMIUM: process.env.RAZORPAY_PLAN_PREMIUM,
   RAZORPAY_PLAN_PRO: process.env.RAZORPAY_PLAN_PRO,
+  RAZORPAY_ALLOW_PLAN_MISMATCH: process.env.RAZORPAY_ALLOW_PLAN_MISMATCH,
   AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
   AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
   AWS_REGION: process.env.AWS_REGION,
@@ -210,6 +213,32 @@ export function isRazorpayConfigured(): boolean {
  */
 export function razorpayPlanIdFor(plan: "pro" | "premium"): string | undefined {
   return plan === "premium" ? env.RAZORPAY_PLAN_PREMIUM : env.RAZORPAY_PLAN_PRO;
+}
+
+/** True when the configured Razorpay key is a TEST key rather than a live one. */
+export function isRazorpayTestMode(): boolean {
+  return (env.RAZORPAY_KEY_ID ?? "").startsWith("rzp_test_");
+}
+
+/**
+ * True when a Razorpay plan is allowed to charge something other than the
+ * advertised price — the ₹1 test-plan escape hatch.
+ *
+ * BOTH CONDITIONS, and the second is not configurable. A live key refuses the
+ * override however the environment is set, and says so loudly, because the
+ * whole value of the price check is that it cannot be switched off by accident
+ * on the deployment where it matters.
+ */
+export function allowPlanMismatch(): boolean {
+  if (env.RAZORPAY_ALLOW_PLAN_MISMATCH !== "true") return false;
+  if (!isRazorpayTestMode()) {
+    console.error(
+      "[razorpay] RAZORPAY_ALLOW_PLAN_MISMATCH is set on LIVE keys and is being ignored. " +
+        "Unset it: a plan that disagrees with the pricing page must never be sold to a real customer.",
+    );
+    return false;
+  }
+  return true;
 }
 
 /**

@@ -7,6 +7,7 @@ import { users, auditLog } from "@/db/schema";
 import { signupSchema, loginSchema, type AuthFormState } from "@/lib/validation";
 import { hashPassword, verifyPassword, fakeVerify } from "@/lib/security/password";
 import { rateLimit, clearRateLimit } from "@/lib/security/rate-limit";
+import { safeNext } from "@/lib/auth-routes";
 import {
   createSession,
   destroySession,
@@ -106,6 +107,7 @@ export async function signup(
 
   await createSession(userId); // rotates in a fresh session token
   await audit(userId, "signup", ip, userAgent);
+  const destination = safeNext(formData.get("next"));
 
   // Send the welcome email (best-effort — must never block signup, and the try
   // MUST NOT wrap the redirect below, which throws NEXT_REDIRECT).
@@ -121,7 +123,7 @@ export async function signup(
     // A mail outage must not fail account creation.
   }
 
-  redirect("/dashboard");
+  redirect(destination);
 }
 
 /* ------------------------------------------------------------------ *
@@ -196,7 +198,10 @@ export async function login(
   await clearRateLimit(`login:email:${email}`);
   await createSession(user.id);
   await audit(user.id, "login.success", ip, userAgent);
-  redirect("/dashboard");
+  // Back to whatever they were trying to reach — the pricing card they pressed
+  // Subscribe on, or the protected page the proxy bounced. `safeNext` is what
+  // stops that being an open redirect; see src/lib/auth-routes.ts.
+  redirect(safeNext(formData.get("next")));
 }
 
 /* ------------------------------------------------------------------ *
