@@ -737,7 +737,7 @@ export const PRACTICE_POSTS: BlogPost[] = [
       "A day-by-day plan for the final week: what still moves in seven days, what does not, and what to do in the last 48 hours so you arrive sharp rather than exhausted.",
     category: "Study plan",
     date: "September 2026",
-    publishedAt: "2026-09-02",
+    publishedAt: "2026-08-10",
     readMins: 8,
     keywords: [
       "ielts last minute preparation",
@@ -777,7 +777,7 @@ export const PRACTICE_POSTS: BlogPost[] = [
       "Band 8 is not Band 7 with more effort. What the descriptors actually demand at the top end, and how practice has to change to get there.",
     category: "Scoring",
     date: "September 2026",
-    publishedAt: "2026-09-03",
+    publishedAt: "2026-08-03",
     readMins: 9,
     keywords: [
       "how to get band 8 in ielts",

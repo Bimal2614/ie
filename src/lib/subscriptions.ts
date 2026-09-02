@@ -4,7 +4,7 @@ import { and, desc, eq, inArray, isNotNull, lte, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { subscriptionLogs, subscriptions, users } from "@/db/schema";
 import type { Subscription } from "@/db/schema";
-import { effectivePlan, planRank, PLANS, toPlanKey, type PlanKey } from "@/lib/plans";
+import { CURRENCY, effectivePlan, planRank, PLANS, toPlanKey, type PlanKey } from "@/lib/plans";
 
 /**
  * The ONLY writer for what a candidate is entitled to.
@@ -188,6 +188,11 @@ export type GrantInput = {
   periodEnd?: Date | null;
   /** What was charged, in minor units. Omit for a free grant. */
   priceCents?: number | null;
+  /**
+   * Defaults to what the plans table is priced in. Named only by a caller
+   * recording a payment that was actually settled in something else — an
+   * amount in paise stored against "USD" is a refund figure off by ~90x.
+   */
   currency?: string;
   actor?: Actor;
   actorUserId?: string | null;
@@ -261,7 +266,7 @@ export async function grantPlan(input: GrantInput): Promise<Subscription> {
         currentPeriodStart: startsAt,
         currentPeriodEnd: periodEnd,
         priceCents: input.priceCents ?? null,
-        currency: input.currency ?? "USD",
+        currency: input.currency ?? CURRENCY,
         provider: input.provider ?? "manual",
         providerSubscriptionId: input.providerSubscriptionId ?? null,
         providerPlanId: input.providerPlanId ?? null,
@@ -295,7 +300,7 @@ export async function grantPlan(input: GrantInput): Promise<Subscription> {
         effectiveAt: startsAt,
         expiresAt: periodEnd,
         amountCents: input.priceCents ?? null,
-        currency: input.currency ?? "USD",
+        currency: input.currency ?? CURRENCY,
         note: input.note ?? (previous ? "Replaced an existing subscription" : null),
         metadata: input.metadata ?? null,
       },

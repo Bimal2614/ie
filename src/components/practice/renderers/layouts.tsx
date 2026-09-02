@@ -47,18 +47,63 @@ function Sheet({ className, children }: { className?: string; children: React.Re
  * ------------------------------------------------------------------ */
 
 function InlineBlanks({ layout, resolve, run }: LayoutProps<InlineBlanksLayout>) {
+  const prose = (
+    <div className="space-y-3">
+      {layout.blocks.map((block, i) => (
+        <p key={i} className="text-sm leading-7 text-ink-soft">
+          <GapText
+            text={block}
+            resolve={resolve}
+            run={`${run}:b${i}`}
+            renderGap={layout.choices ? (binding) => <ChoiceSlot binding={binding} /> : undefined}
+          />
+        </p>
+      ))}
+    </div>
+  );
+
+  // Typed blanks — "Write ONE WORD from the passage" — have no box.
+  if (!layout.choices) {
+    return (
+      <Sheet>
+        <LayoutHeading run={`${run}:h`}>{layout.heading}</LayoutHeading>
+        {prose}
+      </Sheet>
+    );
+  }
+
+  /**
+   * "Complete the summary using the list of words, A-H, below" — a placement
+   * task over flowing prose, laid out exactly as the flow-chart's box is and
+   * for the same reason: the candidate reads every option before placing any,
+   * so the bank stays on screen while they work through the paragraph.
+   *
+   * The bank goes UNDER the summary rather than beside it. A summary is a
+   * paragraph of running text, and squeezing it into a narrow column to make
+   * room alongside would re-wrap it every few words.
+   */
   return (
     <Sheet>
       <LayoutHeading run={`${run}:h`}>{layout.heading}</LayoutHeading>
-      <div className="space-y-3">
-        {layout.blocks.map((block, i) => (
-          <p key={i} className="text-sm text-ink-soft">
-            <GapText text={block} resolve={resolve} run={`${run}:b${i}`} />
-          </p>
-        ))}
-      </div>
+      {/* Graded state read off a REAL gap — resolving a made-up number returns
+          null, which would leave the box draggable after submission. */}
+      <ChoiceBankProvider
+        choices={layout.choices}
+        disabled={firstBlankDisabled(layout, resolve)}
+      >
+        <div className="space-y-4">
+          {prose}
+          <ChoiceBank />
+        </div>
+      </ChoiceBankProvider>
     </Sheet>
   );
+}
+
+/** Graded state of the summary's first real blank. See Flowchart's twin. */
+function firstBlankDisabled(layout: InlineBlanksLayout, resolve: GapResolver): boolean {
+  const m = layout.blocks.join(" ").match(/\[\[(\d+)\]\]/);
+  return m ? (resolve(Number(m[1]))?.disabled ?? false) : false;
 }
 
 /* ------------------------------------------------------------------ *
@@ -115,6 +160,21 @@ function Notes({ layout, resolve, run }: LayoutProps<NotesLayout>) {
           </div>
         ))}
       </div>
+
+      {/* The printed paper sets these in a ruled box under the task, and the
+          candidate copies a word out of it — so this is a reference box, not
+          a picker. Without it the task cannot be answered at all. */}
+      {layout.wordBank && layout.wordBank.length > 0 && (
+        <div className="mt-5 rounded-lg border border-line bg-paper-sunken px-4 py-3">
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
+            {layout.wordBank.map((word, wi) => (
+              <span key={wi} className="text-sm font-medium text-ink-strong">
+                <AnnotatedText run={`${run}:w${wi}`} text={word} />
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
     </Sheet>
   );
 }
@@ -124,6 +184,10 @@ function Notes({ layout, resolve, run }: LayoutProps<NotesLayout>) {
  * ------------------------------------------------------------------ */
 
 function TableCompletion({ layout, resolve, run }: LayoutProps<TableLayout>) {
+  // The printed paper rules every cell, not just the rows, and a table that
+  // opens straight onto a full-width sentence prints no column headings at
+  // all. Both are reproduced here rather than normalised away.
+  const cell = "border border-line px-4 py-3 text-left";
   return (
     <Sheet className="p-0">
       {layout.heading && (
@@ -134,42 +198,56 @@ function TableCompletion({ layout, resolve, run }: LayoutProps<TableLayout>) {
       {/* Tables are the one stimulus that can genuinely outgrow the column. */}
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr>
-              {layout.columns.map((col, i) => (
-                <th
-                  key={i}
-                  scope="col"
-                  className="border-b border-line bg-paper-sunken px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-ink-strong"
-                >
-                  <AnnotatedText run={`${run}:c${i}`} text={col} />
-                </th>
-              ))}
-            </tr>
-          </thead>
+          {/* A grid whose columns are all blank has no heading row in the
+              paper either — printing one adds an empty grey band above the
+              first real row. */}
+          {layout.columns.some((c) => c.trim()) && (
+            <thead>
+              <tr>
+                {layout.columns.map((col, i) => (
+                  <th
+                    key={i}
+                    scope="col"
+                    className={`${cell} bg-paper-sunken text-xs font-semibold uppercase tracking-wider text-ink-strong`}
+                  >
+                    <AnnotatedText run={`${run}:c${i}`} text={col} />
+                  </th>
+                ))}
+              </tr>
+            </thead>
+          )}
           <tbody>
             {layout.rows.map((row, ri) => (
-              <tr key={ri} className="border-b border-line last:border-0">
-                {row.map((cell, ci) =>
-                  cell.header ? (
+              <tr key={ri}>
+                {row.map((c, ci) => {
+                  // A label shared by the rows beneath it sits centred against
+                  // them, the way the paper sets it; everything else hangs from
+                  // the top so a gap lines up with the text that introduces it.
+                  const span = {
+                    ...(c.colSpan && c.colSpan > 1 ? { colSpan: c.colSpan } : {}),
+                    ...(c.rowSpan && c.rowSpan > 1 ? { rowSpan: c.rowSpan } : {}),
+                  };
+                  const v = c.rowSpan && c.rowSpan > 1 ? "align-middle" : "align-top";
+                  return c.header ? (
                     <th
                       key={ci}
-                      scope="row"
-                      className="bg-paper-sunken/60 px-4 py-3 text-left align-top font-semibold text-ink-strong"
+                      scope={c.colSpan && c.colSpan > 1 ? "colgroup" : "row"}
+                      {...span}
+                      className={`${cell} ${v} bg-paper-sunken/60 font-semibold text-ink-strong`}
                     >
-                      <AnnotatedText run={`${run}:r${ri}.${ci}`} text={cell.text} />
+                      <AnnotatedText run={`${run}:r${ri}.${ci}`} text={c.text} />
                     </th>
                   ) : (
-                    <td key={ci} className="px-4 py-3 align-top text-ink-soft">
+                    <td key={ci} {...span} className={`${cell} ${v} text-ink-soft`}>
                       <GapText
-                        text={cell.text}
+                        text={c.text}
                         resolve={resolve}
                         width="sm"
                         run={`${run}:r${ri}.${ci}`}
                       />
                     </td>
-                  ),
-                )}
+                  );
+                })}
               </tr>
             ))}
           </tbody>

@@ -13,6 +13,17 @@
  * src/lib/security/plan-guard.ts are what enforce it, server-side.
  */
 
+/**
+ * The currency EVERY figure in this file is denominated in.
+ *
+ * One currency, because there is one way to pay: the purchase button opens a
+ * UPI QR, and UPI settles in rupees. A card quoted in dollars beside a QR that
+ * charges rupees is a price the visitor has to convert themselves — and the
+ * `subscriptions.currency` column recorded against a grant reads from here too,
+ * so a stored amount is never a bare number whose unit has to be guessed.
+ */
+export const CURRENCY = "INR";
+
 export const PLAN_KEYS = ["free", "pro", "premium"] as const;
 export type PlanKey = (typeof PLAN_KEYS)[number];
 
@@ -22,7 +33,7 @@ export type SectionKey = "listening" | "reading" | "writing" | "speaking";
 export type Entitlements = {
   /** Display name, as the pricing page and upgrade prompts say it. */
   label: string;
-  /** What ONE payment costs, in minor units (cents). 0 for free. */
+  /** What ONE payment costs, in minor units (paise, at `CURRENCY`). 0 for free. */
   priceCents: number;
   /**
    * What the tier cost BEFORE the current discount, in minor units.
@@ -31,7 +42,7 @@ export type Entitlements = {
    * SHOWN STRUCK THROUGH, NEVER CHARGED. `priceCents` above remains the single
    * number a payment, a subscription row and every gate read; this one is copy.
    * It lives here rather than in the pricing page's markup for the same reason
-   * the real price does: a "was $50" typed into a card is a claim about a
+   * the real price does: a "was ₹4,000" typed into a card is a claim about a
    * purchase, and the hand-written one is what drifts. Ending the promotion is
    * setting this back to `null`, not editing figures in a page.
    */
@@ -89,10 +100,13 @@ export const PLANS: Record<PlanKey, Entitlements> = {
   },
   pro: {
     label: "Pro",
-    priceCents: 1500,
-    // $20 before the launch discount. Kept in step with the hidden card: if Pro
-    // goes back on sale it is already priced, discount and all.
-    listPriceCents: 2000,
+    // Rupees, like every other figure here. Pro is HIDDEN and has never been
+    // sold at these numbers — they exist only so a one-currency table has no
+    // dollar amount left in it. Re-price before putting the card back.
+    priceCents: 119900,
+    // ₹1,999 before the launch discount. Kept in step with the hidden card: if
+    // Pro goes back on sale it is already priced, discount and all.
+    listPriceCents: 199900,
     // Pro is HIDDEN, not retired — see OFFERED_PLANS below, and the card it
     // still needs on the pricing page. One month is the term it has always been
     // sold on, so accounts already holding it keep the window they bought;
@@ -107,8 +121,9 @@ export const PLANS: Record<PlanKey, Entitlements> = {
   },
   premium: {
     label: "Premium",
-    priceCents: 3500,
-    listPriceCents: 5000,
+    // ₹2,499 now, down from ₹4,000.
+    priceCents: 249900,
+    listPriceCents: 400000,
     billingMonths: 3,
     monthlyPracticeAnswers: null,
     practiceSections: ["reading", "listening", "writing", "speaking"],
@@ -250,7 +265,7 @@ export function monthStart(now: Date = new Date()): Date {
 }
 
 /**
- * The denominator in "$35 / 3 months" — what one payment buys, in words.
+ * The denominator in "₹2,499 / 3 months" — what one payment buys, in words.
  *
  * Here and not in the page's copy, because it is a term of sale rather than
  * marketing: the card, the payment dialog and the admin grant screen all say it
@@ -263,9 +278,24 @@ export function billingPeriodLabel(plan: PlanKey): string {
   return months === 1 ? "month" : `${months} months`;
 }
 
-/** "$15" / "$0" — the pricing page's format, from the one stored number. */
-export function formatPrice(cents: number, currency = "USD"): string {
+/**
+ * "₹2,499" / "₹0" — the pricing page's format, from the one stored number.
+ *
+ * Grouped the Indian way (₹2,49,900 for a lakh-sized figure, not ₹249,900) with
+ * an explicit `en-IN`, never the runtime's locale: the pricing page renders on
+ * the server and again in the browser, and a price that formats differently in
+ * the two is a hydration mismatch. Whole amounts drop the paise — "₹2,499.00"
+ * on a card reads like a bill, not a price.
+ */
+export function formatPrice(cents: number, currency: string = CURRENCY): string {
   const amount = cents / 100;
-  const s = Number.isInteger(amount) ? String(amount) : amount.toFixed(2);
+  const whole = Number.isInteger(amount);
+  if (currency === "INR") {
+    return `₹${amount.toLocaleString("en-IN", {
+      minimumFractionDigits: whole ? 0 : 2,
+      maximumFractionDigits: 2,
+    })}`;
+  }
+  const s = whole ? String(amount) : amount.toFixed(2);
   return currency === "USD" ? `$${s}` : `${s} ${currency}`;
 }
