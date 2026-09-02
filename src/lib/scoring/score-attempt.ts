@@ -261,6 +261,7 @@ export async function scoreAttemptWritingFor(
         aiFeedback: {
           onTask: s.onTask,
           wordCount: s.wordCount,
+          gradedWordCount: s.gradedWordCount,
           overallFeedback: s.overallFeedback,
           criteria: s.criteria,
           corrections: s.corrections,

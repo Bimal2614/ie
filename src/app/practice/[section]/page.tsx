@@ -145,7 +145,6 @@ function TaskCardInner({
   qCount,
   unit,
   disabled,
-  secKey,
 }: {
   meta: (typeof QUESTION_TYPES)[QuestionTypeKey];
   qCount: number;

@@ -72,6 +72,7 @@ export function SectionBody({
   groupHeaders = true,
   instructions = "full",
   spokenPromptOnly = false,
+  autoRecordAfterPrompt = false,
   answerScope,
   flagged,
   onToggleFlag,
@@ -143,6 +144,13 @@ export function SectionBody({
    * because they are two different decisions that happen to agree today.
    */
   spokenPromptOnly?: boolean;
+  /**
+   * Speaking: start recording by itself when the examiner's question ends. The
+   * mock passes this — on test day there is no button — and section practice
+   * does not, because there the clip is something you replay until you have
+   * understood it.
+   */
+  autoRecordAfterPrompt?: boolean;
 }) {
   /**
    * A map answers exactly one task, so it is drawn inside that group rather
@@ -267,6 +275,7 @@ export function SectionBody({
         matrixImage: figureOwner >= 0 ? section.imageUrl : null,
         stimulusImage: figureOwner < 0,
         spokenPromptOnly,
+        autoRecordAfterPrompt,
       }}
     />
   );

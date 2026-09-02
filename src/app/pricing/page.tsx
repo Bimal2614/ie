@@ -39,10 +39,10 @@ function listPrice(tier: PlanKey): string | null {
  * stretch of time while the server grants another cannot happen. The copy below
  * (taglines, feature lines) is marketing's, and stays.
  *
- * ONE PAID TIER IS SOLD. Pro is still defined in src/lib/plans.ts — an account
- * granted it must keep resolving to what it was sold — but it has no card here,
- * so Premium is the only thing a visitor can buy and the only thing an upgrade
- * prompt names. Bringing it back is a card here plus `OFFERED_PLANS` there.
+ * A CARD HERE IS NOT WHAT PUTS A TIER ON SALE — `OFFERED_PLANS` in
+ * src/lib/plans.ts is, and it is also what the checkout action validates
+ * against. The two must agree: a card for a tier missing from that list renders
+ * a button whose server action refuses it.
  */
 const PLANS = [
   {
@@ -63,6 +63,27 @@ const PLANS = [
     // Rendered with a muted cross, so the free tier's ceiling is stated rather
     // than left for the reader to infer from an absence.
     excludes: ["AI band scoring on Writing & Speaking"],
+  },
+  {
+    name: "Pro",
+    tier: "pro" as PlanKey,
+    price: formatPrice(PLAN_ENTITLEMENTS.pro.priceCents),
+    was: listPrice("pro"),
+    cadence: billingPeriodLabel("pro"),
+    tagline: "Everything marked, month to month.",
+    cta: "Go Pro",
+    href: "/signup",
+    featured: false,
+    features: [
+      "Unlimited practice questions",
+      "AI band scoring on Writing & Speaking",
+      "Unlimited full mock tests",
+      "All 4 skills, every task type",
+      "Full history & progress tracking",
+    ],
+    // What Pro does NOT buy, stated rather than left to be inferred from the
+    // longer list on the card beside it.
+    excludes: ["Priority AI scoring", "Band-prediction reports & study plan"],
   },
   {
     name: "Premium",
@@ -115,7 +136,7 @@ export default function PricingPage() {
         </Reveal>
 
         {/* Plans */}
-        <div className="mx-auto mt-14 grid max-w-3xl items-start gap-6 sm:grid-cols-2">
+        <div className="mx-auto mt-14 grid max-w-5xl items-start gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {PLANS.map((p, i) => (
             <Reveal key={p.name} delay={i * 0.1} className="h-full">
               <div

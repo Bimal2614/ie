@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { Eye, EyeOff, Loader2, ArrowRight } from "lucide-react";
 import { signup } from "@/app/actions/auth";
+import { clearAuthCache } from "@/lib/auth-cache";
 import { type AuthFormState } from "@/lib/validation";
 import { cn } from "@/lib/utils";
 import { AuthField, authButton, authError } from "./auth-ui";
@@ -14,7 +15,7 @@ const MODULES = [
   { value: "general", label: "General Training", hint: "Migration / work" },
 ] as const;
 
-export function SignupForm() {
+export function SignupForm({ next }: { next?: string }) {
   const [state, action, pending] = useActionState<AuthFormState, FormData>(
     signup,
     null,
@@ -23,7 +24,11 @@ export function SignupForm() {
   const [module, setModule] = useState<"academic" | "general">("academic");
 
   return (
-    <form action={action} className="space-y-3" noValidate>
+    // Same reason as LoginForm: drop whoever was cached before the session is
+    // swapped, so the new account is never painted with the old one's tier.
+    <form action={action} onSubmit={() => clearAuthCache()} className="space-y-3" noValidate>
+      {/* See LoginForm: a hint for where to land, revalidated by `safeNext`. */}
+      {next && <input type="hidden" name="next" value={next} />}
       {state?.error && (
         <p role="alert" className={authError}>
           {state.error}
@@ -118,7 +123,7 @@ export function SignupForm() {
       <p className="pt-1 text-center text-sm text-ink-muted">
         Already have an account?{" "}
         <Link
-          href="/login"
+          href={next ? `/login?next=${encodeURIComponent(next)}` : "/login"}
           className="ml-1 rounded-full border border-line px-3 py-1 font-medium text-ink transition-colors hover:bg-paper-sunken"
         >
           Log in

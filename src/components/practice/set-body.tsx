@@ -95,6 +95,7 @@ export function SetBody({
   onClearAnswer,
   flagged,
   onToggleFlag,
+  onSequentialFocus,
   slot = "all",
   exam = false,
 }: {
@@ -107,6 +108,11 @@ export function SetBody({
   /** Client-side "mark for review" set + toggle (optional — omitted in mock review). */
   flagged?: Set<string>;
   onToggleFlag?: (questionId: string) => void;
+  /**
+   * Speaking Parts 1 and 3 only: which question the interview has moved to.
+   * The player uses it to scope its history panel to that question.
+   */
+  onSequentialFocus?: (questionId: string) => void;
   /**
    * Which half to draw. The exam layout puts the passage or the figure in one
    * pane and the questions in the other, so it asks for them separately; the
@@ -223,6 +229,7 @@ export function SetBody({
         splitStimulus: !exam && set.section === "reading",
         // Speaking Parts 1 and 3 are an interview, one question at a time.
         sequential: meta.presentation === "sequential",
+        onSequentialFocus,
         // Listening sets carry a per-question window into the recording. Kept in
         // the exam layout too: section practice has no equivalent, so dropping
         // it to match would remove a feature rather than align a look.

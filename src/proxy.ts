@@ -38,26 +38,49 @@ const AUTH_ROUTES = ["/login", "/signup"];
 // *.amazonaws.com. Allowed for media/img/fetch so playback isn't CSP-blocked.
 const S3 = "https://*.amazonaws.com";
 
+/**
+ * Razorpay Checkout's origins.
+ *
+ * The modal is an IFRAME served from api.razorpay.com, loaded by a script from
+ * checkout.razorpay.com, which then talks to several razorpay.com subdomains
+ * (api for the payment itself, lumberjack for its telemetry) and pulls bank and
+ * wallet logos from its CDN. Every one of those is a separate CSP directive,
+ * and the failure mode when one is missing is silent: the button opens an empty
+ * white box with the refusal only in the console.
+ *
+ * The wildcard covers those subdomains without pinning a list that Razorpay is
+ * free to change. It is not in `script-src`, where `strict-dynamic` makes host
+ * expressions meaningless — the checkout script is trusted there by being
+ * inserted from already-trusted code (see use-razorpay-checkout.ts), not by its
+ * origin, which is the stronger rule and the reason the host is listed here for
+ * documentation and for browsers too old to honour strict-dynamic.
+ */
+const RAZORPAY = "https://*.razorpay.com";
+
 function buildCsp(nonce: string): string {
   return [
     `default-src 'self'`,
     // 'strict-dynamic' lets the nonce'd Next bootstrap script load the rest;
     // 'unsafe-eval' is dev-only (React uses eval for better stack traces).
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${RAZORPAY}${isDev ? " 'unsafe-eval'" : ""}`,
     // Styles use 'unsafe-inline' WITHOUT a nonce. Per the CSP spec, a nonce (or
     // hash) in style-src makes the browser IGNORE 'unsafe-inline' — which would
     // block every React inline style={{…}} (colours, gradients, widths, fonts)
     // and Next's own injected styles. Inline style is low-risk (it can't run
     // JS); scripts stay strict with the nonce above, where the real risk is.
     `style-src 'self' 'unsafe-inline'`,
-    `img-src 'self' blob: data: ${S3}`,
+    `img-src 'self' blob: data: ${S3} ${RAZORPAY}`,
     `media-src 'self' blob: ${S3}`,
     `font-src 'self'`,
     `object-src 'none'`,
     `base-uri 'self'`,
-    `form-action 'self'`,
+    // Razorpay posts to its own domain for the bank / 3-D Secure hop.
+    `form-action 'self' ${RAZORPAY}`,
     `frame-ancestors 'none'`, // clickjacking protection (with X-Frame-Options)
-    `connect-src 'self' ${S3}`,
+    // The Checkout modal itself. Without this it falls back to default-src
+    // 'self' and the button opens a blank white box.
+    `frame-src ${RAZORPAY}`,
+    `connect-src 'self' ${S3} ${RAZORPAY}`,
     `upgrade-insecure-requests`,
   ].join("; ");
 }
@@ -77,9 +100,23 @@ function applySecurityHeaders(res: NextResponse, csp: string): void {
   res.headers.set("X-DNS-Prefetch-Control", "off");
   res.headers.set(
     "Permissions-Policy",
-    "camera=(), geolocation=(), payment=(), usb=(), microphone=(self)",
+    // `payment=(self)` enables the Payment Request API that Razorpay Checkout
+    // uses for saved cards and wallet autofill; it was disabled outright here
+    // before there was anything on the site to pay for.
+    "camera=(), geolocation=(), payment=(self), usb=(), microphone=(self)",
   );
-  res.headers.set("Cross-Origin-Opener-Policy", "same-origin");
+  /*
+   * `same-origin-allow-popups`, not `same-origin`.
+   *
+   * Razorpay Checkout sends some methods — netbanking especially — through a
+   * popup that reports the result back via `window.opener`. Under plain
+   * `same-origin` the browser severs that reference, and the popup completes
+   * the payment with no way to tell the page it did: the customer is charged
+   * and the modal sits there spinning. The relaxation only concerns popups THIS
+   * page opens; a cross-origin document still cannot reach into this one, which
+   * is the protection that matters here.
+   */
+  res.headers.set("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
   res.headers.set("Cross-Origin-Resource-Policy", "same-origin");
 }
 

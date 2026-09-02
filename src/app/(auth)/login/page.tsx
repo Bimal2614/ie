@@ -14,8 +14,8 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ verified?: string; verify?: string; oauth?: string; signedout?: string }> }) {
-  const { verified, verify, oauth, signedout } = await searchParams;
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ verified?: string; verify?: string; oauth?: string; signedout?: string; next?: string }> }) {
+  const { verified, verify, oauth, signedout, next } = await searchParams;
   const oauthError = oauth ? OAUTH_ERROR[oauth] : null;
   return (
     <div className="space-y-6">
@@ -44,7 +44,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       {oauthError && (
         <p className="rounded-lg border border-danger/25 bg-danger-soft px-3 py-2 text-sm text-danger">{oauthError}</p>
       )}
-      <LoginForm />
+      <LoginForm next={next} />
       <GoogleButton />
     </div>
   );

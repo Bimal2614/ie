@@ -443,6 +443,10 @@ export function MockPlayer({ sitting }: Props) {
       // On test day a Speaking question is spoken and never printed, so the
       // paper plays it and hides the text. Section practice does the opposite.
       spokenPromptOnly
+      // And nobody hands you a record button either: the question plays, and
+      // when it stops the recorder is already running. Section practice leaves
+      // the candidate to press it, because that is where a clip gets replayed.
+      autoRecordAfterPrompt
     />
   );
 

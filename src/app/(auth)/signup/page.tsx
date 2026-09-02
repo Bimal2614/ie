@@ -8,7 +8,8 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-export default function SignupPage() {
+export default async function SignupPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
+  const { next } = await searchParams;
   return (
     <div className="space-y-4">
       <AuthHeader
@@ -16,7 +17,7 @@ export default function SignupPage() {
         subtitle="Enter your details to start practising."
       />
       <GoogleButton label="Sign up with Google" position="top" />
-      <SignupForm />
+      <SignupForm next={next} />
     </div>
   );
 }

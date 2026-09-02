@@ -25,12 +25,10 @@ export function QuestionJumpDialog({
   onNavigate,
   sectionLabel,
   typeLabel,
-  accentColor = "brand",
 }: QuestionJumpDialogProps) {
   if (!isOpen) return null;
 
   const answeredCount = questions.filter((q) => q.status === "answered").length;
-  const flaggedCount = questions.filter((q) => q.status === "flagged").length;
   const remaining = totalCount - answeredCount;
 
   const getStatus = (index: number): QuestionStatus["status"] => {

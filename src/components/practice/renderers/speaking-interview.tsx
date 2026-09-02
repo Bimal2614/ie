@@ -30,7 +30,9 @@ export function SpeakingInterview({
   answers,
   disabled,
   spokenOnly = false,
+  autoRecord = false,
   onAnswer,
+  onFocusChange,
 }: {
   topic: string;
   questions: RenderQuestion[];
@@ -38,13 +40,39 @@ export function SpeakingInterview({
   disabled: boolean;
   /** Mock: play the question instead of printing it. */
   spokenOnly?: boolean;
+  /** Mock: open the recorder as soon as the examiner's question has played out. */
+  autoRecord?: boolean;
   onAnswer: (questionId: string, value: Answer) => void;
+  /**
+   * Which question is being asked, for chrome that lives outside this card.
+   *
+   * The index is state in here — the dots, Previous and Next all move it — but
+   * the player's history panel reports on ONE question, so it has to be told
+   * which. Reported upwards rather than lifted: the interview owns where it is,
+   * and every other surface that draws it (the mock, section practice) is free
+   * to ignore this.
+   */
+  onFocusChange?: (questionId: string) => void;
 }) {
   const [index, setIndex] = useState(0);
+  /**
+   * Which question's clip has played to the end — by id, not a flag, because
+   * this component stays mounted as the interview moves and a boolean would
+   * still read "finished" over the next question, which nobody has heard yet.
+   */
+  const [askedFully, setAskedFully] = useState<string | null>(null);
   const current = questions[index];
   const answeredCount = questions.filter((q) => isAnswered(answers[q.id])).length;
   const answeredById = (id: string) => isAnswered(answers[id]);
   const atLast = index === questions.length - 1;
+
+  // Above the early return, because hooks cannot sit behind one. Keyed on the
+  // id rather than the index so stepping between two sets that both open at
+  // question 1 still reports the change.
+  const currentId = current?.id;
+  useEffect(() => {
+    if (currentId) onFocusChange?.(currentId);
+  }, [currentId, onFocusChange]);
 
   if (!current) return null;
 
@@ -108,6 +136,7 @@ export function SpeakingInterview({
             // question's progress and its "already played" state.
             key={current.id}
             src={current.promptAudioSrc}
+            onEnded={() => setAskedFully(current.id)}
           />
         ) : null}
 
@@ -127,6 +156,8 @@ export function SpeakingInterview({
             disabled={disabled}
             state="idle"
             options={null}
+            autoRecord={autoRecord}
+            promptEnded={askedFully === current.id}
             onChange={(v) => onAnswer(current.id, v)}
           />
         </div>
@@ -167,18 +198,13 @@ export function SpeakingInterview({
  * a waveform attached. Reusing it means one player to maintain, one set of
  * no-download rules, and a volume the candidate set on a listening part still
  * holding here.
+ *
+ * It asks once, unprompted — that is the examiner speaking without being
+ * invited to. Autoplay is best-effort (browsers refuse it until the page has
+ * been interacted with) and the player's own button is what guarantees it;
+ * `onEnded` reports the end of the question either way.
  */
-function ExaminerAudio({ src }: { src: string }) {
+function ExaminerAudio({ src, onEnded }: { src: string; onEnded?: () => void }) {
   const ref = useRef<HTMLAudioElement | null>(null);
-
-  /**
-   * Ask once, unprompted — that is the examiner speaking without being invited
-   * to. Browsers refuse autoplay until the page has been interacted with, so
-   * this is best-effort and the player's own button is what guarantees it.
-   */
-  useEffect(() => {
-    ref.current?.play().catch(() => {});
-  }, []);
-
-  return <AudioStimulus src={src} audioRef={ref} className="mt-3" />;
+  return <AudioStimulus src={src} audioRef={ref} autoPlay onEnded={onEnded} className="mt-3" />;
 }

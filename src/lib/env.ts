@@ -74,6 +74,49 @@ const EnvSchema = z.object({
   //     is unset: an unauthenticated sweep would let anyone churn the ledger. ---
   CRON_SECRET: z.string().min(16, "CRON_SECRET must be at least 16 characters").optional(),
 
+  // --- Razorpay (recurring subscriptions). Optional: the app boots without
+  //     them and every paid button falls back to saying checkout is
+  //     unavailable, rather than opening a checkout that cannot charge.
+  //     The KEY ID is public (the browser needs it to open Checkout) and is
+  //     handed to the client by the checkout action, not by a NEXT_PUBLIC_
+  //     variable — that way a deployment with no keys ships no key at all.
+  //     The SECRET signs API calls and verifies the handler's signature; the
+  //     WEBHOOK secret is a DIFFERENT value, set when you create the webhook
+  //     in the Razorpay dashboard. ---
+  RAZORPAY_KEY_ID: z.string().optional(),
+  RAZORPAY_KEY_SECRET: z.string().optional(),
+  RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
+  /*
+   * The `plan_…` for each paid tier, created BY HAND in the Razorpay dashboard.
+   *
+   * IN THE ENVIRONMENT, not in src/lib/plans.ts, because a plan id is not a
+   * property of the tier — it is a property of the Razorpay ACCOUNT. Test mode
+   * and live mode issue different ids for the same plan, so an id committed
+   * beside `priceCents` would work perfectly until the day the live keys went
+   * in and then fail for everyone at once.
+   *
+   * Optional per tier: a tier with no id set simply cannot be bought, and says
+   * so, rather than falling back to a plan that charges something else.
+   */
+  RAZORPAY_PLAN_PREMIUM: z.string().optional(),
+  RAZORPAY_PLAN_PRO: z.string().optional(),
+  /**
+   * Let a Razorpay plan disagree with the price the pricing page advertises.
+   *
+   * FOR TESTING THE PAYMENT PATH WITH A ₹1 PLAN, and nothing else. Normally the
+   * checkout reads the plan back and refuses to sell when its amount, currency
+   * or cadence differ from src/lib/plans.ts — that check is the only thing
+   * standing between "we advertise ₹2,499" and "the card is charged something
+   * else", so it is not the kind of thing to leave switchable in production.
+   *
+   * IT IS IGNORED UNLESS THE KEY IS A TEST KEY. See `allowPlanMismatch()`: the
+   * flag alone cannot do anything: with `rzp_live_…` keys it is refused and
+   * logged, so this escaping into a production environment file weakens
+   * nothing. That belt-and-braces is deliberate — an override that protects
+   * real customers only when someone remembers to unset it is not a protection.
+   */
+  RAZORPAY_ALLOW_PLAN_MISMATCH: z.enum(["true", "false"]).default("false"),
+
   // --- S3 (speaking audio storage). Optional for the same reason. ---
   AWS_ACCESS_KEY_ID: z.string().optional(),
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
@@ -106,6 +149,12 @@ export const env = EnvSchema.parse({
   RATE_LIMIT_VIOLATIONS_BEFORE_DEACTIVATE: process.env.RATE_LIMIT_VIOLATIONS_BEFORE_DEACTIVATE,
   RATE_LIMIT_VIOLATION_WINDOW_DAYS: process.env.RATE_LIMIT_VIOLATION_WINDOW_DAYS,
   CRON_SECRET: process.env.CRON_SECRET,
+  RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
+  RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET,
+  RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET,
+  RAZORPAY_PLAN_PREMIUM: process.env.RAZORPAY_PLAN_PREMIUM,
+  RAZORPAY_PLAN_PRO: process.env.RAZORPAY_PLAN_PRO,
+  RAZORPAY_ALLOW_PLAN_MISMATCH: process.env.RAZORPAY_ALLOW_PLAN_MISMATCH,
   AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
   AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
   AWS_REGION: process.env.AWS_REGION,
@@ -139,6 +188,67 @@ export function isEmailConfigured(): boolean {
 /** True when the scheduled subscription sweep can authenticate callers. */
 export function isCronConfigured(): boolean {
   return Boolean(env.CRON_SECRET);
+}
+
+/**
+ * True when Razorpay can both open a checkout and sign an API call.
+ *
+ * BOTH keys, for the same reason the Speaking check wants both halves: a key id
+ * with no secret opens a checkout that every server call behind it answers 401,
+ * which looks configured right up to the moment someone tries to pay.
+ * The webhook secret is deliberately NOT part of this — checkout works without
+ * it (the signed handler activates the plan); what is lost is renewals, and
+ * `isRazorpayWebhookConfigured` below is what guards that.
+ */
+export function isRazorpayConfigured(): boolean {
+  return Boolean(env.RAZORPAY_KEY_ID && env.RAZORPAY_KEY_SECRET);
+}
+
+/**
+ * The dashboard-created `plan_…` for a paid tier, or undefined if none is set.
+ *
+ * Keyed by the tier's own name so adding a tier is one env var, not a code
+ * change — but read through a function rather than by string-building the
+ * variable name, so a typo is a compile error instead of a silent undefined.
+ */
+export function razorpayPlanIdFor(plan: "pro" | "premium"): string | undefined {
+  return plan === "premium" ? env.RAZORPAY_PLAN_PREMIUM : env.RAZORPAY_PLAN_PRO;
+}
+
+/** True when the configured Razorpay key is a TEST key rather than a live one. */
+export function isRazorpayTestMode(): boolean {
+  return (env.RAZORPAY_KEY_ID ?? "").startsWith("rzp_test_");
+}
+
+/**
+ * True when a Razorpay plan is allowed to charge something other than the
+ * advertised price — the ₹1 test-plan escape hatch.
+ *
+ * BOTH CONDITIONS, and the second is not configurable. A live key refuses the
+ * override however the environment is set, and says so loudly, because the
+ * whole value of the price check is that it cannot be switched off by accident
+ * on the deployment where it matters.
+ */
+export function allowPlanMismatch(): boolean {
+  if (env.RAZORPAY_ALLOW_PLAN_MISMATCH !== "true") return false;
+  if (!isRazorpayTestMode()) {
+    console.error(
+      "[razorpay] RAZORPAY_ALLOW_PLAN_MISMATCH is set on LIVE keys and is being ignored. " +
+        "Unset it: a plan that disagrees with the pricing page must never be sold to a real customer.",
+    );
+    return false;
+  }
+  return true;
+}
+
+/**
+ * True when the Razorpay webhook can authenticate a caller.
+ *
+ * The route stays CLOSED while this is unset, exactly as the cron sweep does:
+ * an unverified webhook is an open endpoint for granting anyone a paid plan.
+ */
+export function isRazorpayWebhookConfigured(): boolean {
+  return Boolean(env.RAZORPAY_WEBHOOK_SECRET);
 }
 
 /** True when Google OAuth is configured. */

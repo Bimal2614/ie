@@ -4,15 +4,30 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { Eye, EyeOff, Loader2, ArrowRight } from "lucide-react";
 import { login } from "@/app/actions/auth";
+import { clearAuthCache } from "@/lib/auth-cache";
 import { type AuthFormState } from "@/lib/validation";
 import { AuthField, authButton, authError } from "./auth-ui";
 
-export function LoginForm() {
+export function LoginForm({ next }: { next?: string }) {
   const [state, action, pending] = useActionState<AuthFormState, FormData>(login, null);
   const [show, setShow] = useState(false);
 
   return (
-    <form action={action} className="space-y-4" noValidate>
+    /*
+     * The outgoing account's cached tier is dropped the moment a sign-in is
+     * attempted. `login` ends in a server-side redirect, which the App Router
+     * serves as a client navigation: nothing remounts, so a leftover
+     * `{"plan":"premium"}` from the last person would be painted onto the next
+     * one's first frame — a free account being told, on /pricing, that Premium
+     * is "Your current plan". Clearing here also settles AuthProvider through
+     * the same-tab event; the probe on arrival fills in the real tier.
+     */
+    <form action={action} onSubmit={() => clearAuthCache()} className="space-y-4" noValidate>
+      {/* Where to land after signing in. Travels as a form field rather than
+          being read from the URL in the action, because a Server Action has no
+          referring URL to read. Revalidated server-side by `safeNext` — this
+          input is a hint, not a trusted destination. */}
+      {next && <input type="hidden" name="next" value={next} />}
       {state?.error && (
         <p role="alert" className={authError}>
           {state.error}
@@ -70,7 +85,7 @@ export function LoginForm() {
       <p className="pt-1 text-center text-sm text-ink-muted">
         New here?{" "}
         <Link
-          href="/signup"
+          href={next ? `/signup?next=${encodeURIComponent(next)}` : "/signup"}
           className="ml-1 rounded-full border border-line px-3 py-1 font-medium text-ink transition-colors hover:bg-paper-sunken"
         >
           Create an account

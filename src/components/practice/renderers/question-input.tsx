@@ -6,7 +6,13 @@ import { storeSpeakingRecording } from "@/app/actions/speaking";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { QUESTION_TYPES, type QuestionTypeKey } from "@/lib/ielts";
+import {
+  countWords,
+  QUESTION_TYPES,
+  truncateToWords,
+  writingWordCap,
+  type QuestionTypeKey,
+} from "@/lib/ielts";
 import type { Answer, OptionsLayout } from "@/lib/question-content";
 import { GapField, type GapBinding } from "./gap-field";
 import { AnnotatedText } from "./annotations";
@@ -40,6 +46,13 @@ type InputProps = {
    * ending well short of the chart beside it.
    */
   fill?: boolean;
+  /**
+   * Speaking, mock only: open the recorder without being asked, once the
+   * examiner's question has played out. See `autoRecordAfterPrompt`.
+   */
+  autoRecord?: boolean;
+  /** That question's clip has reached its end — the cue `autoRecord` waits for. */
+  promptEnded?: boolean;
 };
 
 /* ------------------------------------------------------------------ *
@@ -302,9 +315,20 @@ function ShortAnswer({ question, value, disabled, state, onChange }: InputProps)
 
 function Writing({ question, value, disabled, onChange, fill }: InputProps) {
   const text = (value?.text as string) ?? "";
-  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+  const words = countWords(text);
   const min = question.wordLimitMin ?? 0;
   const under = min > 0 && words < min;
+  // Nothing past this is marked: the AI examiner is sent the first `max` words
+  // and no more (see `writingWordCap`), so the box stops taking input there
+  // rather than letting someone write a thousand words no one will read. A
+  // paste over the limit is cut to it on the spot.
+  const max = writingWordCap(question.questionType, question.wordLimitMin);
+  const atMax = words >= max;
+
+  const setText = (raw: string) => {
+    const next = countWords(raw) > max ? truncateToWords(raw, max) : raw;
+    onChange({ text: next, words: countWords(next) });
+  };
 
   return (
     <div className={cn("space-y-2", fill && "flex h-full min-h-0 flex-col")}>
@@ -313,7 +337,7 @@ function Writing({ question, value, disabled, onChange, fill }: InputProps) {
         disabled={disabled}
         value={text}
         placeholder="Write your response here…"
-        onChange={(e) => onChange({ text: e.target.value, words })}
+        onChange={(e) => setText(e.target.value)}
         /*
          * NO WRITING AID OF ANY KIND. The real test gives none, and spelling and
          * grammatical accuracy are two of the four things Writing is marked on —
@@ -344,10 +368,14 @@ function Writing({ question, value, disabled, onChange, fill }: InputProps) {
         <span className={cn("font-mono tabular-nums", under ? "text-danger" : "text-ink-muted")}>
           {words} {words === 1 ? "word" : "words"}
         </span>
-        {min > 0 && (
-          <span className="text-ink-muted">
-            {under ? `${min - words} more to reach the ${min}-word minimum` : `Minimum ${min} met`}
-          </span>
+        {atMax ? (
+          <span className="text-danger">Limit reached: only the first {max} words are marked.</span>
+        ) : (
+          min > 0 && (
+            <span className="text-ink-muted">
+              {under ? `${min - words} more to reach the ${min}-word minimum` : `Minimum ${min} met`}
+            </span>
+          )
         )}
       </div>
     </div>
@@ -358,7 +386,7 @@ function Writing({ question, value, disabled, onChange, fill }: InputProps) {
  * Speaking
  * ------------------------------------------------------------------ */
 
-function Speaking({ question, value, disabled, onChange }: InputProps) {
+function Speaking({ question, value, disabled, autoRecord, promptEnded, onChange }: InputProps) {
   const cue = question.content?.cueCard as { topic: string; bullets: string[] } | undefined;
   const [recording, setRecording] = useState(false);
   const [recorded, setRecorded] = useState(false);
@@ -450,7 +478,7 @@ function Speaking({ question, value, disabled, onChange }: InputProps) {
   // Stop automatically at the speaking limit — the real test cuts you off.
   useEffect(() => {
     if (recording && limit > 0 && elapsed >= limit) stop();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [elapsed, recording, limit]);
 
   const startPrep = () => {
@@ -608,6 +636,30 @@ function Speaking({ question, value, disabled, onChange }: InputProps) {
   // Part 2 gives a preparation minute; Parts 1/3 (no cue card / no prep) don't.
   const hasPrep = prep > 0 && !!cue;
 
+  /**
+   * THE MOCK HANDS YOU NO BUTTON. The examiner asks, the question ends, and you
+   * are expected to be speaking — so the recorder opens itself. Part 2 goes to
+   * its preparation minute instead, which is what the cue card means on test
+   * day; `startPrep` starts the recording when that runs out.
+   *
+   * ONCE PER QUESTION, and never over an answer that already exists. Replaying
+   * the question fires `ended` again, and without the guard the second one
+   * would open a recorder on top of the take just given — throwing that answer
+   * away to record the candidate's surprise.
+   */
+  const autoStartedFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (!autoRecord || !promptEnded) return;
+    if (autoStartedFor.current === question.id) return;
+    if (disabled || recording || recorded || uploading || preparing) return;
+    autoStartedFor.current = question.id;
+    if (hasPrep) startPrep();
+    else void start();
+    // `start` and `startPrep` are rebuilt every render; listing them would re-run
+    // this on each one. The clip ending is the only cue that should trigger it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRecord, promptEnded, question.id, disabled, recording, recorded, uploading, preparing]);
+
   return (
     <div className="space-y-3">
       {cue && (
@@ -659,13 +711,22 @@ function Speaking({ question, value, disabled, onChange }: InputProps) {
             </Button>
           )
         )}
+        {/* Say so before it happens: a recorder that opens by itself is only
+            fair if the candidate knew it was coming. Gone the moment it does. */}
+        {autoRecord && !recording && !preparing && !recorded && (
+          <span className="text-xs text-ink-muted">
+            {hasPrep
+              ? "Preparation time starts when the examiner finishes."
+              : "Recording starts when the examiner finishes."}
+          </span>
+        )}
         {uploading && (
           <span className="inline-flex items-center gap-1.5 text-xs text-ink-muted">
             <Loader2 className="size-3.5 animate-spin" /> Saving recording…
           </span>
         )}
         {url && !recording && (
-          // eslint-disable-next-line jsx-a11y/media-has-caption
+           
           <audio controls src={url} className="h-9" />
         )}
       </div>

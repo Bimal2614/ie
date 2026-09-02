@@ -25,7 +25,6 @@ export function QuestionNavigator({
   onPrevious,
   onNext,
   onJump,
-  accentColor = "brand",
 }: QuestionNavigatorProps) {
   const completedCount = questions.filter((q) => q.status === "answered").length;
   const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;

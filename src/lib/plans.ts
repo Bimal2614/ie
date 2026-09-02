@@ -100,17 +100,11 @@ export const PLANS: Record<PlanKey, Entitlements> = {
   },
   pro: {
     label: "Pro",
-    // Rupees, like every other figure here. Pro is HIDDEN and has never been
-    // sold at these numbers — they exist only so a one-currency table has no
-    // dollar amount left in it. Re-price before putting the card back.
-    priceCents: 119900,
-    // ₹1,999 before the launch discount. Kept in step with the hidden card: if
-    // Pro goes back on sale it is already priced, discount and all.
+    // ₹1,299 a month, down from ₹1,999.
+    priceCents: 129900,
     listPriceCents: 199900,
-    // Pro is HIDDEN, not retired — see OFFERED_PLANS below, and the card it
-    // still needs on the pricing page. One month is the term it has always been
-    // sold on, so accounts already holding it keep the window they bought;
-    // change this only if it goes back on sale with a different term.
+    // One month is the term Pro has always been sold on, so accounts already
+    // holding it keep the window they bought.
     billingMonths: 1,
     monthlyPracticeAnswers: null,
     practiceSections: ["reading", "listening", "writing", "speaking"],
@@ -178,17 +172,25 @@ export function isPlanBlock(value: unknown): value is PlanBlock {
  * ------------------------------------------------------------------ */
 
 /**
- * The paid tiers a candidate can be put on today, cheapest first.
+ * The paid tiers a candidate can be put on today, CHEAPEST FIRST.
  *
- * ONLY PREMIUM IS SOLD. Pro stays defined in `PLANS` above rather than being
- * deleted: `users.plan` is a database enum and a subscription that was granted
- * on Pro must still resolve to the entitlements it was sold with, or an old row
- * would silently read as `free`. What this list controls is the FUTURE — the
- * tiers the pricing page offers, the tiers an admin can grant, and the tier
- * every "upgrade to X" prompt names. Selling Pro again is adding it back here,
- * not editing the gates.
+ * This list controls the tiers the pricing page offers, the tiers an admin can
+ * grant, and the tier every "upgrade to X" prompt names — it is not what the
+ * gates read. Pro was hidden here for a while and stayed defined in `PLANS`
+ * throughout, which is the point of keeping the two separate: `users.plan` is a
+ * database enum, and an account granted Pro must keep resolving to the
+ * entitlements it was sold with whether or not the card is on the page.
+ *
+ * The order matters. `cheapestPlanWith()` walks this list to answer "what is
+ * the least a candidate must buy for AI scoring?", so a tier out of price order
+ * would send someone to a dearer plan than they need.
+ *
+ * EVERY TIER HERE NEEDS A RAZORPAY PLAN. Adding one means creating the matching
+ * plan in the Razorpay dashboard and setting its `RAZORPAY_PLAN_<TIER>` — the
+ * checkout refuses to sell a tier it has no plan id for, rather than falling
+ * back to another tier's price.
  */
-export const OFFERED_PLANS = ["premium"] as const satisfies readonly Exclude<PlanKey, "free">[];
+export const OFFERED_PLANS = ["pro", "premium"] as const satisfies readonly Exclude<PlanKey, "free">[];
 
 export type OfferedPlan = (typeof OFFERED_PLANS)[number];
 

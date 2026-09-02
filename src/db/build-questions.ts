@@ -267,7 +267,10 @@ async function main() {
                 explanation: i.explanation ?? expl[String(i.n)] ?? null,
               })),
             ),
-            timings[`${bookNo}|${part.testNumber}|${part.partNumber}`] ?? null,
+            // Keyed by bookKey, not the bare number: a series with no digits in
+            // its name collapsed to "" and every one of them collided. Cambridge
+            // keys are unchanged, since bookKey gives a numbered book its digits.
+            timings[`${bookKey(part.book)}|${part.testNumber}|${part.partNumber}`] ?? null,
           )
         : new Map<number, Window>();
 
@@ -296,12 +299,21 @@ async function main() {
           module: part.module,
           section: part.sectionType,
           questionType: group.questionType as typeof questionSets.$inferInsert.questionType,
+          // Speaking leads with its TOPIC. Forty-four sets titled "Cambridge 11
+          // · Test 1 · Speaking Part 1" are indistinguishable in a library
+          // list; what a candidate picks by is whether it asks about food or
+          // photographs. The book and test stay on the end, because which paper
+          // a set came from is still how people find one they have not sat.
+          // Part 2 already titled itself with its cue card; Parts 1 and 3 now
+          // carry a topic read off their own questions.
           title:
-            `${part.book} · Test ${part.testNumber} · ` +
-            `${LABEL[part.sectionType]} Part ${part.partNumber}` +
-            (part.sectionType === "listening" || part.sectionType === "reading"
-              ? ` · Q${from}${to > from ? `-${to}` : ""}`
-              : ""),
+            part.sectionType === "speaking"
+              ? `${part.title} · ${part.book} · Test ${part.testNumber}`
+              : `${part.book} · Test ${part.testNumber} · ` +
+                `${LABEL[part.sectionType]} Part ${part.partNumber}` +
+                (part.sectionType === "listening" || part.sectionType === "reading"
+                  ? ` · Q${from}${to > from ? `-${to}` : ""}`
+                  : ""),
           instructions: group.instruction ?? part.instructions ?? null,
           difficulty: part.difficulty,
           // Each set is self-contained: the passage, recording and image travel
@@ -486,6 +498,8 @@ async function main() {
     `\n${setCount} set(s), ${qCount} question(s)\n` +
       `  explanations attached: ${withExpl}/${qCount}\n` +
       `  listening audio windows: ${withAudio}\n` +
+      `  sets trimmed of surplus questions: ${trimmed}
+` +
       `  stale sets removed: ${stale.length}`,
   );
   await client.end();
