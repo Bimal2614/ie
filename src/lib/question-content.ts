@@ -107,18 +107,36 @@ export type NotesLayout = {
    */
   example?: string;
   groups: { title?: string; items: string[] }[];
+  /**
+   * The box of words a map-labelling task tells the candidate to choose from
+   * ("Choose your answers from the box below"). Unlike `choices` elsewhere
+   * these are not lettered — the candidate writes the word out — so this is a
+   * printed reference box, not a picker, and the paper is unanswerable
+   * without it.
+   */
+  wordBank?: string[];
 };
 
 export type TableCell = {
   text: string;
   /** Header cells render bold on a tinted background and take no input. */
   header?: boolean;
+  /** Cells merged across columns / down rows, as the printed paper prints
+   * them: a sentence or a section label running the full width of the grid,
+   * or a row label shared by the two rows beneath it. A row carrying a
+   * merged cell holds fewer cells than the table has columns — that is the
+   * span doing its job, not a malformed row. */
+  colSpan?: number;
+  rowSpan?: number;
 };
 
 /** A real grid — table completion. */
 export type TableLayout = {
   kind: "table";
   heading?: string;
+  /** Empty when the paper prints no column headings, or prints them inside
+   * the grid — some tables open straight onto a full-width sentence, and one
+   * grid can carry two sections with a heading row each. */
   columns: string[];
   rows: TableCell[][];
 };

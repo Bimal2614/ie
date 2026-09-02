@@ -160,6 +160,21 @@ function Notes({ layout, resolve, run }: LayoutProps<NotesLayout>) {
           </div>
         ))}
       </div>
+
+      {/* The printed paper sets these in a ruled box under the task, and the
+          candidate copies a word out of it — so this is a reference box, not
+          a picker. Without it the task cannot be answered at all. */}
+      {layout.wordBank && layout.wordBank.length > 0 && (
+        <div className="mt-5 rounded-lg border border-line bg-paper-sunken px-4 py-3">
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
+            {layout.wordBank.map((word, wi) => (
+              <span key={wi} className="text-sm font-medium text-ink-strong">
+                <AnnotatedText run={`${run}:w${wi}`} text={word} />
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
     </Sheet>
   );
 }
@@ -169,6 +184,10 @@ function Notes({ layout, resolve, run }: LayoutProps<NotesLayout>) {
  * ------------------------------------------------------------------ */
 
 function TableCompletion({ layout, resolve, run }: LayoutProps<TableLayout>) {
+  // The printed paper rules every cell, not just the rows, and a table that
+  // opens straight onto a full-width sentence prints no column headings at
+  // all. Both are reproduced here rather than normalised away.
+  const cell = "border border-line px-4 py-3 text-left";
   return (
     <Sheet className="p-0">
       {layout.heading && (
@@ -179,42 +198,56 @@ function TableCompletion({ layout, resolve, run }: LayoutProps<TableLayout>) {
       {/* Tables are the one stimulus that can genuinely outgrow the column. */}
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr>
-              {layout.columns.map((col, i) => (
-                <th
-                  key={i}
-                  scope="col"
-                  className="border-b border-line bg-paper-sunken px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-ink-strong"
-                >
-                  <AnnotatedText run={`${run}:c${i}`} text={col} />
-                </th>
-              ))}
-            </tr>
-          </thead>
+          {/* A grid whose columns are all blank has no heading row in the
+              paper either — printing one adds an empty grey band above the
+              first real row. */}
+          {layout.columns.some((c) => c.trim()) && (
+            <thead>
+              <tr>
+                {layout.columns.map((col, i) => (
+                  <th
+                    key={i}
+                    scope="col"
+                    className={`${cell} bg-paper-sunken text-xs font-semibold uppercase tracking-wider text-ink-strong`}
+                  >
+                    <AnnotatedText run={`${run}:c${i}`} text={col} />
+                  </th>
+                ))}
+              </tr>
+            </thead>
+          )}
           <tbody>
             {layout.rows.map((row, ri) => (
-              <tr key={ri} className="border-b border-line last:border-0">
-                {row.map((cell, ci) =>
-                  cell.header ? (
+              <tr key={ri}>
+                {row.map((c, ci) => {
+                  // A label shared by the rows beneath it sits centred against
+                  // them, the way the paper sets it; everything else hangs from
+                  // the top so a gap lines up with the text that introduces it.
+                  const span = {
+                    ...(c.colSpan && c.colSpan > 1 ? { colSpan: c.colSpan } : {}),
+                    ...(c.rowSpan && c.rowSpan > 1 ? { rowSpan: c.rowSpan } : {}),
+                  };
+                  const v = c.rowSpan && c.rowSpan > 1 ? "align-middle" : "align-top";
+                  return c.header ? (
                     <th
                       key={ci}
-                      scope="row"
-                      className="bg-paper-sunken/60 px-4 py-3 text-left align-top font-semibold text-ink-strong"
+                      scope={c.colSpan && c.colSpan > 1 ? "colgroup" : "row"}
+                      {...span}
+                      className={`${cell} ${v} bg-paper-sunken/60 font-semibold text-ink-strong`}
                     >
-                      <AnnotatedText run={`${run}:r${ri}.${ci}`} text={cell.text} />
+                      <AnnotatedText run={`${run}:r${ri}.${ci}`} text={c.text} />
                     </th>
                   ) : (
-                    <td key={ci} className="px-4 py-3 align-top text-ink-soft">
+                    <td key={ci} {...span} className={`${cell} ${v} text-ink-soft`}>
                       <GapText
-                        text={cell.text}
+                        text={c.text}
                         resolve={resolve}
                         width="sm"
                         run={`${run}:r${ri}.${ci}`}
                       />
                     </td>
-                  ),
-                )}
+                  );
+                })}
               </tr>
             ))}
           </tbody>

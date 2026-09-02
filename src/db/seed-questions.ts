@@ -1,8 +1,13 @@
 /**
- * Seed IELTS practice content — one set per (section, question type), covering
- * all 23 task types for Academic & General.
+ * Seed IELTS practice content — one set per (section, question type) for
+ * Listening, Reading and Speaking.
  *
  * Run: npm run db:seed:questions   (idempotent — clears source='seed' first)
+ *
+ * WRITING IS NOT SEEDED. The imported Cambridge, Barron's and forecast papers
+ * now carry every writing task, so a sample prompt would only sit alongside
+ * real ones in the same list. A type may therefore declare no blueprint at all,
+ * and the seed loop skips it.
  *
  * STRUCTURE — one blueprint per TYPE, not per family. An earlier version
  * switched on `meta.family`, so all seven completion types (sentence, summary,
@@ -94,7 +99,7 @@ type Blueprint = {
  * — colours, flowers, holidays… — so it needs a set per topic; most types just
  * need one. Practice paginates across whatever a type declares.
  */
-const BLUEPRINTS: Record<QuestionTypeKey, Blueprint | Blueprint[]> = {
+const BLUEPRINTS: Partial<Record<QuestionTypeKey, Blueprint | Blueprint[]>> = {
   /* ---- Selection ---- */
   multiple_choice_single: {
     startNumber: 1,
@@ -485,37 +490,7 @@ const BLUEPRINTS: Record<QuestionTypeKey, Blueprint | Blueprint[]> = {
     ],
   },
 
-  /* ---- Writing ---- */
-  writing_task1_academic: {
-    startNumber: 1,
-    questions: [
-      {
-        prompt:
-          "The image below shows information about a location. Summarise the information by selecting and reporting the main features, and make comparisons where relevant.",
-        wordLimitMin: 150,
-      },
-    ],
-  },
-  writing_task1_general: {
-    startNumber: 1,
-    questions: [
-      {
-        prompt:
-          "You recently visited a public park that needs improvement. Write a letter to the local council. In your letter: explain which park you visited, describe the problems you saw, and suggest improvements.",
-        wordLimitMin: 150,
-      },
-    ],
-  },
-  writing_task2: {
-    startNumber: 1,
-    questions: [
-      {
-        prompt:
-          "Some people believe cities should prioritise green spaces over new housing. To what extent do you agree or disagree? Give reasons for your answer and include relevant examples from your own knowledge or experience.",
-        wordLimitMin: 250,
-      },
-    ],
-  },
+  /* Writing declares no blueprint — see the header note. */
 
   /* ---- Speaking ----
    * Part 1 is a topic-by-topic interview: the examiner picks a familiar topic
@@ -682,8 +657,9 @@ const BLUEPRINTS: Record<QuestionTypeKey, Blueprint | Blueprint[]> = {
  * numbers its questions occupy. Catching that here means the player never has
  * to render an orphaned gap or a question no gap points at.
  */
-/** A type declares one set or many; normalise to a list. */
-function setsOf(v: Blueprint | Blueprint[]): Blueprint[] {
+/** A type declares one set, many, or none (Writing); normalise to a list. */
+function setsOf(v: Blueprint | Blueprint[] | undefined): Blueprint[] {
+  if (!v) return [];
   return Array.isArray(v) ? v : [v];
 }
 
@@ -719,7 +695,7 @@ async function main() {
   // never half-seed.
   for (const [typeKey, value] of Object.entries(BLUEPRINTS) as [
     QuestionTypeKey,
-    Blueprint | Blueprint[],
+    Blueprint | Blueprint[] | undefined,
   ][]) {
     for (const bp of setsOf(value)) {
       const label = bp.title ? `${typeKey}/${bp.title}` : typeKey;
@@ -746,7 +722,7 @@ async function main() {
       const meta = QUESTION_TYPES[typeKey];
       const isListening = section === "listening";
       const isReading = section === "reading";
-      const needsImage = !!meta.layoutKind?.includes("diagram") || typeKey === "writing_task1_academic";
+      const needsImage = !!meta.layoutKind?.includes("diagram");
 
       for (const bp of setsOf(BLUEPRINTS[typeKey])) {
         const [set] = await db
@@ -766,8 +742,7 @@ async function main() {
             layout: bp.layout ?? null,
             startNumber: bp.startNumber,
             partNumber: 1,
-            estimatedMinutes:
-              section === "writing" ? (typeKey === "writing_task2" ? 40 : 20) : 5,
+            estimatedMinutes: 5,
             tags: bp.title ? ["seed", section, bp.title] : ["seed", section],
             source: "seed",
             isActive: true,
