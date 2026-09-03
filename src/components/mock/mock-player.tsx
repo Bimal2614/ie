@@ -364,14 +364,47 @@ export function MockPlayer({ sitting }: Props) {
     () => sheet.parts.find((p) => p.id === activePartId)?.numbers ?? [],
     [activePartId, sheet.parts],
   );
+  /**
+   * SPEAKING ONLY MOVES FORWARD.
+   *
+   * An interview is not a paper. The examiner asks, you answer, and they move
+   * on — there is no going back to a question already asked, and certainly no
+   * listening to your own answer and recording a better one. The recorder was
+   * offering "Re-record" on any question the candidate walked back to, which
+   * turned a timed speaking test into an editing session.
+   *
+   * LISTENING, READING AND WRITING ARE UNTOUCHED. Those are papers: every
+   * question stays open until the module is handed in, and the answer strip
+   * navigates them freely in both directions. This lock is `section ===
+   * "speaking"` and nothing else.
+   */
+  const forwardOnly = module.section === "speaking";
+
+  /**
+   * Everything the interview has already passed. Empty for every other module,
+   * so the strip renders exactly as it always has.
+   */
+  const locked = useMemo(() => {
+    if (!forwardOnly) return undefined;
+    // Where the interview stands: the focused question, or the first of the
+    // part when nothing has been focused yet.
+    const here = current ?? partNumbers[0] ?? null;
+    if (here === null) return new Set<number>();
+    const at = sheet.all.indexOf(here);
+    return new Set(at > 0 ? sheet.all.slice(0, at) : []);
+  }, [forwardOnly, current, partNumbers, sheet.all]);
+
   const step = useCallback(
     (delta: number) => {
       if (partNumbers.length === 0) return;
+      // Belt and braces: the button is disabled below, but a keyboard shortcut
+      // or a stale render must not be able to walk the interview backwards.
+      if (forwardOnly && delta < 0) return;
       const at = current === null ? -1 : partNumbers.indexOf(current);
       const next = Math.min(partNumbers.length - 1, Math.max(0, (at === -1 ? 0 : at) + delta));
       jumpTo(partNumbers[next], activePartId);
     },
-    [activePartId, current, jumpTo, partNumbers],
+    [activePartId, current, forwardOnly, jumpTo, partNumbers],
   );
 
   /**
@@ -414,7 +447,6 @@ export function MockPlayer({ sitting }: Props) {
   // lets a candidate rehearse — the habit the real test punishes.
   const oneAtATime = module.section === "speaking";
   const focus = oneAtATime ? (current ?? partNumbers[0] ?? null) : null;
-  const focusIndex = focus === null ? -1 : partNumbers.indexOf(focus);
   // Published for the auto-advance effect above, which cannot see them directly.
   focusRef.current = focus;
   partRef.current = part.sectionId;
@@ -443,6 +475,9 @@ export function MockPlayer({ sitting }: Props) {
       // On test day a Speaking question is spoken and never printed, so the
       // paper plays it and hides the text. Section practice does the opposite.
       spokenPromptOnly
+      // One take: the interview cannot be walked back to, so a "Re-record"
+      // button would offer something the navigation refuses.
+      singleTake
       // And nobody hands you a record button either: the question plays, and
       // when it stops the recorder is already running. Section practice leaves
       // the candidate to press it, because that is where a clip gets replayed.
@@ -519,7 +554,13 @@ export function MockPlayer({ sitting }: Props) {
       answered={answered}
       flagged={flaggedNumbers}
       current={current}
-      onJump={jumpTo}
+      // The strip disables a closed square; this is the same rule enforced on
+      // the handler, so nothing can reopen one by another route.
+      onJump={(n, partId) => {
+        if (locked?.has(n)) return;
+        jumpTo(n, partId);
+      }}
+      locked={locked}
       // A sheet number maps back to the input that owns it, so flagging the
       // second square of a paired "choose TWO" flags the one question, not a
       // number with nothing behind it.
@@ -528,15 +569,27 @@ export function MockPlayer({ sitting }: Props) {
         if (a) toggleFlag(a.sectionId, a.n);
       }}
       onSelectPart={(id) => {
+        const numbers = sheet.parts.find((p) => p.id === id)?.numbers ?? [];
+        // A part every one of whose questions has been asked is behind you.
+        if (locked && numbers.length > 0 && numbers.every((n) => locked.has(n))) return;
         setActivePartId(id);
         setCurrent(null);
       }}
       onPrev={() => step(-1)}
-      onNext={() => step(1)}
-      canPrev={oneAtATime ? focusIndex > 0 : current === null || partNumbers.indexOf(current) > 0}
+      // The interview runs straight through its three parts, so Next carries on
+      // into the next one rather than clamping at the end of this part. It only
+      // mattered occasionally before; now that there is no way back, a dead
+      // Next on a part's last question would leave the answer strip as the only
+      // way forward.
+      onNext={() => (forwardOnly ? nextInterviewQuestion() : step(1))}
+      // Speaking has no Previous at all — see `forwardOnly`.
+      canPrev={
+        forwardOnly ? false : current === null || partNumbers.indexOf(current) > 0
+      }
       canNext={
-        oneAtATime
-          ? focusIndex < partNumbers.length - 1
+        forwardOnly
+          ? // Anywhere but the last question of the last part.
+            focus !== null && focus !== sheet.all[sheet.all.length - 1]
           : current === null || partNumbers.indexOf(current) < partNumbers.length - 1
       }
       onSubmit={() => setConfirming(true)}

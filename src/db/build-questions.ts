@@ -39,6 +39,7 @@ import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { and, eq, gte, inArray, notInArray, sql } from "drizzle-orm";
 import { practiceSections, questionSets, questions } from "./schema";
+import { resolveTarget } from "./target";
 import type { QuestionGroup, QuestionItem } from "../lib/question-content";
 
 const SOURCE = "cambridge";
@@ -212,7 +213,8 @@ const LABEL: Record<string, string> = {
 };
 
 async function main() {
-  const client = postgres(process.env.DATABASE_URL!, { max: 1 });
+  const target = resolveTarget();
+  const client = postgres(target.url, { ssl: target.ssl, max: 1 });
   const db = drizzle(client, {
     schema: { practiceSections, questionSets, questions },
     casing: "snake_case",
@@ -363,6 +365,11 @@ async function main() {
               // row's position in the set.
               n: item.n,
               ...(item.options ? { options: item.options } : {}),
+              // A picture THIS question is asked about — "Which chart shows
+              // ...?" where the options are only "Chart A/B/C". Distinct from
+              // the set's imageUrl, which one paper's consecutive questions
+              // cannot share because each has its own chart.
+              ...(item.imageUrl ? { imageUrl: item.imageUrl } : {}),
               ...(item.selectCount ? { selectCount: item.selectCount } : {}),
               ...(item.cueCard ? { cueCard: item.cueCard } : {}),
               ...(audio ? { audio } : {}),

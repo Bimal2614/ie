@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   pgTable,
   pgEnum,
@@ -712,6 +713,18 @@ export const userResponses = pgTable(
     index("user_responses_user_set_idx").on(t.userId, t.setId),
     // Rolling rows back up into attempts, and loading one attempt's rows.
     index("user_responses_attempt_idx").on(t.attemptId),
+    // The scoring sweeper's queue (/api/cron/scoring), which asks "which
+    // subjective answers still have no band?" every few minutes forever.
+    //
+    // PARTIAL, on purpose. Scored rows are the overwhelming majority and are
+    // never the answer to that question, so indexing them would mean a second
+    // full-size index on the busiest table to serve a query that only ever
+    // matches a handful of rows. This one holds only what is actually pending —
+    // in steady state a few rows, often none — and a row leaves it as soon as
+    // its band is written.
+    index("user_responses_unscored_idx")
+      .on(t.createdAt)
+      .where(sql`band is null and section in ('writing', 'speaking')`),
   ],
 );
 
@@ -951,6 +964,11 @@ export const mockTestAnswers = pgTable(
     index("mock_answers_session_idx").on(t.sessionId),
     // The results drill-down loads one module of one sitting.
     index("mock_answers_session_section_idx").on(t.sessionId, t.section),
+    // The sweeper's queue for mock sittings. Partial, for the same reason as
+    // user_responses_unscored_idx above.
+    index("mock_answers_unscored_idx")
+      .on(t.answeredAt)
+      .where(sql`band is null and section in ('writing', 'speaking')`),
   ],
 );
 

@@ -46,6 +46,14 @@ import { QUESTION_TYPES, type SectionKey } from "@/lib/ielts";
  */
 const POLL_SCHEDULE_MS = [
   900, 1200, 1500, 2000, 2500, 3000, 4000, 5000, 6000, 8000, 10000, 12000, 15000, 15000,
+  // THE TAIL IS FOR A BUSY EVENING, not for a bigger set. The schedule above adds
+  // up to about 85 seconds, which covers scoring that starts immediately — but at
+  // peak an attempt can sit behind other candidates' answers at the provider, or
+  // behind a rate limit, and be picked up by the sweeper cron minutes later. With
+  // the old tail the screen gave up first and told a candidate their answers
+  // could not be scored while they were still in the queue. Slow polls are cheap;
+  // a wrong "it failed" is not.
+  20000, 20000, 30000, 30000, 30000, 60000, 60000, 60000,
 ];
 
 /**

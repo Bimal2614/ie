@@ -13,10 +13,13 @@ import { rateLimit } from "./rate-limit";
  *  - AI (Writing/Speaking scoring): RATE_LIMIT_AI_PER_DAY + a per-account cap
  *    (RATE_LIMIT_AI_PER_ACCOUNT over RATE_LIMIT_AI_ACCOUNT_WINDOW_DAYS).
  *
- * Every time a user is throttled it is logged to the audit log; once the
- * violations reach RATE_LIMIT_VIOLATIONS_BEFORE_DEACTIVATE within the violation
- * window, the account is automatically deactivated (all sessions revoked). All
- * thresholds are read from the environment, so they are fully configurable.
+ * THE TWO DIFFER IN WHAT A REFUSAL MEANS, and that is the whole design. A
+ * general refusal is a flood: it is logged as a violation, and
+ * RATE_LIMIT_VIOLATIONS_BEFORE_DEACTIVATE of those inside the violation window
+ * deactivate the account and revoke its sessions. An AI refusal is an empty
+ * allowance: it is audited and returned to the caller, and escalates to nothing.
+ * Only a rate a user can actually choose may cost them their account — see
+ * `tryConsumeAi`. All thresholds are read from the environment.
  */
 
 export const SLOW_DOWN = "You're going too fast: please slow down and try again shortly.";
@@ -99,14 +102,53 @@ export async function guardMedia(userId: string): Promise<void> {
   if (!r.allowed) throw new RateLimitError(r.retryAfterSec);
 }
 
-/** Throttle expensive AI scoring (100/day + a per-account cap by default). */
-export async function guardAi(userId: string): Promise<void> {
+/** What the caller is told when there is no AI budget left. */
+export const AI_BUDGET_SPENT =
+  "You've used your AI marking allowance for now. Your answers are saved — please try again later.";
+
+export type AiBudget = {
+  allowed: boolean;
+  retryAfterSec: number;
+  /** Ready to show a candidate. Empty when allowed. */
+  message: string;
+};
+
+/**
+ * Take an AI scoring token if the account has one (100/day + a per-account cap
+ * by default).
+ *
+ * IT RETURNS A REFUSAL; IT DOES NOT REGISTER A VIOLATION, AND IT NEVER THROWS.
+ * This is deliberate, and it replaced a `guardAi` that did both.
+ *
+ * Running out of AI budget is not abuse. It is a quota — a property of the plan
+ * and the day, reached by using the product as designed. Treating it as a
+ * violation put it on the same counter that DEACTIVATES AN ACCOUNT after three
+ * strikes and deletes every one of its sessions.
+ *
+ * That was not theoretical. Scoring is retried by machinery the candidate cannot
+ * see: `after()` at submit, and a sweeper cron every five minutes. One account
+ * that spent its allowance would be asked for a token it did not have on every
+ * sweep, and three sweeps — fifteen minutes — would lock the person out of a
+ * product they had paid for, for something they did not do. Escalation must not
+ * be reachable from OUR retry loop.
+ *
+ * Flood detection lives where it belongs: `guardGeneral`, which counts actions a
+ * user actually drives, at 60 a minute. That is what a violation should mean.
+ */
+export async function tryConsumeAi(userId: string): Promise<AiBudget> {
   const [perDay, perAccount] = await Promise.all([
     rateLimit(`ai:day:${userId}`, env.RATE_LIMIT_AI_PER_DAY, DAY),
     rateLimit(`ai:acct:${userId}`, env.RATE_LIMIT_AI_PER_ACCOUNT, env.RATE_LIMIT_AI_ACCOUNT_WINDOW_DAYS * DAY),
   ]);
-  if (!perDay.allowed || !perAccount.allowed) {
-    await registerViolation(userId, "ai");
-    throw new RateLimitError(Math.max(perDay.retryAfterSec, perAccount.retryAfterSec));
+  if (perDay.allowed && perAccount.allowed) {
+    return { allowed: true, retryAfterSec: 0, message: "" };
   }
+  // Audited, so an exhausted allowance is still visible to support — just not
+  // punished.
+  await audit(userId, "rate_limit.ai_exhausted", { scope: "ai" });
+  return {
+    allowed: false,
+    retryAfterSec: Math.max(perDay.retryAfterSec, perAccount.retryAfterSec),
+    message: AI_BUDGET_SPENT,
+  };
 }

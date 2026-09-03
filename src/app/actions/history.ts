@@ -6,7 +6,7 @@ import { userResponses, questions, questionSets, practiceSections } from "@/db/s
 import { requireUser } from "@/lib/dal";
 import type { SectionKey, QuestionTypeKey } from "@/lib/ielts";
 import type { SetLayout, QuestionGroup, QuestionItem } from "@/lib/question-content";
-import { mediaUrl } from "@/lib/media-urls";
+import { mediaUrl, safeQuestionContent } from "@/lib/media-urls";
 
 /* ------------------------------------------------------------------ *
  * Day boundaries
@@ -517,7 +517,7 @@ async function loadAttempt(
       question: q
         ? {
             prompt: q.prompt,
-            content: q.content,
+            content: safeQuestionContent(q.id, q.content),
             correctAnswer: q.correctAnswer,
             explanation: q.explanation,
             orderIndex: q.orderIndex,
@@ -787,7 +787,7 @@ export async function getQuestionAnswers(
     questionId: q.id,
     questionType: q.questionType as QuestionTypeKey,
     prompt: q.prompt,
-    content: q.content,
+    content: safeQuestionContent(q.id, q.content),
     correctAnswer: q.correctAnswer,
     layout: (q.layout as SetLayout | null) ?? null,
     answers: rows.map((r) => ({

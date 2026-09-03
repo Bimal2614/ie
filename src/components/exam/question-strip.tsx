@@ -25,6 +25,7 @@ export function QuestionStrip({
   activePartId,
   answered,
   flagged,
+  locked,
   current,
   onJump,
   onSelectPart,
@@ -34,6 +35,12 @@ export function QuestionStrip({
   activePartId: string;
   answered: Set<number>;
   flagged?: Set<number>;
+  /**
+   * Questions that can no longer be opened — Speaking in a mock, where the
+   * interview only moves forward. Omitted everywhere else: a Reading or
+   * Listening paper stays open until it is handed in.
+   */
+  locked?: Set<number>;
   /** The number the viewport is on, highlighted as "you are here". */
   current?: number | null;
   onJump: (n: number, partId: string) => void;
@@ -67,11 +74,16 @@ export function QuestionStrip({
         const isActive = part.id === activePartId;
         const done = part.numbers.filter((n) => answered.has(n)).length;
 
+        // A part is behind you once every question in it is closed.
+        const partLocked = Boolean(locked) && part.numbers.every((n) => locked!.has(n));
+
         if (multi && !open) {
           return (
             <button
               key={part.id}
               type="button"
+              disabled={partLocked}
+              title={partLocked ? `${part.label} is finished — the interview has moved on` : undefined}
               onClick={() => {
                 setOpenId(part.id);
                 onSelectPart?.(part.id);
@@ -81,7 +93,8 @@ export function QuestionStrip({
                 "text-sm transition-colors",
                 isActive
                   ? "border-brand/50 bg-brand-soft text-brand"
-                  : "border-line bg-paper text-ink-soft hover:border-brand/40 hover:text-ink",
+                  : "border-line bg-paper text-ink-soft enabled:hover:border-brand/40 enabled:hover:text-ink",
+                partLocked && "cursor-default opacity-45",
               )}
             >
               <span className="font-semibold">{part.label}:</span>
@@ -105,10 +118,12 @@ export function QuestionStrip({
               {part.numbers.map((n) => {
                 const isAnswered = answered.has(n);
                 const isFlagged = flagged?.has(n);
+                const isLocked = locked?.has(n) ?? false;
                 return (
                   <button
                     key={n}
                     type="button"
+                    disabled={isLocked}
                     onClick={() => onJump(n, part.id)}
                     onContextMenu={
                       onToggleFlag
@@ -118,16 +133,25 @@ export function QuestionStrip({
                           }
                         : undefined
                     }
-                    title={onToggleFlag ? `Question ${n} — right-click to flag for review` : undefined}
+                    title={
+                      isLocked
+                        ? `Question ${n} has been asked — the interview has moved on`
+                        : onToggleFlag
+                          ? `Question ${n} — right-click to flag for review`
+                          : undefined
+                    }
                     aria-label={`Question ${n}${isAnswered ? ", answered" : ", not answered"}${
                       isFlagged ? ", flagged for review" : ""
-                    }`}
+                    }${isLocked ? ", closed" : ""}`}
                     aria-current={current === n ? "true" : undefined}
                     className={cn(
                       "relative grid size-7 place-items-center rounded border font-mono text-[11px] font-semibold tabular-nums transition-colors",
                       isAnswered
                         ? "border-brand bg-brand text-white"
-                        : "border-line bg-paper-elev text-ink-soft hover:border-brand/50 hover:text-brand",
+                        : "border-line bg-paper-elev text-ink-soft enabled:hover:border-brand/50 enabled:hover:text-brand",
+                      // Still legible — a closed question is a record of what
+                      // was asked, not something to hide.
+                      isLocked && "cursor-default opacity-45",
                       current === n && "ring-2 ring-brand/40 ring-offset-1 ring-offset-paper",
                     )}
                   >

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { timingSafeEqual } from "node:crypto";
-import { env } from "@/lib/env";
+import { sql } from "drizzle-orm";
+import { db } from "@/db";
+import { isAuthorizedCron } from "@/lib/security/cron-auth";
 import { expireDueSubscriptions } from "@/lib/subscriptions";
 
 /**
@@ -25,40 +26,41 @@ import { expireDueSubscriptions } from "@/lib/subscriptions";
 // Never prerendered, never cached: it mutates.
 export const dynamic = "force-dynamic";
 
-/** Constant-time compare, so the secret cannot be recovered a byte at a time. */
-function secretMatches(supplied: string, expected: string): boolean {
-  const a = Buffer.from(supplied);
-  const b = Buffer.from(expected);
-  // timingSafeEqual throws on a length mismatch, which would itself leak the
-  // length; compare the lengths separately and always run the comparison.
-  return a.length === b.length && timingSafeEqual(a, b);
-}
-
-function authorized(request: Request): boolean {
-  const secret = env.CRON_SECRET;
-  // No secret configured = the endpoint is closed, not open. An unauthenticated
-  // sweep is a way for anyone to churn the billing ledger.
-  if (!secret) return false;
-
-  // `Authorization: Bearer <secret>` is what platform cron schedulers send;
-  // `x-cron-secret` is here for schedulers that cannot set an auth header.
-  const header = request.headers.get("authorization") ?? "";
-  const bearer = header.startsWith("Bearer ") ? header.slice(7) : "";
-  const alt = request.headers.get("x-cron-secret") ?? "";
-
-  return secretMatches(bearer, secret) || secretMatches(alt, secret);
+/**
+ * Housekeeping that rides along with the nightly sweep: drop spent rate-limit
+ * windows.
+ *
+ * `rate_limits` is written on every guarded action and nothing ever deleted from
+ * it, so it grows by a few rows per user per day forever. Expired rows are read
+ * by nobody — the limiter resets a window it finds expired rather than trusting
+ * what is in it — so removing them reclaims space and costs nothing. A day of
+ * slack is kept so a row is never dropped while its window is still counting.
+ *
+ * NIGHTLY, not with the scoring sweep. There is no index on `expires_at` and no
+ * reason to add one for housekeeping: the delete is a scan, which is cheap once
+ * a day on a small table and pure waste every five minutes.
+ */
+async function pruneRateLimits(): Promise<number> {
+  const res = await db.execute(
+    sql`DELETE FROM rate_limits WHERE expires_at < now() - interval '1 day'`,
+  );
+  return Number((res as { count?: number }).count ?? 0);
 }
 
 export async function GET(request: Request) {
-  if (!authorized(request)) {
+  if (!isAuthorizedCron(request)) {
     // 404, not 401: an unauthenticated caller learns nothing about whether this
     // route exists or whether a secret is configured.
     return new NextResponse(null, { status: 404 });
   }
 
   const result = await expireDueSubscriptions();
+  const prunedRateLimits = await pruneRateLimits();
 
-  return NextResponse.json(result, { headers: { "Cache-Control": "no-store" } });
+  return NextResponse.json(
+    { ...result, prunedRateLimits },
+    { headers: { "Cache-Control": "no-store" } },
+  );
 }
 
 /** Same job, for schedulers that POST. */

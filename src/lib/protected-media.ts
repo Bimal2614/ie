@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getObjectStream, keyFromUrl } from "@/lib/speech/s3";
+import { getObjectStream, keyFromUrl, presignGetUrl } from "@/lib/speech/s3";
 import { guardMedia, RateLimitError } from "@/lib/security/rate-guard";
 
 /** Every media route is addressed by uuid; a malformed one never reaches the db. */
@@ -262,4 +262,59 @@ export async function serveProtectedAudio(
   if (!stored) return new Response("Not found", { status: 404 });
 
   return streamProtectedAudio(req, stored);
+}
+
+/**
+ * Auth-gated resolver for an exam IMAGE — maps, plans, diagrams, the chart a
+ * Writing Task 1 describes, and the pictures a single question is asked about.
+ *
+ * WHY A REDIRECT AND NOT A STREAM. Unlike the recordings above, a figure is
+ * not the product: it is meaningless without the paper it belongs to, and it
+ * has to survive `next/image`, which follows a 302 but will not carry a
+ * session through a streaming route. So this presigns for an hour and
+ * redirects, exactly as the image routes did before this helper existed.
+ *
+ * WHY IT IS HERE. Three routes needed the same twenty lines — the set figure,
+ * the practice-section figure, and now the per-question chart — and the first
+ * two had already drifted apart in their error strings and cache headers.
+ * `locate` is the only part that genuinely differs: which table to read.
+ */
+export async function serveProtectedImage(opts: {
+  userId: string | null;
+  /** Path segments that must look like uuids before any query runs. */
+  uuids?: Array<string | undefined>;
+  /** The stored `s3://bucket/key`, a public https URL, or null. */
+  locate: () => Promise<string | null | undefined>;
+}): Promise<Response> {
+  if (!opts.userId) return new Response("Unauthorized", { status: 401 });
+
+  try {
+    await guardMedia(opts.userId);
+  } catch (e) {
+    if (e instanceof RateLimitError) {
+      return new Response("Too many requests: slow down.", { status: 429 });
+    }
+    throw e;
+  }
+
+  for (const id of opts.uuids ?? []) {
+    if (!id || !UUID.test(id)) return new Response("Not found", { status: 404 });
+  }
+
+  const stored = await opts.locate();
+  if (!stored) return new Response("Not found", { status: 404 });
+
+  // A seeded set carries a public sample URL; those pass straight through.
+  const key = keyFromUrl(stored);
+  const target = key
+    ? await presignGetUrl(key, 3600)
+    : /^https?:\/\//.test(stored)
+      ? stored
+      : null;
+  if (!target) return new Response("Media unavailable", { status: 404 });
+
+  return new Response(null, {
+    status: 302,
+    headers: { Location: target, "Cache-Control": "private, max-age=300" },
+  });
 }

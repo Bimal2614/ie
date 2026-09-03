@@ -1,0 +1,2 @@
+CREATE INDEX "mock_answers_unscored_idx" ON "mock_test_answers" USING btree ("answered_at") WHERE band is null and section in ('writing', 'speaking');--> statement-breakpoint
+CREATE INDEX "user_responses_unscored_idx" ON "user_responses" USING btree ("created_at") WHERE band is null and section in ('writing', 'speaking');

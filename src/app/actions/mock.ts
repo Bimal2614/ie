@@ -1,6 +1,6 @@
 "use server";
 
-import { and, asc, desc, eq, inArray, isNull, isNotNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import {
@@ -39,13 +39,9 @@ import {
   timelineEnd,
   type MockTimeline,
 } from "@/lib/mock-timing";
-import { keyFromUrl, presignGetUrl } from "@/lib/speech/s3";
-import { analyzeSpeaking, partFor } from "@/lib/speech/ielts-speaking";
-import { scoreWriting, type WritingTaskType } from "@/lib/writing/openai";
-import { resolvePrompts } from "@/lib/scoring/prompts";
-import { speakingFeedback, unscorableFeedback } from "@/lib/scoring/speaking-feedback";
-import { mapWithConcurrency } from "@/lib/scoring/concurrency";
-import { guardAi, guardGeneral, RateLimitError } from "@/lib/security/rate-guard";
+import { scoreMockSpeakingFor, scoreMockWritingFor } from "@/lib/scoring/score-mock";
+import { scheduleMockScoring } from "@/lib/scoring/background";
+import { guardGeneral, tryConsumeAi } from "@/lib/security/rate-guard";
 import { checkAiScoring, checkMockAccess } from "@/lib/security/plan-guard";
 import { mediaUrl } from "@/lib/media-urls";
 
@@ -66,18 +62,6 @@ import { mediaUrl } from "@/lib/media-urls";
 
 /** Answers travel keyed `"<practiceSectionId>:<sheetNumber>"`. */
 type AnswerMap = Record<string, Record<string, unknown>>;
-
-/**
- * How many mock answers are scored at once.
- *
- * Matches the practice path. A mock's Speaking module is longer than a practice
- * set, so sequential scoring hurt most here — but the ceiling still keeps
- * parallel calls well short of being throttled by the scoring APIs.
- */
-const MOCK_SCORING_CONCURRENCY = 6;
-
-/** Signed-URL lifetime for a recording handed to the scorer. See score-attempt. */
-const MOCK_SIGNED_URL_TTL_SEC = 3600;
 
 /* ------------------------------------------------------------------ *
  * The catalogue
@@ -526,6 +510,12 @@ export async function finishMock(
   const user = await requireUser();
   await guardGeneral(user.id);
   await submitSitting(sessionId, user.id, answers, timings);
+  // Scored after the response goes out, not from the report page. The trigger
+  // there used to be the ONLY path: hand the paper in, close the tab, and the
+  // Writing and Speaking bands were never computed at all. See
+  // scheduleMockScoring — and the sweeper cron behind it, for a batch too long
+  // to finish inside this invocation.
+  scheduleMockScoring(user.id, sessionId);
   redirect(`/results/${sessionId}`);
 }
 
@@ -660,14 +650,19 @@ async function submitSitting(
  * ------------------------------------------------------------------ */
 
 /**
- * Score a finished sitting's Speaking answers and fold the band into the report.
+ * Retry Writing + Speaking scoring for a finished sitting.
  *
- * Runs after submit, not inline: each call takes tens of seconds, so scoring a
- * whole Speaking module would stall the hand-in. The report shows "awaiting AI
- * band score" until this fills it in.
+ * THE AUTHORITATIVE RUN IS `scheduleMockScoring` AT HAND-IN, and the sweeper
+ * cron behind it — this is the ask-again path for when neither could finish,
+ * kept because the report screen is where a candidate notices a missing band.
  *
- * Idempotent — only rows with a recording and no band are scored, so a retry or
- * a second page load cannot double-charge the API or overwrite a band.
+ * The work itself lives in src/lib/scoring/score-mock.ts. It cannot live here:
+ * everything exported from a "use server" module is a callable endpoint, so a
+ * userId-taking scorer exported from this file would let any client spend
+ * someone else's AI quota. These wrappers establish the user themselves.
+ *
+ * Idempotent — only rows with no band are touched, so a retry or a second visit
+ * cannot double-charge the API.
  */
 export async function scoreMockSpeaking(sessionId: string): Promise<{ scored: number }> {
   const user = await requireUser();
@@ -675,279 +670,63 @@ export async function scoreMockSpeaking(sessionId: string): Promise<{ scored: nu
   // lapse between hand-in and the report being opened.
   if (checkAiScoring(user)) return { scored: 0 };
 
-  const [session] = await db
-    .select({ id: mockTestSessions.id })
-    .from(mockTestSessions)
-    .where(and(eq(mockTestSessions.id, sessionId), eq(mockTestSessions.userId, user.id)))
-    .limit(1);
-  if (!session) return { scored: 0 };
+  if (!(await tryConsumeAi(user.id)).allowed) return { scored: 0 };
 
-  try {
-    await guardAi(user.id);
-  } catch (e) {
-    if (e instanceof RateLimitError) return { scored: 0 };
-    throw e;
-  }
-
-  const rows = await db
-    .select()
-    .from(mockTestAnswers)
-    .where(
-      and(
-        eq(mockTestAnswers.sessionId, sessionId),
-        eq(mockTestAnswers.section, "speaking"),
-        isNull(mockTestAnswers.band),
-        isNotNull(mockTestAnswers.audioUrl),
-        // Bandless but WITH feedback means this recording was already found to
-        // hold no speech — re-calling the API would buy the same answer twice.
-        isNull(mockTestAnswers.aiFeedback),
-      ),
-    );
-
-  // Part 2 asks its question as a cue card, so the prompt has to be assembled
-  // from topic + bullets rather than read off a single field. The section id +
-  // item number pair is exactly what resolvePrompts already understands.
-  const prompts = await resolvePrompts(
-    rows.map((r) => ({
-      id: r.id,
-      questionId: null,
-      setId: r.sectionId,
-      questionNumber: r.questionNumber,
-    })),
-  );
-
-  // Scored TOGETHER, not one after another: each call is a ~15s round trip, so a
-  // Speaking module done in sequence kept a candidate waiting minutes for the
-  // first band. Each answer is contained — a failure on one must not abandon the
-  // rest of the batch — but never swallowed silently.
-  const results = await mapWithConcurrency(rows, MOCK_SCORING_CONCURRENCY, (row) =>
-    scoreOne(row).catch((e) => {
-      console.error("[scoring] mock speaking: threw", { answerId: row.id, error: e });
-      return null;
-    }),
-  );
-
-  const bands = results.filter((b): b is number => b !== null);
-  const scored = bands.length;
-  // One line per run, always. "0 of 5 scored" is the difference between a
-  // reported bug and a silently broken integration.
-  console.info("[scoring] mock speaking run", { sessionId, scored, failed: rows.length - scored });
-
-  async function scoreOne(row: (typeof rows)[number]): Promise<number | null> {
-    const key = row.audioUrl ? keyFromUrl(row.audioUrl) : null;
-    if (!key) {
-      console.warn("[scoring] mock speaking: unreadable audioUrl", { answerId: row.id });
-      return null;
-    }
-    // The scorer fetches the recording straight from S3, so no audio passes
-    // through this process at all.
-    const audioUrl = await presignGetUrl(key, MOCK_SIGNED_URL_TTL_SEC);
-    if (!audioUrl) {
-      console.warn("[scoring] mock speaking: could not presign audio", { answerId: row.id, key });
-      return null;
-    }
-
-    // NOT falling back to the type's generic instruction: relevance is judged
-    // against whatever we send, so "Answer questions about yourself" would mark
-    // an on-topic answer as off-topic. Omitting it is the honest option when we
-    // cannot say what was asked. A cue card goes over structured, so the long
-    // turn is assessed against each bullet it was meant to cover.
-    const resolved = prompts.get(row.id);
-    const cueCard = resolved?.cueCard ?? null;
-    const question = cueCard ? cueCard.topic || undefined : (resolved?.prompt ?? undefined);
-
-    const res = await analyzeSpeaking({
-      audioUrl,
-      part: partFor(row.questionType as QuestionTypeKey),
-      question,
-      cueCardPoints: cueCard?.bullets,
-    });
-
-    if (!res.ok) {
-      console.error("[scoring] mock speaking: not scored", {
-        answerId: row.id,
-        reason: res.reason,
-        detail: res.detail,
-      });
-      // A recording with no speech in it can never be scored, so it is recorded
-      // as such rather than left looking like a band still on its way.
-      if (res.reason === "no_speech" || res.reason === "bad_audio") {
-        await db
-          .update(mockTestAnswers)
-          .set({ aiFeedback: unscorableFeedback(res.reason, res.detail) })
-          .where(eq(mockTestAnswers.id, row.id));
-      }
-      return null;
-    }
-
-    const a = res.assessment;
-    await db
-      .update(mockTestAnswers)
-      .set({
-        band: a.overall.band.toFixed(1),
-        transcript: a.transcript.text,
-        aiFeedback: speakingFeedback(a, Boolean(question)),
-      })
-      .where(eq(mockTestAnswers.id, row.id));
-    return a.overall.band;
-  }
-
-  if (bands.length > 0) {
-    // The module band is the mean of its answers, rounded to the nearest half
-    // band — the IELTS convention.
-    const mean = bands.reduce((a, b) => a + b, 0) / bands.length;
-    await recomputeOverall(sessionId, "speaking", Math.round(mean * 2) / 2);
-  }
-
-  return { scored };
+  return scoreMockSpeakingFor(user.id, sessionId);
 }
 
 /**
- * Score a finished sitting's Writing answers and fold the band into the report.
- * Mirrors scoreMockSpeaking: post-submit, idempotent (only rows with no band),
- * degrades to "unscored" on an outage.
+ * How many of a sitting's subjective answers are still waiting for a band.
+ *
+ * The report polls this instead of firing the scorers on mount. Firing on mount
+ * was a double charge: `finishMock` schedules the same work with `after()` and
+ * then redirects here, so the page opened while that run was still going, read
+ * the same `band IS NULL` rows, and called both providers a second time for
+ * every answer. Idempotency does not save you there — it is read-then-write with
+ * no claim, so two runs racing simply both read "unscored".
+ *
+ * COUNTS ONLY WHAT CAN ACTUALLY BE SCORED, for the same reason the sweeper does:
+ * a speaking answer whose upload failed and a writing task left blank are
+ * settled, not pending, and counting them would leave the report spinning
+ * forever on a band that is never coming.
  */
+export async function mockScoringStatus(sessionId: string): Promise<{ pending: number }> {
+  const user = await requireUser();
+
+  const [row] = await db
+    .select({ pending: sql<number>`count(*)::int` })
+    .from(mockTestAnswers)
+    .innerJoin(mockTestSessions, eq(mockTestSessions.id, mockTestAnswers.sessionId))
+    .where(
+      and(
+        eq(mockTestAnswers.sessionId, sessionId),
+        eq(mockTestSessions.userId, user.id),
+        isNull(mockTestAnswers.band),
+        or(
+          and(
+            eq(mockTestAnswers.section, "writing"),
+            sql`coalesce(btrim(${mockTestAnswers.response}->>'text'), '') <> ''`,
+          ),
+          and(
+            eq(mockTestAnswers.section, "speaking"),
+            isNotNull(mockTestAnswers.audioUrl),
+            isNull(mockTestAnswers.aiFeedback),
+          ),
+        ),
+      ),
+    );
+
+  return { pending: row?.pending ?? 0 };
+}
+
+/** Retry Writing scoring for a finished sitting. Mirrors scoreMockSpeaking. */
 export async function scoreMockWriting(sessionId: string): Promise<{ scored: number }> {
   const user = await requireUser();
   if (checkAiScoring(user)) return { scored: 0 };
 
-  const [session] = await db
-    .select({ id: mockTestSessions.id })
-    .from(mockTestSessions)
-    .where(and(eq(mockTestSessions.id, sessionId), eq(mockTestSessions.userId, user.id)))
-    .limit(1);
-  if (!session) return { scored: 0 };
+  if (!(await tryConsumeAi(user.id)).allowed) return { scored: 0 };
 
-  try {
-    await guardAi(user.id);
-  } catch (e) {
-    if (e instanceof RateLimitError) return { scored: 0 };
-    throw e;
-  }
-
-  const rows = await db
-    .select()
-    .from(mockTestAnswers)
-    .where(
-      and(
-        eq(mockTestAnswers.sessionId, sessionId),
-        eq(mockTestAnswers.section, "writing"),
-        isNull(mockTestAnswers.band),
-      ),
-    );
-
-  const prompts = await resolvePrompts(
-    rows.map((r) => ({
-      id: r.id,
-      questionId: null,
-      setId: r.sectionId,
-      questionNumber: r.questionNumber,
-    })),
-  );
-
-  // Kept apart so the official IELTS weighting (Task 2 ×2, Task 1 ×1) applies.
-  const task1Bands: number[] = [];
-  const task2Bands: number[] = [];
-
-  // Graded together; a two-task paper should not wait for Task 2 to record Task 1.
-  const graded = await mapWithConcurrency(rows, MOCK_SCORING_CONCURRENCY, (row) =>
-    gradeOne(row).catch(() => false),
-  );
-  const scored = graded.filter(Boolean).length;
-
-  async function gradeOne(row: (typeof rows)[number]): Promise<boolean> {
-    const r = row.response as Record<string, unknown> | null;
-    const text = typeof r?.text === "string" ? r.text.trim() : "";
-    if (!text) return false;
-
-    const qt = row.questionType as QuestionTypeKey;
-    const meta = QUESTION_TYPES[qt];
-    if (!meta || meta.family !== "writing") return false;
-
-    const resolved = prompts.get(row.id);
-    const res = await scoreWriting({
-      text,
-      taskType: qt as WritingTaskType,
-      module: user.targetModule,
-      // Unlike speaking, a missing prompt DOES fall back to the type's
-      // instruction: the grader cannot grade at all without some statement of task.
-      questionPrompt: resolved?.prompt ?? meta.instruction ?? "",
-      // The minimum authored for THIS task wins over the type default.
-      wordMin: resolved?.wordLimitMin ?? meta.wordLimitMin ?? (qt === "writing_task2" ? 250 : 150),
-    });
-    if (!res.ok) return false;
-
-    const s = res.score;
-    (qt === "writing_task2" ? task2Bands : task1Bands).push(s.overall);
-    await db
-      .update(mockTestAnswers)
-      .set({
-        band: s.overall.toFixed(1),
-        aiFeedback: {
-          onTask: s.onTask,
-          wordCount: s.wordCount,
-          gradedWordCount: s.gradedWordCount,
-          overallFeedback: s.overallFeedback,
-          criteria: s.criteria,
-          corrections: s.corrections,
-          improvedExamples: s.improvedExamples,
-          nextSteps: s.nextSteps,
-          taskCompliance: s.taskCompliance,
-          provider: "openai",
-        },
-      })
-      .where(eq(mockTestAnswers.id, row.id));
-    return true;
-  }
-
-  if (task1Bands.length > 0 || task2Bands.length > 0) {
-    const avg = (a: number[]) => a.reduce((x, y) => x + y, 0) / a.length;
-    // Official IELTS: the Writing band weights Task 2 twice as heavily as Task 1
-    // → (T1 + 2·T2) / 3. If only one task was attempted, use it alone.
-    let writingBand: number;
-    if (task1Bands.length && task2Bands.length) {
-      writingBand = (avg(task1Bands) + 2 * avg(task2Bands)) / 3;
-    } else {
-      writingBand = task2Bands.length ? avg(task2Bands) : avg(task1Bands);
-    }
-    await recomputeOverall(sessionId, "writing", Math.round(writingBand * 2) / 2);
-  }
-
-  return { scored };
-}
-
-/** Re-average the report now that an AI-scored module band exists. */
-async function recomputeOverall(
-  sessionId: string,
-  section: "writing" | "speaking",
-  band: number,
-): Promise<void> {
-  const [result] = await db
-    .select()
-    .from(mockTestResults)
-    .where(eq(mockTestResults.sessionId, sessionId))
-    .limit(1);
-  if (!result) return;
-
-  const num = (b: string | null) => (b === null ? null : Number(b));
-  const writingBand = section === "writing" ? band : num(result.writingBand);
-  const speakingBand = section === "speaking" ? band : num(result.speakingBand);
-
-  const present = [num(result.listeningBand), num(result.readingBand), writingBand, speakingBand]
-    .filter((b): b is number => b !== null);
-
-  const overall =
-    present.length > 0
-      ? Math.round((present.reduce((a, b) => a + b, 0) / present.length) * 2) / 2
-      : null;
-
-  await db
-    .update(mockTestResults)
-    .set({
-      ...(section === "writing" ? { writingBand: band.toFixed(1) } : { speakingBand: band.toFixed(1) }),
-      overallBand: overall === null ? null : overall.toFixed(1),
-    })
-    .where(eq(mockTestResults.sessionId, sessionId));
+  return scoreMockWritingFor(user.id, sessionId);
 }
 
 /* ------------------------------------------------------------------ *

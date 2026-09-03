@@ -23,6 +23,7 @@ import { join, relative } from "node:path";
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { practiceSections } from "./schema";
+import { resolveTarget, positional } from "./target";
 import {
   gapsInLayout,
   type SectionQuestions,
@@ -58,6 +59,44 @@ type PartDoc = {
 };
 
 type ContentFile = { parts: PartDoc[] };
+
+/* ------------------------------------------------------------------ *
+ * Normalisation — one shape reaches the database
+ * ------------------------------------------------------------------ */
+
+/**
+ * A PART 2 CUE CARD, however the book wrote it down.
+ *
+ * Cambridge authors `cueCard: { topic, bullets }`, which is the shape every
+ * reader downstream knows. Barron's and the forecast books author the bullets
+ * under `content: { bullets }` instead — a field `QuestionItem` does not
+ * define, so it survived only because the whole group object is written into
+ * the jsonb column verbatim. Nothing ever read it.
+ *
+ * The damage was not just a missing card. `hasPrep` in the recorder is
+ * `prepSeconds > 0 && cueCard`, so those 22 tasks also skipped the preparation
+ * minute and went straight to recording — the candidate was speaking before
+ * they had seen what to speak about.
+ *
+ * Normalising here rather than at every reader means the database holds one
+ * shape and a book can go on being authored either way.
+ */
+function normalise(part: PartDoc): void {
+  for (const g of part.groups) {
+    if (g.questionType !== "speaking_part2") continue;
+    for (const item of g.items) {
+      if (item.cueCard) continue;
+      const bullets = (item as { content?: { bullets?: unknown } }).content?.bullets;
+      if (!Array.isArray(bullets) || bullets.length === 0) continue;
+      item.cueCard = {
+        // The books that use this shape put the task line in `prompt` and only
+        // the "you should say" points in `bullets`, so the topic is the prompt.
+        topic: item.prompt ?? part.title,
+        bullets: bullets.map(String),
+      };
+    }
+  }
+}
 
 /* ------------------------------------------------------------------ *
  * Validation — a content bug fails here, not at exam time
@@ -106,6 +145,15 @@ function validate(part: PartDoc, where: string): void {
       if (OBJECTIVE.has(part.sectionType) && !i.answer) {
         throw new Error(`${label}: Q${i.n} has no answer key`);
       }
+      // The long turn IS the cue card. Without one the candidate gets a bare
+      // line and no preparation minute, which is how six Barron's tests and
+      // sixteen forecast tests shipped — silently, because nothing checked.
+      if (g.questionType === "speaking_part2" && !i.cueCard?.bullets?.length) {
+        throw new Error(
+          `${label}: Q${i.n} is a Part 2 long turn with no cue card — give it ` +
+            `cueCard: { topic, bullets } (or content.bullets, which is normalised).`,
+        );
+      }
     }
 
     // Gap-backed layouts bind every input through `[[n]]`. An unmatched gap
@@ -144,10 +192,11 @@ function jsonFilesUnder(dir: string): string[] {
 }
 
 async function main() {
-  const url = process.env.DATABASE_URL;
-  if (!url) throw new Error("DATABASE_URL is not set");
+  const target = resolveTarget();
 
-  const filter = process.argv[2]; // optional book folder, e.g. "cambridge-20"
+  // The book folder, if one was named. Read past the flags, so
+  // `-- forecast-general --staging` does not take "--staging" for a folder.
+  const filter = positional(); // optional book folder, e.g. "cambridge-20"
   const root = filter ? join(CONTENT_DIR, filter) : CONTENT_DIR;
 
   const files = jsonFilesUnder(root).sort();
@@ -168,12 +217,15 @@ async function main() {
     }
     const rel = relative(CONTENT_DIR, file);
     for (const part of doc.parts ?? []) {
+      // Normalise BEFORE validating: the cue-card check below is what makes the
+      // two authoring shapes interchangeable rather than one of them silent.
+      normalise(part);
       validate(part, rel);
       loaded.push({ file: rel, part });
     }
   }
 
-  const client = postgres(url, { max: 1 });
+  const client = postgres(target.url, { ssl: target.ssl, max: 1 });
   const db = drizzle(client, { schema: { practiceSections }, casing: "snake_case" });
 
   let count = 0;

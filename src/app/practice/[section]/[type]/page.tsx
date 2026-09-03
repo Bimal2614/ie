@@ -4,6 +4,21 @@ import { SECTIONS, QUESTION_TYPES, SECTION_ORDER, type SectionKey, type Question
 import { getSetPaginated, getAttemptedSets } from "@/app/actions/questions";
 import { PracticeSession } from "@/components/practice/practice-session";
 
+/**
+ * Room for the scoring that runs after the response.
+ *
+ * A submit from this page schedules AI band scoring with `after()`, which runs
+ * inside THIS invocation once the response is out — so the route's duration is
+ * what bounds it. A Speaking batch is tens of seconds per wave; at the platform
+ * default of 15s that work was being killed halfway through, leaving answers
+ * saved and band-less. 300s is the fluid-compute default, stated explicitly so a
+ * lower project-level default cannot silently reintroduce that.
+ *
+ * It is a ceiling, not a reservation: nothing is billed for time not spent, and
+ * anything this still cannot finish is picked up by /api/cron/scoring.
+ */
+export const maxDuration = 300;
+
 export async function generateMetadata({
   params,
 }: {
