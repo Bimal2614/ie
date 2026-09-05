@@ -6,7 +6,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { users, auditLog } from "@/db/schema";
 import { requireAdmin } from "@/lib/dal";
-import { PLANS, DEFAULT_OFFERED_PLAN, isOfferedPlan, type PlanKey } from "@/lib/plans";
+import { DEFAULT_OFFERED_PLAN, isOfferedPlan, priceFor, type PlanKey } from "@/lib/plans";
 import {
   grantPlan,
   revokePlan,
@@ -63,8 +63,10 @@ export async function adminGrantPlan(input: {
     periodEnd:
       input.periodEnd === undefined ? undefined : input.periodEnd === null ? null : new Date(input.periodEnd),
     // What the tier costs today, recorded with the grant so a later price change
-    // does not rewrite what this account was put on.
-    priceCents: PLANS[input.plan].priceCents,
+    // does not rewrite what this account was put on. Rupees: an admin grant is
+    // made from the dashboard here, not from a candidate's checkout, so it is
+    // priced in the base currency whoever it is granted to.
+    priceCents: priceFor(input.plan),
     actor: "admin",
     actorUserId: admin.id,
     note: input.note ?? `Granted by admin`,

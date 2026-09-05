@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "users_razorpay_customer_uq" ON "users" USING btree ("razorpay_customer_id");

@@ -6,12 +6,30 @@ import { BANDS, BAND_SLUGS } from "@/lib/band-content";
 import { pageMeta } from "@/lib/seo";
 import { LONG_TAIL } from "@/lib/keywords";
 
+/**
+ * TARGETING: what each band MEANS and who needs it — not how scoring works.
+ *
+ * This page, /blog/how-ielts-band-score-is-calculated and
+ * /ielts-band-score-calculator were all three chasing the same scoring cluster,
+ * and all three ranked nowhere for it (positions 83, 70, and unindexed) on ~358
+ * combined impressions. keywords.ts warns about exactly this: scattering one
+ * cluster across several pages builds several pages that rank for nothing.
+ *
+ * The split now is by intent, so they stop bidding against each other:
+ *   this page  → band MEANINGS and requirements (LONG_TAIL.bandTargets)
+ *   the post   → the METHOD: criteria, weighting, rounding (LONG_TAIL.scoring)
+ *   /blog/ielts-band-score-chart → the raw-score CONVERSION tables
+ *   the calculator → the tool itself
+ *
+ * LONG_TAIL.scoring was deliberately removed from here. Do not add it back
+ * without moving it off the post first.
+ */
 export const metadata: Metadata = pageMeta({
-  title: "IELTS Band Scores Explained: How IELTS Scoring Works",
+  title: "IELTS Band Scores: What Each Band Means",
   description:
-    "How IELTS band scores work: the 9-band scale, how each skill is marked, how the overall band is averaged and rounded, and what Band 7, 8 and 9 actually require.",
+    "What each IELTS band actually means, from Band 5 to Band 9, which band universities and visa routes ask for, and how to tell which one you realistically need.",
   path: "/ielts-band-scores",
-  keywords: ["IELTS band scores", "IELTS scoring", "how IELTS is scored", "IELTS band score calculator", "IELTS overall band", ...LONG_TAIL.scoring, ...LONG_TAIL.bandTargets],
+  keywords: ["IELTS band scores", "IELTS band score meaning", "what IELTS band do I need", "IELTS band 7 meaning", "IELTS band 8", "IELTS band requirements", ...LONG_TAIL.bandTargets],
 });
 
 const SCALE = [

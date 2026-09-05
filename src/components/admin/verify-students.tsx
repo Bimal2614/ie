@@ -16,6 +16,7 @@ import {
   DEFAULT_OFFERED_PLAN,
   billingPeriodLabel,
   formatPrice,
+  priceFor,
   type PlanKey,
 } from "@/lib/plans";
 import { cardClass } from "@/components/dashboard/ui";
@@ -245,7 +246,7 @@ export function VerifyStudents({
           There is no payment gateway yet, so paid access is granted by hand here. Verifying a
           student puts their account on{" "}
           <strong className="font-semibold text-ink">
-            {GRANTED.label} ({formatPrice(GRANTED.priceCents)} /{" "}
+            {GRANTED.label} ({formatPrice(priceFor(DEFAULT_OFFERED_PLAN))} /{" "}
             {billingPeriodLabel(DEFAULT_OFFERED_PLAN)})
           </strong>{" "}
           straight away — the same entitlement a checkout would buy — and every grant is recorded

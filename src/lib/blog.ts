@@ -311,6 +311,13 @@ export const POSTS: BlogPost[] = [
       { heading: "Don't get left behind", paragraphs: ["If you miss an answer, let it go immediately and focus on the next question: chasing a lost answer makes you miss two more. Leave it blank in your head, keep pace with the recording, and come back to guess at the end. Never leave any answer blank on the sheet; there's no penalty for wrong guesses."] },
       { heading: "Build the skill deliberately", paragraphs: ["Train under real conditions: single play, no pausing, no rewinding. On IELTSVega every Listening set plays once, just like the real exam, and covers all the question types: form completion, multiple choice, map labelling, matching. You get instant answers and can review the transcript afterwards to catch exactly where your ear slipped, then reinforce it with full mock tests."] },
     ],
+    faqs: [
+      { q: "What is 27 out of 40 in IELTS Listening?", a: "27 out of 40 is Band 6.5. Band 7 starts at 30, so three more correct answers moves you up a half band. Listening uses one conversion table for both Academic and General Training candidates." },
+      { q: "How do I get 7.5 in IELTS Listening?", a: "You need 32 out of 40, which means you can afford eight mistakes. At that level the marks are almost never lost in Sections 1 and 2, so the work is in Sections 3 and 4: multiple speakers, academic vocabulary and fewer pauses. Practise those two sections disproportionately, and audit every lost mark to see whether it was comprehension or a spelling or word-limit error." },
+      { q: "How do I get Band 9 in IELTS Listening?", a: "Band 9 requires 39 or 40 out of 40, so it is an accuracy problem rather than a comprehension one. Candidates at that level lose marks to spelling, plurals, and exceeding the stated word limit, not to missing the answer. Train with transcripts, check every answer against the exact wording required, and treat a right answer written wrongly as the serious error it is." },
+      { q: "Does IELTS Listening play the recording twice?", a: "No. The recording plays once only, in both computer-delivered and paper-based tests. This is why practising with pause and rewind builds a false sense of readiness. Every practice set should run single-play from the start." },
+      { q: "Do spelling mistakes matter in IELTS Listening?", a: "Yes, and they are the most expensive habit in the paper. An answer with the right meaning but the wrong spelling scores zero. Both British and American spellings are accepted, but the word has to be correctly spelt in one of them, so drill the words that recur in test recordings: accommodation, Wednesday, February, restaurant, receipt." },
+    ],
   },
   {
     slug: "ielts-academic-vs-general-training",
@@ -339,12 +346,17 @@ export const POSTS: BlogPost[] = [
       { heading: "How Reading differs", paragraphs: ["Academic Reading uses three long texts from books, journals and newspapers, written for a general but educated audience. The language is more formal and the topics more academic. General Training Reading uses everyday materials: notices, advertisements, workplace documents and a longer general-interest passage. The question types are the same; the texts are the difference."] },
       { heading: "How Writing differs", bullets: ["Academic Task 1: describe a graph, chart, table, map or process in at least 150 words.", "General Training Task 1: write a letter (formal, semi-formal or informal) in response to a situation, at least 150 words.", "Task 2: both versions write an essay of at least 250 words, but General Training essay topics are usually a little more everyday than Academic ones."] },
       { heading: "Is one easier than the other?", paragraphs: ["General Training Reading and Writing are often perceived as more approachable because the texts and topics are more familiar. However, the band requirements for migration can be high, and the scoring is calibrated so that a given band means the same level of English in both versions. Choose based on what your application requires, not on which seems easier."] },
-      { heading: "Prepare for the right version", paragraphs: ["On IELTSVega you can practise for both Academic and General Training, including Academic Task 1 charts and General Training letters, with instant AI band scoring on Writing and Speaking. Set your target module when you start, and every practice set and mock test is tailored to the version you'll actually sit."] },
+      { heading: "The Reading score chart is not the same, and that is the real difference", paragraphs: ["The point almost every comparison misses: Academic and General Training Reading are converted to bands with two different tables, and General Training is the stricter of the two. Same 40 questions, same question types, different conversion."], bullets: ["Band 6: 23 out of 40 in Academic Reading, 30 out of 40 in General Training.", "Band 6.5: 27 Academic, 32 General Training.", "Band 7: 30 Academic, 34 General Training.", "Band 8: 35 Academic, 37 General Training.", "Band 9: 39 Academic, all 40 in General Training."] },
+      { heading: "What that means in practice", paragraphs: ["General Training Reading gives you an easier text and less room for error. Needing 34 out of 40 for Band 7 means you can afford six mistakes across the whole paper; in Academic Reading the same band allows ten. At the top the gap is starker still, because Band 9 in General Training requires a perfect score.", "So the honest answer to which is harder is that it depends where you look. The General Training texts are easier to read. The General Training marking is harder to satisfy. If your visa route asks for Band 7 in each skill, do not assume the General Training paper is the soft option, and do budget real time for accuracy work: spelling, word limits and transferring answers correctly are worth more marks to you than they would be to an Academic candidate.", "Listening is the exception and the relief. It uses a single conversion table for both modules, so a Listening band means the same raw score whichever version you sit."] },
+      { heading: "Prepare for the right version", paragraphs: ["On IELTSVega you can practise for both Academic and General Training, including Academic Task 1 charts and General Training letters, with instant AI band scoring on Writing and Speaking. Set your target module when you start, and every practice set and mock test is tailored to the version you'll actually sit, including the correct Reading conversion table for your module."] },
     ],
     faqs: [
       { q: "Can I switch between IELTS Academic and General Training?", a: "You choose the version when you book, and you should pick the one your university, employer or visa requires. If you booked the wrong version you'd generally need to register again for the correct one, so confirm before paying." },
       { q: "Is IELTS General Training easier than Academic?", a: "Its Reading and Writing use more everyday materials, which many find more familiar, but the scoring is calibrated so a given band means the same level of English in both. Choose based on what your application needs, not perceived difficulty." },
       { q: "Is IELTS Speaking the same in Academic and General Training?", a: "Yes. Listening and Speaking are identical in both versions. Same format, timing and scoring. Only the Reading and Writing sections differ." },
+      { q: "Which is harder, IELTS Academic or General Training?", a: "The General Training texts are easier to read, but General Training Reading is marked more strictly. Band 7 needs 30 out of 40 in Academic Reading and 34 out of 40 in General Training, and Band 9 in General Training requires all 40 correct. Easier texts, less margin for error, so neither is simply the soft option." },
+      { q: "Is there a different score chart for General Training and Academic Reading?", a: "Yes. Reading uses two separate raw score to band tables, and General Training requires more correct answers for every band from 6 upwards. Listening uses a single table that covers both modules, so a Listening raw score converts identically whichever version you sit." },
+      { q: "How long is IELTS General Training valid for?", a: "Two years from the test date, the same as Academic. Validity is a convention of the receiving institution rather than a property of the module, so both versions are treated identically, and some organisations will accept older results with evidence of continued English use." },
     ],
   },
   {
@@ -476,6 +488,152 @@ export const POSTS: BlogPost[] = [
   /* ---------------------------------------------------------------- *
    * Earlier posts
    * ---------------------------------------------------------------- */
+  /* ---------------------------------------------------------------- *
+   * The raw-score conversion charts. Written to serve the single most
+   * recurrent unserved intent across every scoring SERP: "what band is
+   * 32 out of 40". Google's People Also Ask blocks on
+   * "how is ielts band score calculated", "ielts listening strategies"
+   * and "ielts academic vs general" all surface a variant of it, and the
+   * answer differs by paper — which is exactly what the competing charts
+   * bury. Numbers here MUST stay in sync with BAND_TABLES in
+   * src/lib/ielts.ts, which is what /ielts-band-score-calculator renders.
+   * ---------------------------------------------------------------- */
+  {
+    slug: "ielts-band-score-chart",
+    title: "IELTS band score chart: raw score to band for Listening and Reading",
+    seoTitle: "IELTS Band Score Chart: Raw Score to Band Out of 40",
+    excerpt:
+      "What 32 out of 40 means in Listening, Academic Reading and General Training Reading, with the full conversion charts for all three papers and the rounding rule.",
+    category: "Scoring",
+    date: "September 2026",
+    publishedAt: "2026-09-05",
+    readMins: 7,
+    keywords: [
+      "ielts band score chart",
+      "ielts raw score to band score",
+      "ielts listening raw score to band score chart",
+      "ielts band score chart for general reading and listening",
+      "what band is 32 out of 40 in ielts",
+      "ielts band score calculator academic reading",
+      "ielts band score calculator general training reading",
+      "ielts academic vs general reading band difference",
+      "why is general training reading scored harder",
+      "ielts half band scores how they work",
+      "how is ielts overall band score rounded",
+      "ielts score conversion table",
+    ],
+    sections: [
+      {
+        paragraphs: [
+          "Listening and Reading are both marked out of 40, and both are converted to a band with a fixed table. What almost every chart online leaves out is that the three papers use three different tables. The same raw score is not the same band.",
+          "Take 32 out of 40. In Listening that is Band 7.5. In Academic Reading it is Band 7. In General Training Reading it is Band 6.5. One raw score, three different results, and it is the single most common reason people miscalculate what they need.",
+        ],
+      },
+      {
+        heading: "IELTS Listening band score chart (Academic and General Training)",
+        paragraphs: ["Listening uses one table for both modules, so this chart applies whichever version you sit."],
+        bullets: [
+          "39-40 correct = Band 9",
+          "37-38 = Band 8.5",
+          "35-36 = Band 8",
+          "32-34 = Band 7.5",
+          "30-31 = Band 7",
+          "26-29 = Band 6.5",
+          "23-25 = Band 6",
+          "18-22 = Band 5.5",
+          "16-17 = Band 5",
+          "13-15 = Band 4.5",
+          "10-12 = Band 4",
+          "6-9 = Band 3.5",
+          "4-5 = Band 3",
+        ],
+      },
+      {
+        heading: "IELTS Academic Reading band score chart",
+        paragraphs: ["Academic Reading uses three long texts from books, journals and newspapers. The conversion is more forgiving than General Training because the texts are harder."],
+        bullets: [
+          "39-40 correct = Band 9",
+          "37-38 = Band 8.5",
+          "35-36 = Band 8",
+          "33-34 = Band 7.5",
+          "30-32 = Band 7",
+          "27-29 = Band 6.5",
+          "23-26 = Band 6",
+          "19-22 = Band 5.5",
+          "15-18 = Band 5",
+          "13-14 = Band 4.5",
+          "10-12 = Band 4",
+          "8-9 = Band 3.5",
+          "6-7 = Band 3",
+        ],
+      },
+      {
+        heading: "IELTS General Training Reading band score chart",
+        paragraphs: ["General Training Reading is the strictest of the three. The texts are everyday materials, so more correct answers are required for the same band."],
+        bullets: [
+          "40 correct = Band 9",
+          "39 = Band 8.5",
+          "37-38 = Band 8",
+          "36 = Band 7.5",
+          "34-35 = Band 7",
+          "32-33 = Band 6.5",
+          "30-31 = Band 6",
+          "27-29 = Band 5.5",
+          "23-26 = Band 5",
+          "19-22 = Band 4.5",
+          "15-18 = Band 4",
+          "12-14 = Band 3.5",
+          "9-11 = Band 3",
+        ],
+      },
+      {
+        heading: "Why General Training Reading needs more marks",
+        paragraphs: [
+          "It looks unfair the first time you see it: Band 7 costs you 30 marks in Academic Reading and 34 in General Training. The reason is that a band is meant to describe a level of English, not a level of difficulty in one paper. General Training texts are notices, adverts and workplace documents, which are easier to read, so a higher proportion of correct answers is needed before the same band is justified.",
+          "The practical consequence matters more than the principle. In General Training Reading you have almost no margin at the top: Band 8 starts at 37 and Band 9 requires all 40. Three careless spelling errors in a General Training paper can cost a full band where the same three errors in Academic Reading would cost half of one.",
+        ],
+      },
+      {
+        heading: "What each band actually costs you",
+        paragraphs: ["The three most requested targets, side by side, so you can see what your paper demands:"],
+        bullets: [
+          "Band 6: 23 in Listening, 23 in Academic Reading, 30 in General Training Reading.",
+          "Band 6.5: 26 Listening, 27 Academic Reading, 32 General Training Reading.",
+          "Band 7: 30 Listening, 30 Academic Reading, 34 General Training Reading.",
+          "Band 7.5: 32 Listening, 33 Academic Reading, 36 General Training Reading.",
+          "Band 8: 35 Listening, 35 Academic Reading, 37 General Training Reading.",
+        ],
+      },
+      {
+        heading: "How the overall band is rounded",
+        paragraphs: [
+          "Your overall band is the average of the four skill bands, reported to the nearest half band. An average ending in .25 rounds up to the next half band, and .75 rounds up to the next whole band. So 6.25 becomes 6.5, and 6.75 becomes 7.0.",
+          "This is why the cheapest half band is almost always in your weakest skill. Lifting a 5.5 to a 6 moves the average by 0.125, which is often exactly enough to cross a rounding boundary that lifting an already-strong skill would not.",
+        ],
+      },
+      {
+        heading: "Treat these tables as a close guide, not a guarantee",
+        paragraphs: [
+          "Every version of the test is statistically equated, which means the exact raw score needed for a band can shift by a mark or two between papers to keep the standard constant. The tables above are the widely published Cambridge averages and they are what any calculator, including ours, is built on. Use them to track progress and set targets, not to argue with a result.",
+          "One thing they do not flex on: spelling and grammar. A correct answer spelt wrong scores zero in both Listening and Reading, and exceeding the stated word limit scores zero however right the content is. Those are the marks people lose without ever knowing.",
+        ],
+      },
+      {
+        heading: "Find your band after every practice set",
+        paragraphs: [
+          "Converting scores by hand gets old fast. On IELTSVega every Listening and Reading set is marked instantly against these tables, for whichever module you are sitting, so you see the band rather than the raw number. Full mock tests report a band per skill and your rounded overall, and the Writing and Speaking papers are AI-scored against all four criteria, so the overall band you see is calculated exactly the way the real one will be.",
+        ],
+      },
+    ],
+    faqs: [
+      { q: "What band is 32 out of 40 in IELTS?", a: "It depends which paper. 32 out of 40 is Band 7.5 in Listening, Band 7 in Academic Reading and Band 6.5 in General Training Reading. The three papers use separate conversion tables, so the same raw score gives three different bands." },
+      { q: "What is 27 out of 40 in IELTS Listening?", a: "27 out of 40 in Listening is Band 6.5. You need 30 for Band 7, so three more correct answers would move you up a half band." },
+      { q: "Is 6.25 rounded to 6.5 in IELTS?", a: "Yes. An overall average ending in .25 rounds up to the next half band, and .75 rounds up to the next whole band. So a 6.25 average is reported as 6.5 and a 6.75 average is reported as 7.0." },
+      { q: "Why is General Training Reading scored harder than Academic Reading?", a: "Because a band describes a level of English rather than a score in one paper. General Training texts are everyday materials and easier to read, so a higher proportion of correct answers is required for the same band. Band 7 needs 30 out of 40 in Academic Reading but 34 out of 40 in General Training." },
+      { q: "Do Listening and Reading use the same band score chart?", a: "No. Listening has one table that covers both Academic and General Training candidates. Reading has two separate tables, one for Academic and a stricter one for General Training." },
+      { q: "Can you get half bands in IELTS Listening and Reading?", a: "Yes. Both are awarded in half band steps straight from the raw score table, exactly like Writing and Speaking. There is no rounding applied to an individual skill, only to the overall average of the four." },
+    ],
+  },
   {
     slug: "how-ielts-band-score-is-calculated",
     title: "How the IELTS band score is calculated, and how to raise it",
@@ -483,7 +641,29 @@ export const POSTS: BlogPost[] = [
     category: "Scoring",
     date: "July 2026",
     readMins: 6,
-    keywords: ["band ielts", "ielts score", "ielts band score", "ielts writing", "ielts speaking", "reading ielts", "listening ielts", "ielts academic", "ielts general", "test ielts"],
+    /**
+     * TARGETING: the METHOD — criteria, weighting, rounding.
+     *
+     * These used to be ten vague head terms ("ielts score", "test ielts") that
+     * competed with /ielts-band-scores while describing nothing specific. This
+     * post now owns the scoring cluster; /ielts-band-scores owns band meanings
+     * and /blog/ielts-band-score-chart owns the raw-score conversion tables.
+     * See the targeting note in src/app/ielts-band-scores/page.tsx.
+     */
+    keywords: [
+      "how is ielts band score calculated",
+      "ielts scoring system",
+      "ielts overall band score calculator all four skills",
+      "how is ielts overall band score rounded",
+      "ielts 6.25 rounds to which band",
+      "ielts 6.75 rounds up or down",
+      "ielts writing task 1 and task 2 weighting",
+      "ielts writing score calculation task 2 counts double",
+      "ielts speaking four criteria equal weighting",
+      "ielts half band scores how they work",
+      "ielts band descriptors writing task 2 explained",
+      "ielts grading explained",
+    ],
     sections: [
       { paragraphs: ["IELTS reports scores on a 9-band scale, from Band 1 (non-user) to Band 9 (expert). You receive a band for each of the four skills, Listening, Reading, Writing and Speaking, plus an overall band. Understanding exactly how those numbers are produced is the fastest way to stop losing marks you don't need to."] },
       { heading: "Listening and Reading: raw score → band", paragraphs: ["Both are marked out of 40. Your raw score (the number of correct answers) is converted to a band using a fixed conversion table. As a rough guide, around 30/40 maps to Band 7 and 35/40 to Band 8, though the exact table varies slightly by test. Every mark counts, and spelling and grammar must be correct."] },

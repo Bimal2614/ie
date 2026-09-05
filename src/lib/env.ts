@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { DEFAULT_CURRENCY, OFFERED_PLANS, type BillingCurrency } from "@/lib/plans";
+
 /**
  * Strips one layer of wrapping quotes. `.env` parsers drop them, but shell
  * exports and hosting-panel env fields keep them literal, and a quoted value
@@ -73,6 +75,19 @@ const EnvSchema = z.object({
   //     authenticates with this. Optional, and the route stays CLOSED while it
   //     is unset: an unauthenticated sweep would let anyone churn the ledger. ---
   CRON_SECRET: z.string().min(16, "CRON_SECRET must be at least 16 characters").optional(),
+  /**
+   * Who gets operational mail — today, the AI smoke-test report.
+   *
+   * A COMMA-SEPARATED LIST, not one address: an alert that goes to a single
+   * person is an alert that is missed while that person is asleep. Read through
+   * `adminEmails()`, never directly, so the splitting and trimming happen in one
+   * place.
+   *
+   * Optional, and the smoke test still RUNS without it — it just has nowhere to
+   * send the report, says so in the log, and returns it in the response instead.
+   * That way a misconfigured recipient list never turns into a failing cron.
+   */
+  ADMIN_EMAILS: z.string().transform(unquote).optional(),
 
   // --- Razorpay (recurring subscriptions). Optional: the app boots without
   //     them and every paid button falls back to saying checkout is
@@ -100,6 +115,23 @@ const EnvSchema = z.object({
    */
   RAZORPAY_PLAN_PREMIUM: z.string().optional(),
   RAZORPAY_PLAN_PRO: z.string().optional(),
+  /*
+   * ...and the same tiers again, as the USD plans sold outside India.
+   *
+   * A SEPARATE PLAN, NOT A CONVERTED PRICE. A Razorpay plan's currency is
+   * welded in at creation alongside its amount, so "Premium in dollars" is a
+   * different `plan_…` that has to exist in the dashboard before a single
+   * international candidate can be quoted one. Leaving these unset is a
+   * supported state: `resolveBillingCurrency` still quotes rupees to everyone,
+   * because a currency with no plan behind it is not on sale.
+   *
+   * Charging USD also needs INTERNATIONAL PAYMENTS enabled on the Razorpay
+   * account. Without it the plan creates fine and the checkout is refused at
+   * the gateway — which surfaces here as a `RazorpayApiError` naming the
+   * currency, logged in full by the checkout action.
+   */
+  RAZORPAY_PLAN_PREMIUM_USD: z.string().optional(),
+  RAZORPAY_PLAN_PRO_USD: z.string().optional(),
   /**
    * Let a Razorpay plan disagree with the price the pricing page advertises.
    *
@@ -116,6 +148,16 @@ const EnvSchema = z.object({
    * real customers only when someone remembers to unset it is not a protection.
    */
   RAZORPAY_ALLOW_PLAN_MISMATCH: z.enum(["true", "false"]).default("false"),
+  /**
+   * Pretend every request comes from this ISO country, for pricing only.
+   *
+   * FOR SEEING THE USD CARDS ON A LAPTOP, where no CDN has written an
+   * `x-vercel-ip-country` header and every visitor therefore looks Indian.
+   * IGNORED IN PRODUCTION (see src/lib/payments/region.ts): a currency chosen by
+   * an environment variable rather than by the caller would quote one price to
+   * the entire world, which is precisely the bug this whole path exists to fix.
+   */
+  BILLING_TEST_COUNTRY: z.string().length(2).optional(),
 
   // --- S3 (speaking audio storage). Optional for the same reason. ---
   AWS_ACCESS_KEY_ID: z.string().optional(),
@@ -149,12 +191,16 @@ export const env = EnvSchema.parse({
   RATE_LIMIT_VIOLATIONS_BEFORE_DEACTIVATE: process.env.RATE_LIMIT_VIOLATIONS_BEFORE_DEACTIVATE,
   RATE_LIMIT_VIOLATION_WINDOW_DAYS: process.env.RATE_LIMIT_VIOLATION_WINDOW_DAYS,
   CRON_SECRET: process.env.CRON_SECRET,
+  ADMIN_EMAILS: process.env.ADMIN_EMAILS,
   RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
   RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET,
   RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET,
   RAZORPAY_PLAN_PREMIUM: process.env.RAZORPAY_PLAN_PREMIUM,
   RAZORPAY_PLAN_PRO: process.env.RAZORPAY_PLAN_PRO,
+  RAZORPAY_PLAN_PREMIUM_USD: process.env.RAZORPAY_PLAN_PREMIUM_USD,
+  RAZORPAY_PLAN_PRO_USD: process.env.RAZORPAY_PLAN_PRO_USD,
   RAZORPAY_ALLOW_PLAN_MISMATCH: process.env.RAZORPAY_ALLOW_PLAN_MISMATCH,
+  BILLING_TEST_COUNTRY: process.env.BILLING_TEST_COUNTRY,
   AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
   AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
   AWS_REGION: process.env.AWS_REGION,
@@ -191,6 +237,26 @@ export function isCronConfigured(): boolean {
 }
 
 /**
+ * The operators to send alerts to, de-duplicated and in the order configured.
+ *
+ * Split here rather than at each call site, and tolerant of the shapes an
+ * environment panel produces — trailing commas, stray spaces, a value someone
+ * quoted. An empty list is a supported state, not an error: see ADMIN_EMAILS.
+ */
+export function adminEmails(): string[] {
+  const raw = env.ADMIN_EMAILS ?? "";
+  const seen = new Set<string>();
+  for (const part of raw.split(",")) {
+    const address = part.trim();
+    // The bar is deliberately low — one "@" with something either side. This
+    // guards against a stray token in the list, not against a typo; SMTP is the
+    // only thing that can actually tell whether an address exists.
+    if (/^[^@\s]+@[^@\s]+$/.test(address)) seen.add(address);
+  }
+  return [...seen];
+}
+
+/**
  * True when Razorpay can both open a checkout and sign an API call.
  *
  * BOTH keys, for the same reason the Speaking check wants both halves: a key id
@@ -205,14 +271,38 @@ export function isRazorpayConfigured(): boolean {
 }
 
 /**
- * The dashboard-created `plan_…` for a paid tier, or undefined if none is set.
+ * The dashboard-created `plan_…` for a paid tier IN ONE CURRENCY, or undefined
+ * if none is set.
  *
- * Keyed by the tier's own name so adding a tier is one env var, not a code
- * change — but read through a function rather than by string-building the
- * variable name, so a typo is a compile error instead of a silent undefined.
+ * Keyed by the tier's own name and the currency, so adding either is env vars
+ * rather than a code change — but read through a function rather than by
+ * string-building the variable name, so a typo is a compile error instead of a
+ * silent undefined.
+ *
+ * THERE IS NO CROSS-CURRENCY FALLBACK, deliberately. Handing back the rupee
+ * plan when the dollar one is missing would charge ₹2,499 to a card that was
+ * shown $29; the checkout refusing the sale is the correct failure.
  */
-export function razorpayPlanIdFor(plan: "pro" | "premium"): string | undefined {
+export function razorpayPlanIdFor(
+  plan: "pro" | "premium",
+  currency: BillingCurrency = DEFAULT_CURRENCY,
+): string | undefined {
+  if (currency === "USD") {
+    return plan === "premium" ? env.RAZORPAY_PLAN_PREMIUM_USD : env.RAZORPAY_PLAN_PRO_USD;
+  }
   return plan === "premium" ? env.RAZORPAY_PLAN_PREMIUM : env.RAZORPAY_PLAN_PRO;
+}
+
+/**
+ * True when a tier can actually be SOLD in `currency` right now.
+ *
+ * What the pricing page's currency switch reads: offering a dollar price with
+ * no dollar plan behind it produces a button that opens nothing and an error
+ * the candidate cannot act on, so the switch simply does not appear until the
+ * plans exist.
+ */
+export function isCurrencyOnSale(currency: BillingCurrency): boolean {
+  return OFFERED_PLANS.every((plan) => Boolean(razorpayPlanIdFor(plan, currency)));
 }
 
 /** True when the configured Razorpay key is a TEST key rather than a live one. */
