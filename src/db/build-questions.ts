@@ -218,9 +218,17 @@ async function main() {
     casing: "snake_case",
   });
 
-  const explanations: Record<string, Record<string, string>> = JSON.parse(
-    readFileSync(EXPL_PATH, "utf-8"),
-  );
+  // Optional, exactly like timings below: `tools/` is a working folder that is
+  // not in the repo, so a clone without it must still be able to build. Every
+  // lookup already falls back per part, and the only thing lost is the review
+  // note explaining an answer — worth strictly less than a build that refuses
+  // to run at all.
+  let explanations: Record<string, Record<string, string>> = {};
+  try {
+    explanations = JSON.parse(readFileSync(EXPL_PATH, "utf-8"));
+  } catch {
+    console.log("no explanations.json - answers build without their review note");
+  }
   // Optional: a part with no pins keeps its transcript-fraction window, so the
   // build works before align.py has been run and improves part by part after.
   let timings: Record<string, [number, number][]> = {};
@@ -349,8 +357,17 @@ async function main() {
           // in `content` handed the answer to the client before a single
           // question was answered. The text stays in `explanation`, which the
           // page projection never sends.
-          const audio = anchors.get(item.n) ?? null;
-          if (audio && !audio.approx) withAudio++;
+          // Content that MEASURED its own timings beats anything inferred here.
+          // Generated listening audio is built by concatenating rendered lines,
+          // so the pipeline knows the exact second each answer is spoken and
+          // says so. Deriving it from where the words fall in the transcript is
+          // a guess, and a poor one for that audio: a long "look at the
+          // questions" pause is silence the transcript has no words for, so the
+          // estimate lands tens of seconds early. Cambridge parts, which were
+          // recorded rather than generated, keep the derived anchor.
+          const audio = item.audio ?? anchors.get(item.n) ?? null;
+          // A measured window carries no `approx` flag, so it always counts.
+          if (audio && !("approx" in audio && audio.approx)) withAudio++;
           return {
             // The set's key for now — swapped for its uuid once the sets are in.
             setId: externalKey,
@@ -366,6 +383,11 @@ async function main() {
               ...(item.selectCount ? { selectCount: item.selectCount } : {}),
               ...(item.cueCard ? { cueCard: item.cueCard } : {}),
               ...(audio ? { audio } : {}),
+              // The whole set's stretch of the recording, so the player can
+              // bound itself to this group. Repeated on every question because
+              // a set is a group and `question_sets` has nowhere of its own to
+              // put it — two numbers a row, against a column for one fact.
+              ...(group.audio ? { setAudio: group.audio } : {}),
             },
             correctAnswer: item.answer ?? null,
             explanation,
@@ -449,7 +471,12 @@ async function main() {
           prompt: sql`excluded.prompt`,
           content: sql`excluded.content`,
           correctAnswer: sql`excluded.correct_answer`,
-          explanation: sql`excluded.explanation`,
+          // KEEP an explanation the build cannot supply. Explanations come from
+          // tools/cambridge/explanations.json, a working file that is not in the
+          // repo — so on a machine without it every note would be overwritten
+          // with NULL, and re-running would not bring them back. The build
+          // enriches this column; it is not the only thing entitled to write it.
+          explanation: sql`coalesce(excluded.explanation, ${questions.explanation})`,
           marks: sql`excluded.marks`,
           wordLimitMin: sql`excluded.word_limit_min`,
           wordLimitMax: sql`excluded.word_limit_max`,

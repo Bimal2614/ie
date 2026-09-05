@@ -289,7 +289,33 @@ type AudioWindow = {
 
 function windowOf(content: Record<string, unknown> | null): AudioWindow | null {
   const a = content?.audio as AudioWindow | undefined;
-  return a && typeof a.fromFrac === "number" && typeof a.toFrac === "number" ? a : null;
+  if (!a) return null;
+  // A measured window carries seconds and no fractions; an inferred one carries
+  // fractions and, once aligned, seconds too. Either is playable.
+  const frac = typeof a.fromFrac === "number" && typeof a.toFrac === "number";
+  const secs = typeof a.fromSec === "number" && typeof a.toSec === "number";
+  return frac || secs ? a : null;
+}
+
+/**
+ * The stretch of recording this whole document is answered in, or null.
+ *
+ * ONLY FROM MEASURED WINDOWS. Every question must carry real seconds: an
+ * estimate drawn from where words fall in the transcript can be tens of seconds
+ * out, and hiding the rest of the recording behind a wrong range would leave a
+ * candidate unable to reach the moment they need. Missing one question is
+ * enough to fall back to the whole file, which is today's behaviour and always
+ * safe.
+ */
+function spanOf(items: BodyItem[]): { from: number; to: number } | null {
+  const s = items[0]?.content?.setAudio as { fromSec: number; toSec: number } | undefined;
+  if (typeof s?.fromSec !== "number" || typeof s.toSec !== "number") return null;
+  // TAKEN VERBATIM, NOT PADDED. The window was chosen at the boundaries of
+  // rendered lines — it opens on the exam's own cue ("Now listen and answer
+  // questions six to ten") and closes at the end of a sentence. Widening it by
+  // a few seconds would undo exactly that: lines are separated by a 0.4s
+  // breath, so any lead worth having lands in the middle of the one before.
+  return { from: s.fromSec, to: s.toSec };
 }
 
 /**
@@ -335,10 +361,15 @@ function useAudioClip(ref: React.RefObject<HTMLAudioElement | null>) {
       const start = () => {
         if (!Number.isFinite(el.duration) || el.duration <= 0) return;
         const exact = typeof w.fromSec === "number" && typeof w.toSec === "number";
-        // A measured window needs only enough lead to catch the run-up to the
-        // sentence; a transcript-fraction guess needs far more slack.
-        const lead = exact ? 3 : w.approx ? 12 : 6;
-        const tail = exact ? 2 : w.approx ? 8 : 4;
+        // A MEASURED WINDOW IS ALREADY THE RIGHT LENGTH. It spans whole
+        // rendered lines — usually the question as well as the answer — so it
+        // is played as it stands. Padding it would reach past a 0.4s breath
+        // into the neighbouring sentence and open the clip mid-word, which is
+        // the one thing a "play this bit" button must never do.
+        // An inferred window is a guess at a position in a transcript and still
+        // needs slack, generously so when it had to be interpolated.
+        const lead = exact ? 0 : w.approx ? 12 : 6;
+        const tail = exact ? 0 : w.approx ? 8 : 4;
         const from = exact ? w.fromSec! : w.fromFrac * el.duration;
         const to = exact ? w.toSec! : w.toFrac * el.duration;
         const at = Math.max(0, from - lead);
@@ -475,10 +506,21 @@ export function QuestionBody({
     </AnnotationProvider>
   );
 
+  /**
+   * Confine the player to this set's own stretch — but only where the clip
+   * feature is on at all. `config.clips` is what distinguishes drilling one
+   * group from sitting the whole part, and sitting the part must hear all of it.
+   */
+  const audioRange = useMemo(
+    () => (config.clips && doc.audioSrc ? spanOf(allItems) : null),
+    [config.clips, doc.audioSrc, allItems],
+  );
+
   const stimulus = (
     <Stimulus
       doc={doc}
       audioRef={audioRef}
+      audioRange={audioRange}
       sticky={config.stickyAudio}
       showImage={config.stimulusImage !== false}
       fit={config.fitStimulus}
@@ -1214,6 +1256,7 @@ function PassageText({ text, annotate }: { text: string; annotate: boolean }) {
 function Stimulus({
   doc,
   audioRef,
+  audioRange = null,
   sticky,
   showImage = true,
   fit = false,
@@ -1221,6 +1264,8 @@ function Stimulus({
 }: {
   doc: BodyDoc;
   audioRef: React.RefObject<HTMLAudioElement | null>;
+  /** The set's own stretch of the recording, when its timings are measured. */
+  audioRange?: { from: number; to: number } | null;
   sticky?: boolean;
   /** False when a layout or question group draws the figure itself. */
   showImage?: boolean;
@@ -1253,7 +1298,7 @@ function Stimulus({
               carries a Download entry in Chromium's menu and "Save Audio As…"
               in everyone else's. The bytes behind this URL are defended
               separately — see src/lib/protected-media.ts. */}
-          <AudioStimulus src={doc.audioSrc} audioRef={audioRef} />
+          <AudioStimulus src={doc.audioSrc} audioRef={audioRef} range={audioRange} />
         </div>
       )}
 

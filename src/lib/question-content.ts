@@ -308,6 +308,16 @@ export type QuestionItem = {
   marks?: number;
   /** Omitted for Writing & Speaking, which are AI-scored rather than keyed. */
   answer?: CorrectAnswer;
+  /**
+   * The seconds of the recording in which this answer is spoken, when the
+   * content knows them exactly.
+   *
+   * Only generated audio can carry this: the renderer lays the lines down in
+   * order, so it knows precisely where each one starts. A recorded part has to
+   * have its moments inferred instead — see `anchorPart` in build-questions.ts,
+   * which estimates from the transcript and marks the result approximate.
+   */
+  audio?: { fromSec: number; toSec: number };
   /** Why that answer is right — shown in review. */
   explanation?: string;
   /** Writing. */
@@ -339,6 +349,12 @@ export type QuestionGroup = {
   to: number;
   /** The structure the gaps live in. Null for self-contained items (MCQ). */
   layout?: SetLayout | null;
+  /**
+   * The stretch of recording this whole group is answered in. Opens slightly
+   * before the first answer, because the run-up to a question is part of
+   * hearing it. Same provenance as `QuestionItem.audio`: measured, not guessed.
+   */
+  audio?: { fromSec: number; toSec: number };
   items: QuestionItem[];
 };
 
