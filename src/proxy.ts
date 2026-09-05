@@ -57,19 +57,39 @@ const S3 = "https://*.amazonaws.com";
  */
 const RAZORPAY = "https://*.razorpay.com";
 
+/**
+ * Google Analytics 4 and Microsoft Clarity origins.
+ *
+ * Split across three directives because the tags do three different things and
+ * a missing one fails silently in a different way:
+ *   script — the loaders. Listed for documentation and for browsers too old to
+ *            honour strict-dynamic; modern ones trust the nonce instead.
+ *   connect — where the beacons actually POST. Miss this and the tag loads,
+ *            the console stays quiet, and every report reads zero.
+ *   img    — GA4 falls back to a pixel when fetch/beacon is unavailable, and
+ *            Clarity serves its recorder assets from the same hosts.
+ *
+ * c.bing.com is Clarity's, not a stray: the recorder pings it for consent state.
+ */
+const ANALYTICS_SCRIPT = "https://*.googletagmanager.com https://*.clarity.ms";
+const ANALYTICS_CONNECT =
+  "https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://*.clarity.ms https://c.bing.com";
+const ANALYTICS_IMG =
+  "https://*.google-analytics.com https://*.googletagmanager.com https://*.clarity.ms";
+
 function buildCsp(nonce: string): string {
   return [
     `default-src 'self'`,
     // 'strict-dynamic' lets the nonce'd Next bootstrap script load the rest;
     // 'unsafe-eval' is dev-only (React uses eval for better stack traces).
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${RAZORPAY}${isDev ? " 'unsafe-eval'" : ""}`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${RAZORPAY} ${ANALYTICS_SCRIPT}${isDev ? " 'unsafe-eval'" : ""}`,
     // Styles use 'unsafe-inline' WITHOUT a nonce. Per the CSP spec, a nonce (or
     // hash) in style-src makes the browser IGNORE 'unsafe-inline' — which would
     // block every React inline style={{…}} (colours, gradients, widths, fonts)
     // and Next's own injected styles. Inline style is low-risk (it can't run
     // JS); scripts stay strict with the nonce above, where the real risk is.
     `style-src 'self' 'unsafe-inline'`,
-    `img-src 'self' blob: data: ${S3} ${RAZORPAY}`,
+    `img-src 'self' blob: data: ${S3} ${RAZORPAY} ${ANALYTICS_IMG}`,
     `media-src 'self' blob: ${S3}`,
     `font-src 'self'`,
     `object-src 'none'`,
@@ -80,7 +100,7 @@ function buildCsp(nonce: string): string {
     // The Checkout modal itself. Without this it falls back to default-src
     // 'self' and the button opens a blank white box.
     `frame-src ${RAZORPAY}`,
-    `connect-src 'self' ${S3} ${RAZORPAY}`,
+    `connect-src 'self' ${S3} ${RAZORPAY} ${ANALYTICS_CONNECT}`,
     `upgrade-insecure-requests`,
   ].join("; ");
 }
