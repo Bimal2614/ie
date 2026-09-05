@@ -168,8 +168,8 @@ export const PLANS: Record<PlanKey, Entitlements> = {
     prices: {
       // ₹2,499 now, down from ₹4,000.
       INR: { priceCents: 249900, listPriceCents: 400000 },
-      // $29 for the quarter, down from $46.
-      USD: { priceCents: 2900, listPriceCents: 4600 },
+      // $30 for the quarter, down from $46.
+      USD: { priceCents: 3000, listPriceCents: 4600 },
     },
     billingMonths: 3,
     monthlyPracticeAnswers: null,
