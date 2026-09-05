@@ -277,7 +277,26 @@ async function main() {
         : new Map<number, Window>();
 
     for (const group of groups) {
-      for (const items of chunk(group)) {
+      for (const all of chunk(group)) {
+        if (!all.length) continue;
+
+        // AN ITEM ASKED ABOUT ITS OWN PICTURE CANNOT STAND ALONE HERE.
+        //
+        // "Which chart shows the percentage of cinema seats?" with the options
+        // "Chart A/B/C" needs the three charts on screen, and in this path the
+        // figure that reaches the browser is the SET's — one image for a whole
+        // group, which is exactly what a per-question chart is not. Copying
+        // `item.imageUrl` onto the question row produced a row that looked
+        // complete and rendered as three unlabelled radio buttons.
+        //
+        // These items are not lost: they live in the `practice_sections`
+        // document for the same paper, which is what section practice and the
+        // mock tests read, and which addresses a figure by (section, item
+        // number) rather than by the set. This builder simply stops claiming it
+        // can serve them on their own.
+        const items = all.filter((item) => !item.imageUrl);
+        // Nothing buildable in this chunk — no set, and no key, so the sweep at
+        // the end retires any set a previous build made from it.
         if (!items.length) continue;
         const last = items[items.length - 1];
         const from = items[0].n;
@@ -365,11 +384,6 @@ async function main() {
               // row's position in the set.
               n: item.n,
               ...(item.options ? { options: item.options } : {}),
-              // A picture THIS question is asked about — "Which chart shows
-              // ...?" where the options are only "Chart A/B/C". Distinct from
-              // the set's imageUrl, which one paper's consecutive questions
-              // cannot share because each has its own chart.
-              ...(item.imageUrl ? { imageUrl: item.imageUrl } : {}),
               ...(item.selectCount ? { selectCount: item.selectCount } : {}),
               ...(item.cueCard ? { cueCard: item.cueCard } : {}),
               ...(audio ? { audio } : {}),
