@@ -26,6 +26,30 @@ const nextConfig: NextConfig = {
    * node_modules and `__dirname` still means what the package thinks it means.
    */
   serverExternalPackages: ["ffmpeg-static"],
+  /**
+   * ...and its BINARY has to reach the deployed function with it.
+   *
+   * `serverExternalPackages` keeps the require at runtime, which is what fixes
+   * `__dirname` — but the thing `__dirname` then points at is an 80 MB
+   * executable, not a module anyone imports. A dependency trace follows imports;
+   * on a platform that ships only traced files, the package's index.js arriving
+   * without its binary means every transcode fails with ENOENT, which the
+   * recorder reports as "that recording couldn't be processed" on a perfectly
+   * good recording.
+   *
+   * The tracer currently picks the binary up on its own (verified in the build's
+   * .nft.json for these routes). This is insurance, not a fix for a present bug:
+   * the failure it guards against is silent, production-only, and would be found
+   * by candidates rather than by a build. Scoped to the routes that actually
+   * record rather than "/**", because the binary counts against each function's
+   * size limit.
+   */
+  outputFileTracingIncludes: {
+    "/practice/set/[id]": ["./node_modules/ffmpeg-static/**"],
+    "/practice/[section]/[type]": ["./node_modules/ffmpeg-static/**"],
+    "/section-practice/[id]": ["./node_modules/ffmpeg-static/**"],
+    "/mock-test/[id]": ["./node_modules/ffmpeg-static/**"],
+  },
   reactStrictMode: true,
   turbopack: {
     root: projectRoot,
@@ -41,7 +65,14 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     serverActions: {
-      bodySizeLimit: "2mb",
+      // A speaking answer is uploaded through a server action, and 2mb sat under
+      // the size of a long turn recorded at a higher browser bitrate — those
+      // failed with a framework error rather than anything the recorder could
+      // explain. 4mb is the most that is worth allowing: the serverless platform
+      // refuses a request body over 4.5 MB before the action is reached, so a
+      // larger number here would only move the failure, not remove it. Kept in
+      // step with MAX_UPLOAD_BYTES in src/app/actions/speaking.ts.
+      bodySizeLimit: "4mb",
       ...(appHost ? { allowedOrigins: [appHost] } : {}),
     },
   },

@@ -42,6 +42,7 @@ export function ExamShell({
   activePartId,
   answered,
   flagged,
+  locked,
   current,
   onJump,
   onSelectPart,
@@ -80,6 +81,8 @@ export function ExamShell({
   activePartId: string;
   answered: Set<number>;
   flagged?: Set<number>;
+  /** Questions the paper has closed — mock Speaking only. See QuestionStrip. */
+  locked?: Set<number>;
   current?: number | null;
   onJump: (n: number, partId: string) => void;
   onSelectPart?: (partId: string) => void;
@@ -235,6 +238,7 @@ export function ExamShell({
           activePartId={activePartId}
           answered={answered}
           flagged={flagged}
+          locked={locked}
           current={current}
           onJump={onJump}
           onSelectPart={onSelectPart}

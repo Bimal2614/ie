@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { Mic, Square, Loader2 } from "lucide-react";
+import { useState, useRef, useEffect, type ReactNode } from "react";
+import Image from "next/image";
+import { Mic, Square, Loader2, Check } from "lucide-react";
 import { storeSpeakingRecording } from "@/app/actions/speaking";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -59,6 +60,20 @@ type InputProps = {
   autoRecord?: boolean;
   /** That question's clip has reached its end — the cue `autoRecord` waits for. */
   promptEnded?: boolean;
+  /**
+   * One take and no second chance — the mock.
+   *
+   * On test day the examiner hears what you said, not the version you would
+   * rather have given. Practice keeps "Re-record" because that is what practice
+   * is for; a timed paper must not offer it.
+   */
+  singleTake?: boolean;
+  /**
+   * Writing only: a control to sit in the counter row under the editor. Filling
+   * a pane, the row that used to carry it above the box cost a line of the
+   * essay's height and gave nothing back — see the `bare` branch in ItemRow.
+   */
+  footerExtra?: ReactNode;
 };
 
 /* ------------------------------------------------------------------ *
@@ -185,9 +200,25 @@ function ChoiceRow({
 
 function SingleChoice({ question, value, disabled, state, onChange }: InputProps) {
   const options = (question.content?.options as string[]) ?? [];
+  const image = question.content?.imageUrl as string | undefined;
   const selected = value?.index as number | undefined;
   return (
     <div className="space-y-2">
+      {/* The charts this question is asked about. Printed above the options,
+          as the paper prints them, because "Chart A/B/C" means nothing on its
+          own. */}
+      {image && (
+        <div className="mb-3 overflow-hidden rounded-lg border border-line bg-white">
+          <Image
+            src={image}
+            alt="Chart for this question"
+            width={1000}
+            height={420}
+            className="h-auto w-full object-contain"
+            unoptimized
+          />
+        </div>
+      )}
       {options.map((opt, i) => (
         <ChoiceRow
           key={i}
@@ -369,7 +400,7 @@ function ShortAnswer({ question, value, disabled, state, onChange }: InputProps)
  * Writing
  * ------------------------------------------------------------------ */
 
-function Writing({ question, value, disabled, onChange, fill }: InputProps) {
+function Writing({ question, value, disabled, onChange, fill, footerExtra }: InputProps) {
   const text = (value?.text as string) ?? "";
   const words = countWords(text);
   const min = question.wordLimitMin ?? 0;
@@ -386,8 +417,11 @@ function Writing({ question, value, disabled, onChange, fill }: InputProps) {
     onChange({ text: next, words: countWords(next) });
   };
 
+  // `flex-1`, not `h-full`: a percentage height against a parent that is itself
+  // flexing rounds a pixel or two long, and that put a scrollbar on a pane whose
+  // content fits exactly.
   return (
-    <div className={cn("space-y-2", fill && "flex h-full min-h-0 flex-col")}>
+    <div className={cn("space-y-2", fill && "flex min-h-0 flex-1 flex-col")}>
       <Textarea
         rows={fill ? undefined : 12}
         disabled={disabled}
@@ -417,22 +451,25 @@ function Writing({ question, value, disabled, onChange, fill }: InputProps) {
           "leading-relaxed",
           // Filling the pane, the drag handle would fight the layout; sized to
           // content, it is the only way to make a 12-row box bigger.
-          fill ? "min-h-0 flex-1 resize-none" : "resize-y",
+          fill ? "min-h-0 flex-1 resize-none px-4 py-3" : "resize-y",
         )}
       />
-      <div className="flex items-center justify-between text-xs">
+      <div className="flex items-center gap-3 text-xs">
         <span className={cn("font-mono tabular-nums", under ? "text-danger" : "text-ink-muted")}>
           {words} {words === 1 ? "word" : "words"}
         </span>
-        {atMax ? (
-          <span className="text-danger">Limit reached: only the first {max} words are marked.</span>
-        ) : (
-          min > 0 && (
-            <span className="text-ink-muted">
-              {under ? `${min - words} more to reach the ${min}-word minimum` : `Minimum ${min} met`}
-            </span>
-          )
-        )}
+        <span className="ml-auto text-right">
+          {atMax ? (
+            <span className="text-danger">Limit reached: only the first {max} words are marked.</span>
+          ) : (
+            min > 0 && (
+              <span className="text-ink-muted">
+                {under ? `${min - words} more to reach the ${min}-word minimum` : `Minimum ${min} met`}
+              </span>
+            )
+          )}
+        </span>
+        {footerExtra && <span className="-my-1 shrink-0">{footerExtra}</span>}
       </div>
     </div>
   );
@@ -442,7 +479,15 @@ function Writing({ question, value, disabled, onChange, fill }: InputProps) {
  * Speaking
  * ------------------------------------------------------------------ */
 
-function Speaking({ question, value, disabled, autoRecord, promptEnded, onChange }: InputProps) {
+function Speaking({
+  question,
+  value,
+  disabled,
+  autoRecord,
+  promptEnded,
+  singleTake,
+  onChange,
+}: InputProps) {
   const cue = question.content?.cueCard as { topic: string; bullets: string[] } | undefined;
   const [recording, setRecording] = useState(false);
   const [recorded, setRecorded] = useState(false);
@@ -636,9 +681,26 @@ function Speaking({ question, value, disabled, autoRecord, promptEnded, onChange
         // submit button shut until the flag clears.
         report({ recorded: true, durationSec, pendingUpload: true });
         try {
-          const fd = new FormData();
-          fd.append("audio", blob, "answer.webm");
-          const res = await storeSpeakingRecording(fd);
+          // A fresh FormData per attempt: one that has been sent is spent, while
+          // the blob behind it is not.
+          const send = () => {
+            const fd = new FormData();
+            fd.append("audio", blob, "answer.webm");
+            return storeSpeakingRecording(fd);
+          };
+
+          let res = await send();
+          // ONE AUTOMATIC RETRY, and only for the failure that asks for it.
+          // Server-side transcoding is capped per instance, so a burst — a class
+          // finishing the same question together — can refuse a perfectly good
+          // recording purely for queue pressure. The candidate has no way to
+          // resend from here, so an unretried "try again in a moment" would lose
+          // the answer to a wait. The pause is longer than a single transcode,
+          // so the lane that refused this one has freed by the time we ask again.
+          if ("error" in res && res.retryable) {
+            await new Promise((r) => setTimeout(r, 2500));
+            res = await send();
+          }
           if ("error" in res) {
             // Clear the flag either way — a failed upload must not wedge submit
             // shut forever. The answer stays without a URL, which the report
@@ -754,6 +816,12 @@ function Speaking({ question, value, disabled, autoRecord, promptEnded, onChange
             <Square className="h-4 w-4" /> Stop · {mmss(elapsed)}
             {limit > 0 && <span className="ml-1 opacity-70">/ {mmss(limit)}</span>}
           </Button>
+        ) : recorded && singleTake ? (
+          // Answered, and that is the end of it: a settled statement rather
+          // than a button, so there is nothing to press by mistake.
+          <span className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-soft">
+            <Check className="size-4 text-success" /> Answer recorded
+          </span>
         ) : (
           !preparing && (
             <Button

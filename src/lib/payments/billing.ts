@@ -4,7 +4,15 @@ import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { subscriptions, users } from "@/db/schema";
 import { allowPlanMismatch, env, razorpayPlanIdFor } from "@/lib/env";
-import { CURRENCY, PLANS, toPlanKey, type PlanKey } from "@/lib/plans";
+import {
+  DEFAULT_CURRENCY,
+  PLANS,
+  priceFor,
+  toBillingCurrency,
+  toPlanKey,
+  type BillingCurrency,
+  type PlanKey,
+} from "@/lib/plans";
 import {
   cadenceFor,
   cancelSubscription,
@@ -72,6 +80,11 @@ type PlanTerms = {
   cadence: Cadence;
 };
 
+/** What the ledger records for a currency Razorpay charged in. */
+function currencyOf(sub: RazorpaySubscription): BillingCurrency {
+  return toBillingCurrency(sub.notes?.currency);
+}
+
 /**
  * The dashboard-created plan for a tier, checked against what we advertise.
  *
@@ -94,18 +107,31 @@ type PlanTerms = {
  * being called twice more in the same flow, and caching it would mean a price
  * corrected in the dashboard stayed wrong here until something evicted it.
  */
-export async function resolvePlanTerms(plan: Exclude<PlanKey, "free">): Promise<PlanTerms> {
+export async function resolvePlanTerms(
+  plan: Exclude<PlanKey, "free">,
+  currency: BillingCurrency = DEFAULT_CURRENCY,
+): Promise<PlanTerms> {
   const entitlements = PLANS[plan];
-  const planId = razorpayPlanIdFor(plan);
+  const planId = razorpayPlanIdFor(plan, currency);
   if (!planId) {
+    /*
+     * No plan for this tier IN THIS CURRENCY.
+     *
+     * Never falls through to the other currency's plan: the rupee plan charges
+     * ₹2,499 to a card that was quoted $29, which is the mis-charge this whole
+     * function exists to prevent. Refusing is the correct failure, and the
+     * pricing page's currency switch hides a currency in this state anyway —
+     * reaching here means the environment changed since the page was rendered.
+     */
+    const suffix = currency === DEFAULT_CURRENCY ? "" : `_${currency}`;
     throw new PlanConfigError(
-      `No Razorpay plan id configured for "${plan}". Create the plan in the Razorpay dashboard and set RAZORPAY_PLAN_${plan.toUpperCase()}.`,
+      `No Razorpay plan id configured for "${plan}" in ${currency}. Create the plan in the Razorpay dashboard and set RAZORPAY_PLAN_${plan.toUpperCase()}${suffix}.`,
     );
   }
 
   const expected = {
-    amount: entitlements.priceCents,
-    currency: CURRENCY,
+    amount: priceFor(plan, currency),
+    currency,
     cadence: cadenceFor(entitlements.billingMonths),
   };
 
@@ -164,7 +190,7 @@ export async function resolvePlanTerms(plan: Exclude<PlanKey, "free">): Promise<
     }
 
     throw new PlanConfigError(
-      `Razorpay plan ${planId} does not match what /pricing advertises for "${plan}" (${mismatches.join("; ")}). ` +
+      `Razorpay plan ${planId} does not match what /pricing advertises for "${plan}" in ${currency} (${mismatches.join("; ")}). ` +
         `Fix the plan in the dashboard, or the figures in src/lib/plans.ts, so the price shown is the price charged.`,
     );
   }
@@ -209,6 +235,31 @@ async function ensureCustomerId(user: {
   return customer.id;
 }
 
+/**
+ * The account a `cust_…` belongs to, or null if we have never seen it.
+ *
+ * THE LAST WAY BACK TO AN OWNER, and for some events the only one. Razorpay's
+ * `notes` are a property of the SUBSCRIPTION, and a `payment.failed` for a
+ * subscription charge carries neither the subscription entity nor a copy of its
+ * notes — the payment's own `notes` come through empty. What it does carry is
+ * `customer_id`, and `ensureCustomerId` above wrote that onto the user the
+ * moment the checkout was opened, so the column is a reverse index into the
+ * accounts by the one handle the event actually has.
+ *
+ * Reads the cached column rather than asking Razorpay for the customer: the id
+ * is ours, written by us, and a gateway round trip in a webhook is a retry
+ * waiting to happen.
+ */
+export async function userIdByCustomerId(customerId: string | null | undefined): Promise<string | null> {
+  if (!customerId) return null;
+  const [row] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.razorpayCustomerId, customerId))
+    .limit(1);
+  return row?.id ?? null;
+}
+
 /* ------------------------------------------------------------------ *
  * Opening a checkout
  * ------------------------------------------------------------------ */
@@ -237,8 +288,9 @@ export type CheckoutSession = {
 export async function openCheckout(
   user: { id: string; name: string; email: string; phone: string | null },
   plan: Exclude<PlanKey, "free">,
+  currency: BillingCurrency = DEFAULT_CURRENCY,
 ): Promise<CheckoutSession> {
-  const terms = await resolvePlanTerms(plan);
+  const terms = await resolvePlanTerms(plan, currency);
   const customerId = await ensureCustomerId(user);
   const entitlements = PLANS[plan];
 
@@ -248,8 +300,10 @@ export async function openCheckout(
     totalCount: cycleCount(terms.cadence),
     // Echoed back on every event this subscription ever raises. The webhook
     // reads the account out of here, which is what lets a renewal three months
-    // from now find its owner without a browser session to ask.
-    notes: { userId: user.id, planKey: plan },
+    // from now find its owner without a browser session to ask — and the
+    // CURRENCY too, so a renewal in 2027 records dollars against a dollar
+    // mandate instead of stamping the default on it.
+    notes: { userId: user.id, planKey: plan, currency: terms.currency },
   });
 
   return {
@@ -388,7 +442,17 @@ export async function activateFromRazorpay(input: {
   if (!owner) return { ok: false, reason: "no_owner" };
 
   const { start, end } = windowOf(sub, owner.plan);
-  const amountCents = input.amountCents ?? PLANS[owner.plan].priceCents;
+  /*
+   * What was charged and in what.
+   *
+   * The currency comes off the mandate's own notes, stamped when the checkout
+   * was opened — not from a default and not from the request, which by renewal
+   * time is a Razorpay server in another country. An amount in cents recorded
+   * against "INR" is a refund figure out by ~90x, and it is the ledger, so it
+   * is wrong forever.
+   */
+  const currency = currencyOf(sub);
+  const amountCents = input.amountCents ?? priceFor(owner.plan, currency);
   const metadata = {
     razorpaySubscriptionId: sub.id,
     razorpayPlanId: sub.plan_id,
@@ -425,7 +489,7 @@ export async function activateFromRazorpay(input: {
     startsAt: start,
     periodEnd: end,
     priceCents: amountCents,
-    currency: CURRENCY,
+    currency,
     actor: input.actor === "user" ? "user" : "webhook",
     provider: "razorpay",
     providerSubscriptionId: sub.id,
@@ -462,6 +526,8 @@ export async function recordFailedPayment(input: {
   userId: string;
   subscriptionId: string | null;
   amountCents: number | null;
+  /** What the gateway said it tried to take, when the event carries it. */
+  currency?: string | null;
   note: string;
   metadata: Record<string, unknown>;
 }): Promise<void> {
@@ -471,7 +537,7 @@ export async function recordFailedPayment(input: {
     event: "payment_failed",
     actor: "webhook",
     amountCents: input.amountCents,
-    currency: CURRENCY,
+    currency: toBillingCurrency(input.currency),
     note: input.note,
     metadata: input.metadata,
   });

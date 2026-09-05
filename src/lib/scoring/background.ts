@@ -3,10 +3,11 @@ import "server-only";
 import { after } from "next/server";
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import { db } from "@/db";
-import { userResponses } from "@/db/schema";
-import { guardAi, RateLimitError } from "@/lib/security/rate-guard";
+import { mockTestAnswers, userResponses } from "@/db/schema";
+import { tryConsumeAi } from "@/lib/security/rate-guard";
 import { userMayUseAiScoring } from "@/lib/security/plan-guard";
 import { scoreAttemptSpeakingFor, scoreAttemptWritingFor } from "./score-attempt";
+import { scoreMockSpeakingFor, scoreMockWritingFor } from "./score-mock";
 
 /**
  * Kick off AI band scoring for an attempt AFTER the response has been sent.
@@ -61,17 +62,68 @@ export function scheduleAttemptScoring(userId: string, attemptId: string): void 
       if (!(await userMayUseAiScoring(userId))) return;
 
       const sections = new Set(pending.map((p) => p.section));
-      await guardAi(userId);
+      // No allowance left: leave the rows band-less exactly as an outage would,
+      // for the sweeper to pick up once the window rolls over.
+      if (!(await tryConsumeAi(userId)).allowed) return;
 
       // Sequential, not parallel: they share one per-account AI budget, and a
       // writing grade finishing first is worth more than both landing together.
       if (sections.has("writing")) await scoreAttemptWritingFor(userId, attemptId);
       if (sections.has("speaking")) await scoreAttemptSpeakingFor(userId, attemptId);
     } catch (e) {
-      // A throttle or an outage must never surface as a failed submit — the
-      // answers are already saved, and the retry path re-runs this.
-      if (e instanceof RateLimitError) return;
+      // An outage must never surface as a failed submit — the answers are
+      // already saved, and the sweeper re-runs this.
       console.error("[scoring] background run failed", { attemptId, error: e });
+    }
+  });
+}
+
+/**
+ * The same thing for a finished mock sitting.
+ *
+ * WHY THIS EXISTS. Mock scoring used to be fired by a component on the report
+ * page, because `finishMock` redirects and the player never gets a chance to
+ * trigger anything. That is the exact failure the practice path was moved off:
+ * hand the paper in, close the tab before the report renders, and the Writing
+ * and Speaking bands were never computed at all — while the report promised
+ * them. `after()` reaches the same code with no browser involved; the trigger on
+ * the report stays as the fastest way to refresh a band, not the only way to
+ * earn one.
+ *
+ * Same duration caveat as above: a full Speaking module is a long batch, so what
+ * this cannot finish is left band-less for the sweeper cron (/api/cron/scoring).
+ */
+export function scheduleMockScoring(userId: string, sessionId: string): void {
+  after(async () => {
+    try {
+      // Cheap indexed pre-check on (session_id, section): never spend the AI
+      // rate-limit token on a sitting whose subjective answers are already done.
+      const pending = await db
+        .select({ section: mockTestAnswers.section })
+        .from(mockTestAnswers)
+        .where(
+          and(
+            eq(mockTestAnswers.sessionId, sessionId),
+            isNull(mockTestAnswers.band),
+            inArray(mockTestAnswers.section, [...AI_SECTIONS]),
+          ),
+        );
+      if (pending.length === 0) return;
+
+      // The last check before money is spent — this callback outlives the
+      // request that scheduled it, and a plan can lapse in between.
+      if (!(await userMayUseAiScoring(userId))) return;
+
+      const sections = new Set(pending.map((p) => p.section));
+      if (!(await tryConsumeAi(userId)).allowed) return;
+
+      // Writing first, for the same reason as the practice path: they share one
+      // per-account budget, and a Writing band landing early is worth more than
+      // both landing together.
+      if (sections.has("writing")) await scoreMockWritingFor(userId, sessionId);
+      if (sections.has("speaking")) await scoreMockSpeakingFor(userId, sessionId);
+    } catch (e) {
+      console.error("[scoring] background mock run failed", { sessionId, error: e });
     }
   });
 }

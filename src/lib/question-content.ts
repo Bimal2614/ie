@@ -189,7 +189,18 @@ export type SetLayout =
  * Question-level content (types that carry their own options)
  * ------------------------------------------------------------------ */
 
-export type ChoiceContent = { options: string[]; selectCount?: number };
+export type ChoiceContent = {
+  options: string[];
+  selectCount?: number;
+  /**
+   * A picture this question alone is asked about — "Which chart shows the
+   * percentage of cinema seats?" over three pie charts, where the options are
+   * only the labels "Chart A/B/C". The set-level `imageUrl` cannot carry
+   * these: consecutive questions in one group each have their own chart, and
+   * without the picture the question cannot be answered at all.
+   */
+  imageUrl?: string;
+};
 export type JudgementContent = { choices?: string[] };
 export type CueCardContent = { cueCard: { topic: string; bullets: string[] } };
 
@@ -295,6 +306,12 @@ export type QuestionItem = {
   prompt?: string;
   /** Multiple choice / matching options, when the item owns them. */
   options?: string[];
+  /**
+   * A picture this question alone is asked about, when the options only name
+   * it ("Chart A", "Graph B"). The set's `imageUrl` cannot serve here — one
+   * group's consecutive questions each carry a different chart.
+   */
+  imageUrl?: string;
   /** How many options a "Choose TWO letters" item expects. */
   selectCount?: number;
   /**

@@ -93,3 +93,11 @@ Desktop.ini
 # One-off local utility / db seeding scripts — not part of the app
 utility/
 audio-que-generation/
+
+
+# Local-only by choice (2026-09-05). The dated SEO audits and the skill that
+# produces them stay out of history: the audit reads the most recent report off
+# disk to compute deltas, which still works locally, but a fresh clone starts
+# with no trend history and the first run there becomes a new baseline.
+seo-reports/
+.claude/skills/

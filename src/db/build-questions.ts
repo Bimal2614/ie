@@ -39,6 +39,7 @@ import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { and, eq, gte, inArray, notInArray, sql } from "drizzle-orm";
 import { practiceSections, questionSets, questions } from "./schema";
+import { resolveTarget } from "./target";
 import type { QuestionGroup, QuestionItem } from "../lib/question-content";
 
 const SOURCE = "cambridge";
@@ -212,7 +213,8 @@ const LABEL: Record<string, string> = {
 };
 
 async function main() {
-  const client = postgres(process.env.DATABASE_URL!, { max: 1 });
+  const target = resolveTarget();
+  const client = postgres(target.url, { ssl: target.ssl, max: 1 });
   const db = drizzle(client, {
     schema: { practiceSections, questionSets, questions },
     casing: "snake_case",
@@ -283,7 +285,26 @@ async function main() {
         : new Map<number, Window>();
 
     for (const group of groups) {
-      for (const items of chunk(group)) {
+      for (const all of chunk(group)) {
+        if (!all.length) continue;
+
+        // AN ITEM ASKED ABOUT ITS OWN PICTURE CANNOT STAND ALONE HERE.
+        //
+        // "Which chart shows the percentage of cinema seats?" with the options
+        // "Chart A/B/C" needs the three charts on screen, and in this path the
+        // figure that reaches the browser is the SET's — one image for a whole
+        // group, which is exactly what a per-question chart is not. Copying
+        // `item.imageUrl` onto the question row produced a row that looked
+        // complete and rendered as three unlabelled radio buttons.
+        //
+        // These items are not lost: they live in the `practice_sections`
+        // document for the same paper, which is what section practice and the
+        // mock tests read, and which addresses a figure by (section, item
+        // number) rather than by the set. This builder simply stops claiming it
+        // can serve them on their own.
+        const items = all.filter((item) => !item.imageUrl);
+        // Nothing buildable in this chunk — no set, and no key, so the sweep at
+        // the end retires any set a previous build made from it.
         if (!items.length) continue;
         const last = items[items.length - 1];
         const from = items[0].n;

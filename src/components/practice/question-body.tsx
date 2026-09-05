@@ -186,6 +186,13 @@ export type BodyConfig = {
    * is what the real test does with a cue card.
    */
   autoRecordAfterPrompt?: boolean;
+  /**
+   * Speaking, mock only: one take per question, with no "Re-record". Paired
+   * with the forward-only navigation the mock player imposes — offering a
+   * retake on a question the candidate can no longer reach would be a button
+   * that does nothing.
+   */
+  singleTake?: boolean;
   /** Where the report-a-problem button goes. */
   reportOn?: "row" | "feedback" | "none";
   /**
@@ -542,6 +549,7 @@ export function QuestionBody({
           disabled={disabled}
           spokenOnly={config.spokenPromptOnly}
           autoRecord={!disabled && Boolean(config.autoRecordAfterPrompt)}
+          singleTake={config.singleTake}
           onAnswer={onAnswer}
           onFocusChange={config.onSequentialFocus}
         />
@@ -559,7 +567,7 @@ export function QuestionBody({
           .map((g) => ({ ...g, items: g.items.filter((i) => i.n === config.focusNumber) }));
 
   const questionBlocks = (
-    <div className={cn("space-y-6", config.fillHeight && "flex h-full min-h-0 flex-col")}>
+    <div className={cn("space-y-6", config.fillHeight && "flex min-h-0 flex-1 flex-col")}>
       {groups.map((group, gi) => (
         <GroupBlock
           key={gi}
@@ -883,6 +891,47 @@ function ItemRow({
    */
   const isWriting = QUESTION_TYPES[item.questionType]?.family === "writing";
 
+  /**
+   * THE EDITOR IS THE CARD.
+   *
+   * Filling the pane, a Writing task drew a bordered card around a bordered
+   * textarea and then spent the difference on chrome that says nothing: a "1"
+   * badge for the only question on screen, a prompt line the bar above already
+   * carries, and 16px of padding on all four sides. On a laptop that was about
+   * a fifth of the editor's height and a sixth of its width — the essay, which
+   * is the whole task, got the leftovers. Here the box takes the pane and the
+   * one control worth keeping (report a bad question) moves down beside the
+   * word count, where it costs no row of its own.
+   */
+  const bare = Boolean(config.fillHeight) && isWriting;
+
+  if (bare) {
+    return (
+      <li
+        id={`${config.anchorPrefix}-${item.n}`}
+        data-qnum={item.n}
+        className="flex min-h-0 flex-1 flex-col scroll-mt-28"
+      >
+        <QuestionInput
+          fill
+          question={toRenderQuestion(item)}
+          value={value}
+          disabled={disabled}
+          state={state}
+          options={optionsLayout}
+          footerExtra={
+            config.reportOn === "row" ? <ReportQuestionButton questionId={item.key} /> : null
+          }
+          onChange={(v) => {
+            if (onClearAnswer && Object.keys(v).length === 0) onClearAnswer(item.key);
+            else onAnswer(item.key, v);
+          }}
+        />
+        {result && <ResultNote result={result} />}
+      </li>
+    );
+  }
+
   return (
     <li
       // Anchor for the question palette; scroll-mt clears the sticky header.
@@ -990,6 +1039,7 @@ function ItemRow({
             correctAnswer={result?.correctAnswer}
             options={optionsLayout}
             autoRecord={!disabled && Boolean(config.autoRecordAfterPrompt)}
+            singleTake={config.singleTake}
             promptEnded={promptEnded}
             onChange={(v) => {
               // Deselecting your own choice sends an empty answer. Read as a
@@ -1108,24 +1158,43 @@ function ResultNote({ result, inline }: { result: BodyResult; inline?: boolean }
  * in its own chrome (the session top bar, the set page's heading), so printing
  * it here put the same line on screen twice.
  */
-export function InstructionBar({ text, section }: { text: string | null | undefined; section: SectionKey }) {
+export function InstructionBar({
+  text,
+  section,
+  compact = false,
+}: {
+  text: string | null | undefined;
+  section: SectionKey;
+  /**
+   * Inside the fixed split frame every row of chrome is taken straight out of
+   * the editor below it, so the prompt keeps its full wording and gives up its
+   * padding instead.
+   */
+  compact?: boolean;
+}) {
   if (!text) return null;
   const sec = SECTIONS[section];
   return (
-    <div className="flex items-start gap-3 rounded-xl border border-line bg-paper-elev p-4">
+    <div
+      className={cn(
+        "flex shrink-0 items-start gap-3 rounded-xl border border-line bg-paper-elev",
+        compact ? "px-3 py-2" : "p-4",
+      )}
+    >
       {/* "Q", not a decorative icon: this bar carries the question itself for a
           Writing task, and a sparkle above a prompt reads as an ornament rather
           than a label. aria-hidden because the question follows immediately. */}
       <span
         aria-hidden
         className={cn(
-          "grid size-8 shrink-0 place-items-center rounded-lg text-sm font-bold",
+          "grid shrink-0 place-items-center rounded-lg font-bold",
+          compact ? "size-6 text-xs" : "size-8 text-sm",
           `chip-${sec.accent}`,
         )}
       >
         Q
       </span>
-      <p className="min-w-0 text-sm text-ink-strong">
+      <p className={cn("min-w-0 text-sm text-ink-strong", compact && "leading-snug")}>
         <AnnotatedText run="instruction" text={text} />
       </p>
     </div>
@@ -1269,7 +1338,7 @@ function Stimulus({
   sticky?: boolean;
   /** False when a layout or question group draws the figure itself. */
   showImage?: boolean;
-  /** Scale the figure down to fit the pane rather than overflowing it. */
+  /** This figure is alone in its own pane, so it may take the pane's width. */
   fit?: boolean;
   /** Offer the highlighter. Off once the paper is graded — see BodyConfig. */
   annotate?: boolean;
@@ -1277,12 +1346,24 @@ function Stimulus({
   const image = showImage ? doc.imageSrc : null;
   if (!doc.audioSrc && !image && !doc.passageText) return null;
 
-  // Only a figure standing alone can take the pane's height. Beside a passage
-  // or under a recording there is other content competing for it.
-  const fitImage = fit && Boolean(image) && !doc.passageText;
+  /**
+   * A FIGURE ALONE IN A PANE IS SIZED TO THE PANE'S WIDTH, and the pane scrolls
+   * if it runs past the bottom.
+   *
+   * It used to be scaled to fit the pane's HEIGHT, which was the only way to
+   * stop a tall chart dragging the editor beside it down the page. The fixed
+   * frame now guarantees that height whatever the figure does, and fitting by
+   * height on a short window shrank a Task 1 diagram to a thumbnail with a
+   * third of the pane empty either side of it. The labels on a process diagram
+   * have to be readable; scrolling to the bottom of one does not.
+   *
+   * All that is left of `fit` is the paper behind a figure with transparency,
+   * which stands out against the pane on a dark theme.
+   */
+  const soloImage = fit && Boolean(image) && !doc.passageText;
 
   return (
-    <div className={cn("space-y-4", fitImage && "flex h-full min-h-0 flex-col")}>
+    <div className="space-y-4">
       {doc.audioSrc && (
         <div
           className={cn(
@@ -1306,7 +1387,9 @@ function Stimulus({
         <div
           className={cn(
             "overflow-hidden rounded-xl border border-line",
-            fitImage && "flex min-h-0 flex-1 items-center justify-center p-2",
+            // Never squeezed by a sibling: whatever height the figure needs at
+            // the pane's width is the height it gets, and the pane scrolls.
+            soloImage && "bg-paper-elev",
           )}
         >
           <Image
@@ -1316,12 +1399,7 @@ function Stimulus({
             alt={doc.title}
             width={1000}
             height={640}
-            className={cn(
-              "object-contain",
-              // Bounded by BOTH axes so the whole figure lands inside the pane;
-              // `w-full` alone forces the natural aspect ratio and overflows.
-              fitImage ? "max-h-full min-h-0 w-auto max-w-full" : "h-auto w-full",
-            )}
+            className="h-auto w-full object-contain"
             unoptimized
           />
         </div>

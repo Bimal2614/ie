@@ -28,6 +28,26 @@ function pathIf(stored: string | null | undefined, path: string): string | null 
   return stored ? path : null;
 }
 
+/**
+ * Question `content` with its stored image location swapped for our gated
+ * path — the one place a question's jsonb is made safe to send.
+ *
+ * `content` is handed to the client wholesale in three actions. When a
+ * question started carrying its own `imageUrl`, that meant a raw
+ * `s3://bucket/key` in the payload of every one of them: broken in the
+ * browser, and publishing the bucket layout this module exists to hide.
+ * Passing it through here keeps that impossible to forget in a fourth.
+ */
+export function safeQuestionContent(
+  questionId: string,
+  content: unknown,
+): Record<string, unknown> | null {
+  if (!content || typeof content !== "object") return (content ?? null) as null;
+  const c = content as Record<string, unknown>;
+  if (typeof c.imageUrl !== "string") return c;
+  return { ...c, imageUrl: mediaUrl.questionImage(questionId, c.imageUrl) };
+}
+
 export const mediaUrl = {
   /** Listening audio for a `question_sets` row. → /api/media/[setId] */
   setAudio: (setId: string, stored: string | null | undefined) =>
@@ -44,6 +64,17 @@ export const mediaUrl = {
   /** Figure for a `practice_sections` row. → /api/practice/image/[id] */
   sectionImage: (sectionId: string, stored: string | null | undefined) =>
     pathIf(stored, `/api/practice/image/${sectionId}`),
+
+  /**
+   * A picture ONE question is asked about, when its options only name it
+   * ("Chart A", "Graph B"). → /api/media/question/[questionId]/image
+   *
+   * Per QUESTION, not per set, for the same reason the prompt audio below is:
+   * consecutive questions in one group each carry a different chart, and the
+   * set has room for only one figure.
+   */
+  questionImage: (questionId: string, stored: string | null | undefined) =>
+    pathIf(stored, `/api/media/question/${questionId}/image`),
 
   /**
    * The examiner asking one speaking question. → /api/media/prompt/[questionId]

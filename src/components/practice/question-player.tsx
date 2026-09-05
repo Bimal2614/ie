@@ -185,7 +185,11 @@ export function QuestionPlayer({
       storageKey={`exam-split-${set.section}`}
       left={<div className="p-4 sm:p-5">{stimulus}</div>}
       right={
-        <div className="space-y-4 p-4 sm:p-5">
+        // A column, so a full-height editor has something definite to fill:
+        // `flex-1` against a block parent resolves to nothing and the essay box
+        // collapses back to two rows. Everything else sizes to its content as
+        // before.
+        <div className="flex h-full min-h-0 flex-col space-y-4 p-4 sm:p-5">
           {scoreCard}
           {questionBlocks}
         </div>

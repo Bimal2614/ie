@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { DevtoolsGuard } from "@/components/security/devtools-guard";
+import { Analytics } from "@/components/analytics/analytics";
 import { SITE_URL } from "@/lib/site";
 import { BRAND, DEFAULT_DESCRIPTION, DEFAULT_TITLE, KEYWORDS } from "@/lib/seo";
 import { LONG_TAIL, metaKeywordSlice } from "@/lib/keywords";
@@ -123,6 +124,9 @@ export default function RootLayout({
           {/* One auth probe for the whole app; consumed via useAuth() everywhere. */}
           <AuthProvider>{children}</AuthProvider>
         </DevtoolsGuard>
+        {/* Outside DevtoolsGuard on purpose: the guard unmounts its subtree
+            when DevTools opens, and analytics must not be torn down with it. */}
+        <Analytics />
       </body>
     </html>
   );

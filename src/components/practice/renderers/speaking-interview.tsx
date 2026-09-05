@@ -31,6 +31,7 @@ export function SpeakingInterview({
   disabled,
   spokenOnly = false,
   autoRecord = false,
+  singleTake = false,
   onAnswer,
   onFocusChange,
 }: {
@@ -42,6 +43,8 @@ export function SpeakingInterview({
   spokenOnly?: boolean;
   /** Mock: open the recorder as soon as the examiner's question has played out. */
   autoRecord?: boolean;
+  /** Mock: one take per question, so the recorder offers no "Re-record". */
+  singleTake?: boolean;
   onAnswer: (questionId: string, value: Answer) => void;
   /**
    * Which question is being asked, for chrome that lives outside this card.
@@ -157,6 +160,7 @@ export function SpeakingInterview({
             state="idle"
             options={null}
             autoRecord={autoRecord}
+            singleTake={singleTake}
             promptEnded={askedFully === current.id}
             onChange={(v) => onAnswer(current.id, v)}
           />

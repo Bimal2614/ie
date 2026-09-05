@@ -6,7 +6,7 @@ import { questionSets, questions, userResponses } from "@/db/schema";
 import { requireUser } from "@/lib/dal";
 import type { SectionKey, QuestionTypeKey } from "@/lib/ielts";
 import type { SetLayout } from "@/lib/question-content";
-import { mediaUrl } from "@/lib/media-urls";
+import { mediaUrl, safeQuestionContent } from "@/lib/media-urls";
 
 /* ------------------------------------------------------------------ *
  * IELTS Set-Based Loading
@@ -162,7 +162,7 @@ export async function getSetPaginated(
         id: q.id,
         questionType: q.questionType as QuestionTypeKey,
         prompt: q.prompt,
-        content: q.content as Record<string, unknown> | null,
+        content: safeQuestionContent(q.id, q.content),
         wordLimitMin: q.wordLimitMin,
         prepSeconds: q.prepSeconds,
         speakSeconds: q.speakSeconds,

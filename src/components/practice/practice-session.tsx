@@ -350,6 +350,24 @@ export function PracticeSession({
   );
 
   /**
+   * A Writing task with nothing beside it — Task 2, and a General Task 1
+   * letter. One editor and no figure, but the same argument: the essay is the
+   * whole screen's job, so it gets the frame's height instead of a 12-row box
+   * halfway down a page that scrolls.
+   */
+  const soloWriting = Boolean(
+    playerSet && section === "writing" && !sideStimulus && !result && currentSet?.questions.length,
+  );
+
+  /**
+   * Pinned chrome, scrolling content, nothing below the fold. See
+   * `.practice-root[data-frame]` — "split" also drops the reading-column cap,
+   * which an essay on its own still wants.
+   */
+  const frame = sideStimulus ? "split" : soloWriting ? "solo" : undefined;
+  const fixedFrame = Boolean(frame);
+
+  /**
    * The interviewed question, resolved against the set actually on screen.
    *
    * Resolving it here rather than trusting the id means a stale announcement —
@@ -382,16 +400,24 @@ export function PracticeSession({
   const noun = SET_NOUN[section];
 
   return (
-    <div className="practice-root mx-auto w-full max-w-6xl" ref={topRef}>
+    <div
+      // With a figure beside the editor this stops being a document and becomes
+      // a fixed frame: the chrome is pinned, the panes take the rest, and the
+      // reading-column cap comes off so a wide screen goes into the essay
+      // rather than into two empty margins. See `.practice-root[data-frame]`.
+      data-frame={frame}
+      className={cn("practice-root mx-auto w-full max-w-6xl", sideStimulus && "lg:max-w-none")}
+      ref={topRef}
+    >
       <PlanBlockDialog block={blocked} onClose={() => setBlocked(null)} />
       {notice && (
-        <div className="mb-3 rounded-lg border border-warning/40 bg-warning-soft px-4 py-2.5 text-sm text-ink-soft">
+        <div className="mb-3 shrink-0 rounded-lg border border-warning/40 bg-warning-soft px-4 py-2.5 text-sm text-ink-soft">
           {notice}
         </div>
       )}
-      <div className="surface pb-0">
+      <div className={cn("surface pb-0", fixedFrame && "lg:flex lg:min-h-0 lg:flex-1 lg:flex-col")}>
         {/* ── Top bar ── */}
-        <div className="flex items-center gap-2 border-b border-line px-3 py-2.5 sm:px-4">
+        <div className="flex shrink-0 items-center gap-2 border-b border-line px-3 py-2.5 sm:px-4">
           <Button variant="ghost" size="sm" onClick={goBack} className="text-ink-soft">
             <ArrowLeft className="mr-1 h-4 w-4" />
             <span className="hidden sm:inline">Back</span>
@@ -532,28 +558,44 @@ export function PracticeSession({
         </div>
 
         {/* ── Content ── */}
-        <div className="min-h-[50vh] px-4 py-5 sm:px-6 sm:py-6">
+        <div
+          className={cn(
+            "min-h-[50vh] px-4 py-5 sm:px-6 sm:py-6",
+            // The frame's flexible middle: it never grows the page, it just
+            // hands whatever is left to the panes.
+            fixedFrame &&
+              "lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden lg:px-4 lg:py-4",
+          )}
+        >
           {loading ? (
             <div className="flex flex-col items-center justify-center gap-3 py-20">
               <Loader2 className="h-7 w-7 animate-spin text-brand" />
               <p className="text-sm text-ink-muted">Loading passage…</p>
             </div>
           ) : playerSet && currentSet ? (
-            <div key={`${currentSet.id}-${restartKey}`} className="space-y-6">
+            <div
+              key={`${currentSet.id}-${restartKey}`}
+              className={cn(
+                "space-y-6",
+                fixedFrame && "lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:gap-4 lg:space-y-0",
+              )}
+            >
               {/* A Task 1 chart and a Reading passage have to stay in view while
                   the answer is written, so they take their own pane instead of
                   pushing the questions off the screen. Same <SplitPane/> and the
                   same <SetBody/> slots the single-set and section players use. */}
               {sideStimulus ? (
-                <div className="space-y-4">
-                  <InstructionBar text={instructionText} section={section} />
+                <div className="space-y-4 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:gap-3 lg:space-y-0">
+                  <InstructionBar text={instructionText} section={section} compact />
                   {/* Both panes take the SAME height and scroll inside it, so a
                       tall chart no longer leaves the editor beside it ending
-                      halfway down. Sized off the viewport minus this route's own
-                      chrome; in fullscreen `.practice-root:fullscreen` gives it
-                      the whole screen. */}
+                      halfway down. From `lg` up that height is whatever the
+                      fixed frame has left — no magic number to fall out of date
+                      when a line of chrome is added above. Stacked below `lg`
+                      the page scrolls, so a viewport-derived height is still
+                      what keeps both panes on screen. */}
                   <SplitPane
-                    className="h-[calc(100dvh-19rem)] min-h-[24rem]"
+                    className="h-[calc(100dvh-19rem)] min-h-[24rem] lg:h-auto lg:min-h-0 lg:flex-1"
                     storageKey={`exam-split-${section}`}
                     left={
                       <div className="h-full overflow-y-auto pr-1">
@@ -586,6 +628,54 @@ export function PracticeSession({
                     }
                   />
                 </div>
+              ) : soloWriting ? (
+                /* One pane, same frame. The prompt is drawn here rather than by
+                   the body so the row below is the editor and nothing else —
+                   see the `bare` branch in <QuestionBody/>. */
+                <div className="space-y-4 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:gap-3 lg:space-y-0">
+                  <InstructionBar text={instructionText} section={section} compact />
+                  <div className="flex h-[calc(100dvh-19rem)] min-h-[24rem] flex-col lg:h-auto lg:min-h-0 lg:flex-1">
+                    <SetBody
+                      set={playerSet}
+                      questions={currentSet.questions}
+                      answers={answers}
+                      results={null}
+                      onAnswer={handleAnswer}
+                      onClearAnswer={clearAnswer}
+                      flagged={flagged}
+                      onToggleFlag={toggleFlag}
+                      slot="questions"
+                      exam
+                    />
+                  </div>
+                </div>
+              ) : aiScored && result ? (
+                /* THE REPORT IS THE RESULT, so the question layout stands down.
+                   Left in place it printed the task prompt above the report
+                   that quotes it, and the essay in a greyed-out editor above
+                   the report's own "Your response" — both twice on one screen,
+                   with a full-width chart between them.
+
+                   The figure is the one thing the report does not carry and the
+                   analysis keeps referring to ("the trends you selected"), so
+                   it stays — at a readable width rather than the ~900px the
+                   answering pane gave it. */
+                playerSet.imageUrl ? (
+                  // Capped, because the band is what this screen is for: at the
+                  // width the answering pane gave it the chart filled the first
+                  // screen and the score was below the fold.
+                  <div className="mx-auto w-full max-w-3xl [&_img]:mx-auto [&_img]:max-h-[38vh] [&_img]:w-auto">
+                    <SetBody
+                      set={playerSet}
+                      questions={currentSet.questions}
+                      answers={answers}
+                      results={null}
+                      onAnswer={handleAnswer}
+                      slot="stimulus"
+                      exam
+                    />
+                  </div>
+                ) : null
               ) : (
                 <SetBody
                   set={playerSet}
@@ -604,27 +694,33 @@ export function PracticeSession({
               )}
 
               {!result ? (
-                <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper-sunken p-4">
-                  <p className="text-sm text-ink-soft">
-                    <span className="font-semibold text-ink">{answeredCount}</span> / {totalQsInSet}{" "}
-                    answered
-                  </p>
-                  <Button
-                    size="lg"
-                    onClick={handleSubmit}
-                    disabled={submitting || savingRecording || answeredCount === 0}
-                    className="btn-lift"
-                  >
-                    {(submitting || savingRecording) && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    )}
-                    {savingRecording
-                      ? "Saving recording…"
-                      : submitting
-                        ? "Submitting…"
-                        : `Submit ${totalQsInSet > 1 ? "all answers" : "answer"}`}
-                  </Button>
-                </div>
+                /* Split, the submit control rides in the pager instead: a
+                   second full-width strip between the panes and the pager was
+                   ~70px of the frame spent on one button, and it came straight
+                   out of the height of the editor and the figure. */
+                !fixedFrame && (
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-line bg-paper-sunken p-4">
+                    <p className="text-sm text-ink-soft">
+                      <span className="font-semibold text-ink">{answeredCount}</span> /{" "}
+                      {totalQsInSet} answered
+                    </p>
+                    <Button
+                      size="lg"
+                      onClick={handleSubmit}
+                      disabled={submitting || savingRecording || answeredCount === 0}
+                      className="btn-lift"
+                    >
+                      {(submitting || savingRecording) && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      {savingRecording
+                        ? "Saving recording…"
+                        : submitting
+                          ? "Submitting…"
+                          : `Submit ${totalQsInSet > 1 ? "all answers" : "answer"}`}
+                    </Button>
+                  </div>
+                )
               ) : (
                 aiScored ? (
                 /* Writing and Speaking have no right/wrong to report — the AI
@@ -694,7 +790,7 @@ export function PracticeSession({
         </div>
 
         {/* ── Set navigation ── */}
-        <div className="sticky bottom-0 z-10 flex items-center justify-between gap-3 rounded-b-xl border-t border-line bg-paper-elev/95 px-3 py-2.5 backdrop-blur-md sm:px-4">
+        <div className="sticky bottom-0 z-10 flex shrink-0 items-center justify-between gap-3 rounded-b-xl border-t border-line bg-paper-elev/95 px-3 py-2.5 backdrop-blur-md sm:px-4">
           <Button
             variant="ghost"
             size="sm"
@@ -719,15 +815,41 @@ export function PracticeSession({
             <span className="font-mono tabular-nums text-ink-muted">{totalSets}</span>
           </button>
 
-          <Button
-            size="sm"
-            onClick={() => goToSet(setPage + 1)}
-            disabled={!data.hasNextSet}
-            className="btn-lift"
-          >
-            <span className="mr-1 hidden sm:inline">Next</span>
-            <ArrowRight className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            {fixedFrame && !result && (
+              <>
+                <p className="hidden text-xs text-ink-soft sm:block">
+                  <span className="font-semibold text-ink">{answeredCount}</span> / {totalQsInSet}{" "}
+                  answered
+                </p>
+                <Button
+                  size="sm"
+                  onClick={handleSubmit}
+                  disabled={submitting || savingRecording || answeredCount === 0}
+                  className="btn-lift"
+                >
+                  {(submitting || savingRecording) && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  {savingRecording
+                    ? "Saving recording…"
+                    : submitting
+                      ? "Submitting…"
+                      : `Submit ${totalQsInSet > 1 ? "all" : "answer"}`}
+                </Button>
+              </>
+            )}
+            <Button
+              variant={fixedFrame && !result ? "outline" : "default"}
+              size="sm"
+              onClick={() => goToSet(setPage + 1)}
+              disabled={!data.hasNextSet}
+              className={cn(!(fixedFrame && !result) && "btn-lift")}
+            >
+              <span className="mr-1 hidden sm:inline">Next</span>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
 

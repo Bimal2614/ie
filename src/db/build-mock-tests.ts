@@ -29,6 +29,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
+import { resolveTarget } from "./target";
 import {
   mockTests,
   mockTestSections,
@@ -69,22 +70,16 @@ type PartRow = {
  * ------------------------------------------------------------------ */
 
 function connect() {
-  const staging = process.argv.includes("--staging");
-  const url = staging ? process.env.STAGING_DATABASE_URL : process.env.DATABASE_URL;
-  if (!url) {
-    throw new Error(
-      staging
-        ? "STAGING_DATABASE_URL is not set — add it to .env.local."
-        : "DATABASE_URL is not set — add it to .env.local.",
-    );
-  }
-  const client = postgres(url, { ssl: staging ? "require" : false, max: 1 });
+  // Target resolution is shared with the content import and the question
+  // build — see ./target.ts for why it is not inlined here any more.
+  const target = resolveTarget();
+  const client = postgres(target.url, { ssl: target.ssl, max: 1 });
   // `casing` must match the runtime client (src/db/index.ts), or the generated
   // SQL asks for "testNumber" instead of "test_number".
   return {
     db: drizzle(client, { schema, casing: "snake_case" }),
     client,
-    label: staging ? "staging" : "local",
+    label: target.label,
   };
 }
 

@@ -2,7 +2,7 @@
 
 import { requireUser } from "@/lib/dal";
 import { scoreAttemptWritingFor } from "@/lib/scoring/score-attempt";
-import { guardAi, RateLimitError } from "@/lib/security/rate-guard";
+import { tryConsumeAi } from "@/lib/security/rate-guard";
 import { checkAiScoring } from "@/lib/security/plan-guard";
 
 /**
@@ -23,12 +23,8 @@ export async function scoreAttemptWriting(
   const gate = checkAiScoring(user);
   if (gate) return { scored: 0, limited: true, message: gate.message };
 
-  try {
-    await guardAi(user.id);
-  } catch (e) {
-    if (e instanceof RateLimitError) return { scored: 0, limited: true, message: e.message };
-    throw e;
-  }
+  const budget = await tryConsumeAi(user.id);
+  if (!budget.allowed) return { scored: 0, limited: true, message: budget.message };
 
   const { scored } = await scoreAttemptWritingFor(user.id, attemptId);
   return { scored };

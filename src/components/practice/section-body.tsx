@@ -73,6 +73,7 @@ export function SectionBody({
   instructions = "full",
   spokenPromptOnly = false,
   autoRecordAfterPrompt = false,
+  singleTake = false,
   answerScope,
   flagged,
   onToggleFlag,
@@ -151,6 +152,8 @@ export function SectionBody({
    * understood it.
    */
   autoRecordAfterPrompt?: boolean;
+  /** Speaking, mock only: one take per question and no "Re-record" button. */
+  singleTake?: boolean;
 }) {
   /**
    * A map answers exactly one task, so it is drawn inside that group rather
@@ -276,6 +279,7 @@ export function SectionBody({
         stimulusImage: figureOwner < 0,
         spokenPromptOnly,
         autoRecordAfterPrompt,
+        singleTake,
       }}
     />
   );

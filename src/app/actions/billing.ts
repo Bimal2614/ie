@@ -5,6 +5,7 @@ import { z } from "zod";
 import { requireUser } from "@/lib/dal";
 import { isRazorpayConfigured } from "@/lib/env";
 import { isOfferedPlan, PLANS } from "@/lib/plans";
+import { checkoutCurrency } from "@/lib/payments/region";
 import { guardGeneral, RateLimitError, SLOW_DOWN } from "@/lib/security/rate-guard";
 import {
   activateFromRazorpay,
@@ -55,8 +56,16 @@ const callbackSchema = z.object({
  * an email afterwards, but a mandate has to be attached to an account at the
  * moment it is created or there is nothing to grant when it charges. The
  * pricing card sends a visitor to sign up first.
+ *
+ * THE CURRENCY IS NAMED BY THE BROWSER, and that is on purpose: the pricing
+ * page shows a ₹/$ switch, and a choice the server quietly overrules is not a
+ * choice. What the browser cannot do is name a PRICE — `checkoutCurrency`
+ * narrows the request to a currency we actually have Razorpay plans for, the
+ * amount is read from src/lib/plans.ts, and `resolvePlanTerms` then checks it
+ * against Razorpay's own copy of the plan before a card is touched. So the
+ * worst a tampered argument achieves is being quoted the other real price.
  */
-export async function startCheckout(plan: string): Promise<CheckoutResult> {
+export async function startCheckout(plan: string, currency?: string): Promise<CheckoutResult> {
   const user = await requireUser();
 
   try {
@@ -82,6 +91,7 @@ export async function startCheckout(plan: string): Promise<CheckoutResult> {
     const session = await openCheckout(
       { id: user.id, name: user.name, email: user.email, phone: user.phone },
       plan,
+      await checkoutCurrency(currency),
     );
     return { ok: true, session };
   } catch (error) {

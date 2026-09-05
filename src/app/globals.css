@@ -510,6 +510,47 @@
     background-color: hsl(var(--paper));
     padding: 1rem;
   }
+
+  /* A SPLIT-PANE TASK IS A FIXED FRAME, NOT A DOCUMENT.
+     With a figure beside the editor the screen has two things to show at once
+     and no reason to scroll as a page: the top bar, the prompt, the submit row
+     and the pager are pinned, and the two panes take whatever is left. The old
+     `calc(100dvh - 19rem)` guessed that leftover, and guessed low — the submit
+     button sat below the fold while the editor ended short of the chart.
+
+     `--practice-inset` is what the app chrome costs above and below; inside
+     fullscreen there is none but this element's own padding. */
+  .practice-root { --practice-inset: calc(var(--topbar-height) + 2 * clamp(16px, 3vw, 32px)); }
+  .practice-root:fullscreen { --practice-inset: 2rem; }
+
+  /* Below `lg` the panes stack, so the frame stands down and the page scrolls
+     the way every other practice layout does. */
+  @media (min-width: 1024px) {
+    /* "split" is a figure or a passage beside the answers; "solo" is one editor
+       filling the frame on its own. Both are fixed; only "split" takes the
+       extra width. */
+    .practice-root[data-frame] {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      height: calc(100dvh - var(--practice-inset));
+    }
+    /* Beats the `height: 100%` above, which is the same specificity. */
+    .practice-root[data-frame]:fullscreen { height: 100%; }
+
+    /* The reading-column cap belongs to pages of prose. A split task is two
+       documents side by side, so on a wide monitor the cap was leaving a third
+       of the width empty and taking it out of the essay. An essay on its own
+       keeps the cap: a 1400px line is no easier to write than to read. */
+    .app-page:has(> .practice-root[data-frame="split"]) {
+      max-width: none;
+      padding: clamp(12px, 1.5vw, 20px);
+    }
+    /* The frame gets that padding, so the inset it subtracts has to match. */
+    .practice-root[data-frame="split"] {
+      --practice-inset: calc(var(--topbar-height) + 2 * clamp(12px, 1.5vw, 20px));
+    }
+  }
 }
 
 /* ───────────────────────── UTILITIES ───────────────────────────────────────── */

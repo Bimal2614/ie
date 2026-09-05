@@ -9,6 +9,16 @@ import { LocalTime } from "@/components/history/local-time";
 import { MockSectionReviewBlock } from "@/components/mock/mock-section-review";
 import { SpeakingScoreTrigger } from "@/components/mock/speaking-score-trigger";
 
+/**
+ * Room for the scoring this page can trigger.
+ *
+ * The report's score trigger calls the Writing and Speaking scorers directly, and
+ * a whole Speaking module is tens of seconds per wave. At the platform default
+ * that call was killed mid-batch, so the page went on showing "awaiting band" for
+ * answers it had already paid to score. Same ceiling as the pages that submit.
+ */
+export const maxDuration = 300;
+
 export const metadata: Metadata = { title: "Mock result · IELTSVega", robots: { index: false } };
 
 export default async function ResultPage({ params }: { params: Promise<{ id: string }> }) {

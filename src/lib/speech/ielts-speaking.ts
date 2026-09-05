@@ -211,7 +211,7 @@ export type SpeakingAssessment = {
 };
 
 export type SpeakingScoreResult =
-  | { ok: true; assessment: SpeakingAssessment }
+  | { ok: true; assessment: SpeakingAssessment; status: number }
   /**
    * `no_speech` and `bad_audio` are PERMANENT for this recording — the service
    * heard nothing, or could not fetch/read it, so a retry cannot succeed.
@@ -233,6 +233,16 @@ export type SpeakingScoreResult =
         | "request_failed"
         | "bad_response";
       detail?: string;
+      /**
+       * The HTTP status, where there was one. Absent when the request never got
+       * an answer at all (DNS, connection refused, timeout) or was never sent.
+       *
+       * Nothing in the scoring path reads this — the `reason` is what decides
+       * whether a row is retried or written off. It is here for MONITORING: the
+       * smoke test reports the code it actually got, and "503" and "the
+       * connection timed out" are different outages with different owners.
+       */
+      status?: number;
     };
 
 /** The service's own cap. Anything longer is rejected as a validation error. */
@@ -297,14 +307,14 @@ export async function analyzeSpeaking(params: {
   try {
     json = (await res.json()) as RawAssessment;
   } catch {
-    return { ok: false, reason: "bad_response", detail: "response was not JSON" };
+    return { ok: false, reason: "bad_response", detail: "response was not JSON", status: res.status };
   }
 
   if (typeof json?.overall?.band !== "number" || !json.transcript) {
-    return { ok: false, reason: "bad_response", detail: "no band in response" };
+    return { ok: false, reason: "bad_response", detail: "no band in response", status: res.status };
   }
 
-  return { ok: true, assessment: normalise(json) };
+  return { ok: true, assessment: normalise(json), status: res.status };
 }
 
 /**
@@ -337,6 +347,7 @@ async function readError(res: Response): Promise<SpeakingScoreResult> {
       detail:
         "blocked by Vercel Deployment Protection before reaching the service. " +
         "disable it for this project, or send a protection-bypass token",
+      status: res.status,
     };
   }
 
@@ -355,16 +366,17 @@ async function readError(res: Response): Promise<SpeakingScoreResult> {
         ? JSON.stringify(detailRaw).slice(0, 300)
         : `HTTP ${res.status}${text ? `: ${text.slice(0, 200)}` : ""}`;
 
-  if (res.status === 401 || res.status === 403) return { ok: false, reason: "unauthorized", detail };
-  if (res.status === 422) {
+  const status = res.status;
+  if (status === 401 || status === 403) return { ok: false, reason: "unauthorized", detail, status };
+  if (status === 422) {
     return isValidation
-      ? { ok: false, reason: "bad_request", detail }
-      : { ok: false, reason: "no_speech", detail };
+      ? { ok: false, reason: "bad_request", detail, status }
+      : { ok: false, reason: "no_speech", detail, status };
   }
   // 400 covers a URL the service could not fetch or read — permanent for this
   // recording in the same way no-speech is.
-  if (res.status === 400) return { ok: false, reason: "bad_audio", detail };
-  return { ok: false, reason: "request_failed", detail: `HTTP ${res.status}: ${detail}` };
+  if (status === 400) return { ok: false, reason: "bad_audio", detail, status };
+  return { ok: false, reason: "request_failed", detail: `HTTP ${status}: ${detail}`, status };
 }
 
 /* ---- Wire shape → our camelCase shape ---------------------------------- */
