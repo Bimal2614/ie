@@ -108,6 +108,17 @@ export const users = pgTable(
   (t) => [
     uniqueIndex("users_email_normalized_uq").on(t.emailNormalized),
     uniqueIndex("users_google_id_uq").on(t.googleId), // NULLs don't conflict in PG
+    /*
+     * The reverse lookup a `payment.failed` webhook depends on.
+     *
+     * That event carries no subscription and no notes — `customer_id` is the
+     * only handle on it, so this column is read as an INDEX INTO THE ACCOUNTS
+     * and not just stored on them (see `userIdByCustomerId`). Unique because
+     * `ensureCustomerId` mints one customer per user and reuses it forever;
+     * two rows sharing a `cust_…` would make that lookup ambiguous at the one
+     * moment it has to be certain.
+     */
+    uniqueIndex("users_razorpay_customer_uq").on(t.razorpayCustomerId),
   ],
 );
 
