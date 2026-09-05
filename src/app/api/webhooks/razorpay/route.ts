@@ -4,7 +4,12 @@ import { db } from "@/db";
 import { webhookEvents } from "@/db/schema";
 import { isRazorpayWebhookConfigured } from "@/lib/env";
 import { verifyWebhookSignature } from "@/lib/payments/razorpay";
-import { activateFromRazorpay, recordFailedPayment, supersededLocally } from "@/lib/payments/billing";
+import {
+  activateFromRazorpay,
+  recordFailedPayment,
+  supersededLocally,
+  userIdByCustomerId,
+} from "@/lib/payments/billing";
 import { markPastDue, requestCancellation, subscriptionByProviderId } from "@/lib/subscriptions";
 
 /**
@@ -40,8 +45,16 @@ type RazorpayEvent = {
       entity?: {
         id?: string;
         amount?: number;
+        /** "INR" or "USD" — which of the two plans behind this tier was sold. */
+        currency?: string;
         error_description?: string;
         notes?: Record<string, string>;
+        /**
+         * The payer's `cust_…`. THE ONLY OWNER HANDLE ON A FAILED SUBSCRIPTION
+         * PAYMENT — see the `payment.failed` branch below for why the notes
+         * cannot be relied on here.
+         */
+        customer_id?: string;
       };
     };
   };
@@ -235,20 +248,52 @@ async function handle(type: string, event: RazorpayEvent): Promise<void> {
      * is what says the SUBSCRIPTION is in trouble. This is only recorded, so
      * support can see the attempt when a candidate says their card was
      * declined.
+     *
+     * FINDING THE OWNER IS THE WHOLE DIFFICULTY, and it is why this branch is
+     * longer than what it writes. `payment.failed` is the one subscription event
+     * that arrives with NO subscription entity: there are no `notes` to read the
+     * account out of (the payment's own `notes` come through as an empty array),
+     * and no `sub_…` to look a local row up by. Trusting those alone dropped
+     * every failed first payment on the floor — the candidate whose UPI mandate
+     * timed out got no ledger row at all, so support had nothing to show them.
+     *
+     * `customer_id` is what the event does carry, and `ensureCustomerId` wrote
+     * that onto the user when the checkout was opened, so it closes the gap for
+     * exactly the case the notes cannot cover.
      */
     case "payment.failed": {
-      const userId = paymentEntity?.notes?.userId ?? subEntity?.notes?.userId;
       const local = await localSubscriptionFor(subscriptionId);
-      const owner = userId ?? local?.userId;
-      if (!owner) return;
+      const owner =
+        paymentEntity?.notes?.userId ??
+        subEntity?.notes?.userId ??
+        local?.userId ??
+        (await userIdByCustomerId(paymentEntity?.customer_id));
+      if (!owner) {
+        /*
+         * A payment we cannot attribute to anybody — a checkout opened before
+         * this account had a customer id cached, or a payment made outside the
+         * app entirely. Nothing to record it against, but it is NOT nothing:
+         * silence here is what hid the dropped failures in the first place, so
+         * it goes to the log with the handles a human can search Razorpay by.
+         */
+        console.warn(
+          `[razorpay-webhook] payment.failed with no owner: payment ${paymentEntity?.id ?? "?"}, ` +
+            `customer ${paymentEntity?.customer_id ?? "none"}, subscription ${subscriptionId ?? "none"}`,
+        );
+        return;
+      }
       await recordFailedPayment({
         userId: owner,
         subscriptionId: local?.id ?? null,
         amountCents: typeof paymentEntity?.amount === "number" ? paymentEntity.amount : null,
+        // An amount in cents filed under rupees is a support ticket nobody can
+        // read; the gateway says which it tried to take, so take its word.
+        currency: paymentEntity?.currency ?? subEntity?.notes?.currency ?? null,
         note: paymentEntity?.error_description ?? "Payment failed at Razorpay",
         metadata: {
           razorpayPaymentId: paymentEntity?.id ?? null,
           razorpaySubscriptionId: subscriptionId ?? null,
+          razorpayCustomerId: paymentEntity?.customer_id ?? null,
         },
       });
       return;

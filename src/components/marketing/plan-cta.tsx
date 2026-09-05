@@ -1,10 +1,13 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { ArrowRight, Check, Loader2 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
+import { useBillingCurrency } from "@/components/marketing/currency-switch";
 import { useRazorpayCheckout } from "@/components/marketing/use-razorpay-checkout";
-import { planAtLeast, PLANS, type PlanKey } from "@/lib/plans";
+import { planAtLeast, PLANS, priceFor, type PlanKey } from "@/lib/plans";
+import { trackBeginCheckout, trackPurchase } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 /**
@@ -41,6 +44,23 @@ export function PlanCta({
 }) {
   const { authenticated, plan: current } = useAuth();
   const { open, phase, error, granted } = useRazorpayCheckout();
+  // Whichever currency the card beside this button is quoting. Pressed with
+  // dollars on screen, the checkout opens against the dollar plan — the server
+  // still decides whether that currency is sellable and what it costs.
+  const { currency } = useBillingCurrency();
+
+  /**
+   * Report the sale ONCE, when the server confirms the grant — not from
+   * Razorpay's callback, which fires on payment rather than entitlement.
+   * 'granted' stays set for the life of the component, so without the ref any
+   * unrelated re-render would report a second purchase against the same sale.
+   */
+  const reported = useRef(false);
+  useEffect(() => {
+    if (!granted || reported.current) return;
+    reported.current = true;
+    trackPurchase(granted.plan, priceFor(plan, currency), currency);
+  }, [granted, plan, currency]);
 
   const base =
     "mt-6 inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold transition-[filter,background-color]";
@@ -69,7 +89,10 @@ export function PlanCta({
       <>
         <button
           type="button"
-          onClick={() => open(plan)}
+          onClick={() => {
+            trackBeginCheckout(plan, priceFor(plan, currency), currency);
+            open(plan, currency);
+          }}
           disabled={working || phase === "done"}
           className={cn(base, featured ? primary : secondary, working && "cursor-wait opacity-80")}
         >

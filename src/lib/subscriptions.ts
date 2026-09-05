@@ -4,7 +4,7 @@ import { and, desc, eq, inArray, isNotNull, lte, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { subscriptionLogs, subscriptions, users } from "@/db/schema";
 import type { Subscription } from "@/db/schema";
-import { CURRENCY, effectivePlan, planRank, PLANS, toPlanKey, type PlanKey } from "@/lib/plans";
+import { DEFAULT_CURRENCY, effectivePlan, planRank, PLANS, toPlanKey, type PlanKey } from "@/lib/plans";
 
 /**
  * The ONLY writer for what a candidate is entitled to.
@@ -266,7 +266,7 @@ export async function grantPlan(input: GrantInput): Promise<Subscription> {
         currentPeriodStart: startsAt,
         currentPeriodEnd: periodEnd,
         priceCents: input.priceCents ?? null,
-        currency: input.currency ?? CURRENCY,
+        currency: input.currency ?? DEFAULT_CURRENCY,
         provider: input.provider ?? "manual",
         providerSubscriptionId: input.providerSubscriptionId ?? null,
         providerPlanId: input.providerPlanId ?? null,
@@ -300,7 +300,7 @@ export async function grantPlan(input: GrantInput): Promise<Subscription> {
         effectiveAt: startsAt,
         expiresAt: periodEnd,
         amountCents: input.priceCents ?? null,
-        currency: input.currency ?? CURRENCY,
+        currency: input.currency ?? DEFAULT_CURRENCY,
         note: input.note ?? (previous ? "Replaced an existing subscription" : null),
         metadata: input.metadata ?? null,
       },

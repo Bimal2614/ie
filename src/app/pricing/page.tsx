@@ -1,15 +1,17 @@
 import { Check, X } from "lucide-react";
 import { LandingNav } from "@/components/marketing/landing-nav";
 import { PlanCta } from "@/components/marketing/plan-cta";
+import {
+  CurrencyProvider,
+  CurrencySwitch,
+  PriceTag,
+} from "@/components/marketing/currency-switch";
 import { LandingFooter } from "@/components/marketing/landing-footer";
 import { Reveal } from "@/components/marketing/motion";
+import { isCurrencyOnSale } from "@/lib/env";
 import { cn } from "@/lib/utils";
-import {
-  billingPeriodLabel,
-  formatPrice,
-  PLANS as PLAN_ENTITLEMENTS,
-  type PlanKey,
-} from "@/lib/plans";
+import { billingPeriodLabel, type PlanKey } from "@/lib/plans";
+import { resolveBillingCurrency } from "@/lib/payments/region";
 import { KEYWORDS, pageMeta } from "@/lib/seo";
 
 export const metadata = pageMeta({
@@ -21,14 +23,16 @@ export const metadata = pageMeta({
 });
 
 /**
- * "₹4,000" for a plan that now costs ₹2,499 — the pre-discount price, or `null`
- * for a tier that isn't discounted. Read from the same table as the price beside
- * it, so a promotion that ends cannot leave a struck-out figure on the card.
+ * The prices depend on where the visitor is, so this page is rendered per
+ * request rather than at build time.
+ *
+ * `resolveBillingCurrency` reads the CDN's country header, which makes the route
+ * dynamic on its own; saying so here is documentation as much as configuration.
+ * The cost is one server render of a page that was static — worth it against
+ * the alternative, which is quoting the currency in the browser after paint and
+ * showing every visitor outside India the wrong price for a frame.
  */
-function listPrice(tier: PlanKey): string | null {
-  const cents = PLAN_ENTITLEMENTS[tier].listPriceCents;
-  return cents === null ? null : formatPrice(cents);
-}
+export const dynamic = "force-dynamic";
 
 /*
  * The cards.
@@ -39,6 +43,10 @@ function listPrice(tier: PlanKey): string | null {
  * stretch of time while the server grants another cannot happen. The copy below
  * (taglines, feature lines) is marketing's, and stays.
  *
+ * NOR IS THE CURRENCY. `PriceTag` renders whichever of the tier's prices the
+ * visitor is being quoted — the country header picks the default, the ₹/$ switch
+ * overrides it, and the same choice is what `PlanCta` opens the checkout in.
+ *
  * A CARD HERE IS NOT WHAT PUTS A TIER ON SALE — `OFFERED_PLANS` in
  * src/lib/plans.ts is, and it is also what the checkout action validates
  * against. The two must agree: a card for a tier missing from that list renders
@@ -48,8 +56,6 @@ const PLANS = [
   {
     name: "Free",
     tier: "free" as PlanKey,
-    price: formatPrice(PLAN_ENTITLEMENTS.free.priceCents),
-    was: listPrice("free"),
     cadence: billingPeriodLabel("free"),
     tagline: "Get a feel for how IELTSVega practice works.",
     cta: "Start free",
@@ -67,8 +73,6 @@ const PLANS = [
   {
     name: "Pro",
     tier: "pro" as PlanKey,
-    price: formatPrice(PLAN_ENTITLEMENTS.pro.priceCents),
-    was: listPrice("pro"),
     cadence: billingPeriodLabel("pro"),
     tagline: "Everything marked, month to month.",
     cta: "Go Pro",
@@ -88,8 +92,6 @@ const PLANS = [
   {
     name: "Premium",
     tier: "premium" as PlanKey,
-    price: formatPrice(PLAN_ENTITLEMENTS.premium.priceCents),
-    was: listPrice("premium"),
     // "3 months" — one payment covers the whole term. `billingMonths` in
     // src/lib/plans.ts is what both this and the granted window read from.
     cadence: billingPeriodLabel("premium"),
@@ -118,7 +120,21 @@ const INCLUDED = [
   "No card required to start",
 ];
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  /*
+   * Where this visitor is, decided once, on the server.
+   *
+   * The same function the checkout action calls, on the same request, so the
+   * figure on the card and the plan the mandate is created against cannot come
+   * from two different guesses. The switch below can move it from here; nothing
+   * else can.
+   */
+  const currency = await resolveBillingCurrency();
+  // Only offer the switch when there is something to switch to — see
+  // `CurrencySwitch`. Until the USD plans are set, everyone is quoted rupees
+  // and no control appears.
+  const switchable = isCurrencyOnSale("INR") && isCurrencyOnSale("USD");
+
   return (
     <div className="min-h-svh bg-paper text-ink">
       <LandingNav alwaysSolid />
@@ -135,65 +151,55 @@ export default function PricingPage() {
           </p>
         </Reveal>
 
-        {/* Plans */}
-        <div className="mx-auto mt-14 grid max-w-5xl items-start gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {PLANS.map((p, i) => (
-            <Reveal key={p.name} delay={i * 0.1} className="h-full">
-              <div
-                className={cn(
-                  "flex h-full flex-col rounded-2xl border bg-paper-elev p-7",
-                  p.featured ? "border-2 border-green shadow-lg" : "border-line",
-                )}
-              >
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-ink">{p.name}</h2>
-                  {p.featured && (
-                    <span className="rounded-full bg-green px-3 py-1 text-xs font-semibold text-green-ink">
-                      Most popular
-                    </span>
+        <CurrencyProvider initial={currency} switchable={switchable}>
+          {/* Renders nothing while only one currency has plans behind it. */}
+          <div className="mt-8 flex justify-center">
+            <CurrencySwitch />
+          </div>
+
+          {/* Plans */}
+          <div className="mx-auto mt-6 grid max-w-5xl items-start gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {PLANS.map((p, i) => (
+              <Reveal key={p.name} delay={i * 0.1} className="h-full">
+                <div
+                  className={cn(
+                    "flex h-full flex-col rounded-2xl border bg-paper-elev p-7",
+                    p.featured ? "border-2 border-green shadow-lg" : "border-line",
                   )}
+                >
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-semibold text-ink">{p.name}</h2>
+                    {p.featured && (
+                      <span className="rounded-full bg-green px-3 py-1 text-xs font-semibold text-green-ink">
+                        Most popular
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-2 text-sm text-ink-muted">{p.tagline}</p>
+
+                  <PriceTag tier={p.tier} cadence={p.cadence} />
+
+                  <PlanCta plan={p.tier} label={p.cta} href={p.href} featured={p.featured} />
+
+                  <ul className="mt-7 space-y-3 border-t border-line pt-6 text-sm">
+                    {p.features.map((f) => (
+                      <li key={f} className="flex gap-2.5 text-ink-soft">
+                        <Check className="mt-0.5 size-4 shrink-0 text-green" />
+                        {f}
+                      </li>
+                    ))}
+                    {p.excludes?.map((f) => (
+                      <li key={f} className="flex gap-2.5 text-ink-muted">
+                        <X className="mt-0.5 size-4 shrink-0 text-ink-muted" />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <p className="mt-2 text-sm text-ink-muted">{p.tagline}</p>
-
-                {/* The struck price is the tier's own `listPriceCents`, never a
-                    number typed here, and it simply doesn't render on a tier
-                    that isn't discounted. "Was"/"now" are spoken but not shown:
-                    line-through is a visual convention a screen reader gives no
-                    hint of, so without them both figures read as one price. */}
-                <div className="mt-6 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                  {p.was && (
-                    <span className="font-serif text-2xl tracking-tight text-ink-muted line-through">
-                      <span className="sr-only">Was </span>
-                      {p.was}
-                    </span>
-                  )}
-                  <span className="font-serif text-5xl tracking-tight text-ink">
-                    {p.was && <span className="sr-only">now </span>}
-                    {p.price}
-                  </span>
-                  <span className="text-sm text-ink-muted">/ {p.cadence}</span>
-                </div>
-
-                <PlanCta plan={p.tier} label={p.cta} href={p.href} featured={p.featured} />
-
-                <ul className="mt-7 space-y-3 border-t border-line pt-6 text-sm">
-                  {p.features.map((f) => (
-                    <li key={f} className="flex gap-2.5 text-ink-soft">
-                      <Check className="mt-0.5 size-4 shrink-0 text-green" />
-                      {f}
-                    </li>
-                  ))}
-                  {p.excludes?.map((f) => (
-                    <li key={f} className="flex gap-2.5 text-ink-muted">
-                      <X className="mt-0.5 size-4 shrink-0 text-ink-muted" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </Reveal>
-          ))}
-        </div>
+              </Reveal>
+            ))}
+          </div>
+        </CurrencyProvider>
 
         {/* Included-in-all strip */}
         <Reveal className="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 rounded-2xl border border-line bg-paper-elev px-6 py-5 text-sm text-ink-soft">

@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-provider";
 import { confirmCheckout, startCheckout } from "@/app/actions/billing";
+import type { BillingCurrency } from "@/lib/plans";
 import type { CheckoutSession } from "@/lib/payments/billing";
 
 /**
@@ -101,7 +102,7 @@ export function useRazorpayCheckout() {
   const busy = useRef(false);
 
   const open = useCallback(
-    async (plan: string) => {
+    async (plan: string, currency?: BillingCurrency) => {
       if (busy.current) return;
       busy.current = true;
       setState({ phase: "opening", error: null, granted: null });
@@ -112,9 +113,10 @@ export function useRazorpayCheckout() {
       };
 
       // The subscription is created server-side first: the browser never names
-      // a price, only a tier, and the server decides whether that tier is on
-      // sale and what it costs.
-      const created = await startCheckout(plan).catch(() => null);
+      // a price, only a tier and the currency the visitor is reading it in, and
+      // the server decides whether that tier is on sale, in that currency, and
+      // what it costs there.
+      const created = await startCheckout(plan, currency).catch(() => null);
       if (!created) return fail("Something went wrong. Please try again.");
       if (!created.ok) return fail(created.error);
 

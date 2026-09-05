@@ -14,15 +14,40 @@
  */
 
 /**
- * The currency EVERY figure in this file is denominated in.
+ * The currencies a plan can be SOLD in.
  *
- * One currency, because there is one way to pay: the purchase button opens a
- * UPI QR, and UPI settles in rupees. A card quoted in dollars beside a QR that
- * charges rupees is a price the visitor has to convert themselves — and the
- * `subscriptions.currency` column recorded against a grant reads from here too,
- * so a stored amount is never a bare number whose unit has to be guessed.
+ * TWO, BECAUSE THE CARD IS CHARGED IN ONE OF THEM. Razorpay settles a
+ * subscription in whatever currency the plan behind it was created with, and a
+ * plan is immutable — so "the same tier, priced for a candidate outside India"
+ * is a second Razorpay plan, with its own `plan_…`, its own amount, and its own
+ * entry in the table below. Everything downstream (the pricing card, the
+ * Checkout modal, `subscriptions.currency`, the ledger) reads the currency from
+ * one place so a figure is never a bare number whose unit has to be guessed.
+ *
+ * INR IS THE BASE. Every Razorpay account can charge it, so it is what a
+ * request whose country cannot be determined falls back to — see
+ * src/lib/payments/region.ts. USD is the international price and needs
+ * international payments enabled on the Razorpay account.
  */
-export const CURRENCY = "INR";
+export const BILLING_CURRENCIES = ["INR", "USD"] as const;
+export type BillingCurrency = (typeof BILLING_CURRENCIES)[number];
+
+/**
+ * What a price means when nobody has said otherwise.
+ *
+ * An admin grant, a reconciled bank transfer and a figure on an internal screen
+ * are all rupees, and a lookup that cannot resolve a country resolves to this.
+ */
+export const DEFAULT_CURRENCY: BillingCurrency = "INR";
+
+export function isBillingCurrency(value: unknown): value is BillingCurrency {
+  return (BILLING_CURRENCIES as readonly string[]).includes(String(value));
+}
+
+/** Narrow anything a browser, a header or an old row hands us. Never throws. */
+export function toBillingCurrency(value: unknown): BillingCurrency {
+  return isBillingCurrency(value) ? value : DEFAULT_CURRENCY;
+}
 
 export const PLAN_KEYS = ["free", "pro", "premium"] as const;
 export type PlanKey = (typeof PLAN_KEYS)[number];
@@ -30,23 +55,43 @@ export type PlanKey = (typeof PLAN_KEYS)[number];
 /** The four IELTS skills, named as `user_responses.section` names them. */
 export type SectionKey = "listening" | "reading" | "writing" | "speaking";
 
+/**
+ * One tier's figures in ONE currency.
+ *
+ * `listPriceCents` is SHOWN STRUCK THROUGH, NEVER CHARGED — `priceCents` stays
+ * the single number a payment, a subscription row and every gate read, and this
+ * one is copy. It lives here rather than in the pricing page's markup for the
+ * same reason the real price does: a "was ₹4,000" typed into a card is a claim
+ * about a purchase, and the hand-written one is what drifts. Ending the
+ * promotion is setting this back to `null`, not editing figures in a page.
+ * `null` on a tier that is not discounted, and on free, which has no price to
+ * cut.
+ */
+export type Price = {
+  /** In minor units of the currency it is keyed under. 0 for free. */
+  priceCents: number;
+  listPriceCents: number | null;
+};
+
 export type Entitlements = {
   /** Display name, as the pricing page and upgrade prompts say it. */
   label: string;
-  /** What ONE payment costs, in minor units (paise, at `CURRENCY`). 0 for free. */
-  priceCents: number;
   /**
-   * What the tier cost BEFORE the current discount, in minor units.
-   * `null` when it is not discounted — and on free, which has no price to cut.
+   * What ONE payment costs, PER CURRENCY, in minor units (paise, or cents).
    *
-   * SHOWN STRUCK THROUGH, NEVER CHARGED. `priceCents` above remains the single
-   * number a payment, a subscription row and every gate read; this one is copy.
-   * It lives here rather than in the pricing page's markup for the same reason
-   * the real price does: a "was ₹4,000" typed into a card is a claim about a
-   * purchase, and the hand-written one is what drifts. Ending the promotion is
-   * setting this back to `null`, not editing figures in a page.
+   * EVERY CURRENCY HERE NEEDS ITS OWN RAZORPAY PLAN, and the amounts must match
+   * that plan exactly — `resolvePlanTerms` in src/lib/payments/billing.ts reads
+   * the plan back before every checkout and REFUSES THE SALE when the two
+   * disagree, rather than charging a figure the candidate was never shown. So
+   * editing a number here without editing the Razorpay plan does not
+   * mis-charge anyone; it takes the tier off sale in that currency until they
+   * agree again.
+   *
+   * The USD figures are the international price, not a converted one: they are
+   * round numbers a card statement reads cleanly, and they do not move with the
+   * exchange rate. Free is 0 in both, which is the absence of a price.
    */
-  listPriceCents: number | null;
+  prices: Record<BillingCurrency, Price>;
   /**
    * How long that one payment buys, in months.
    *
@@ -88,8 +133,10 @@ export type Entitlements = {
 export const PLANS: Record<PlanKey, Entitlements> = {
   free: {
     label: "Free",
-    priceCents: 0,
-    listPriceCents: null,
+    prices: {
+      INR: { priceCents: 0, listPriceCents: null },
+      USD: { priceCents: 0, listPriceCents: null },
+    },
     billingMonths: 0,
     monthlyPracticeAnswers: 50,
     practiceSections: ["reading", "listening"],
@@ -100,9 +147,12 @@ export const PLANS: Record<PlanKey, Entitlements> = {
   },
   pro: {
     label: "Pro",
-    // ₹1,299 a month, down from ₹1,999.
-    priceCents: 129900,
-    listPriceCents: 199900,
+    prices: {
+      // ₹1,299 a month, down from ₹1,999.
+      INR: { priceCents: 129900, listPriceCents: 199900 },
+      // $15 a month, down from $23 — the same discount, in round dollars.
+      USD: { priceCents: 1500, listPriceCents: 2300 },
+    },
     // One month is the term Pro has always been sold on, so accounts already
     // holding it keep the window they bought.
     billingMonths: 1,
@@ -115,9 +165,12 @@ export const PLANS: Record<PlanKey, Entitlements> = {
   },
   premium: {
     label: "Premium",
-    // ₹2,499 now, down from ₹4,000.
-    priceCents: 249900,
-    listPriceCents: 400000,
+    prices: {
+      // ₹2,499 now, down from ₹4,000.
+      INR: { priceCents: 249900, listPriceCents: 400000 },
+      // $29 for the quarter, down from $46.
+      USD: { priceCents: 2900, listPriceCents: 4600 },
+    },
     billingMonths: 3,
     monthlyPracticeAnswers: null,
     practiceSections: ["reading", "listening", "writing", "speaking"],
@@ -185,10 +238,11 @@ export function isPlanBlock(value: unknown): value is PlanBlock {
  * the least a candidate must buy for AI scoring?", so a tier out of price order
  * would send someone to a dearer plan than they need.
  *
- * EVERY TIER HERE NEEDS A RAZORPAY PLAN. Adding one means creating the matching
- * plan in the Razorpay dashboard and setting its `RAZORPAY_PLAN_<TIER>` — the
- * checkout refuses to sell a tier it has no plan id for, rather than falling
- * back to another tier's price.
+ * EVERY TIER HERE NEEDS A RAZORPAY PLAN PER CURRENCY. Adding one means creating
+ * the matching plans in the Razorpay dashboard and setting `RAZORPAY_PLAN_<TIER>`
+ * (rupees) and `RAZORPAY_PLAN_<TIER>_USD` — the checkout refuses to sell a tier
+ * it has no plan id for in the currency being quoted, rather than falling back
+ * to another tier's price or to the other currency's plan.
  */
 export const OFFERED_PLANS = ["pro", "premium"] as const satisfies readonly Exclude<PlanKey, "free">[];
 
@@ -215,6 +269,32 @@ export function planAtLeast(plan: PlanKey, required: PlanKey): boolean {
 
 export function entitlements(plan: PlanKey): Entitlements {
   return PLANS[plan];
+}
+
+/**
+ * The tier's figures in ONE currency — the only way price is ever read.
+ *
+ * Nothing indexes `PLANS[x].prices` by hand, so adding a currency is one entry
+ * per tier rather than a hunt through the pages that render a price. An unknown
+ * currency narrows to `DEFAULT_CURRENCY` instead of returning undefined: a
+ * missing price renders as "NaN" on a pricing card, which is worse than showing
+ * the rupee figure to someone we could not place.
+ */
+export function priceOf(plan: PlanKey, currency: BillingCurrency = DEFAULT_CURRENCY): Price {
+  return PLANS[plan].prices[toBillingCurrency(currency)];
+}
+
+/** What one payment costs, in minor units of `currency`. */
+export function priceFor(plan: PlanKey, currency: BillingCurrency = DEFAULT_CURRENCY): number {
+  return priceOf(plan, currency).priceCents;
+}
+
+/** The struck-through "was", or null on a tier that isn't discounted. */
+export function listPriceFor(
+  plan: PlanKey,
+  currency: BillingCurrency = DEFAULT_CURRENCY,
+): number | null {
+  return priceOf(plan, currency).listPriceCents;
 }
 
 /** Narrow an unvalidated string (a DB read from before an enum change, a param). */
@@ -289,7 +369,7 @@ export function billingPeriodLabel(plan: PlanKey): string {
  * the two is a hydration mismatch. Whole amounts drop the paise — "₹2,499.00"
  * on a card reads like a bill, not a price.
  */
-export function formatPrice(cents: number, currency: string = CURRENCY): string {
+export function formatPrice(cents: number, currency: string = DEFAULT_CURRENCY): string {
   const amount = cents / 100;
   const whole = Number.isInteger(amount);
   if (currency === "INR") {
