@@ -21,7 +21,7 @@ const LOGO = `${SITE_URL}/brand/logo-128.png`;
  * containing `&`, a quote or a tag breaks the email's HTML or smuggles markup
  * into it. Every dynamic value below goes through here.
  */
-function esc(s: string): string {
+export function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -29,6 +29,9 @@ function esc(s: string): string {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 }
+
+/** The same thing under the short name every template below already uses. */
+const esc = escapeHtml;
 
 function layout(raw: { heading: string; body: string; ctaLabel: string; ctaUrl: string; footer: string }): string {
   const opts = {

@@ -78,8 +78,20 @@ export type WritingScore = {
 };
 
 export type WritingScoreResult =
-  | { ok: true; score: WritingScore }
-  | { ok: false; reason: "not_configured" | "request_failed" | "bad_response"; detail?: string };
+  | { ok: true; score: WritingScore; status: number }
+  /**
+   * `status` is the HTTP code OpenAI answered with, where there was one — absent
+   * when the request never got an answer (timeout, connection refused) or was
+   * never sent. Scoring itself ignores it and acts on `reason`; it is carried
+   * for MONITORING, so the smoke test can report the code it actually got
+   * rather than "request_failed" for both a 429 and a dead socket.
+   */
+  | {
+      ok: false;
+      reason: "not_configured" | "request_failed" | "bad_response";
+      detail?: string;
+      status?: number;
+    };
 
 /** IELTS rounding: nearest half-band, clamped to 0–9. */
 function toHalfBand(n: number): number {
@@ -373,16 +385,25 @@ export async function scoreWriting(params: {
       // Keep the body: a wrong OPENAI_MODEL and a spent quota both fail here and
       // the message is the only thing that tells them apart.
       const detail = await res.text().catch(() => "");
-      return { ok: false, reason: "request_failed", detail: `${res.status} ${detail.slice(0, 500)}` };
+      return {
+        ok: false,
+        reason: "request_failed",
+        detail: `${res.status} ${detail.slice(0, 500)}`,
+        status: res.status,
+      };
     }
 
     const json = await res.json();
     const message = json?.choices?.[0]?.message;
     // A refusal or a truncated completion leaves no JSON to parse. Treat both as
     // a bad response rather than letting JSON.parse throw on `undefined`.
-    if (message?.refusal) return { ok: false, reason: "bad_response", detail: "refused" };
+    if (message?.refusal) {
+      return { ok: false, reason: "bad_response", detail: "refused", status: res.status };
+    }
     const body = message?.content;
-    if (!body) return { ok: false, reason: "bad_response", detail: "empty completion" };
+    if (!body) {
+      return { ok: false, reason: "bad_response", detail: "empty completion", status: res.status };
+    }
     const parsed = JSON.parse(body);
 
     const crit = (c: { band?: number; summary?: string; strengths?: string[]; improvements?: string[] }): WritingCriterion => ({
@@ -420,6 +441,7 @@ export async function scoreWriting(params: {
 
     return {
       ok: true,
+      status: res.status,
       score: {
         overall: toHalfBand(mean),
         wordCount,

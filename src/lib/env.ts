@@ -75,6 +75,19 @@ const EnvSchema = z.object({
   //     authenticates with this. Optional, and the route stays CLOSED while it
   //     is unset: an unauthenticated sweep would let anyone churn the ledger. ---
   CRON_SECRET: z.string().min(16, "CRON_SECRET must be at least 16 characters").optional(),
+  /**
+   * Who gets operational mail — today, the AI smoke-test report.
+   *
+   * A COMMA-SEPARATED LIST, not one address: an alert that goes to a single
+   * person is an alert that is missed while that person is asleep. Read through
+   * `adminEmails()`, never directly, so the splitting and trimming happen in one
+   * place.
+   *
+   * Optional, and the smoke test still RUNS without it — it just has nowhere to
+   * send the report, says so in the log, and returns it in the response instead.
+   * That way a misconfigured recipient list never turns into a failing cron.
+   */
+  ADMIN_EMAILS: z.string().transform(unquote).optional(),
 
   // --- Razorpay (recurring subscriptions). Optional: the app boots without
   //     them and every paid button falls back to saying checkout is
@@ -178,6 +191,7 @@ export const env = EnvSchema.parse({
   RATE_LIMIT_VIOLATIONS_BEFORE_DEACTIVATE: process.env.RATE_LIMIT_VIOLATIONS_BEFORE_DEACTIVATE,
   RATE_LIMIT_VIOLATION_WINDOW_DAYS: process.env.RATE_LIMIT_VIOLATION_WINDOW_DAYS,
   CRON_SECRET: process.env.CRON_SECRET,
+  ADMIN_EMAILS: process.env.ADMIN_EMAILS,
   RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
   RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET,
   RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET,
@@ -220,6 +234,26 @@ export function isEmailConfigured(): boolean {
 /** True when the scheduled subscription sweep can authenticate callers. */
 export function isCronConfigured(): boolean {
   return Boolean(env.CRON_SECRET);
+}
+
+/**
+ * The operators to send alerts to, de-duplicated and in the order configured.
+ *
+ * Split here rather than at each call site, and tolerant of the shapes an
+ * environment panel produces — trailing commas, stray spaces, a value someone
+ * quoted. An empty list is a supported state, not an error: see ADMIN_EMAILS.
+ */
+export function adminEmails(): string[] {
+  const raw = env.ADMIN_EMAILS ?? "";
+  const seen = new Set<string>();
+  for (const part of raw.split(",")) {
+    const address = part.trim();
+    // The bar is deliberately low — one "@" with something either side. This
+    // guards against a stray token in the list, not against a typo; SMTP is the
+    // only thing that can actually tell whether an address exists.
+    if (/^[^@\s]+@[^@\s]+$/.test(address)) seen.add(address);
+  }
+  return [...seen];
 }
 
 /**
