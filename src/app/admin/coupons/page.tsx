@@ -7,9 +7,9 @@ import { COUPON_DEFAULTS, listCoupons } from "@/lib/admin";
 import { requireAdmin } from "@/lib/dal";
 import { parsePageRequest } from "@/lib/pagination";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/format-date";
 
-const date = (d: Date) =>
-  d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+const date = (d: unknown) => formatDate(d) ?? "—";
 
 /**
  * Coupons are wholesale rates we hand to classes. Nobody types one: there is no

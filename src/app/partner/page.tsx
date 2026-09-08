@@ -7,6 +7,7 @@ import { RateCard } from "@/components/partner/plan-picker";
 import { parsePageRequest, toPage } from "@/lib/pagination";
 import { quotesFor } from "@/lib/partner-pricing";
 import { DEFAULT_CURRENCY } from "@/lib/plans";
+import { formatDate } from "@/lib/format-date";
 import {
   partnerContext,
   partnerOverview,
@@ -24,8 +25,7 @@ import {
  * a class of six hundred that it has fifty students.
  */
 
-const date = (d: Date) =>
-  d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+const date = (d: unknown) => formatDate(d) ?? "—";
 
 /**
  * Dates are formatted HERE, on the server. The table is a client component, and

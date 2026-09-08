@@ -4,9 +4,9 @@ import { ADMIN_STUDENT_DEFAULTS, adminStudents, type AdminStudentRow } from "@/l
 import { requireAdmin } from "@/lib/dal";
 import { parsePageRequest, toPage } from "@/lib/pagination";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/format-date";
 
-const date = (d: Date) =>
-  d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+const date = (d: unknown) => formatDate(d) ?? "—";
 
 /**
  * Dates are formatted on the server: the table is a client component, and a

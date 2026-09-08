@@ -9,9 +9,9 @@ import { parsePageRequest } from "@/lib/pagination";
 import { listPartnersForAdmin, PARTNER_LIST_DEFAULTS } from "@/lib/partners";
 import { formatPrice } from "@/lib/plans";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/format-date";
 
-const date = (d: Date) =>
-  d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+const date = (d: unknown) => formatDate(d) ?? "—";
 
 /** Money is summed per currency, so it is rendered per currency too. */
 function revenueLabel(revenue: Record<string, number>): string {

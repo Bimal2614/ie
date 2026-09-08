@@ -7,16 +7,9 @@ import { requireAdmin } from "@/lib/dal";
 import { parsePageRequest } from "@/lib/pagination";
 import { formatPrice, PLANS } from "@/lib/plans";
 import { cn } from "@/lib/utils";
+import { formatDateTime } from "@/lib/format-date";
 
-const dateTime = (d: Date) =>
-  d.toLocaleString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "UTC",
-  });
+const dateTime = (d: unknown) => formatDateTime(d) ?? "—";
 
 /** Every seat a partner has paid for, or tried to. */
 export default async function AdminPaymentsPage({

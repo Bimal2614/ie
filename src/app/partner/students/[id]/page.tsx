@@ -9,6 +9,7 @@ import { quotesFor } from "@/lib/partner-pricing";
 import { partnerContext, partnerStudentDetail } from "@/lib/partners";
 import { DEFAULT_CURRENCY, formatPrice, PLANS } from "@/lib/plans";
 import { cn } from "@/lib/utils";
+import { formatDate, formatDateTime } from "@/lib/format-date";
 
 /**
  * One student's record, as their class sees it.
@@ -18,17 +19,9 @@ import { cn } from "@/lib/utils";
  * from one that does not exist.
  */
 
-const date = (d: Date) =>
-  d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+const date = (d: unknown) => formatDate(d) ?? "—";
 
-const dateTime = (d: Date) =>
-  d.toLocaleString("en-GB", {
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "UTC",
-  });
+const dateTime = (d: unknown) => formatDateTime(d) ?? "—";
 
 function Meta({ label, value }: { label: string; value: string }) {
   return (

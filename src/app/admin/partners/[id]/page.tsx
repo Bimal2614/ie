@@ -11,9 +11,9 @@ import { parsePageRequest } from "@/lib/pagination";
 import { partnerForAdmin, STUDENT_LIST_DEFAULTS } from "@/lib/partners";
 import { formatPrice, PLANS } from "@/lib/plans";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/format-date";
 
-const date = (d: Date) =>
-  d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+const date = (d: unknown) => formatDate(d) ?? "—";
 
 export default async function AdminPartnerPage({
   params,
