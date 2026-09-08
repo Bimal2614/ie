@@ -1,0 +1,1 @@
+ALTER TYPE "public"."subscription_actor" ADD VALUE 'partner' BEFORE 'system';

@@ -3,6 +3,7 @@ import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { homeFor } from "@/lib/auth-routes";
 import { validateSession, SESSION_COOKIE, type AuthenticatedUser } from "@/lib/session";
 
 /**
@@ -28,6 +29,47 @@ export async function requireAdmin(): Promise<AuthenticatedUser> {
   const user = await requireUser();
   if (user.role !== "admin") redirect("/dashboard");
   return user;
+}
+
+/**
+ * Require a CANDIDATE — someone the study app is actually for.
+ *
+ * An admin runs the business and a partner runs a class; neither has a streak,
+ * a plan or a practice history, so the candidate shell shows them an empty
+ * dashboard, a locked practice nav and an Upgrade button for a product they
+ * already own. Both are sent to their own panel instead.
+ *
+ * NOT a security boundary — nothing here is secret from an admin. It is a
+ * routing rule, and it lives here so all seven candidate layouts get it by
+ * calling one function rather than by remembering to repeat a redirect.
+ */
+export async function requireCandidate(): Promise<AuthenticatedUser> {
+  const user = await requireUser();
+  if (user.role !== "user") redirect(homeFor(user.role));
+  return user;
+}
+
+/** A partner session, with the institution it may act for proven present. */
+export type PartnerUser = AuthenticatedUser & { partnerId: string };
+
+/**
+ * Require a partner login, and hand back the institution it belongs to.
+ *
+ * THE `partnerId` IS THE SCOPE OF EVERY QUERY THE PANEL RUNS, so it is proven
+ * here once rather than re-read from an argument later: a partner action that
+ * took the institution id from its caller would be an endpoint for reading
+ * another class's students. A partner row without one cannot exist through the
+ * admin panel, and if one ever did it would have no students to show — so it is
+ * turned away rather than shown an empty panel.
+ *
+ * Redirects to /dashboard, not /login: whoever this is IS signed in, they are
+ * simply not a partner. Sending them to a login form they have already passed
+ * is the loop that /logout exists to break.
+ */
+export async function requirePartner(): Promise<PartnerUser> {
+  const user = await requireUser();
+  if (user.role !== "partner" || !user.partnerId) redirect("/dashboard");
+  return user as PartnerUser;
 }
 
 /**

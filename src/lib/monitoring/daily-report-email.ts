@@ -123,9 +123,11 @@ function tile(label: string, value: string, colour = INK): string {
 
 function purchaseRow(p: Purchase): string {
   const amount = p.amountCents === null ? "—" : formatPrice(p.amountCents, p.currency);
+  // "partner" earns a tag of its own: it is real money, unlike a comp, but it
+  // came from a class rather than the candidate whose name is on the row.
   const tags = [
     KIND_LABELS[p.kind],
-    p.provider === "manual" ? "manual" : null,
+    p.provider === "manual" || p.provider === "partner" ? p.provider : null,
     p.comped ? "comped" : null,
   ].filter(Boolean) as string[];
   return `<tr>
@@ -318,7 +320,11 @@ export function dailyReportEmail(report: DailyReport): {
   if (purchases.list.length) {
     for (const p of purchases.list) {
       const amount = p.amountCents === null ? "—" : formatPrice(p.amountCents, p.currency);
-      const tags = [KIND_LABELS[p.kind], p.provider === "manual" ? "manual" : null, p.comped ? "comped" : null]
+      const tags = [
+        KIND_LABELS[p.kind],
+        p.provider === "manual" || p.provider === "partner" ? p.provider : null,
+        p.comped ? "comped" : null,
+      ]
         .filter(Boolean)
         .join(" · ");
       lines.push(`  ${istTime(p.at)}  ${p.name} <${p.email}> — ${planMove(p)}, ${amount} [${tags}]`);

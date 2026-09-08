@@ -100,3 +100,12 @@ utility/
 # with no trend history and the first run there becomes a new baseline.
 seo-reports/
 .claude/skills/
+
+# Reddit channel — the daily output only. policy.md, communities.md,
+# activity-log.md and channels.md ARE tracked: they are the operating rules and
+# the ledger the 9:1 promotion ratio is enforced from, and losing them on a
+# fresh clone would mean re-scouting every subreddit from scratch.
+reddit/answers/
+reddit/posts/
+
+reddit/

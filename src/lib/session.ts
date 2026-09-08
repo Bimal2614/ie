@@ -109,7 +109,18 @@ export type AuthenticatedUser = {
   id: string;
   email: string;
   name: string;
-  role: "user" | "admin";
+  role: "user" | "admin" | "partner";
+  /**
+   * The institution behind this session, for the two roles that have one: a
+   * partner's own login and every student that partner enrolled. NULL for
+   * everyone else, including admins.
+   *
+   * Carried on the session because the partner panel's gate needs it on every
+   * request — `requirePartner()` answers "is this a partner, and whose data may
+   * it see?" from the row it already loaded, with no second query and no chance
+   * of the two answers disagreeing.
+   */
+  partnerId: string | null;
   emailVerified: boolean;
   /** NULL for Google accounts that arrived without one — AppShell prompts. */
   phone: string | null;
@@ -149,6 +160,7 @@ export async function validateSession(): Promise<AuthenticatedUser | null> {
       email: users.email,
       name: users.name,
       role: users.role,
+      partnerId: users.partnerId,
       emailVerified: users.emailVerified,
       phone: users.phone,
       targetModule: users.targetModule,

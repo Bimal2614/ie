@@ -12,12 +12,6 @@ type ShellUser = { name: string; email: string; targetModule: "academic" | "gene
 interface AppShellProps {
   user: ShellUser;
   /**
-   * Reveals the admin group in the nav. Cosmetic only — every admin route
-   * gates itself with `requireAdmin()`, so a forged `true` here shows a link
-   * that redirects straight back to /dashboard.
-   */
-  isAdmin?: boolean;
-  /**
    * The tier this session is entitled to, straight from `requireUser()`. The
    * shell takes it from the server rather than from `useAuth()` — these routes
    * are already rendered per-request, so there is no reason to make an
@@ -34,14 +28,14 @@ interface AppShellProps {
   children: ReactNode;
 }
 
-export function AppShell({ user, isAdmin, plan, needsPhone, logoutAction, children }: AppShellProps) {
+export function AppShell({ user, plan, needsPhone, logoutAction, children }: AppShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <div className="app-shell">
       {/* Desktop sidebar */}
       <div className="hidden lg:block">
-        <Sidebar isAdmin={isAdmin} plan={plan} />
+        <Sidebar plan={plan} />
       </div>
 
       {/* Mobile drawer */}
@@ -55,7 +49,6 @@ export function AppShell({ user, isAdmin, plan, needsPhone, logoutAction, childr
           />
           <div className="fixed inset-y-0 left-0 z-50 w-[280px] lg:hidden">
             <Sidebar
-              isAdmin={isAdmin}
               plan={plan}
               showCloseButton
               onClose={() => setMobileOpen(false)}

@@ -25,6 +25,7 @@ import {
   type Cadence,
   type RazorpaySubscription,
 } from "@/lib/payments/razorpay";
+import { toE164 } from "@/lib/phone";
 import {
   currentSubscription,
   grantPlan,
@@ -313,7 +314,10 @@ export async function openCheckout(
     description: `${entitlements.label} — billed every ${entitlements.billingMonths} month(s)`,
     amount: terms.amount,
     currency: terms.currency,
-    prefill: { name: user.name, email: user.email, contact: user.phone ?? "" },
+    // E.164, not the stored shape. Numbers are kept as `+91-9904529857` here,
+    // and Checkout silently DROPS a contact it cannot parse — so the hyphen
+    // costs the payer a re-typed mobile number at the moment they are paying.
+    prefill: { name: user.name, email: user.email, contact: toE164(user.phone) ?? "" },
   };
 }
 

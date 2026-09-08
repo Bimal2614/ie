@@ -32,6 +32,22 @@ export const SIGNED_OUT_PARAM = "signedout";
  * auth routes themselves, which would bounce a freshly signed-in user straight
  * back to the form they just completed.
  */
+/**
+ * Where a role belongs when nothing else was asked for.
+ *
+ * NEITHER AN ADMIN NOR A PARTNER HAS A CANDIDATE DASHBOARD. A partner login has
+ * no practice history and no plan; an admin runs the business rather than
+ * studying for the exam, and landing either of them on /dashboard shows an
+ * empty streak, a locked practice nav and an Upgrade button to someone who owns
+ * the product. Kept beside `safeNext`, which takes this as its fallback, so
+ * "where do we send them" has one answer rather than one per call site.
+ */
+export function homeFor(role: "user" | "admin" | "partner" | undefined): string {
+  if (role === "admin") return "/admin";
+  if (role === "partner") return "/partner";
+  return "/dashboard";
+}
+
 export function safeNext(value: unknown, fallback = "/dashboard"): string {
   if (typeof value !== "string" || value.length === 0 || value.length > 512) return fallback;
   if (!value.startsWith("/") || value.startsWith("//") || value.startsWith("/\\")) return fallback;

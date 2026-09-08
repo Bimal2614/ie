@@ -21,7 +21,6 @@ import {
   History,
   Library,
   Mail,
-  BadgeCheck,
 } from "lucide-react";
 import { LogoMark } from "@/components/ui/logo";
 import { type PlanKey } from "@/lib/plans";
@@ -87,14 +86,12 @@ const GROUPS: Group[] = [
   },
 ];
 
-/**
- * Appended only for admins. Not a security boundary — /verify-students calls
- * `requireAdmin()` itself; this is just how an admin finds the screen.
+/*
+ * There is no admin entry in this nav, on purpose. An admin never reaches this
+ * shell at all — login and /dashboard both send them to /admin (see `homeFor`),
+ * which has its own chrome. A link here would only be a way back into a
+ * candidate UI that has nothing in it for them.
  */
-const ADMIN_GROUP: Group = {
-  label: "Admin",
-  items: [{ href: "/verify-students", label: "Verify Students", icon: BadgeCheck }],
-};
 
 /**
  * The nav's own `pb-10`, in px. It keeps the last item clear of the "More"
@@ -107,14 +104,13 @@ interface SidebarProps {
   onNavigate?: () => void;
   showCloseButton?: boolean;
   onClose?: () => void;
-  isAdmin?: boolean;
   /** From the session. Drives which items still read as locked. */
   plan?: PlanKey | null;
 }
 
-export function Sidebar({ onNavigate, showCloseButton, onClose, isAdmin, plan }: SidebarProps) {
+export function Sidebar({ onNavigate, showCloseButton, onClose, plan }: SidebarProps) {
   const pathname = usePathname();
-  const groups = isAdmin ? [...GROUPS, ADMIN_GROUP] : GROUPS;
+  const groups = GROUPS;
   // The "Premium" badge marks a locked feature. To someone who has it, the same
   // badge reads as a wall they have already paid to get past.
   const showsLocks = !plan || plan === "free";

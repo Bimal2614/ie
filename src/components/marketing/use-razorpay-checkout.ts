@@ -5,78 +5,16 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-provider";
 import { confirmCheckout, startCheckout } from "@/app/actions/billing";
 import type { BillingCurrency } from "@/lib/plans";
+import { BRAND_HEX, loadCheckout } from "@/components/payments/razorpay-loader";
 import type { CheckoutSession } from "@/lib/payments/billing";
 
 /**
  * Opening Razorpay Checkout, from the one button that does it.
  *
- * THE SCRIPT IS LOADED ON DEMAND, not in the layout. Checkout is ~100KB of
- * third-party JavaScript that every visitor to a marketing page would otherwise
- * pay for so that the small fraction who press Subscribe save a moment; loading
- * it when the button is pressed costs that fraction one round trip and everyone
- * else nothing.
- *
- * It is injected with `document.createElement` rather than a <script> tag in the
- * markup because of the CSP in src/proxy.ts: `script-src` uses `strict-dynamic`,
- * under which a plain tag with no nonce is refused and a script inserted by
- * already-trusted code inherits that trust. See the Razorpay entries in that
- * file for the frame/connect rules the modal also needs.
+ * The script itself and the `window.Razorpay` global live in
+ * src/components/payments/razorpay-loader.ts, shared with the partner panel's
+ * one-off orders — see the note there on why that declaration has one home.
  */
-
-const CHECKOUT_SRC = "https://checkout.razorpay.com/v1/checkout.js";
-
-/** Razorpay Checkout's global, narrowed to what this file uses. */
-type RazorpayOptions = {
-  key: string;
-  subscription_id: string;
-  name: string;
-  description: string;
-  prefill: { name: string; email: string; contact: string };
-  theme: { color: string };
-  handler: (response: Record<string, string>) => void;
-  modal: { ondismiss: () => void };
-};
-
-type RazorpayInstance = {
-  open: () => void;
-  on: (event: string, handler: (payload: unknown) => void) => void;
-};
-
-declare global {
-  interface Window {
-    Razorpay?: new (options: RazorpayOptions) => RazorpayInstance;
-  }
-}
-
-let loading: Promise<void> | null = null;
-
-function loadCheckout(): Promise<void> {
-  if (typeof window !== "undefined" && window.Razorpay) return Promise.resolve();
-  // One in-flight load shared by every button on the page: a double click must
-  // not append the script twice.
-  loading ??= new Promise<void>((resolve, reject) => {
-    const script = document.createElement("script");
-    script.src = CHECKOUT_SRC;
-    script.async = true;
-    script.onload = () => resolve();
-    script.onerror = () => {
-      loading = null; // let a later attempt retry after a dropped connection
-      reject(new Error("Could not load the payment window"));
-    };
-    document.body.appendChild(script);
-  });
-  return loading;
-}
-
-/**
- * `--brand` from src/app/globals.css as the hex Razorpay's modal wants.
- *
- * Hard-coded rather than read from the custom property: Checkout renders in its
- * own iframe, which cannot see this document's variables, so the value has to
- * cross as a literal either way. Kept in step by hand with the light-theme
- * `--brand: 218 81% 32%`.
- */
-const BRAND_HEX = "#0f4094";
 
 export type CheckoutPhase = "idle" | "opening" | "confirming" | "done";
 

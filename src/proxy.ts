@@ -30,6 +30,10 @@ const PROTECTED_PREFIXES = [
   // Admin-only in practice — this list routes on cookie presence alone, so
   // requireAdmin() in the route's layout is what keeps candidates out.
   "/verify-students",
+  // Partner-only, by the same rule: requirePartner() in the layout is the gate,
+  // and this line only means a signed-out visitor gets the login form instead of
+  // a redirect loop.
+  "/partner",
 ];
 // Auth pages a logged-in user shouldn't see.
 const AUTH_ROUTES = ["/login", "/signup"];

@@ -11,6 +11,7 @@ import {
   userIdByCustomerId,
 } from "@/lib/payments/billing";
 import { markPastDue, requestCancellation, subscriptionByProviderId } from "@/lib/subscriptions";
+import { markStudentOrderFailed, settleStudentOrder } from "@/lib/payments/partner-billing";
 
 /**
  * Razorpay's webhook — where a RECURRING subscription actually recurs.
@@ -27,7 +28,12 @@ import { markPastDue, requestCancellation, subscriptionByProviderId } from "@/li
  *   Secret  a value you choose; put the same one in RAZORPAY_WEBHOOK_SECRET
  *   Events  subscription.charged, subscription.activated, subscription.pending,
  *           subscription.halted, subscription.cancelled, subscription.completed,
- *           payment.failed
+ *           payment.failed, order.paid
+ *
+ * `order.paid` IS THE PARTNER SIDE. A class pays for a student with a one-time
+ * order, not a mandate, and the panel confirms it from the browser — but the
+ * class may close the tab before that call lands. This is what makes the term
+ * arrive anyway, and it is the only handler here that is not about a mandate.
  *
  * The route is CLOSED until that secret is set, exactly as the cron sweep is:
  * an unverified payment webhook is an endpoint for granting anyone a paid plan.
@@ -41,9 +47,13 @@ type RazorpayEvent = {
   event?: string;
   payload?: {
     subscription?: { entity?: { id?: string; notes?: Record<string, string> } };
+    /** One-time orders — how a partner pays for a student. */
+    order?: { entity?: { id?: string; notes?: Record<string, string> } };
     payment?: {
       entity?: {
         id?: string;
+        /** Set when the payment was against a one-time order. */
+        order_id?: string;
         amount?: number;
         /** "INR" or "USD" — which of the two plans behind this tier was sold. */
         currency?: string;
@@ -261,7 +271,40 @@ async function handle(type: string, event: RazorpayEvent): Promise<void> {
      * that onto the user when the checkout was opened, so it closes the gap for
      * exactly the case the notes cannot cover.
      */
+    /*
+     * A PARTNER'S ONE-TIME ORDER SETTLED — the student's term is granted here.
+     *
+     * The panel's own confirm call races this one and either may arrive twice.
+     * `settleStudentOrder` is written for exactly that: it claims the payment
+     * row with a conditional UPDATE, so the second caller finds nothing to do
+     * and grants nothing. An order that is not one of ours falls out of it as
+     * `unknown_order`, which is the normal answer for an integration that also
+     * sells something else.
+     */
+    case "order.paid": {
+      const orderId = event.payload?.order?.entity?.id;
+      if (!orderId) return;
+      const result = await settleStudentOrder({
+        orderId,
+        paymentId: paymentEntity?.id ?? null,
+        actor: "webhook",
+        note: "Paid by the student's IELTS class",
+      });
+      if (!result.ok && result.reason !== "unknown_order") {
+        console.warn(`[razorpay-webhook] order.paid for ${orderId} did nothing: ${result.reason}`);
+      }
+      return;
+    }
+
     case "payment.failed": {
+      /*
+       * A partner's order that could not be collected. Marked and left alone:
+       * nothing was granted, so nothing is withdrawn, and the class's next
+       * attempt opens a fresh order rather than reviving this one.
+       */
+      const failedOrderId = paymentEntity?.order_id;
+      if (failedOrderId && (await markStudentOrderFailed(failedOrderId))) return;
+
       const local = await localSubscriptionFor(subscriptionId);
       const owner =
         paymentEntity?.notes?.userId ??

@@ -9,12 +9,18 @@ import { env } from "@/lib/env";
  * six HTTP calls, and it would be the only dependency in this repo allowed to
  * decide how money is requested.
  *
- * SCOPE: recurring subscriptions only. Razorpay has two unrelated products
- * behind similar names — Orders (charge once) and Subscriptions (a mandate the
- * customer authorises once, which Razorpay then debits every cycle by itself).
- * Everything here is the second. Nothing in this app charges a card on a
- * schedule of its own; Razorpay does that, and tells us it happened over the
- * webhook.
+ * SCOPE: both of Razorpay's products, kept firmly apart. It has two unrelated
+ * things behind similar names — ORDERS (charge once) and SUBSCRIPTIONS (a
+ * mandate the customer authorises once, which Razorpay then debits every cycle
+ * by itself). A candidate buying their own plan gets the second, so nothing in
+ * this app charges a card on a schedule of its own; Razorpay does that and
+ * tells us over the webhook. A partner buying a term for one of its students
+ * gets the FIRST, because a class must not end up with one auto-renewing
+ * mandate per student on its card.
+ *
+ * The two share nothing but this file's HTTP plumbing: different endpoints,
+ * different ids (`order_…` vs `sub_…`), and — the trap — different signature
+ * payloads. See the Signatures section.
  *
  * Server-only, and the secret never leaves this file: the key id alone is what
  * the browser gets, handed over by the checkout action.
@@ -258,6 +264,71 @@ export function cancelSubscription(
 }
 
 /* ------------------------------------------------------------------ *
+ * Orders (charge once)
+ * ------------------------------------------------------------------ */
+
+export type RazorpayOrderStatus = "created" | "attempted" | "paid";
+
+export type RazorpayOrder = {
+  id: string;
+  amount: number;
+  /** What has actually been captured. The field that says a payment landed. */
+  amount_paid: number;
+  currency: string;
+  status: RazorpayOrderStatus;
+  receipt?: string | null;
+  notes?: Record<string, string> | null;
+  created_at?: number;
+};
+
+/**
+ * Open an order for a single charge.
+ *
+ * THE AMOUNT IS NAMED HERE, unlike a subscription, where it comes from a plan
+ * Razorpay already holds. So this is the call that decides what a card is asked
+ * for, and the only safe source for that number is src/lib/plans.ts — never an
+ * argument that started in a browser.
+ *
+ * `notes` is how a webhook that arrives with nothing but an order id finds what
+ * the payment was for. Razorpay echoes it back on every event for the order.
+ *
+ * `payment_capture` is deliberately left at Razorpay's default of automatic:
+ * an authorised-but-uncaptured payment expires after five days and silently
+ * refunds itself, which for a class that paid for a student in the room is the
+ * worst possible outcome.
+ */
+export function createOrder(input: {
+  /** Minor units — paise for INR, cents for USD. */
+  amountCents: number;
+  currency: string;
+  /** Our own reference, shown in Razorpay's dashboard. Max 40 chars. */
+  receipt: string;
+  notes: Record<string, string>;
+}): Promise<RazorpayOrder> {
+  return call<RazorpayOrder>("/orders", {
+    method: "POST",
+    body: {
+      amount: input.amountCents,
+      currency: input.currency,
+      receipt: input.receipt.slice(0, 40),
+      notes: input.notes,
+    },
+  });
+}
+
+/**
+ * Read an order back from Razorpay.
+ *
+ * THIS IS THE ONE THAT DECIDES WHETHER MONEY ARRIVED. The browser's callback
+ * proves someone holds a valid signature; it does not prove the payment was
+ * captured, and a signature over an unpaid order is a perfectly ordinary thing
+ * to hold. `status` and `amount_paid` from here are what grants a plan.
+ */
+export function fetchOrder(id: string): Promise<RazorpayOrder> {
+  return call<RazorpayOrder>(`/orders/${encodeURIComponent(id)}`);
+}
+
+/* ------------------------------------------------------------------ *
  * Signatures
  *
  * Two different secrets sign two different things, and mixing them up is the
@@ -293,6 +364,27 @@ export function verifyCheckoutSignature(input: {
   if (!secret) return false;
   const expected = createHmac("sha256", secret)
     .update(`${input.paymentId}|${input.subscriptionId}`)
+    .digest("hex");
+  return digestMatches(expected, input.signature);
+}
+
+/**
+ * Verify what Checkout handed the browser after a ONE-OFF order.
+ *
+ * `order_id|payment_id` — the reverse order of the subscription signature
+ * above, and signed with the same API key secret. The two are easy to swap by
+ * accident and both fail closed when you do, so a checkout where nothing ever
+ * activates is worth checking here first.
+ */
+export function verifyOrderSignature(input: {
+  orderId: string;
+  paymentId: string;
+  signature: string;
+}): boolean {
+  const secret = env.RAZORPAY_KEY_SECRET;
+  if (!secret) return false;
+  const expected = createHmac("sha256", secret)
+    .update(`${input.orderId}|${input.paymentId}`)
     .digest("hex");
   return digestMatches(expected, input.signature);
 }

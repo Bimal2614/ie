@@ -2,7 +2,13 @@ import "server-only";
 
 import { and, desc, eq, inArray, isNotNull, lte, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { subscriptionLogs, subscriptions, users } from "@/db/schema";
+import {
+  paymentProvider,
+  subscriptionActor,
+  subscriptionLogs,
+  subscriptions,
+  users,
+} from "@/db/schema";
 import type { Subscription } from "@/db/schema";
 import { DEFAULT_CURRENCY, effectivePlan, planRank, PLANS, toPlanKey, type PlanKey } from "@/lib/plans";
 
@@ -22,8 +28,14 @@ import { DEFAULT_CURRENCY, effectivePlan, planRank, PLANS, toPlanKey, type PlanK
  * ended, never from a parameter the caller could get wrong.
  */
 
-type Actor = "user" | "admin" | "system" | "webhook";
-type PaymentProvider = "manual" | "razorpay";
+/** Read off the enum, for the same reason `PaymentProvider` below is. */
+type Actor = (typeof subscriptionActor.enumValues)[number];
+/**
+ * Read off the enum rather than retyped, so a provider added to the schema is
+ * immediately grantable here. Hand-copied, this union silently refused
+ * `partner` the day that value was added to the database.
+ */
+type PaymentProvider = (typeof paymentProvider.enumValues)[number];
 type Status = "active" | "cancelling" | "expired" | "cancelled" | "past_due";
 
 /** Statuses that still entitle the user. Anything else has stopped granting. */

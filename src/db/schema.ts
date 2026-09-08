@@ -19,7 +19,14 @@ import type { SectionQuestions } from "../lib/question-content";
  * Enums
  * ------------------------------------------------------------------ */
 
-export const userRole = pgEnum("user_role", ["user", "admin"]);
+/**
+ * `partner` is an INSTITUTION'S LOGIN, not a candidate: an IELTS class we have
+ * onboarded, whose staff enrol and pay for their own students. A third role
+ * rather than a flag, because every gate in the app already branches on this
+ * column — a partner has to fail the candidate gates (there is no practice
+ * history of their own to show) exactly as it fails the admin ones.
+ */
+export const userRole = pgEnum("user_role", ["user", "admin", "partner"]);
 // IELTS comes in two streams; a user studies toward one (can change later).
 export const ieltsModule = pgEnum("ielts_module", ["academic", "general"]);
 /**
@@ -28,6 +35,98 @@ export const ieltsModule = pgEnum("ielts_module", ["academic", "general"]);
  * of what a tier includes never needs a migration.
  */
 export const userPlan = pgEnum("user_plan", ["free", "pro", "premium"]);
+
+/* ------------------------------------------------------------------ *
+ * Partners (IELTS classes we have onboarded)
+ *
+ * One row per INSTITUTION — the class itself, never a person. The people are
+ * `users` rows carrying `partner_id`: one with role `partner` (the login handed
+ * over at onboarding) and one per student the class enrols.
+ *
+ * DELIBERATELY THIN. Signing in, being rate limited, paying, being locked out —
+ * all of it is already modelled on rows that exist, so this table holds only
+ * what those rows cannot say: who the institution is. Contact details are NOT
+ * copied here; they are the login user's email and phone, and the second copy
+ * is always the one that goes stale.
+ * ------------------------------------------------------------------ */
+
+/**
+ * `suspended` ends the relationship without erasing it: the class's login is
+ * refused and no further students can be enrolled, but students already enrolled
+ * keep the access that was paid for. Withdrawing that would be taking back
+ * something the class has already bought.
+ */
+export const partnerStatus = pgEnum("partner_status", ["active", "suspended"]);
+
+/**
+ * A wholesale rate, with a name.
+ *
+ * NOBODY EVER TYPES THIS CODE. It is not a consumer coupon: there is no input
+ * field for it anywhere in the app, and no endpoint that accepts one. The
+ * discount applies because a student belongs to a partner that holds this row —
+ * `users.partner_id` is the gate, and always was. The code exists so the
+ * arrangement has a name we can put in an email, an invoice and a report.
+ *
+ * A row is a DEAL, not a partner's private column, so several classes can be
+ * put on the same terms and taken off them together — which is what
+ * deactivating one has to mean.
+ */
+export const couponStatus = pgEnum("coupon_status", ["active", "inactive"]);
+
+export const coupons = pgTable(
+  "coupons",
+  {
+    id: uuid().defaultRandom().primaryKey(),
+    /** Uppercase, e.g. "ILDS25". Unique so it is never ambiguous in writing. */
+    code: text().notNull(),
+    /**
+     * Whole percent off the list price, 1-90.
+     *
+     * A PERCENTAGE RATHER THAN AN AMOUNT, because we sell in two currencies and
+     * a fixed ₹300 off says nothing about a dollar price. Capped below 100
+     * deliberately: a free account is an admin grant, which /admin/students
+     * already does properly, and Razorpay refuses an order of zero.
+     */
+    percent: integer().notNull(),
+    status: couponStatus().notNull().default("active"),
+    /** Auto-off. NULL runs until somebody deactivates it by hand. */
+    endsAt: timestamp({ withTimezone: true }),
+    /** Why this deal exists — the admin's own note. */
+    note: text(),
+    /*
+     * No `created_by` column, deliberately. `coupons` is referenced by
+     * `partners`, which is referenced by `users` — pointing back at `users`
+     * from here closes a circle TypeScript cannot infer a type through, and
+     * every table in this file loses its type. Who created a coupon is in
+     * `audit_log`, which is where the rest of the admin trail already lives.
+     */
+
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("coupons_code_uq").on(t.code)],
+);
+
+export const partners = pgTable("partners", {
+  id: uuid().defaultRandom().primaryKey(),
+  /** Trading name of the class, as its own students would recognise it. */
+  name: text().notNull(),
+  /** Free text — "Ahmedabad, IN". Shown, never parsed or filtered on. */
+  location: text(),
+  website: text(),
+  status: partnerStatus().notNull().default("active"),
+
+  /**
+   * The rate this class buys at. NULL — the common case — is list price.
+   *
+   * SET NULL on delete rather than cascade, for the obvious reason: removing a
+   * deal must put the class back on retail, not delete the class.
+   */
+  couponId: uuid().references(() => coupons.id, { onDelete: "set null" }),
+
+  createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+});
 
 /* ------------------------------------------------------------------ *
  * Users
@@ -56,6 +155,22 @@ export const users = pgTable(
     // before we have a number, and the app shell then prompts for one.
     phone: text(),
     role: userRole().notNull().default("user"),
+
+    /**
+     * The institution this row belongs to — BOTH sides of a partnership: the
+     * class's own login (role `partner`) and every student it enrols (role
+     * `user`). NULL for everyone who signed up on their own, which is nearly the
+     * whole table.
+     *
+     * One nullable column is the entire link. A join table would let a student
+     * belong to two classes, which does not happen and would make "whose student
+     * is this, and who paid for them" ambiguous at the one moment it has to be
+     * certain — a refund.
+     *
+     * SET NULL, never CASCADE: removing a partner must not delete the candidates
+     * who practised under it. In the panel a partner is suspended, not deleted.
+     */
+    partnerId: uuid().references(() => partners.id, { onDelete: "set null" }),
 
     /**
      * Subscription tier. The SERVER's copy — every gate reads this column (via
@@ -119,6 +234,17 @@ export const users = pgTable(
      * moment it has to be certain.
      */
     uniqueIndex("users_razorpay_customer_uq").on(t.razorpayCustomerId),
+    /*
+     * The partner panel's one list query: "this class's students, newest first".
+     *
+     * PARTIAL, on the column being present. Self-signed-up candidates are
+     * essentially the whole table and can never be an answer to that question,
+     * so indexing them too would cost a full-size index to serve a query that
+     * only ever touches a few hundred rows.
+     */
+    index("users_partner_created_idx")
+      .on(t.partnerId, t.createdAt)
+      .where(sql`partner_id is not null`),
   ],
 );
 
@@ -210,7 +336,17 @@ export const authTokens = pgTable(
  * `provider_subscription_id IS NULL`: "we could not find an id" and "there was
  * never meant to be one" want different answers when a cancel button is pressed.
  */
-export const paymentProvider = pgEnum("payment_provider", ["manual", "razorpay"]);
+/**
+ * `partner` is a period an INSTITUTION bought for one of its students.
+ *
+ * It is neither of the others, and the difference is load-bearing. Real money
+ * arrived, through Razorpay — so calling it `manual` would hide every paid seat
+ * from the revenue figures. But it arrived as a ONE-TIME ORDER and not a
+ * mandate, so there is no `sub_…` behind it: calling it `razorpay` would send
+ * one of these rows to the subscriptions API the first time anyone pressed
+ * cancel, and the cancel would fail against an id that never existed.
+ */
+export const paymentProvider = pgEnum("payment_provider", ["manual", "razorpay", "partner"]);
 
 export const subscriptionStatus = pgEnum("subscription_status", [
   /** Paid and inside its period. */
@@ -322,8 +458,23 @@ export const subscriptionEventType = pgEnum("subscription_event_type", [
   "plan_revoked",
 ]);
 
-/** Who caused it - a candidate, an admin, a provider webhook, or the sweep. */
-export const subscriptionActor = pgEnum("subscription_actor", ["user", "admin", "system", "webhook"]);
+/**
+ * Who caused it - a candidate, an admin, a partner, a provider webhook, or the
+ * sweep.
+ *
+ * `partner` is NOT `admin`, and the difference is money. Anything an admin puts
+ * in the ledger is read as comped — a support credit, a grant, a bank transfer
+ * reconciled by hand — and left out of revenue. A class paying for its student
+ * paid us in full, so filing it under `admin` would delete real income from
+ * every report that reads this column.
+ */
+export const subscriptionActor = pgEnum("subscription_actor", [
+  "user",
+  "admin",
+  "partner",
+  "system",
+  "webhook",
+]);
 
 /**
  * Everything that has ever happened to a user's billing, append-only.
@@ -420,6 +571,97 @@ export const webhookEvents = pgTable(
 );
 
 /* ------------------------------------------------------------------ *
+ * Partner payments
+ *
+ * One row per student a partner has paid for: the one-time Razorpay ORDER that
+ * bought that student's term, and the subscription period it produced.
+ *
+ * WHY THIS IS NOT JUST ANOTHER `subscription_logs` ENTRY. Two of these fields
+ * have to be columns rather than keys in that table's `metadata` jsonb. The
+ * order id must be UNIQUE, because it is the only thing standing between a
+ * replayed checkout callback and a second free term granted for one payment.
+ * And `partner_id` is what every screen in the partner panel — and every
+ * question about what a class has spent — filters by.
+ *
+ * A ROW IS WRITTEN BEFORE THE MONEY MOVES, in `created`, so an abandoned
+ * checkout leaves a trace: the panel can show "payment started, not completed"
+ * instead of the class wondering whether they were charged.
+ * ------------------------------------------------------------------ */
+
+/**
+ * `created` is an order that exists at Razorpay and has not been paid — the
+ * normal state for a few seconds, and the permanent state of an abandoned
+ * checkout. Only `paid` has ever granted anything.
+ */
+export const partnerPaymentStatus = pgEnum("partner_payment_status", ["created", "paid", "failed"]);
+
+export const partnerPayments = pgTable(
+  "partner_payments",
+  {
+    id: uuid().defaultRandom().primaryKey(),
+
+    /**
+     * RESTRICT, alone among the foreign keys here: a class that has paid us
+     * cannot be deleted at all, only suspended. The database refusing it is
+     * worth more than a comment asking nobody to try.
+     */
+    partnerId: uuid()
+      .notNull()
+      .references(() => partners.id, { onDelete: "restrict" }),
+
+    /**
+     * Who the seat was bought for, and who bought it. SET NULL on both: this is
+     * a money record, and it has to outlive the accounts it refers to for the
+     * same reason `subscription_logs` does.
+     */
+    studentUserId: uuid().references(() => users.id, { onDelete: "set null" }),
+    createdByUserId: uuid().references(() => users.id, { onDelete: "set null" }),
+
+    /** The tier bought. Never "free" — free is the absence of a purchase. */
+    plan: userPlan().notNull(),
+    /** Minor units (paise/cents), as charged. Never a float. */
+    amountCents: integer().notNull(),
+    /**
+     * What it would have cost at list, and the rate that was applied.
+     *
+     * FROZEN AT THE SALE. Re-rating a class next quarter, or deactivating the
+     * coupon entirely, must not rewrite what this invoice says — so the deal is
+     * copied onto the payment rather than looked up through the partner later.
+     * NULL on both means the class paid list price.
+     */
+    listPriceCents: integer(),
+    discountPercent: integer(),
+    currency: text().notNull().default("INR"),
+    status: partnerPaymentStatus().notNull().default("created"),
+
+    /** Razorpay's `order_…` (one-time), and the `pay_…` that settled it. */
+    razorpayOrderId: text().notNull(),
+    razorpayPaymentId: text(),
+
+    /** The period this payment opened, once it has been granted. */
+    subscriptionId: uuid().references(() => subscriptions.id, { onDelete: "set null" }),
+
+    paidAt: timestamp({ withTimezone: true }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    /**
+     * THE REPLAY GUARD. The browser callback and the `order.paid` webhook race
+     * each other to grant the same term, and either can arrive twice. Both claim
+     * the payment by moving this row out of `created` in one conditional UPDATE,
+     * so the loser writes nothing — and this index is what makes "the row for
+     * order_x" a single certain answer.
+     */
+    uniqueIndex("partner_payments_order_uq").on(t.razorpayOrderId),
+    /** The partner panel's billing list, and per-class revenue. */
+    index("partner_payments_partner_created_idx").on(t.partnerId, t.createdAt),
+    /** "What has been paid for this student?" — the row's own history. */
+    index("partner_payments_student_idx").on(t.studentUserId),
+  ],
+);
+
+/* ------------------------------------------------------------------ *
  * Rate limiting (DB-backed sliding window)
  *
  * Keyed by "action:dimension:value", e.g. "login:ip:1.2.3.4" or
@@ -464,6 +706,12 @@ export type NewSubscription = typeof subscriptions.$inferInsert;
 export type SubscriptionLog = typeof subscriptionLogs.$inferSelect;
 export type NewSubscriptionLog = typeof subscriptionLogs.$inferInsert;
 export type WebhookEvent = typeof webhookEvents.$inferSelect;
+export type Partner = typeof partners.$inferSelect;
+export type Coupon = typeof coupons.$inferSelect;
+export type NewCoupon = typeof coupons.$inferInsert;
+export type NewPartner = typeof partners.$inferInsert;
+export type PartnerPayment = typeof partnerPayments.$inferSelect;
+export type NewPartnerPayment = typeof partnerPayments.$inferInsert;
 
 /* ================================================================== *
  * CONTENT, PRACTICE & MOCK TESTS

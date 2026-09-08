@@ -116,7 +116,7 @@ export type Purchase = {
   kind: PurchaseKind;
   amountCents: number | null;
   currency: string;
-  provider: "manual" | "razorpay" | null;
+  provider: "manual" | "razorpay" | "partner" | null;
   /**
    * An admin put this here — a support credit, a comp, a bank transfer
    * reconciled by hand. Listed with the rest, because it is still a plan
@@ -433,7 +433,10 @@ export async function buildDailyReport(day: IstDay): Promise<DailyReport> {
     kind: PURCHASE_KINDS[r.event] ?? "payment",
     amountCents: r.amount_cents === null ? null : Number(r.amount_cents),
     currency: r.currency ?? "INR",
-    provider: r.provider === "razorpay" || r.provider === "manual" ? r.provider : null,
+    provider:
+      r.provider === "razorpay" || r.provider === "manual" || r.provider === "partner"
+        ? r.provider
+        : null,
     comped: r.actor === "admin",
   }));
 

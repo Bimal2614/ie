@@ -7,13 +7,14 @@ import { users, auditLog } from "@/db/schema";
 import { signupSchema, loginSchema, type AuthFormState } from "@/lib/validation";
 import { hashPassword, verifyPassword, fakeVerify } from "@/lib/security/password";
 import { rateLimit, clearRateLimit } from "@/lib/security/rate-limit";
-import { safeNext } from "@/lib/auth-routes";
+import { homeFor, safeNext } from "@/lib/auth-routes";
 import {
   createSession,
   destroySession,
   getRequestContext,
 } from "@/lib/session";
 import { getCurrentUser } from "@/lib/dal";
+import { isUniqueViolation } from "@/lib/db-errors";
 import { sendEmail } from "@/lib/email/mailer";
 import { welcomeTemplate } from "@/lib/email/templates";
 import { env } from "@/lib/env";
@@ -42,25 +43,6 @@ async function audit(
   } catch {
     // Never let audit logging break the auth flow.
   }
-}
-
-/**
- * True for a Postgres unique_violation (23505) — here, a duplicate email on the
- * users_email_normalized_uq index.
- *
- * The code has to be hunted down the cause chain: Drizzle wraps driver errors
- * in a DrizzleQueryError, so `err.code` is undefined and only `err.cause.code`
- * carries 23505. Checking the top-level error alone silently misses every
- * duplicate signup and rethrows as a 500 that dumps the INSERT — bcrypt hash
- * included — into the response.
- */
-function isUniqueViolation(err: unknown): boolean {
-  for (let e: unknown = err; e != null; e = (e as { cause?: unknown }).cause) {
-    if (typeof e === "object" && "code" in e && (e as { code?: unknown }).code === "23505") {
-      return true;
-    }
-  }
-  return false;
 }
 
 /* ------------------------------------------------------------------ *
@@ -200,8 +182,9 @@ export async function login(
   await audit(user.id, "login.success", ip, userAgent);
   // Back to whatever they were trying to reach — the pricing card they pressed
   // Subscribe on, or the protected page the proxy bounced. `safeNext` is what
-  // stops that being an open redirect; see src/lib/auth-routes.ts.
-  redirect(safeNext(formData.get("next")));
+  // stops that being an open redirect; see src/lib/auth-routes.ts. With nothing
+  // asked for, the fallback follows the role: a partner's home is its panel.
+  redirect(safeNext(formData.get("next"), homeFor(user.role)));
 }
 
 /* ------------------------------------------------------------------ *
