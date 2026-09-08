@@ -92,6 +92,7 @@ Desktop.ini
 
 # One-off local utility / db seeding scripts — not part of the app
 utility/
+audio-que-generation/
 
 
 # Local-only by choice (2026-09-05). The dated SEO audits and the skill that

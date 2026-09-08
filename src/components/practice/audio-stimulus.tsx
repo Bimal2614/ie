@@ -58,6 +58,7 @@ export function AudioStimulus({
   audioRef,
   className,
   autoPlay = false,
+  range = null,
   onEnded,
 }: {
   src: string;
@@ -73,6 +74,21 @@ export function AudioStimulus({
    * the candidate starts, and leaves this off.
    */
   autoPlay?: boolean;
+  /**
+   * Confine the player to one stretch of the recording.
+   *
+   * A drill set is one question group, and a group occupies a couple of minutes
+   * of a part that runs for four. Handed the whole file, the player opens at
+   * 0:00 and the candidate sits through the half of the recording that answers
+   * a different set — which is what this exists to stop. With a range, the bar
+   * spans only what this set can be answered from, playback starts there, and
+   * it stops at the end rather than wandering into the next group.
+   *
+   * Only ever passed for content whose timings were MEASURED. A window
+   * estimated from the transcript is not accurate enough to hide the rest of
+   * the recording behind, so those sets keep the full bar.
+   */
+  range?: { from: number; to: number } | null;
   /**
    * The clip reached its end — not fired by a pause partway through, and fired
    * whether the play was automatic or a button press. That is what makes it
@@ -126,21 +142,51 @@ export function AudioStimulus({
     }
   }, []);
 
+  /**
+   * The stretch the controls operate over. Without a range that is the whole
+   * recording, which is what every non-drill player wants.
+   */
+  const lo = range ? Math.max(0, range.from) : 0;
+  const hi = range && duration > 0 ? Math.min(range.to, duration) : duration;
+
   const toggle = useCallback(() => {
     const el = audioRef.current;
     if (!el) return;
-    if (el.paused) void el.play().catch(() => setPlaying(false));
-    else el.pause();
-  }, [audioRef]);
+    if (!el.paused) {
+      el.pause();
+      return;
+    }
+    // Pressing play after the range has run out replays the range, rather than
+    // resuming into the next group's half of the recording.
+    if (range && (el.currentTime < lo || el.currentTime >= hi - 0.05)) {
+      el.currentTime = lo;
+    }
+    void el.play().catch(() => setPlaying(false));
+  }, [audioRef, range, lo, hi]);
+
+  /**
+   * Open where the range opens.
+   *
+   * Deliberately keyed on the range and the duration rather than run once: the
+   * drill view swaps sets without remounting the element, and a stale position
+   * would leave the new set playing from the old one's minute.
+   */
+  useEffect(() => {
+    const el = audioRef.current;
+    if (!el || !range || duration <= 0) return;
+    if (el.currentTime < lo || el.currentTime > hi) el.currentTime = lo;
+  }, [audioRef, range, lo, hi, duration]);
 
   const seek = useCallback(
     (sec: number) => {
       const el = audioRef.current;
       if (!el || !Number.isFinite(el.duration) || el.duration <= 0) return;
-      el.currentTime = Math.min(el.duration, Math.max(0, sec));
+      const top = range ? Math.min(el.duration, hi) : el.duration;
+      const bottom = range ? lo : 0;
+      el.currentTime = Math.min(top, Math.max(bottom, sec));
       setCurrent(el.currentTime);
     },
-    [audioRef],
+    [audioRef, range, lo, hi],
   );
 
   const commitScrub = useCallback(() => {
@@ -173,17 +219,20 @@ export function AudioStimulus({
             screen-reader-operable without us reimplementing either. */}
         <input
           type="range"
-          min={0}
-          max={ready ? duration : 1}
+          min={lo}
+          max={ready ? hi : 1}
           step={0.1}
-          value={ready ? Math.min(shown, duration) : 0}
+          value={ready ? Math.min(Math.max(shown, lo), hi) : 0}
           disabled={!ready}
           onChange={(e) => setScrub(Number(e.target.value))}
           onPointerUp={commitScrub}
           onKeyUp={commitScrub}
           onBlur={commitScrub}
           aria-label="Seek recording"
-          aria-valuetext={`${clock(shown)} of ${clock(duration)}`}
+          // Elapsed within the stretch on offer, not within the whole file:
+          // "0:12 of 1:58" is what a candidate can act on, where "2:22 of 4:20"
+          // invites them to look for the other three minutes.
+          aria-valuetext={`${clock(shown - lo)} of ${clock(hi - lo)}`}
           className="h-1 min-w-0 flex-1 cursor-pointer accent-[hsl(var(--brand))] disabled:cursor-default"
         />
 
@@ -235,7 +284,18 @@ export function AudioStimulus({
         onContextMenu={(e) => e.preventDefault()}
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
         onDurationChange={(e) => setDuration(e.currentTarget.duration || 0)}
-        onTimeUpdate={(e) => setCurrent(e.currentTarget.currentTime)}
+        onTimeUpdate={(e) => {
+          const el = e.currentTarget;
+          setCurrent(el.currentTime);
+          // Stop where this set's questions stop. Without it the recording runs
+          // on into the group the candidate is not being asked about, which is
+          // both confusing and a spoiler for the set they have not opened yet.
+          if (range && !el.paused && el.currentTime >= hi) {
+            el.pause();
+            el.currentTime = hi;
+            onEnded?.();
+          }
+        }}
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
         onEnded={() => {

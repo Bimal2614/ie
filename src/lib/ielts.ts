@@ -218,7 +218,6 @@ export const SECTION_TYPES: Record<SectionKey, QuestionTypeKey[]> = {
   listening: [
     "multiple_choice_single",
     "multiple_choice_multiple",
-    "matching_information",
     "matching_features",
     "plan_map_diagram_labelling",
     "form_completion",
