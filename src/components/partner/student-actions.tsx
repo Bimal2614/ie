@@ -7,7 +7,7 @@ import { resetStudentPassword } from "@/app/actions/partner";
 import { PlanPicker } from "@/components/partner/plan-picker";
 import { useStudentCheckout } from "@/components/partner/use-student-checkout";
 import type { Quote } from "@/lib/partner-pricing";
-import { DEFAULT_CURRENCY, DEFAULT_OFFERED_PLAN, type PlanKey } from "@/lib/plans";
+import { DEFAULT_CURRENCY, PARTNER_DEFAULT_PLAN, type PlanKey } from "@/lib/plans";
 import { cn } from "@/lib/utils";
 
 /**
@@ -34,7 +34,7 @@ export function StudentActions({
   canAct: boolean;
 }) {
   const checkout = useStudentCheckout();
-  const [plan, setPlan] = useState<Exclude<PlanKey, "free">>(DEFAULT_OFFERED_PLAN);
+  const [plan, setPlan] = useState<Exclude<PlanKey, "free">>(PARTNER_DEFAULT_PLAN);
   const busy = checkout.phase === "opening" || checkout.phase === "confirming";
 
   const [password, setPassword] = useState("");

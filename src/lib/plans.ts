@@ -251,6 +251,24 @@ export type OfferedPlan = (typeof OFFERED_PLANS)[number];
 /** The tier a purchase or a manual grant lands on when none is named. */
 export const DEFAULT_OFFERED_PLAN: OfferedPlan = OFFERED_PLANS[0];
 
+/**
+ * The tier the PARTNER PANEL's plan pickers open on.
+ *
+ * Deliberately not `DEFAULT_OFFERED_PLAN`. A partner buys a seat for a student
+ * who is preparing over a term, so the quarter is the tier that fits — but the
+ * picker opened on Pro and classes were paying a month at a time without
+ * noticing there was a longer option, because a pre-selected <option> reads as
+ * a recommendation.
+ *
+ * Only a PRE-SELECTION. Every partner screen still offers the full list from
+ * `quotesFor`, and the checkout action re-validates the plan it is handed and
+ * computes the amount server-side — so this cannot charge anyone for a tier
+ * they did not pick, it only decides which one is showing when the screen
+ * loads. Kept separate from `DEFAULT_OFFERED_PLAN` so that changing what a
+ * class sees first never moves what an admin's manual grant lands on.
+ */
+export const PARTNER_DEFAULT_PLAN: OfferedPlan = "premium";
+
 export function isOfferedPlan(value: unknown): value is OfferedPlan {
   return (OFFERED_PLANS as readonly string[]).includes(String(value));
 }

@@ -11,7 +11,7 @@ import type { Page } from "@/lib/pagination";
 import { PlanPicker } from "@/components/partner/plan-picker";
 import type { Quote } from "@/lib/partner-pricing";
 import type { StudentFilter, StudentPageRequest, StudentSort } from "@/lib/partners";
-import { DEFAULT_CURRENCY, DEFAULT_OFFERED_PLAN, PLANS, type PlanKey } from "@/lib/plans";
+import { DEFAULT_CURRENCY, PARTNER_DEFAULT_PLAN, PLANS, type PlanKey } from "@/lib/plans";
 import { cn } from "@/lib/utils";
 
 /**
@@ -160,7 +160,7 @@ function StudentRow({
   canPay: boolean;
   checkout: ReturnType<typeof useStudentCheckout>;
 }) {
-  const [plan, setPlan] = useState<Exclude<PlanKey, "free">>(DEFAULT_OFFERED_PLAN);
+  const [plan, setPlan] = useState<Exclude<PlanKey, "free">>(PARTNER_DEFAULT_PLAN);
   const busy =
     checkout.activeStudentId === student.id &&
     (checkout.phase === "opening" || checkout.phase === "confirming");

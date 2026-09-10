@@ -10,7 +10,7 @@ import { cardClass } from "@/components/dashboard/ui";
 import { PlanPicker } from "@/components/partner/plan-picker";
 import { useStudentCheckout } from "@/components/partner/use-student-checkout";
 import type { Quote } from "@/lib/partner-pricing";
-import { DEFAULT_CURRENCY, DEFAULT_OFFERED_PLAN, type PlanKey } from "@/lib/plans";
+import { DEFAULT_CURRENCY, PARTNER_DEFAULT_PLAN, type PlanKey } from "@/lib/plans";
 import { TARGET_BANDS } from "@/lib/validation";
 import { cn } from "@/lib/utils";
 
@@ -41,7 +41,7 @@ export function EnrolForm({ quotes, canEnrol }: { quotes: Quote[]; canEnrol: boo
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<{ id: string; name: string } | null>(null);
-  const [plan, setPlan] = useState<Exclude<PlanKey, "free">>(DEFAULT_OFFERED_PLAN);
+  const [plan, setPlan] = useState<Exclude<PlanKey, "free">>(PARTNER_DEFAULT_PLAN);
   const checkout = useStudentCheckout();
 
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
