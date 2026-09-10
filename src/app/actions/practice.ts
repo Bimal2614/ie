@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { randomUUID } from "node:crypto";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
@@ -195,6 +196,25 @@ export async function submitPractice(
     // browser staying open to ask for it. No-op when nothing subjective was
     // answered.
     scheduleAttemptScoring(user.id, attemptId);
+
+    // Retire what this attempt just made wrong.
+    //
+    // The client router now REUSES a page it has already fetched for a short
+    // while (experimental.staleTimes in next.config.ts) — which is what makes
+    // stepping back out of the player instant, and would also have shown a
+    // candidate a dashboard and a history list that predate the attempt they
+    // just finished. Marking those paths from here is the counterpart: the
+    // cache is only allowed to be stale until something actually changes.
+    revalidatePath("/dashboard");
+    revalidatePath("/history");
+    revalidatePath("/results");
+    // THE PLAYER'S OWN ROUTE IS DELIBERATELY NOT LISTED. Revalidating the path
+    // the action was called from makes Next ship a re-render of it in this
+    // response — re-running the set fetch and the attempted-set query on every
+    // single submit, to correct one tick in the set palette that the player has
+    // already ticked in local state. The cost is that re-entering the same task
+    // type within the stale window can show that tick missing for up to 30s.
+    // Cosmetic, self-correcting, and much cheaper than the alternative.
   }
 
   return { setId, attemptId, results, correct, total, subjective, attempted };

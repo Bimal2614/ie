@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, type ReactNode } from "react";
 import Image from "next/image";
 import { Mic, Square, Loader2, Check } from "lucide-react";
-import { storeSpeakingRecording } from "@/app/actions/speaking";
+import { storeSpeakingRecording } from "@/lib/speech/store-recording";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";

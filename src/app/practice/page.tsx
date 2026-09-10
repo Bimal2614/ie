@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Headphones, BookOpen, PenLine, Mic, ArrowRight, Clock, Layers, Sparkles } from "lucide-react";
-import { count, eq } from "drizzle-orm";
-import { db } from "@/db";
-import { questions } from "@/db/schema";
+import { getTotalQuestionCount } from "@/lib/content-stats";
 import { SECTIONS, SECTION_ORDER, SECTION_TYPES, QUESTION_TYPES, type SectionKey } from "@/lib/ielts";
 import { cn } from "@/lib/utils";
 
@@ -31,8 +29,9 @@ const ACCENT_ICON_BG: Record<SectionKey, string> = {
 };
 
 export default async function PracticePage() {
-  // Count total questions
-  const [{ total: totalQuestions }] = await db.select({ total: count() }).from(questions).where(eq(questions.isActive, true));
+  // Cached — the library's size is the same for every account and changes only
+  // when an import runs. See src/lib/content-stats.ts.
+  const totalQuestions = await getTotalQuestionCount();
 
   // Count AI-scored types
   const aiScoredCount = Object.values(QUESTION_TYPES).filter((t) => t.aiEvaluated).length;

@@ -1,9 +1,10 @@
 "use server";
 
-import { and, asc, eq, count, sql } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { questionSets, questions, userResponses } from "@/db/schema";
 import { requireUser } from "@/lib/dal";
+import { getTypeTotals } from "@/lib/content-stats";
 import type { SectionKey, QuestionTypeKey } from "@/lib/ielts";
 import type { SetLayout } from "@/lib/question-content";
 import { mediaUrl, safeQuestionContent } from "@/lib/media-urls";
@@ -73,18 +74,13 @@ export async function getSetPaginated(
     eq(questionSets.isActive, true),
   );
 
-  // How many sets, and how many questions across them — one grouped pass rather
-  // than pulling every row back to count it.
-  const [totals] = await db
-    .select({
-      totalSets: sql<number>`count(distinct ${questionSets.id})`,
-      totalQuestions: count(questions.id),
-    })
-    .from(questionSets)
-    .leftJoin(questions, and(eq(questions.setId, questionSets.id), eq(questions.isActive, true)))
-    .where(matches);
+  // How many sets, and how many questions across them. Cached rather than
+  // recomputed per page turn: the answer describes the library, is identical
+  // for every candidate, and moves only when an import runs — so paging through
+  // twelve passages used to re-count all of them twelve times.
+  const totals = await getTypeTotals(section as SectionKey, questionType as QuestionTypeKey);
 
-  const totalSets = Number(totals?.totalSets ?? 0);
+  const totalSets = totals.totalSets;
   if (totalSets === 0) {
     return { set: null, totalSets: 0, currentSetIndex: 0, totalQuestions: 0, hasNextSet: false, hasPreviousSet: false };
   }
@@ -139,7 +135,7 @@ export async function getSetPaginated(
     .where(and(eq(questions.setId, currentSet.id), eq(questions.isActive, true)))
     .orderBy(questions.orderIndex);
 
-  const total = Number(totals?.totalQuestions ?? 0);
+  const total = totals.totalQuestions;
 
   return {
     set: {

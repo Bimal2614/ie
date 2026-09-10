@@ -38,17 +38,21 @@ const nextConfig: NextConfig = {
    * good recording.
    *
    * The tracer currently picks the binary up on its own (verified in the build's
-   * .nft.json for these routes). This is insurance, not a fix for a present bug:
+   * .nft.json for this route). This is insurance, not a fix for a present bug:
    * the failure it guards against is silent, production-only, and would be found
-   * by candidates rather than by a build. Scoped to the routes that actually
-   * record rather than "/**", because the binary counts against each function's
-   * size limit.
+   * by candidates rather than by a build.
+   *
+   * ONE ROUTE, and the list is short for a reason worth keeping. This used to
+   * name all four practice players, because the upload was a server action and
+   * an action is bundled into every route that renders a component importing it.
+   * The binary counts against each function's size, and size is cold-start time:
+   * a plain navigation into a READING task — which has no audio and never calls
+   * ffmpeg — was measured at 15.9 seconds against ~300 ms warm. Moving the
+   * upload to /api/practice/recording put the 80 MB where the work is. Adding a
+   * page route back to this list re-creates that.
    */
   outputFileTracingIncludes: {
-    "/practice/set/[id]": ["./node_modules/ffmpeg-static/**"],
-    "/practice/[section]/[type]": ["./node_modules/ffmpeg-static/**"],
-    "/section-practice/[id]": ["./node_modules/ffmpeg-static/**"],
-    "/mock-test/[id]": ["./node_modules/ffmpeg-static/**"],
+    "/api/practice/recording": ["./node_modules/ffmpeg-static/**"],
   },
   reactStrictMode: true,
   turbopack: {
@@ -64,14 +68,44 @@ const nextConfig: NextConfig = {
     ],
   },
   experimental: {
+    /**
+     * Let the client router REUSE a page it has already fetched.
+     *
+     * Next's default for a dynamic route is 0 seconds — nothing is ever reused,
+     * so opening a passage and stepping back out re-rendered
+     * /practice/reading on the server both ways, re-running the session lookup
+     * and the library counts to redraw a card grid that had not changed. Every
+     * click cost a full round trip, and with no loading boundary that round
+     * trip was time the candidate spent looking at the page they had just left.
+     *
+     * 30s is the window Next itself shipped as the default until 15, and it is
+     * chosen for how the practice pages actually behave: a section page holds
+     * nothing user-specific, and the one thing that does go stale — the ticks
+     * marking sets already attempted — is retired the moment it changes, by the
+     * revalidatePath calls in submitPractice. `static` is the ceiling for the
+     * pages prefetched with `prefetch`, whose content is the same for everyone.
+     */
+    staleTimes: {
+      dynamic: 30,
+      static: 300,
+    },
     serverActions: {
-      // A speaking answer is uploaded through a server action, and 2mb sat under
-      // the size of a long turn recorded at a higher browser bitrate — those
+      // KEPT AT 4mb THOUGH NOTHING NEEDS IT ANY MORE, deliberately.
+      //
+      // This was raised for the speaking upload, which was a server action: 2mb
+      // sat under a long turn recorded at a higher browser bitrate, and those
       // failed with a framework error rather than anything the recorder could
-      // explain. 4mb is the most that is worth allowing: the serverless platform
-      // refuses a request body over 4.5 MB before the action is reached, so a
-      // larger number here would only move the failure, not remove it. Kept in
-      // step with MAX_UPLOAD_BYTES in src/app/actions/speaking.ts.
+      // explain. That upload is a route handler now (/api/practice/recording,
+      // where the ceiling is MAX_UPLOAD_BYTES) and `bodySizeLimit` does not
+      // apply to route handlers, so the largest thing left going through an
+      // action is a set of answers — capped at 256 KB by MAX_ANSWER_BYTES in
+      // src/app/actions/practice.ts, comfortably inside even the 1mb default.
+      //
+      // Lowering it is therefore safe-looking and is still a separate change
+      // from this one: it would tighten a bound that nothing is currently
+      // pushing against, and if some action does send more than the default the
+      // failure is a framework error in production rather than a build error
+      // here. Not worth bundling into a performance fix.
       bodySizeLimit: "4mb",
       ...(appHost ? { allowedOrigins: [appHost] } : {}),
     },

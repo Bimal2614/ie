@@ -34,13 +34,22 @@ import { toPlanKey, type PlanKey } from "@/lib/plans";
  * refreshed. The cache is a hint about what to PAINT and is never trusted for
  * access — see src/lib/auth-cache.ts.
  *
- * IT RE-PROBES ON EVERY NAVIGATION, and that is not belt and braces. `login`,
- * `signup` and `logout` each finish with a server-side `redirect()`, which the
- * App Router serves as a CLIENT navigation: no reload, so this provider is
- * never remounted and its state outlives the account switch that just happened.
- * Probing once at mount is what left a premium session's "Your current plan"
- * sitting on the pricing card after signing back in on a free account, until a
- * manual refresh. One `no-store` JSON round trip per navigation ends it.
+ * IT RE-PROBES WHEN THE ANSWER CAN HAVE CHANGED, which means arriving from an
+ * auth route. `login`, `signup` and `logout` each finish with a server-side
+ * `redirect()`, which the App Router serves as a CLIENT navigation: no reload,
+ * so this provider is never remounted and its state outlives the account switch
+ * that just happened. Probing only at mount is what left a premium session's
+ * "Your current plan" sitting on the pricing card after signing back in on a
+ * free account, until a manual refresh.
+ *
+ * IT USED TO PROBE ON EVERY NAVIGATION instead, and that was a request and a
+ * session lookup on each of them — for an answer that cannot move while someone
+ * clicks around the app they are already signed into. Nothing was gained by
+ * asking: every one of those pages is server-rendered behind `requireUser()`,
+ * so a session that has been revoked or has expired is caught by the render
+ * itself and redirected, before this probe would have had anything to say.
+ * `AUTH_TRANSITION_ROUTES` below is therefore the whole list of places an
+ * account switch can come from; a session that ENDS is somebody else's job.
  *
  * `authenticated` is `null` only when nothing is known yet — treat it as
  * "unknown" and render the guest state.
@@ -65,6 +74,19 @@ const AuthContext = createContext<AuthContextValue>({
   plan: null,
   refresh: () => {},
 });
+
+/**
+ * The only pages a client navigation can carry a DIFFERENT account away from.
+ *
+ * Each one ends in a server `redirect()` that the router serves without a
+ * reload, so leaving one is the moment — and the only moment — at which this
+ * provider's state can be about somebody else. `/verify-email` is here because
+ * it signs the account in on arrival.
+ */
+const AUTH_TRANSITION_ROUTES = ["/login", "/signup", "/logout", "/verify-email"];
+
+const isAuthTransition = (path: string | null): boolean =>
+  path !== null && AUTH_TRANSITION_ROUTES.some((r) => path === r || path.startsWith(`${r}/`));
 
 /**
  * A layout effect runs before paint, which is what removes the flash — but it
@@ -120,11 +142,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (cached) setState({ authenticated: cached.authenticated, plan: cached.plan });
   }, []);
 
-  // 2. The real answer — on mount, and again after every client navigation,
-  //    which is the only signal we get that a server action may have changed
-  //    who is signed in. See the note at the top of the file.
+  /** Where the last render was, so a navigation can be told what it left. */
+  const previousPath = useRef<string | null>(null);
+
+  // 2. The real answer — on mount, and again on any navigation that came from
+  //    an auth route, which is the only way a server action can have changed who
+  //    is signed in without remounting this. See the note at the top of the file.
   useEffect(() => {
-    refresh();
+    const cameFromAuth = isAuthTransition(previousPath.current);
+    const first = previousPath.current === null;
+    previousPath.current = pathname;
+    // Landing ON an auth route matters too: /logout signs the session out from
+    // under a page this provider is still painting as signed in.
+    if (first || cameFromAuth || isAuthTransition(pathname)) refresh();
   }, [pathname, refresh]);
 
   // 3. The cache changed. In another tab that arrives as `storage`; in this one

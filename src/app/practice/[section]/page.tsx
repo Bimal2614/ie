@@ -2,9 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, Clock, Layers, BookOpen, Headphones, PenLine, Mic, Sparkles } from "lucide-react";
-import { and, eq, countDistinct } from "drizzle-orm";
-import { db } from "@/db";
-import { questionSets, questions } from "@/db/schema";
+import { getSectionTypeCounts } from "@/lib/content-stats";
 import { SECTIONS, SECTION_ORDER, SECTION_TYPES, SET_NOUN, QUESTION_TYPES, type SectionKey, type QuestionTypeKey } from "@/lib/ielts";
 import { cn } from "@/lib/utils";
 
@@ -53,25 +51,12 @@ export default async function SectionPracticePage({ params }: { params: Promise<
   // Practice UNITS per type — a "unit" is one set (a recording / passage), the
   // thing the player pages through (1/1, 2/2…), not each numbered sub-question
   // under it. Counting sub-questions overstated the library: a single recording
-  // with three MCs read as "3 questions" but is one exercise. The inner join
-  // still requires at least one active question, so empty shells aren't counted.
-  const typeCounts = await db
-    .select({
-      questionType: questionSets.questionType,
-      n: countDistinct(questionSets.id),
-    })
-    .from(questionSets)
-    .innerJoin(
-      questions,
-      and(eq(questions.setId, questionSets.id), eq(questions.isActive, true)),
-    )
-    .where(and(eq(questionSets.section, secKey), eq(questionSets.isActive, true)))
-    .groupBy(questionSets.questionType);
-
-  const countByType = new Map<string, number>(
-    typeCounts.map((r) => [r.questionType, Number(r.n)]),
-  );
-  const totalAvailable = [...countByType.values()].reduce((a, b) => a + b, 0);
+  // with three MCs read as "3 questions" but is one exercise.
+  //
+  // Cached, not queried per visit: the number is the same for every account and
+  // moves only when an import runs. See src/lib/content-stats.ts.
+  const countByType = await getSectionTypeCounts(secKey);
+  const totalAvailable = Object.values(countByType).reduce((a, b) => a + b, 0);
   // The player's own word for one set: Recording / Passage / Task / Topic.
   const unit = SET_NOUN[secKey].toLowerCase();
   const plural = (n: number) => `${n.toLocaleString()} ${unit}${n === 1 ? "" : "s"}`;
@@ -107,7 +92,7 @@ export default async function SectionPracticePage({ params }: { params: Promise<
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {sectionTypes.map((typeKey) => {
           const meta = QUESTION_TYPES[typeKey];
-          const qCount = countByType.get(typeKey) ?? 0;
+          const qCount = countByType[typeKey] ?? 0;
           const disabled = qCount === 0;
 
           return disabled ? (
