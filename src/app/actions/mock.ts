@@ -10,6 +10,8 @@ import {
   mockTestResults,
 } from "@/db/schema";
 import { requireUser } from "@/lib/dal";
+import type { AuthenticatedUser } from "@/lib/session";
+import type { PlanBlock } from "@/lib/plans";
 import {
   QUESTION_TYPES,
   isObjective,
@@ -167,25 +169,44 @@ export async function getMockCatalogue(
  * you are 20 minutes into would hand back the time the exam has already spent —
  * which is precisely the thing the timeline exists to prevent.
  */
-export async function startMock(formData: FormData): Promise<void> {
-  const user = await requireUser();
+/**
+ * Either the sitting to open, or why it could not be opened.
+ *
+ * The website's `startMock` turns each of these into a `redirect()`; the API
+ * turns them into status codes. Neither decision belongs in the part that
+ * actually opens a paper, which is why that part returns a value.
+ */
+export type StartMockResult =
+  | { ok: true; sessionId: string; resumed: boolean }
+  | { ok: false; reason: "not_found" | "no_modules" }
+  | { ok: false; reason: "blocked"; block: PlanBlock };
+
+/**
+ * Open a sitting of one mock test, or resume the one already in progress.
+ *
+ * RESUMING IS NOT AN ERROR. A candidate with an unfinished paper who presses
+ * Start again means "let me back in" — the alternative, a second live sitting of
+ * the same test, would split their answers across two rows and score neither
+ * properly. `resumed` tells the caller which happened so the app can say so.
+ */
+export async function startMockFor(
+  user: AuthenticatedUser,
+  mockTestId: string,
+): Promise<StartMockResult> {
   await guardGeneral(user.id);
 
-  // Full papers are a paid feature. A form action cannot hand a message back,
-  // so a blocked candidate goes to the pricing page with the reason in the URL
-  // rather than being bounced silently to a catalogue they cannot use.
+  // Full papers are a paid feature.
   const gate = await checkMockAccess(user);
-  if (gate) redirect(`/pricing?blocked=mock&plan=${gate.requiredPlan}`);
+  if (gate) return { ok: false, reason: "blocked", block: gate };
 
-  const mockTestId = String(formData.get("mockTestId") ?? "");
-  if (!mockTestId) redirect("/mock-tests");
+  if (!mockTestId) return { ok: false, reason: "not_found" };
 
   const [test] = await db
     .select({ id: mockTests.id, module: mockTests.module })
     .from(mockTests)
     .where(and(eq(mockTests.id, mockTestId), eq(mockTests.isActive, true)))
     .limit(1);
-  if (!test) redirect("/mock-tests");
+  if (!test) return { ok: false, reason: "not_found" };
 
   const [open] = await db
     .select({ id: mockTestSessions.id })
@@ -198,10 +219,10 @@ export async function startMock(formData: FormData): Promise<void> {
       ),
     )
     .limit(1);
-  if (open) redirect(`/mock-test/${open.id}`);
+  if (open) return { ok: true, sessionId: open.id, resumed: true };
 
   const order = await mockModuleOrder(test.id);
-  if (order.length === 0) redirect("/mock-tests");
+  if (order.length === 0) return { ok: false, reason: "no_modules" };
 
   const startedAt = new Date();
   const timeline = buildTimeline(order, startedAt);
@@ -223,26 +244,55 @@ export async function startMock(formData: FormData): Promise<void> {
     })
     .returning({ id: mockTestSessions.id });
 
-  redirect(`/mock-test/${session.id}`);
+  return { ok: true, sessionId: session.id, resumed: false };
 }
 
-/** Abandon an unfinished sitting so the paper can be started fresh. */
-export async function abandonMock(formData: FormData): Promise<void> {
+export async function startMock(formData: FormData): Promise<void> {
   const user = await requireUser();
-  const sessionId = String(formData.get("sessionId") ?? "");
-  if (!sessionId) redirect("/mock-tests");
+  const result = await startMockFor(user, String(formData.get("mockTestId") ?? ""));
 
-  await db
+  if (!result.ok) {
+    // A form action cannot hand a message back, so a blocked candidate goes to
+    // the pricing page with the reason in the URL rather than being bounced
+    // silently to a catalogue they cannot use.
+    if (result.reason === "blocked") {
+      redirect(`/pricing?blocked=mock&plan=${result.block.requiredPlan}`);
+    }
+    redirect("/mock-tests");
+  }
+
+  redirect(`/mock-test/${result.sessionId}`);
+}
+
+/**
+ * Abandon an unfinished sitting so the paper can be started fresh.
+ *
+ * Scoped to the caller AND to `in_progress`, so this can neither touch somebody
+ * else's sitting nor reopen-then-abandon a paper that has already been marked.
+ * Returns whether a row actually changed — an app that asks twice should be
+ * told the second one was a no-op, not shown an error.
+ */
+export async function abandonMockFor(userId: string, sessionId: string): Promise<boolean> {
+  if (!sessionId) return false;
+
+  const rows = await db
     .update(mockTestSessions)
     .set({ status: "abandoned", completedAt: new Date() })
     .where(
       and(
         eq(mockTestSessions.id, sessionId),
-        eq(mockTestSessions.userId, user.id),
+        eq(mockTestSessions.userId, userId),
         eq(mockTestSessions.status, "in_progress"),
       ),
-    );
+    )
+    .returning({ id: mockTestSessions.id });
 
+  return rows.length > 0;
+}
+
+export async function abandonMock(formData: FormData): Promise<void> {
+  const user = await requireUser();
+  await abandonMockFor(user.id, String(formData.get("sessionId") ?? ""));
   redirect("/mock-tests");
 }
 

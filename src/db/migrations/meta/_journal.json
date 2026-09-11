@@ -169,6 +169,20 @@
       "when": 1789111442984,
       "tag": "0023_transactions_ledger",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1789129190924,
+      "tag": "0024_aromatic_jamie_braddock",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1789130267615,
+      "tag": "0025_tiresome_george_stacy",
+      "breakpoints": true
     }
   ]
 }

@@ -358,6 +358,21 @@ export async function getAttemptDetail(attemptId: string): Promise<AttemptDetail
 }
 
 /**
+ * The same read, for a caller that has already authenticated its own way.
+ *
+ * The user id is the SCOPE of the query, not a hint — `loadAttemptFor` filters
+ * on it, so an attempt belonging to somebody else comes back as null and the
+ * route answers 404. That is the whole ownership check, and it is why this
+ * takes a proven id rather than trusting one from a request.
+ */
+export async function getAttemptDetailFor(
+  userId: string,
+  attemptId: string,
+): Promise<AttemptDetail | null> {
+  return loadAttemptFor(userId, attemptId, true);
+}
+
+/**
  * The body of both attempt reads.
  *
  * `withPassage` is the only difference between them, and it is a column in the
@@ -371,6 +386,15 @@ async function loadAttempt(
   withPassage: boolean,
 ): Promise<AttemptDetail | null> {
   const user = await requireUser();
+  return loadAttemptFor(user.id, attemptId, withPassage);
+}
+
+async function loadAttemptFor(
+  userId: string,
+  attemptId: string,
+  withPassage: boolean,
+): Promise<AttemptDetail | null> {
+  const user = { id: userId };
 
   /**
    * THE SET IS FETCHED ONCE, NOT JOINED PER ROW.
@@ -648,6 +672,26 @@ export async function getSetAttempts(setId: string, limit = 12): Promise<Attempt
     // Most recent first — the panel opens on what you just did.
     { newestFirst: true, limit: panelLimit(limit) },
   );
+}
+
+/**
+ * A candidate's most recent attempts across EVERYTHING.
+ *
+ * The app's history tab, which has no set and no task type on screen to narrow
+ * by — it opens on "what have I been doing". The web has no equivalent because
+ * its history is browsed a day at a time from a calendar; a phone wants the
+ * reverse-chronological list first and the filters second.
+ *
+ * Takes a proven user id: it is the query's scope, not a hint.
+ */
+export async function getRecentAttemptsFor(
+  userId: string,
+  limit = 20,
+): Promise<AttemptRow[]> {
+  return rollUpAttempts(eq(userResponses.userId, userId), {
+    newestFirst: true,
+    limit: panelLimit(limit),
+  });
 }
 
 /**

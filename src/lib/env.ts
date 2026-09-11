@@ -57,6 +57,17 @@ const EnvSchema = z.object({
   //     when unset. Redirect URI = `${APP_URL}/api/auth/google/callback`. ---
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
+  /**
+   * The mobile app's OAuth client IDs — one per platform, because Google issues
+   * a separate client for each and stamps it as the `aud` of the id_token the
+   * native SDK returns. Verification checks `aud` against this list, so a client
+   * id that is not here cannot sign anyone in: that check is the entire reason
+   * an id_token from some OTHER app's Google project can't be replayed at us.
+   *
+   * Optional — unset simply means that platform cannot use Google sign-in yet.
+   */
+  GOOGLE_IOS_CLIENT_ID: z.string().optional(),
+  GOOGLE_ANDROID_CLIENT_ID: z.string().optional(),
 
   // --- Rate limiting (all configurable; sensible production defaults) ---
   // General API/action limits per authenticated user.
@@ -130,6 +141,40 @@ const EnvSchema = z.object({
    * the gateway — which surfaces here as a `RazorpayApiError` naming the
    * currency, logged in full by the checkout action.
    */
+  /* --- In-app purchase (Apple App Store + Google Play) ---
+   *
+   * The stores are MANDATORY for selling a subscription inside the app: Apple
+   * and Google both require their own purchase flow for digital goods, so
+   * Razorpay Checkout cannot be used there however well it works on the web.
+   *
+   * Each tier needs a product created in BOTH consoles, and the ids are set
+   * here rather than derived from the tier name — the consoles impose their own
+   * naming, and a product id is not something a deploy may silently invent. */
+  APPLE_IAP_PRODUCT_PRO: z.string().optional(),
+  APPLE_IAP_PRODUCT_PREMIUM: z.string().optional(),
+  GOOGLE_IAP_PRODUCT_PRO: z.string().optional(),
+  GOOGLE_IAP_PRODUCT_PREMIUM: z.string().optional(),
+
+  /* Apple App Store Server API — used to VERIFY a purchase and to read renewals.
+   * Auth is an ES256 JWT we sign ourselves, so all four parts are needed. */
+  APPLE_ISSUER_ID: z.string().optional(),
+  APPLE_KEY_ID: z.string().optional(),
+  /** The .p8 private key, PEM, newlines as 
+. Never logged. */
+  APPLE_PRIVATE_KEY: z.string().optional(),
+  /** The app's bundle id — also the `aud` a signed transaction must carry. */
+  APPLE_BUNDLE_ID: z.string().optional(),
+  /** "Production" or "Sandbox". A sandbox receipt fails against production. */
+  APPLE_ENVIRONMENT: z.enum(["Production", "Sandbox"]).default("Production"),
+
+  /* Google Play Developer API — a service account with the "View financial
+   * data" permission, granted in the Play Console. */
+  GOOGLE_PLAY_PACKAGE_NAME: z.string().optional(),
+  GOOGLE_PLAY_SERVICE_ACCOUNT_EMAIL: z.string().optional(),
+  /** The service account's PEM private key, newlines as 
+. Never logged. */
+  GOOGLE_PLAY_PRIVATE_KEY: z.string().optional(),
+
   RAZORPAY_PLAN_PREMIUM_USD: z.string().optional(),
   RAZORPAY_PLAN_PRO_USD: z.string().optional(),
   /**
@@ -197,6 +242,18 @@ export const env = EnvSchema.parse({
   RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET,
   RAZORPAY_PLAN_PREMIUM: process.env.RAZORPAY_PLAN_PREMIUM,
   RAZORPAY_PLAN_PRO: process.env.RAZORPAY_PLAN_PRO,
+  APPLE_IAP_PRODUCT_PRO: process.env.APPLE_IAP_PRODUCT_PRO,
+  APPLE_IAP_PRODUCT_PREMIUM: process.env.APPLE_IAP_PRODUCT_PREMIUM,
+  GOOGLE_IAP_PRODUCT_PRO: process.env.GOOGLE_IAP_PRODUCT_PRO,
+  GOOGLE_IAP_PRODUCT_PREMIUM: process.env.GOOGLE_IAP_PRODUCT_PREMIUM,
+  APPLE_ISSUER_ID: process.env.APPLE_ISSUER_ID,
+  APPLE_KEY_ID: process.env.APPLE_KEY_ID,
+  APPLE_PRIVATE_KEY: process.env.APPLE_PRIVATE_KEY,
+  APPLE_BUNDLE_ID: process.env.APPLE_BUNDLE_ID,
+  APPLE_ENVIRONMENT: process.env.APPLE_ENVIRONMENT,
+  GOOGLE_PLAY_PACKAGE_NAME: process.env.GOOGLE_PLAY_PACKAGE_NAME,
+  GOOGLE_PLAY_SERVICE_ACCOUNT_EMAIL: process.env.GOOGLE_PLAY_SERVICE_ACCOUNT_EMAIL,
+  GOOGLE_PLAY_PRIVATE_KEY: process.env.GOOGLE_PLAY_PRIVATE_KEY,
   RAZORPAY_PLAN_PREMIUM_USD: process.env.RAZORPAY_PLAN_PREMIUM_USD,
   RAZORPAY_PLAN_PRO_USD: process.env.RAZORPAY_PLAN_PRO_USD,
   RAZORPAY_ALLOW_PLAN_MISMATCH: process.env.RAZORPAY_ALLOW_PLAN_MISMATCH,
@@ -341,14 +398,83 @@ export function isRazorpayWebhookConfigured(): boolean {
   return Boolean(env.RAZORPAY_WEBHOOK_SECRET);
 }
 
-/** True when Google OAuth is configured. */
+/** True when Google OAuth is configured (the website's redirect flow). */
 export function isGoogleConfigured(): boolean {
   return Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
+}
+
+/**
+ * Every OAuth client id an id_token may legitimately be addressed to.
+ *
+ * The web client is included because Google hands the ANDROID app a token
+ * audienced to the *web* client when one is configured as the `serverClientId`
+ * — which is the recommended setup, and the single most common reason a
+ * correctly-built Android sign-in is rejected as "wrong audience".
+ */
+export function googleAudiences(): string[] {
+  return [env.GOOGLE_CLIENT_ID, env.GOOGLE_IOS_CLIENT_ID, env.GOOGLE_ANDROID_CLIENT_ID].filter(
+    (id): id is string => Boolean(id),
+  );
+}
+
+/** True when at least one client id is configured to verify an app id_token against. */
+export function isGoogleNativeConfigured(): boolean {
+  return googleAudiences().length > 0;
 }
 
 /** True when S3 credentials + bucket + region are present. */
 export function isS3Configured(): boolean {
   return Boolean(
     env.AWS_ACCESS_KEY_ID && env.AWS_SECRET_ACCESS_KEY && env.S3_BUCKET_NAME && env.AWS_REGION,
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * In-app purchase
+ * ------------------------------------------------------------------ */
+
+/** The App Store product id that sells a tier, or undefined if unset. */
+export function appleProductFor(plan: "pro" | "premium"): string | undefined {
+  return plan === "premium" ? env.APPLE_IAP_PRODUCT_PREMIUM : env.APPLE_IAP_PRODUCT_PRO;
+}
+
+/** The Play product id that sells a tier, or undefined if unset. */
+export function googleProductFor(plan: "pro" | "premium"): string | undefined {
+  return plan === "premium" ? env.GOOGLE_IAP_PRODUCT_PREMIUM : env.GOOGLE_IAP_PRODUCT_PRO;
+}
+
+/**
+ * Which tier a store product id sells — the reverse lookup a receipt needs.
+ *
+ * Returns null for an id we do not sell, and the caller must treat that as a
+ * refusal rather than a default: granting a tier for an unrecognised product
+ * would make any purchase in any of our products worth Premium.
+ */
+export function planForStoreProduct(
+  store: "apple" | "google",
+  productId: string,
+): "pro" | "premium" | null {
+  const map = store === "apple"
+    ? { pro: env.APPLE_IAP_PRODUCT_PRO, premium: env.APPLE_IAP_PRODUCT_PREMIUM }
+    : { pro: env.GOOGLE_IAP_PRODUCT_PRO, premium: env.GOOGLE_IAP_PRODUCT_PREMIUM };
+
+  if (map.premium && productId === map.premium) return "premium";
+  if (map.pro && productId === map.pro) return "pro";
+  return null;
+}
+
+/** True when App Store purchases can actually be verified. */
+export function isAppleIapConfigured(): boolean {
+  return Boolean(
+    env.APPLE_ISSUER_ID && env.APPLE_KEY_ID && env.APPLE_PRIVATE_KEY && env.APPLE_BUNDLE_ID,
+  );
+}
+
+/** True when Play purchases can actually be verified. */
+export function isGoogleIapConfigured(): boolean {
+  return Boolean(
+    env.GOOGLE_PLAY_PACKAGE_NAME &&
+      env.GOOGLE_PLAY_SERVICE_ACCOUNT_EMAIL &&
+      env.GOOGLE_PLAY_PRIVATE_KEY,
   );
 }

@@ -1,49 +1,21 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
-import { db } from "@/db";
-import { users, auditLog } from "@/db/schema";
 import { signupSchema, loginSchema, type AuthFormState } from "@/lib/validation";
-import { hashPassword, verifyPassword, fakeVerify } from "@/lib/security/password";
-import { rateLimit, clearRateLimit } from "@/lib/security/rate-limit";
 import { homeFor, safeNext } from "@/lib/auth-routes";
-import {
-  createSession,
-  destroySession,
-  getRequestContext,
-} from "@/lib/session";
+import { createSession, destroySession, getRequestContext } from "@/lib/session";
 import { getCurrentUser } from "@/lib/dal";
-import { isUniqueViolation } from "@/lib/db-errors";
-import { sendEmail } from "@/lib/email/mailer";
-import { welcomeTemplate } from "@/lib/email/templates";
-import { env } from "@/lib/env";
+import { audit, authenticate, registerAccount } from "@/lib/auth/core";
 
-// Identical message for "no such user" and "wrong password" — no enumeration.
-const INVALID_CREDENTIALS = "Incorrect email or password.";
-
-const LOCKOUT_THRESHOLD = 5; // failed attempts before the account locks
-const LOCKOUT_BASE_MS = 15 * 60 * 1000; // 15 min, doubling each further failure
-const LOCKOUT_CAP_MS = 24 * 60 * 60 * 1000; // capped at 24h
-
-function lockoutMs(attempts: number): number {
-  const over = Math.max(0, attempts - LOCKOUT_THRESHOLD);
-  return Math.min(LOCKOUT_BASE_MS * 2 ** over, LOCKOUT_CAP_MS);
-}
-
-async function audit(
-  userId: string | null,
-  event: string,
-  ip: string | null,
-  userAgent: string | null,
-  metadata?: Record<string, unknown>,
-): Promise<void> {
-  try {
-    await db.insert(auditLog).values({ userId, event, ipAddress: ip, userAgent, metadata });
-  } catch {
-    // Never let audit logging break the auth flow.
-  }
-}
+/**
+ * The web's entry points into authentication.
+ *
+ * The POLICY — throttling, the lockout ladder, the anti-enumeration timing, the
+ * audit trail — lives in `src/lib/auth/core.ts`, shared with the JSON API that
+ * the mobile app calls. What is left here is the part that is genuinely
+ * browser-shaped: reading a FormData, setting a session COOKIE, and redirecting
+ * to the page they were heading for.
+ */
 
 /* ------------------------------------------------------------------ *
  * Sign up
@@ -62,49 +34,22 @@ export async function signup(
   if (!parsed.success) {
     return { fieldErrors: parsed.error.flatten().fieldErrors };
   }
-  const { name, email, phone, password, targetModule } = parsed.data;
-  const { ip, userAgent } = await getRequestContext();
 
-  // Throttle account creation per network.
-  const limit = await rateLimit(`signup:ip:${ip ?? "unknown"}`, 10, 60 * 60);
-  if (!limit.allowed) {
-    return { error: "Too many sign-ups from this network. Please try again later." };
-  }
+  const origin = await getRequestContext();
+  const result = await registerAccount(parsed.data, origin);
 
-  const passwordHash = await hashPassword(password);
-
-  let userId: string;
-  try {
-    const [created] = await db
-      .insert(users)
-      .values({ name, email, emailNormalized: email, phone, passwordHash, targetModule })
-      .returning({ id: users.id });
-    userId = created.id;
-  } catch (err) {
-    if (isUniqueViolation(err)) {
-      return { fieldErrors: { email: ["An account with this email already exists."] } };
+  if (!result.ok) {
+    // The one failure that belongs on a field rather than above the form.
+    if (result.code === "email_taken") {
+      return { fieldErrors: { email: [result.message] } };
     }
-    throw err;
+    return { error: result.message };
   }
 
-  await createSession(userId); // rotates in a fresh session token
-  await audit(userId, "signup", ip, userAgent);
+  await createSession(result.userId); // rotates in a fresh session token
   const destination = safeNext(formData.get("next"));
 
-  // Send the welcome email (best-effort — must never block signup, and the try
-  // MUST NOT wrap the redirect below, which throws NEXT_REDIRECT).
-  //
-  // No verification step for now: addresses are taken at face value and nothing
-  // in the app gates on `emailVerified`. To turn verification back on, issue an
-  // `email_verify` token here and send `verifyEmailTemplate` instead; the token
-  // type and the /verify-email route are both still in place.
-  try {
-    const t = welcomeTemplate(name, `${env.APP_URL ?? "https://ieltsvega.com"}/dashboard`);
-    await sendEmail({ to: email, subject: t.subject, html: t.html, text: t.text });
-  } catch {
-    // A mail outage must not fail account creation.
-  }
-
+  // MUST be outside any try/catch — `redirect()` works by throwing NEXT_REDIRECT.
   redirect(destination);
 }
 
@@ -122,69 +67,18 @@ export async function login(
   if (!parsed.success) {
     return { fieldErrors: parsed.error.flatten().fieldErrors };
   }
-  const { email, password } = parsed.data;
-  const { ip, userAgent } = await getRequestContext();
 
-  // Two independent limiters: per-network and per-account.
-  const ipLimit = await rateLimit(`login:ip:${ip ?? "unknown"}`, 30, 15 * 60);
-  const emailLimit = await rateLimit(`login:email:${email}`, 8, 15 * 60);
-  if (!ipLimit.allowed || !emailLimit.allowed) {
-    const wait = Math.max(ipLimit.retryAfterSec, emailLimit.retryAfterSec);
-    return { error: `Too many attempts. Please try again in about ${Math.ceil(wait / 60)} minute(s).` };
-  }
+  const origin = await getRequestContext();
+  const result = await authenticate(parsed.data.email, parsed.data.password, origin);
+  if (!result.ok) return { error: result.message };
 
-  const [user] = await db
-    .select()
-    .from(users)
-    .where(eq(users.emailNormalized, email))
-    .limit(1);
+  await createSession(result.userId);
 
-  // Unknown account: still spend bcrypt time, then give the generic error.
-  if (!user) {
-    await fakeVerify(password);
-    await audit(null, "login.fail.unknown_user", ip, userAgent, { email });
-    return { error: INVALID_CREDENTIALS };
-  }
-
-  // OAuth-only account (Google, no password). Spend bcrypt time, then nudge to
-  // the right method without confirming the account exists to a stranger.
-  if (!user.passwordHash) {
-    await fakeVerify(password);
-    return { error: "This account uses Google sign-in. Please continue with Google." };
-  }
-
-  // Honor an active lockout.
-  if (user.lockedUntil && user.lockedUntil > new Date()) {
-    await audit(user.id, "login.blocked.locked", ip, userAgent);
-    return { error: "Account temporarily locked due to failed attempts. Try again later." };
-  }
-
-  const ok = await verifyPassword(password, user.passwordHash);
-  if (!ok) {
-    const attempts = user.failedLoginAttempts + 1;
-    const lockedUntil =
-      attempts >= LOCKOUT_THRESHOLD ? new Date(Date.now() + lockoutMs(attempts)) : null;
-    await db
-      .update(users)
-      .set({ failedLoginAttempts: attempts, lockedUntil })
-      .where(eq(users.id, user.id));
-    await audit(user.id, "login.fail", ip, userAgent, { attempts });
-    return { error: INVALID_CREDENTIALS };
-  }
-
-  // Success: reset counters, bind last-login, rotate session, clear throttle.
-  await db
-    .update(users)
-    .set({ failedLoginAttempts: 0, lockedUntil: null, lastLoginAt: new Date(), lastLoginIp: ip })
-    .where(eq(users.id, user.id));
-  await clearRateLimit(`login:email:${email}`);
-  await createSession(user.id);
-  await audit(user.id, "login.success", ip, userAgent);
   // Back to whatever they were trying to reach — the pricing card they pressed
   // Subscribe on, or the protected page the proxy bounced. `safeNext` is what
   // stops that being an open redirect; see src/lib/auth-routes.ts. With nothing
   // asked for, the fallback follows the role: a partner's home is its panel.
-  redirect(safeNext(formData.get("next"), homeFor(user.role)));
+  redirect(safeNext(formData.get("next"), homeFor(result.role)));
 }
 
 /* ------------------------------------------------------------------ *
@@ -194,6 +88,6 @@ export async function logout(): Promise<void> {
   const user = await getCurrentUser();
   const { ip, userAgent } = await getRequestContext();
   await destroySession();
-  if (user) await audit(user.id, "logout", ip, userAgent);
+  if (user) await audit(user.id, "logout", { ip, userAgent });
   redirect("/login");
 }

@@ -182,18 +182,25 @@ export function wavDurationSeconds(input: Buffer | Uint8Array): number {
 }
 
 export async function toWav16kMono(input: Buffer | Uint8Array): Promise<TranscodeResult> {
-  if (!ffmpegPath) return { ok: false, reason: "ffmpeg binary unavailable" };
-
   // ALREADY THE TARGET FORMAT — nothing to do. Some clients record straight to
   // 16 kHz mono PCM, and re-encoding those is a process spawn and a core's worth
   // of work to produce the bytes we were handed. This is the check the format
   // predicate above was written for; it reads the `fmt ` chunk rather than
   // trusting the RIFF magic, so a 44.1 kHz stereo file does not sail through.
+  //
+  // CHECKED BEFORE `ffmpegPath`, deliberately. The mobile app records 16 kHz
+  // mono PCM natively on both platforms, so this branch is its NORMAL path —
+  // and behind the binary check it would have been refused as "ffmpeg
+  // unavailable" on any function the 80 MB binary is not traced into, for a
+  // conversion it never needed. A browser cannot produce this format (it gives
+  // WebM/Opus or AAC), which is why the ordering never mattered before.
   if (isWav16kMono(input)) {
     const wav = Buffer.from(input);
     if (wav.length <= WAV_HEADER_BYTES) return { ok: false, reason: "no audio decoded" };
     return { ok: true, wav };
   }
+
+  if (!ffmpegPath) return { ok: false, reason: "ffmpeg binary unavailable" };
 
   // One core, many recordings: wait for a slot rather than piling processes onto
   // it. See MAX_CONCURRENT_FFMPEG.

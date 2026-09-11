@@ -12,6 +12,7 @@ import { gradeMarks } from "@/lib/grading";
 import { guardGeneral } from "@/lib/security/rate-guard";
 import { checkPracticeAccess, type PlanBlock } from "@/lib/security/plan-guard";
 import type { SectionKey } from "@/lib/plans";
+import type { AuthenticatedUser } from "@/lib/session";
 
 /**
  * The ONE way a set of practice answers is graded and recorded.
@@ -76,12 +77,30 @@ export type SetSubmissionResult = PracticeResult;
  */
 export type PracticeSubmission = PracticeResult | PlanBlock;
 
+/**
+ * The website's entry point: resolve the session, then grade.
+ *
+ * `submitPracticeFor` takes an already-authenticated user so the JSON API can
+ * call it with a bearer-borne session. Everything that matters — the plan gate,
+ * the payload guards, the marks arithmetic, the background scoring hand-off —
+ * lives in the shared function, because a second copy of the grading loop is
+ * exactly the divergence the comment at the top of this file is about.
+ */
 export async function submitPractice(
   setId: string,
   answers: AnswerMap,
   timeSpentSec?: number,
 ): Promise<PracticeSubmission> {
   const user = await requireUser();
+  return submitPracticeFor(user, setId, answers, timeSpentSec);
+}
+
+export async function submitPracticeFor(
+  user: AuthenticatedUser,
+  setId: string,
+  answers: AnswerMap,
+  timeSpentSec?: number,
+): Promise<PracticeSubmission> {
   await guardGeneral(user.id);
 
   const keys = Object.keys(answers ?? {});

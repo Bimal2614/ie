@@ -259,6 +259,16 @@ export const users = pgTable(
  * absolute expiry.
  * ------------------------------------------------------------------ */
 
+/**
+ * Which kind of client a session belongs to.
+ *
+ * Sessions are single-occupancy PER CLIENT, not per account (see
+ * `createSession`). Before the mobile app existed the two were the same thing;
+ * now they are not, and collapsing them would mean opening the app logs you out
+ * of the website and vice versa — forever, because each one signs back in.
+ */
+export const sessionClient = pgEnum("session_client", ["web", "ios", "android"]);
+
 export const sessions = pgTable(
   "sessions",
   {
@@ -267,6 +277,13 @@ export const sessions = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     tokenHash: text().notNull(), // sha256(rawToken) hex
+
+    /**
+     * `web` for the browser (cookie-borne), `ios`/`android` for the app
+     * (bearer-borne). Defaults to `web` so every row that predates the API —
+     * and every future cookie login — is correct without a backfill.
+     */
+    client: sessionClient().notNull().default("web"),
 
     ipAddress: text(),
     userAgent: text(),
@@ -348,7 +365,24 @@ export const authTokens = pgTable(
  * one of these rows to the subscriptions API the first time anyone pressed
  * cancel, and the cancel would fail against an id that never existed.
  */
-export const paymentProvider = pgEnum("payment_provider", ["manual", "razorpay", "partner"]);
+/**
+ * Who took the money.
+ *
+ * `apple` and `google` are the app stores. They are not "Razorpay with a
+ * different name": the store owns the payment instrument, the currency, the
+ * renewal and the refund, and it takes its cut before we see anything — so a
+ * row from one of them records what the store reports, and `priceCents` is what
+ * the candidate was charged in their storefront rather than a figure from
+ * src/lib/plans.ts. Every gate reads entitlement, not provider, so a plan bought
+ * on a phone and one bought on the website are worth exactly the same.
+ */
+export const paymentProvider = pgEnum("payment_provider", [
+  "manual",
+  "razorpay",
+  "partner",
+  "apple",
+  "google",
+]);
 
 export const subscriptionStatus = pgEnum("subscription_status", [
   /** Paid and inside its period. */

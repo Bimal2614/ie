@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { questionSets } from "@/db/schema";
-import { getCurrentUser } from "@/lib/dal";
+import { apiUser } from "@/lib/api/auth";
 import { streamProtectedAudio } from "@/lib/protected-media";
 import { guardMedia, RateLimitError } from "@/lib/security/rate-guard";
 
@@ -31,8 +31,20 @@ export const maxDuration = 60;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/**
+ * Authenticated by SESSION COOKIE OR BEARER TOKEN.
+ *
+ * `apiUser` tries the `Authorization: Bearer` header first and falls back to the
+ * cookie, so the website's `<audio src="...">` and the mobile app's player hit
+ * the SAME url with the same gating. The alternative was a parallel set of
+ * /api/v1/media routes duplicating every ownership and rate-limit rule in here,
+ * which is a second place for those rules to be wrong.
+ *
+ * Still no CSRF exposure: these are GET reads that change nothing, and a bearer
+ * token is never attached automatically by a browser.
+ */
 export async function GET(req: Request, { params }: { params: Promise<{ setId: string }> }) {
-  const user = await getCurrentUser();
+  const user = await apiUser(req);
   if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
   try {

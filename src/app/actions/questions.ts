@@ -67,7 +67,23 @@ export async function getSetPaginated(
   setPage: number = 1,
 ): Promise<PaginatedSetResult> {
   await requireUser();
+  return getSetPaginatedFor(section, questionType, setPage);
+}
 
+/**
+ * The same fetch, for a caller that has ALREADY authenticated.
+ *
+ * The content here is gated by having a session at all, not by who the session
+ * belongs to — which is why the action above discards the user it loads. The
+ * JSON API authenticates through its own guard and calls this, rather than
+ * going through a `requireUser()` that would answer a mobile client with a
+ * redirect to an HTML login page.
+ */
+export async function getSetPaginatedFor(
+  section: string,
+  questionType: string,
+  setPage: number = 1,
+): Promise<PaginatedSetResult> {
   const matches = and(
     eq(questionSets.section, section as SectionKey),
     eq(questionSets.questionType, questionType as QuestionTypeKey),

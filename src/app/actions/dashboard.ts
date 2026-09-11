@@ -97,9 +97,21 @@ export type DashboardStats = {
   } | null;
 };
 
+/**
+ * The web's entry point: resolve the session, then read the stats.
+ *
+ * Split from `getDashboardStatsFor` because `requireUser()` answers a failed
+ * check with `redirect("/login")`, which is right for a page and wrong for the
+ * JSON API — a redirect to an HTML login form is not something a mobile client
+ * can do anything with. The API calls the `For` variant with a user it has
+ * already authenticated its own way. One query, two front doors.
+ */
 export async function getDashboardStats(): Promise<DashboardStats> {
   const user = await requireUser();
-  const userId = user.id;
+  return getDashboardStatsFor(user.id);
+}
+
+export async function getDashboardStatsFor(userId: string): Promise<DashboardStats> {
 
   // Date boundaries
   const todayStart = new Date();

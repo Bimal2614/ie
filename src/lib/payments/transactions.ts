@@ -1,5 +1,10 @@
 import "server-only";
 
+import type { paymentProvider } from "@/db/schema";
+
+/** Every provider the ledger can record. */
+type PaymentProvider = (typeof paymentProvider.enumValues)[number];
+
 import { and, asc, desc, eq, gte, inArray, lt, or, sql } from "drizzle-orm";
 
 import { db } from "@/db";
@@ -51,7 +56,12 @@ export type ChargeInput = {
   /** Minor units, POSITIVE. The sign is applied here, from the direction. */
   amountCents: number;
   currency: string;
-  provider: "razorpay" | "partner" | "manual";
+  /**
+   * Who took the money — including the app stores, which take their cut before
+   * we ever see it, so `amountCents` here is what the candidate was charged in
+   * their storefront rather than what landed in our account.
+   */
+  provider: PaymentProvider;
 
   userId?: string | null;
   partnerId?: string | null;
@@ -251,7 +261,12 @@ export type AdminTransactionRow = {
   createdAt: Date;
   amountCents: number;
   currency: string;
-  provider: "manual" | "razorpay" | "partner";
+  /**
+   * Derived from the database enum rather than spelled out, so adding a
+   * provider (the app stores did exactly this) widens every reader at once
+   * instead of failing here first.
+   */
+  provider: PaymentProvider;
   providerPaymentId: string | null;
   note: string | null;
   userId: string | null;

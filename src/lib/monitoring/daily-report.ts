@@ -1,5 +1,7 @@
 import "server-only";
 
+import type { paymentProvider } from "@/db/schema";
+
 import { sql } from "drizzle-orm";
 import { db } from "@/db";
 import { env } from "@/lib/env";
@@ -117,7 +119,12 @@ export type Purchase = {
   kind: PurchaseKind;
   amountCents: number | null;
   currency: string;
-  provider: "manual" | "razorpay" | "partner" | null;
+  /**
+   * Derived from the database enum rather than spelled out, so adding a
+   * provider (the app stores did exactly this) widens every reader at once
+   * instead of failing here first.
+   */
+  provider: (typeof paymentProvider.enumValues)[number] | null;
   /**
    * An admin put this here — a support credit, a comp, a bank transfer
    * reconciled by hand. Listed with the rest, because it is still a plan
