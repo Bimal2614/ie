@@ -1,9 +1,10 @@
 import "server-only";
 
-import { and, count, desc, eq, gte, inArray, isNotNull, ne, not, or, sql } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNotNull, not, or, sql } from "drizzle-orm";
 
 import { db } from "@/db";
-import { coupons, partnerPayments, partners, subscriptionLogs, users, type Coupon } from "@/db/schema";
+import { coupons, partnerPayments, partners, users, type Coupon } from "@/db/schema";
+import { revenueThisAndLastMonth } from "@/lib/payments/transactions";
 import {
   LIKE_ESCAPE,
   likeTerm,
@@ -249,16 +250,6 @@ export type AdminDashboard = {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** Events that represent money arriving. `payment_failed` also carries an
- *  amount, and counting it would book revenue for a card that was declined. */
-const EARNING_EVENTS = [
-  "plan_granted",
-  "renewed",
-  "upgraded",
-  "downgraded",
-  "payment_succeeded",
-] as const;
-
 function monthStart(d: Date): Date {
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
 }
@@ -283,30 +274,14 @@ export async function adminDashboard(now: Date = new Date()): Promise<AdminDashb
   const iso = (d: Date) => d.toISOString();
 
   const [revenue, planCounts, partnerCounts, studentCounts, actionCounts] = await Promise.all([
-    db
-      .select({
-        currency: subscriptionLogs.currency,
-        thisMonth: sql<number>`coalesce(sum(${subscriptionLogs.amountCents}) filter (
-          where ${subscriptionLogs.createdAt} >= ${iso(thisMonthStart)}::timestamptz
-        ), 0)::int`,
-        lastMonth: sql<number>`coalesce(sum(${subscriptionLogs.amountCents}) filter (
-          where ${subscriptionLogs.createdAt} < ${iso(thisMonthStart)}::timestamptz
-        ), 0)::int`,
-      })
-      .from(subscriptionLogs)
-      .where(
-        and(
-          isNotNull(subscriptionLogs.amountCents),
-          gte(subscriptionLogs.createdAt, lastMonthStart),
-          // An admin grant is a comp, not income.
-          ne(subscriptionLogs.actor, "admin"),
-          // `inArray`, not `= any(...)`: drizzle expands an array parameter into
-          // separate placeholders, which inside `any()` becomes a row
-          // constructor rather than an array and the query is rejected.
-          inArray(subscriptionLogs.event, [...EARNING_EVENTS]),
-        ),
-      )
-      .groupBy(subscriptionLogs.currency),
+    /*
+     * Revenue comes from `transactions` and nowhere else — one row there means
+     * money moved, so there is no event list to keep in step with the daily
+     * report's, and no comp rule to reapply. This used to read
+     * `subscription_logs` through five event types plus `actor <> 'admin'`,
+     * and partner income was missing from it entirely.
+     */
+    revenueThisAndLastMonth(thisMonthStart, lastMonthStart, now),
     db
       .select({
         onAPlan: count(),
@@ -355,16 +330,7 @@ export async function adminDashboard(now: Date = new Date()): Promise<AdminDashb
       .from(partnerPayments),
   ]);
 
-  const thisMonth: Money = {};
-  const lastMonth: Money = {};
-  for (const r of revenue) {
-    // `subscription_logs.currency` is nullable — a row written before a payment
-    // gateway existed has none. Those rows carry no amount either, so they are
-    // already filtered out; this only stops a NULL becoming the string "null".
-    const currency = r.currency ?? "INR";
-    if (r.thisMonth) thisMonth[currency] = (thisMonth[currency] ?? 0) + r.thisMonth;
-    if (r.lastMonth) lastMonth[currency] = (lastMonth[currency] ?? 0) + r.lastMonth;
-  }
+  const { thisMonth, lastMonth } = revenue;
 
   return {
     money: {

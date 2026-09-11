@@ -162,6 +162,13 @@
       "when": 1788853911942,
       "tag": "0022_swift_deadpool",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1789111442984,
+      "tag": "0023_transactions_ledger",
+      "breakpoints": true
     }
   ]
 }

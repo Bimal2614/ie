@@ -3,6 +3,7 @@ import "server-only";
 import { sql } from "drizzle-orm";
 import { db } from "@/db";
 import { env } from "@/lib/env";
+import { ledgerBetween } from "@/lib/payments/transactions";
 import { PLAN_KEYS, PLANS, toPlanKey, type PlanKey } from "@/lib/plans";
 import type { subscriptionStatus } from "@/db/schema";
 
@@ -440,10 +441,18 @@ export async function buildDailyReport(day: IstDay): Promise<DailyReport> {
     comped: r.actor === "admin",
   }));
 
+  /*
+   * THE DAY'S MONEY, from `transactions` and nothing else.
+   *
+   * It is deliberately NOT summed from `purchases` above. That list is the
+   * day's ENTITLEMENT story — it includes comps, which move no money, and one
+   * Razorpay sale can appear in it more than once because all three deliveries
+   * of a charge write their own `subscription_logs` row. The ledger has one row
+   * per charge by construction, so this is a bare sum with no rule attached.
+   */
+  const ledger = await ledgerBetween(from, to);
   const revenue = totalByCurrency(
-    purchases
-      .filter((p) => !p.comped && p.amountCents)
-      .map((p) => ({ currency: p.currency, cents: p.amountCents ?? 0 })),
+    ledger.map((t) => ({ currency: t.currency, cents: t.amountCents })),
   );
 
   // Plan counts come back only for tiers that have somebody on them; the mail

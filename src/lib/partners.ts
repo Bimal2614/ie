@@ -27,6 +27,7 @@ import {
 } from "@/lib/pagination";
 import { requirePartner, type PartnerUser } from "@/lib/dal";
 import type { PartnerRate } from "@/lib/partner-pricing";
+import { revenueByPartner } from "@/lib/payments/transactions";
 import { effectivePlan, toPlanKey, type PlanKey } from "@/lib/plans";
 import { hashPassword } from "@/lib/security/password";
 import { destroyAllSessions } from "@/lib/session";
@@ -847,15 +848,14 @@ export async function listPartnersForAdmin(
       .from(users)
       .where(and(inArray(users.partnerId, ids), eq(users.role, "user")))
       .groupBy(users.partnerId),
-    db
-      .select({
-        partnerId: partnerPayments.partnerId,
-        currency: partnerPayments.currency,
-        cents: sql<number>`sum(${partnerPayments.amountCents})::int`,
-      })
-      .from(partnerPayments)
-      .where(and(inArray(partnerPayments.partnerId, ids), eq(partnerPayments.status, "paid")))
-      .groupBy(partnerPayments.partnerId, partnerPayments.currency),
+    /*
+     * What the class has actually paid us, from the ledger rather than from
+     * `partner_payments`. The order table would answer this correctly today,
+     * but only because its `status = 'paid'` filter reimplements the rule the
+     * ledger makes structural — and it cannot see a bank transfer an admin
+     * reconciled by hand, which is real income from this same class.
+     */
+    revenueByPartner(ids),
   ]);
 
   const loginBy = new Map<string, PartnerLogin>();
@@ -865,12 +865,7 @@ export async function listPartnersForAdmin(
     loginBy.set(l.partnerId, l);
   }
   const countBy = new Map(counts.filter((c) => c.partnerId).map((c) => [c.partnerId!, c]));
-  const revenueBy = new Map<string, Record<string, number>>();
-  for (const r of revenue) {
-    const bucket = revenueBy.get(r.partnerId) ?? {};
-    bucket[r.currency] = (bucket[r.currency] ?? 0) + r.cents;
-    revenueBy.set(r.partnerId, bucket);
-  }
+  const revenueBy = revenue;
 
   const mapped = rows.map(({ partner, coupon }) => ({
     ...partner,

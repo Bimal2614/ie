@@ -8,6 +8,7 @@ import { env } from "@/lib/env";
 import { quoteFor, type PartnerRate } from "@/lib/partner-pricing";
 import { PLANS, type BillingCurrency, type OfferedPlan, type PlanKey } from "@/lib/plans";
 import { createOrder, fetchOrder } from "@/lib/payments/razorpay";
+import { recordCharge } from "@/lib/payments/transactions";
 import { toE164 } from "@/lib/phone";
 import { grantPlan, periodEndFor } from "@/lib/subscriptions";
 import type { Partner } from "@/db/schema";
@@ -291,6 +292,35 @@ export async function settleStudentOrder(input: {
     });
     subscriptionId = sub.id;
     entitledUntil = sub.currentPeriodEnd;
+
+    /*
+     * The money, once the term is actually granted.
+     *
+     * Keyed on the ORDER, which is one-time and already unique in
+     * `partner_payments` — so the browser callback and `order.paid` racing each
+     * other produce one row, exactly as they produce one term.
+     */
+    await recordCharge({
+      idempotencyKey: `razorpay:order:${row.razorpayOrderId}`,
+      amountCents: row.amountCents,
+      currency: row.currency,
+      provider: "partner",
+      userId: studentUserId,
+      partnerId: row.partnerId,
+      subscriptionId: sub.id,
+      partnerPaymentId: row.id,
+      providerPaymentId: input.paymentId ?? row.razorpayPaymentId ?? null,
+      /*
+       * The same shape the direct charge writes: the tier, the window it
+       * bought, and the order it settled. `stillRunning` is what separates a
+       * renewal stacked onto an existing term from a fresh one, and that is
+       * exactly the distinction somebody reconciling this row will ask about.
+       */
+      note:
+        `${PLANS[plan].label} seat · ${stillRunning ? "extended to" : "through"} ` +
+        `${sub.currentPeriodEnd ? sub.currentPeriodEnd.toISOString().slice(0, 10) : "open"}` +
+        ` · order ${row.razorpayOrderId}`,
+    });
   } catch (error) {
     // Release the claim, exactly as the webhook route releases its own on a
     // failure: a claim that outlives the failure suppresses the retry that was

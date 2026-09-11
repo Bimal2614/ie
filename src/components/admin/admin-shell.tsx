@@ -11,6 +11,7 @@ import {
   Menu,
   Receipt,
   Ticket,
+  Wallet,
   X,
 } from "lucide-react";
 
@@ -33,6 +34,7 @@ const LINKS = [
   { href: "/admin/coupons", label: "Coupons", icon: Ticket },
   { href: "/admin/students", label: "Students", icon: BadgeCheck },
   { href: "/admin/payments", label: "Payments", icon: Receipt },
+  { href: "/admin/transactions", label: "Transactions", icon: Wallet },
 ] as const;
 
 export function AdminShell({

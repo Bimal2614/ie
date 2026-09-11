@@ -11,7 +11,9 @@ import {
   jsonb,
   index,
   uniqueIndex,
+  check,
 } from "drizzle-orm/pg-core";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 
 import type { SectionQuestions } from "../lib/question-content";
 
@@ -658,6 +660,141 @@ export const partnerPayments = pgTable(
     index("partner_payments_partner_created_idx").on(t.partnerId, t.createdAt),
     /** "What has been paid for this student?" — the row's own history. */
     index("partner_payments_student_idx").on(t.studentUserId),
+  ],
+);
+
+/* ------------------------------------------------------------------ *
+ * Transactions — the money ledger
+ *
+ * THE INVARIANT: one row means money moved. Because of that, `sum(amount_cents)
+ * group by currency` IS revenue — no event allowlist, no comp exclusion, no
+ * special cases. Every rule below exists to keep that sentence true.
+ *
+ * Nothing else in this file answers "what did we earn". `subscription_logs` is
+ * STATE (it also carries the amount of a card that was DECLINED, and the amount
+ * of a comp); `partner_payments` is the ORDER record, written before the money
+ * moves; `subscriptions` is ENTITLEMENT. Reading money out of any of them means
+ * reconstructing a policy at every call site, which is how the admin dashboard
+ * and the daily report came to use two different event lists for one figure.
+ *
+ * WHAT NEVER GETS A ROW: a declined card (stays `payment_failed` in
+ * `subscription_logs`), an admin comp (nothing moved), an abandoned checkout
+ * (stays `created` in `partner_payments`), a grant, a revoke or an expiry.
+ * An admin-recorded BANK TRANSFER is the exception that proves the rule — it is
+ * real income, recorded by an admin, and it belongs here.
+ * ------------------------------------------------------------------ */
+
+/** Accounting's own letters: C = money in, D = money out. */
+export const transactionDirection = pgEnum("transaction_direction", ["C", "D"]);
+
+export const transactions = pgTable(
+  "transactions",
+  {
+    id: uuid().defaultRandom().primaryKey(),
+
+    direction: transactionDirection().notNull(),
+    /**
+     * Minor units (paise/cents), SIGNED: positive for `C`, negative for `D`.
+     *
+     * The sign is what lets every revenue read be a bare `sum()` rather than a
+     * sum with a policy attached to it. Never a float — money must not round.
+     */
+    amountCents: integer().notNull(),
+    /** "INR" / "USD". NEVER summed across — every read groups by this. */
+    currency: text().notNull(),
+
+    /**
+     * THE DEDUPE, and the reason a triple-reported charge is impossible here
+     * rather than merely guarded against.
+     *
+     * A single direct purchase reaches us THREE times — the signed browser
+     * callback when Checkout closes, `subscription.activated`, and
+     * `subscription.charged` — and all three call `activateFromRazorpay`.
+     *
+     * The key is therefore the BILLING CYCLE, not the delivery: only
+     * `subscription.charged` reliably carries a payment id, so keying on the
+     * payment id would leave the other two colliding on nothing. All three
+     * re-read Razorpay's own copy of the subscription, so they agree on
+     * `current_start` — and next quarter's charge names a different window, and
+     * is correctly recorded as the separate sale it is.
+     *   direct    "razorpay:sub:sub_xxx:2026-09-11T00:00:00.000Z"
+     *   partner   "razorpay:order:order_xxx"
+     *   manual    "manual:<uuid>"
+     */
+    idempotencyKey: text().notNull(),
+
+    /*
+     * WHO. Every column in this group is nullable, each for its own reason: the
+     * FKs that SET NULL have to be, and the rest are genuinely absent on one of
+     * the two sales paths.
+     */
+
+    /** The candidate this money bought a term for. */
+    userId: uuid().references(() => users.id, { onDelete: "set null" }),
+    /**
+     * The paying institution; NULL on every direct sale. RESTRICT, matching
+     * `partner_payments`: a class that has paid us cannot be deleted, only
+     * suspended.
+     */
+    partnerId: uuid().references(() => partners.id, { onDelete: "restrict" }),
+    /**
+     * The admin who reconciled a payment by hand. NOT a comp flag — an admin
+     * recording a bank transfer is recording real income.
+     */
+    recordedByUserId: uuid().references(() => users.id, { onDelete: "set null" }),
+
+    provider: paymentProvider().notNull(),
+    /**
+     * Razorpay's `pay_…`, for support looking up one disputed charge.
+     *
+     * NULL more often than it looks on direct sales: only `subscription.charged`
+     * carries one, so when the browser callback wins the race the row is written
+     * without it. That costs nothing — the row is keyed on the cycle.
+     */
+    providerPaymentId: text(),
+
+    subscriptionId: uuid().references(() => subscriptions.id, { onDelete: "set null" }),
+    partnerPaymentId: uuid().references(() => partnerPayments.id, { onDelete: "set null" }),
+
+    /**
+     * A refund points at the charge it undoes.
+     *
+     * THERE IS NO REFUND FEATURE. Nothing writes a `D` row today. The column
+     * exists so that adding one later is a writer rather than a migration of
+     * every figure that reads this table.
+     */
+    reversesId: uuid().references((): AnyPgColumn => transactions.id, { onDelete: "set null" }),
+
+    /** On a manual row this is the ENTIRE audit trail — "NEFT ref 88213". */
+    note: text(),
+
+    /**
+     * Gateway time is not kept separately, so this is what days and months
+     * bucket by. Deliberate, and safe only because there is no backfill: every
+     * row here is written within seconds of the money actually moving.
+     */
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    /** The guard is the database, not a read-then-write check: the callback and
+     *  the webhook genuinely arrive at the same instant. */
+    uniqueIndex("transactions_idempotency_uq").on(t.idempotencyKey),
+
+    /** Every revenue read: one currency's rows over a date range. */
+    index("transactions_currency_created_idx").on(t.currency, t.createdAt),
+    index("transactions_user_created_idx").on(t.userId, t.createdAt),
+    index("transactions_partner_created_idx").on(t.partnerId, t.createdAt),
+    /** Support: "what happened to pay_xyz?" */
+    index("transactions_provider_payment_idx").on(t.providerPaymentId),
+
+    /** The letter and the sign cannot disagree. */
+    check(
+      "transactions_sign_ck",
+      sql`(${t.direction} = 'C' AND ${t.amountCents} > 0)
+       OR (${t.direction} = 'D' AND ${t.amountCents} < 0)`,
+    ),
+    /** A hand-entered row with no explanation is unauditable. */
+    check("transactions_manual_note_ck", sql`${t.provider} <> 'manual' OR ${t.note} IS NOT NULL`),
   ],
 );
 

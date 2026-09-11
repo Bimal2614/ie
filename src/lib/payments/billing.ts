@@ -25,6 +25,7 @@ import {
   type Cadence,
   type RazorpaySubscription,
 } from "@/lib/payments/razorpay";
+import { recordCharge } from "@/lib/payments/transactions";
 import { toE164 } from "@/lib/phone";
 import {
   currentSubscription,
@@ -457,6 +458,27 @@ export async function activateFromRazorpay(input: {
    */
   const currency = currencyOf(sub);
   const amountCents = input.amountCents ?? priceFor(owner.plan, currency);
+  /*
+   * THE LEDGER KEY, and the reason one sale is one row.
+   *
+   * This function runs THREE times for every charge — the signed browser
+   * callback, `subscription.activated` and `subscription.charged` — and only
+   * the last carries a payment id, so the key is the billing CYCLE instead.
+   * All three read Razorpay's own copy of the subscription, so all three
+   * compute the same `start`; next quarter's charge names a different window
+   * and is recorded as the separate sale it is.
+   */
+  const chargeKey = `razorpay:sub:${sub.id}:${start.toISOString()}`;
+  /*
+   * WHAT THIS ROW IS, in words, for whoever opens /admin/transactions months
+   * from now. The tier, the window it bought, and which charge of the mandate
+   * it was — everything needed to match a line on a bank statement to a
+   * candidate without opening Razorpay.
+   */
+  const day = (d: Date) => d.toISOString().slice(0, 10);
+  const chargeNote =
+    `${PLANS[owner.plan].label} subscription · ${day(start)} → ${end ? day(end) : "open"}` +
+    (sub.total_count ? ` · charge ${sub.paid_count} of ${sub.total_count}` : "");
   const metadata = {
     razorpaySubscriptionId: sub.id,
     razorpayPlanId: sub.plan_id,
@@ -482,12 +504,23 @@ export async function activateFromRazorpay(input: {
       note: `Razorpay charge ${sub.paid_count} of ${sub.total_count}`,
       metadata,
     });
+
+    await recordCharge({
+      idempotencyKey: chargeKey,
+      amountCents,
+      currency,
+      provider: "razorpay",
+      userId: owner.userId,
+      subscriptionId: existing.id,
+      providerPaymentId: input.paymentId ?? null,
+      note: chargeNote,
+    });
     return { ok: true, plan: toPlanKey(existing.plan) as Exclude<PlanKey, "free">, entitledUntil: end };
   }
 
   await cancelSupersededMandates(owner.userId, sub.id);
 
-  await grantPlan({
+  const granted = await grantPlan({
     userId: owner.userId,
     plan: owner.plan,
     startsAt: start,
@@ -500,6 +533,17 @@ export async function activateFromRazorpay(input: {
     providerPlanId: sub.plan_id,
     note: "Razorpay subscription activated",
     metadata,
+  });
+
+  await recordCharge({
+    idempotencyKey: chargeKey,
+    amountCents,
+    currency,
+    provider: "razorpay",
+    userId: owner.userId,
+    subscriptionId: granted.id,
+    providerPaymentId: input.paymentId ?? null,
+    note: chargeNote,
   });
 
   return { ok: true, plan: owner.plan, entitledUntil: end };
