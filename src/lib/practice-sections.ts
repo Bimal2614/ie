@@ -322,6 +322,105 @@ function toOpenSection(row: SectionRow): OpenSection {
   };
 }
 
+/* ------------------------------------------------------------------ *
+ * Step 5 — the parts either side of the one being sat
+ *
+ * A candidate working through a test wants the next part of THAT test, not a
+ * trip back to the library to find it. This is the same ordering the picker
+ * dialog shows — exam order, Listening 1-4 then Reading 1-3 then Writing then
+ * Speaking — so "Next" always lands where the book's contents page says it
+ * should.
+ * ------------------------------------------------------------------ */
+
+export type NeighbourPart = {
+  id: string;
+  sectionType: SectionKey;
+  partNumber: number | null;
+};
+
+export type SectionNeighbours = {
+  prev: NeighbourPart | null;
+  next: NeighbourPart | null;
+  /** 1-based place in the test, for "Part 5 of 12". 0 when there is no test. */
+  position: number;
+  total: number;
+};
+
+const NO_NEIGHBOURS: SectionNeighbours = { prev: null, next: null, position: 0, total: 0 };
+
+/**
+ * Where this part sits in its own book+test, and what comes either side.
+ *
+ * Scoped to one book and one test number, never to the book alone: "Cambridge
+ * 19 Test 1 Speaking Part 3" is the end of a paper, and running on into Test 2
+ * would be a different sitting presented as the next page of this one.
+ */
+export async function sectionNeighbours(
+  section: OpenSection,
+  fallbackModule: ModuleKind,
+): Promise<SectionNeighbours> {
+  // Original (non-book) material is a one-off part with no paper around it.
+  if (!section.book) return NO_NEIGHBOURS;
+
+  /**
+   * The paper in front of the candidate picks the module, not their profile.
+   *
+   * Sitting an Academic Reading part has to continue into Academic Writing even
+   * for a General Training account that opened it deliberately from the browser's
+   * module toggle. Listening and Speaking are the same paper in both modules and
+   * are stored once as "both", saying nothing either way — those fall back to the
+   * account's own module, which is what the browser listed them under.
+   */
+  const paperModule: ModuleKind =
+    section.module === "academic" || section.module === "general"
+      ? section.module
+      : fallbackModule;
+
+  const rows = await db
+    .select({
+      id: practiceSections.id,
+      sectionType: practiceSections.sectionType,
+      partNumber: practiceSections.partNumber,
+    })
+    .from(practiceSections)
+    .where(
+      and(
+        scopeFilter(null, paperModule),
+        eq(practiceSections.book, section.book),
+        section.testNumber === null
+          ? sql`${practiceSections.testNumber} is null`
+          : eq(practiceSections.testNumber, section.testNumber),
+      ),
+    )
+    // Sorted again below; this only fixes the order ties fall back on, so the
+    // sequence matches listParts() and therefore the picker dialog.
+    .orderBy(asc(practiceSections.sectionType), asc(practiceSections.partNumber));
+
+  const ordered = rows
+    .map((r) => ({
+      id: r.id,
+      sectionType: r.sectionType as SectionKey,
+      partNumber: r.partNumber,
+    }))
+    .sort(
+      (a, b) =>
+        SECTION_ORDER.indexOf(a.sectionType) - SECTION_ORDER.indexOf(b.sectionType) ||
+        (a.partNumber ?? 0) - (b.partNumber ?? 0),
+    );
+
+  const at = ordered.findIndex((r) => r.id === section.id);
+  // The module narrowed the list past the part being sat — impossible given the
+  // rule above, but a missing index must not silently report "first part".
+  if (at === -1) return NO_NEIGHBOURS;
+
+  return {
+    prev: ordered[at - 1] ?? null,
+    next: ordered[at + 1] ?? null,
+    position: at + 1,
+    total: ordered.length,
+  };
+}
+
 /**
  * Strip the answer key before the section crosses to the client.
  *

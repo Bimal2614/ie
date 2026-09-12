@@ -5,7 +5,7 @@ import { pageMeta } from "@/lib/seo";
 
 export const metadata = pageMeta({
   title: "Refund Policy for IELTSVega Subscriptions",
-  description: "When a refund is available on an IELTSVega subscription, how to request one, how long it takes, and what happens to your practice history afterwards.",
+  description: "A full refund within 7 days of your first payment if you have barely used the plan: what qualifies, what does not, and how to request one.",
   path: "/refunds",
 });
 

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/dal";
-import { openSection, toClientSection } from "@/lib/practice-sections";
+import { openSection, sectionNeighbours, toClientSection } from "@/lib/practice-sections";
 import { SECTIONS, type SectionKey } from "@/lib/ielts";
 import { SectionPlayer } from "@/components/practice/section-player";
 
@@ -32,13 +32,21 @@ export default async function PracticeSectionPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireUser();
+  const user = await requireUser();
 
   const { id } = await params;
   if (!UUID.test(id)) notFound();
 
   const section = await openSection(id);
   if (!section) notFound();
+
+  // The rest of this book and test, so the player can offer the next part
+  // without a trip back to the library. Listening and Speaking are stored once
+  // for both modules, so the profile decides which paper those continue into.
+  const neighbours = await sectionNeighbours(
+    section,
+    user.targetModule === "general" ? "general" : "academic",
+  );
 
   const sec = SECTIONS[section.sectionType as SectionKey];
   // The answer key stays on the server; the client gets the redacted copy.
@@ -58,9 +66,14 @@ export default async function PracticeSectionPage({
     // two panes need the full height to scroll independently.
     <div className="fixed inset-0 z-50 bg-paper">
       <SectionPlayer
+        // Moving to the next part re-renders this same component in place, and
+        // without a key React would keep the last part's answers, flags and
+        // score card mounted against the new paper.
+        key={section.id}
         section={view}
         paperTitle={paperTitle || section.title}
         exitHref="/section-practice"
+        neighbours={neighbours}
       />
     </div>
   );
