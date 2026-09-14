@@ -7,7 +7,31 @@
  * `import type { BlogPost } from "@/lib/blog"` keeps working.
  */
 
-export type BlogSection = { heading?: string; paragraphs?: string[]; bullets?: string[] };
+/**
+ * A simple data table inside an article.
+ *
+ * Fee, band-conversion and comparison content is inherently tabular, and the
+ * pages that outrank us on those queries lead with a scannable table while we
+ * led with prose bullets. `rows` is rendered as-is; keep each row the same
+ * length as `headers` or the table will render ragged.
+ */
+export type BlogTable = { caption?: string; headers: string[]; rows: string[][] };
+
+/**
+ * An in-body internal link. Bullets and paragraphs are plain strings, so before
+ * this existed the only way to point a reader at a related page was to name it
+ * in prose and hope they searched for it — which passes no link equity at all.
+ * Use descriptive `label` text containing the target query, never "click here".
+ */
+export type BlogLink = { label: string; href: string };
+
+export type BlogSection = {
+  heading?: string;
+  paragraphs?: string[];
+  bullets?: string[];
+  table?: BlogTable;
+  links?: BlogLink[];
+};
 
 export type BlogPost = {
   slug: string;

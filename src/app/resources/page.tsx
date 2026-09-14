@@ -182,8 +182,21 @@ export default function ResourcesPage() {
           </span>
         </Link>
 
-        {/* Internal links into the blog — flows crawl equity to articles. */}
-        <BlogStrip title="Latest from the blog" eyebrow="Guides & tips" />
+        {/* Internal links into the blog — flows crawl equity to articles.
+         * Deliberately a different set from the homepage so the two strongest
+         * marketing pages spread equity across more articles instead of both
+         * pushing the same three. These are the skill-guide pages sitting in
+         * the position 11–20 band, plus the online-vs-paper comparison, which
+         * had 270 impressions and no internal links at all. */}
+        <BlogStrip
+          title="Latest from the blog"
+          eyebrow="Guides & tips"
+          slugs={[
+            "ielts-speaking-parts-questions-answers",
+            "ielts-speaking-band-descriptors",
+            "ielts-online-vs-paper-based",
+          ]}
+        />
       </main>
 
       <LandingFooter />

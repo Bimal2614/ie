@@ -118,18 +118,119 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
     ],
     sections: [
       { paragraphs: ["IELTS is not cheap, and the headline fee is only part of what people actually end up paying. Below is what the test costs in 2026, what drives the differences between countries, and the secondary fees that catch candidates out.", "One caveat before any number: fees are set locally, change without much notice, and move with exchange rates. Treat everything here as a planning figure and confirm the current price on your test centre's booking page before you commit."] },
-      { heading: "Roughly what it costs in 2026", bullets: ["Globally, IELTS Academic and General Training typically fall between about USD 230 and USD 490 equivalent, depending on the country.", "India: the fee rose to around INR 19,000 from 1 April 2026, up from INR 18,000.", "United Kingdom: broadly in the USD 210 to 230 range at current GBP rates.", "Canada: broadly around USD 230 equivalent.", "Australia: among the more expensive markets, roughly AUD 415 to 430.", "IELTS for UKVI generally carries a premium of around 10 to 15% over the standard test, because the centre reports your test details to the UK Home Office."] },
+      {
+        heading: "Roughly what it costs in 2026",
+        table: {
+          caption: "Planning figures for IELTS Academic and General Training. Figures last reviewed 14 September 2026.",
+          headers: ["Where", "Standard test fee", "Notes"],
+          rows: [
+            ["Global range", "≈ USD 230 – 490 equivalent", "Set locally by the British Council and IDP"],
+            ["India", "≈ INR 19,000", "Rose from INR 18,000 on 1 April 2026"],
+            ["United Kingdom", "≈ USD 210 – 230 equivalent", "Varies with the GBP rate"],
+            ["Canada", "≈ USD 230 equivalent", "—"],
+            ["Australia", "≈ AUD 415 – 430", "Among the more expensive markets"],
+            ["IELTS for UKVI", "+10 – 15% on the standard fee", "The centre reports your test details to the UK Home Office"],
+          ],
+        },
+        paragraphs: ["The same test costs different amounts in different places, and the UKVI premium applies on top of whatever the local standard fee is. If you are comparing quotes between centres in the same country and they differ by more than a few percent, one of them is quoting the UKVI or Life Skills fee rather than the standard one."],
+      },
       { heading: "Why the same test costs different amounts", paragraphs: ["The fee is set per market by the British Council and IDP, and it absorbs local costs: venue hire, examiner pay, invigilation, and the Speaking examiner's time. That last one is the expensive part of IELTS and the reason it costs more than fully automated tests. It also reflects what the local market will bear. None of this changes the test you sit or the score you get."] },
       { heading: "The fees nobody mentions", bullets: ["Rescheduling: typically an administrative fee if you move your date more than about five weeks out.", "Cancellation: usually a partial refund before the deadline, and little or nothing after it. Documented medical cases are handled separately.", "Enquiry on Results (a remark): a fee that is refunded in full if any band changes. You normally have six weeks from your test date to apply.", "One Skill Retake: a separate fee, though generally lower than a full test. That is the point of it.", "Extra Test Report Forms sent to institutions beyond the free allowance.", "A full re-sit: the entire fee again, which is why the cheapest thing you can buy in IELTS is preparation."] },
       { heading: "How to spend it once", paragraphs: ["The real cost of IELTS is not the fee, it is the number of times you pay it. Two sittings plus a remark costs more than most people's entire preparation budget. Three things reduce the odds of a second payment: know your exact requirement including any per-skill minimum, practise in the format you will actually sit, and only book once your timed mock scores are consistently at or above target.", "If you fall short in exactly one skill, check One Skill Retake before booking a full test. It is computer-delivered only, must be taken within 60 days of your original test and in the same country, and is available across most of the 110+ IELTS countries, though not in the United States. Confirm your receiving organisation accepts a One Skill Retake result before relying on it."] },
       { heading: "Is IELTS worth it against cheaper tests?", paragraphs: ["Duolingo English Test and PTE Academic are usually cheaper. Acceptance is what decides it. IELTS is accepted by essentially every university and immigration system that asks for English, while the cheaper tests are accepted broadly but not universally, and some visa routes still specify IELTS. Check your specific university, employer or visa route first: a cheaper test your institution does not accept costs you 100% of its fee."] },
       { heading: "Get your money's worth on the first attempt", paragraphs: ["The most expensive IELTS is the one you sit twice. On IELTSVega you can sit full timed mock tests, get instant AI band scores on Writing and Speaking against all four criteria, and work through 15,000+ Academic and General Training questions, so the fee buys a result rather than a diagnostic."] },
+      {
+        heading: "Fees by country",
+        paragraphs: ["This page is the global picture. For a single market in detail, including local fee changes and what is and is not accepted there:"],
+        links: [
+          { label: "IELTS exam fee in the USA 2026 — and the increase on 1 October", href: "/blog/ielts-exam-fee-usa" },
+        ],
+      },
     ],
     faqs: [
       { q: "How much does the IELTS exam cost in 2026?", a: "Globally the fee typically falls between about USD 230 and USD 490 equivalent, set locally by the British Council and IDP. In India it rose to roughly INR 19,000 from 1 April 2026. Always confirm the current price on your test centre's booking page, as fees change without much notice." },
       { q: "Why does IELTS for UKVI cost more?", a: "IELTS for UKVI is the same test under additional UK Home Office administrative and reporting requirements, and it is only offered at approved centres. That typically adds around 10 to 15% to the standard fee in most markets." },
       { q: "Is the IELTS fee refundable if I cancel?", a: "Usually you receive a partial refund if you cancel more than about five weeks before your test date, and little or nothing after that. Documented medical reasons are normally handled separately. Check your centre's specific terms, which are shown during booking." },
       { q: "Is One Skill Retake cheaper than sitting IELTS again?", a: "Yes. It carries its own fee, but it is generally lower than a full test, which is the reason it exists. It applies only to computer-delivered tests, must be taken within 60 days and in the same country as your original test, and is not available in the United States." },
+      { q: "Did the IELTS fee increase in 2026?", a: "Yes, in several markets. In India the fee rose to around INR 19,000 from 1 April 2026, up from INR 18,000. Fees are set per market rather than globally, so an increase in one country does not mean every country changed. Check your own centre's booking page for the figure that applies to you." },
+      { q: "Is an IELTS score valid for 5 years?", a: "No. An IELTS Test Report Form is normally valid for two years from your test date. Some institutions and immigration routes accept older results in specific circumstances, but two years is the standard validity and you should plan around it. If your result is close to expiring and you still need it, budget for a re-sit rather than assuming an extension." },
+      { q: "Why is IELTS so expensive?", a: "Most of the cost is the Speaking test. IELTS is marked by trained human examiners, and the Speaking section is a live one-to-one interview that has to be scheduled, staffed and assessed individually. Add venue hire, invigilation and secure test materials, and you get a fee well above fully automated tests. It is also priced to what each local market will bear, which is why the same test costs very different amounts in different countries." },
+    ],
+  },
+  /* ---------------------------------------------------------------- *
+   * Country fee pages.
+   *
+   * TARGETING: geo-modified fee intent. `ielts-exam-fee-2026` stays the
+   * global hub and owns the country-comparison table; each country page
+   * owns one market in depth and links back to the hub.
+   *
+   * Why country pages and NOT city pages: on 14 Sep 2026 the SERP for
+   * "ielts exam fee in delhi" returned only nation-level pages from IDP,
+   * PW and KC Overseas, plus ielts.org's own per-centre listings. Not one
+   * content site ranked with a city page, because the fee is national.
+   * The single site that addressed the city did it with a city TABLE
+   * inside a national page. Copy that, and do not generate city pages —
+   * our templated /ielts-band/[band] pages all sit at position 38-66,
+   * which is what templated pages do on a domain with no authority.
+   *
+   * The USA is the first of these because it is our second-largest market
+   * by impressions (411 in the 28 days to 12 Sep 2026) against a single
+   * click at position 38.0 — the biggest untapped demand we can see.
+   * ---------------------------------------------------------------- */
+  {
+    slug: "ielts-exam-fee-usa",
+    seoTitle: "IELTS Fee in the USA 2026: Cost and October Rise",
+    title: "IELTS exam fee in the USA 2026, and the increase landing on 1 October",
+    excerpt:
+      "What IELTS costs in the United States in 2026, the fee rise taking effect on 1 October, and whether booking before it is worth doing.",
+    category: "Booking",
+    date: "September 2026",
+    publishedAt: "2026-09-14",
+    readMins: 5,
+    keywords: [
+      "ielts exam fee usa",
+      "ielts test fee united states",
+      "how much does ielts cost in usa",
+      "ielts fee increase october 2026",
+      "ielts price usa 2026",
+      "ielts academic fee usa",
+      "ielts general training fee usa",
+      "ielts test centre usa cost",
+    ],
+    sections: [
+      { paragraphs: ["IELTS in the United States costs USD 285 for tests taken before 1 October 2026 and USD 325 from that date onward — an increase of USD 40, or about 14%. If you are planning to sit the test this autumn, the booking date is what matters, and there are only a few weeks left at the lower price."] },
+      {
+        heading: "IELTS fees in the USA",
+        table: {
+          caption: "Standard test-centre fees. Taken from ielts.org test centre listings for New York City Metro, San Francisco, Washington DC and Salt Lake City, checked 14 September 2026.",
+          headers: ["Test", "Before 1 Oct 2026", "From 1 Oct 2026", "Change"],
+          rows: [
+            ["IELTS Academic", "USD 285", "USD 325", "+USD 40"],
+            ["IELTS General Training", "USD 285", "USD 325", "+USD 40"],
+            ["IELTS Online (at home)", "USD 244.40", "USD 244.40", "Unchanged at time of writing"],
+          ],
+        },
+        paragraphs: ["Individual centres set their own fees and a few differ, so confirm the figure on your centre's booking page before paying. The four centres checked above, spread across the country, all quoted the same price — the fee is national rather than city-by-city, so there is no cheaper city to travel to."],
+      },
+      { heading: "Is it worth booking before 1 October?", paragraphs: ["Only if you would have been ready anyway. USD 40 is real money, but a rushed test is a far more expensive mistake: a re-sit costs the full fee again, so booking early to save 14% and then scoring half a band short turns a USD 40 saving into a USD 325 loss.", "The honest rule is the same as it always is. Book when your timed mock scores are consistently at or above the band you need, and treat the deadline as a tiebreaker if you are already close, not as a reason to sit early."] },
+      { heading: "What the fee covers, and what it does not", bullets: ["All four sections — Listening, Reading, Writing and a face-to-face Speaking interview with a human examiner.", "One Test Report Form for you, plus a number of copies sent directly to receiving institutions (the free allowance varies by centre).", "It does not cover an Enquiry on Results, which is charged separately and refunded in full if any band changes.", "It does not cover rescheduling, which normally carries an administrative fee if you move your date more than about five weeks out.", "It does not cover One Skill Retake, which has its own lower fee — and note that One Skill Retake is not available in the United States."] },
+      { heading: "IELTS Online versus a test centre", paragraphs: ["IELTS Online costs USD 244.40 and is sat at home under remote proctoring, which makes it the cheaper option and it is not affected by the October increase. The catch is acceptance: IELTS Online is not accepted for UK visa purposes, is not accepted by every university, and cannot be used where a UKVI-approved test is required. Confirm with the organisation receiving your score before you book it, because a cheaper test that is not accepted is the most expensive option of all."] },
+      {
+        heading: "Where to go next",
+        paragraphs: ["Fees vary sharply by country. For the global picture and other markets:"],
+        links: [
+          { label: "IELTS exam fee in 2026: global costs and the fees nobody mentions", href: "/blog/ielts-exam-fee-2026" },
+          { label: "How the IELTS band score is calculated, and how to raise it", href: "/blog/how-ielts-band-score-is-calculated" },
+          { label: "IELTS practice tests with answers, free to start", href: "/blog/best-free-ielts-practice-tests-online" },
+        ],
+      },
+    ],
+    faqs: [
+      { q: "How much does IELTS cost in the USA in 2026?", a: "USD 285 for tests taken before 1 October 2026, rising to USD 325 from that date. The fee is the same for IELTS Academic and IELTS General Training. IELTS Online, sat at home, costs USD 244.40. Individual centres can differ slightly, so confirm on your centre's booking page." },
+      { q: "Is the IELTS fee going up in the USA?", a: "Yes. US test centres are moving from USD 285 to USD 325 for tests taken on or after 1 October 2026, an increase of about 14%. The change is tied to your test date, so booking before the deadline for a later test date does not lock in the old price at every centre — check your centre's terms." },
+      { q: "Is IELTS cheaper in some US cities than others?", a: "No. Fees are set nationally rather than by city, and test centres in New York, San Francisco, Washington DC and Salt Lake City all quote the same figure. There is no cheaper city worth travelling to, so choose your centre on date availability and convenience instead." },
+      { q: "Is IELTS Online accepted in the USA?", a: "It depends entirely on who is receiving your score. IELTS Online is cheaper at USD 244.40, but it is not accepted for UK visa and immigration purposes and not every university accepts it. Confirm acceptance in writing with your institution before booking, because an unaccepted result means paying for the test twice." },
+      { q: "Can I retake just one section of IELTS in the USA?", a: "No. One Skill Retake is available in most IELTS countries but not in the United States. If you fall short in a single skill, a full re-sit at the current fee is the only route, which is a strong argument for not booking until your practice scores are consistently at target." },
     ],
   },
   {

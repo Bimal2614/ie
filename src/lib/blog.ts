@@ -56,6 +56,12 @@ export const POSTS: BlogPost[] = [
       { heading: "How to use these questions", bullets: ["Record yourself answering: don't just read. Fluency comes from speaking, not planning.", "Time Part 2 strictly: one minute prep, then two minutes talking without stopping.", "For every Part 3 answer, give an opinion, a reason, and a 'that said…' counterpoint.", "Review against the four criteria: Fluency, Vocabulary, Grammar, Pronunciation."] },
       { heading: "Practise this month's topics with instant feedback", paragraphs: ["Reading questions isn't practice: speaking them is. On IELTSVega you can record answers to real Part 1, 2 and 3 questions (with the built-in Part 2 prep timer), then get instant AI band scoring against all four Speaking criteria. Run through this month's topics a few at a time and your confidence builds fast before test day."] },
     ],
+    faqs: [
+      { q: "Are these the real IELTS Speaking questions for July 2026?", a: "No, and you should be wary of any site that claims otherwise. Live IELTS questions are confidential. These are the topic areas most commonly reported by candidates after their tests, which is a different and more useful thing: the themes recur even though the exact wording changes. Practise the topic, not the sentence." },
+      { q: "Do IELTS Speaking topics repeat?", a: "Topic areas repeat constantly. Work, study, hometown, technology, travel and free time come up in almost every cycle, and Part 2 cue cards are drawn from a fairly stable pool of people, places, objects, events and experiences. What changes is the precise phrasing, which is why preparing ideas around a theme works and memorising a script does not." },
+      { q: "How long should a Part 1 answer be?", a: "Two to three sentences. Answer the question, then add one reason, example or contrast. One-word answers cost you marks under Fluency and Coherence because you give the examiner nothing to assess, and a ninety-second monologue in Part 1 is equally wrong for the format." },
+      { q: "Can I memorise answers for IELTS Speaking?", a: "No. Examiners are trained to identify memorised language, and it is explicitly penalised under Fluency and Coherence. Memorised answers also tend to stop matching the question, which is obvious to a listener. Prepare ideas and vocabulary for a topic, then build the sentences live." },
+    ],
   },
   {
     slug: "recent-ielts-speaking-questions-june-2026",
@@ -86,6 +92,12 @@ export const POSTS: BlogPost[] = [
       { heading: "Part 3: discussion prompts", bullets: ["Reading & books: are people reading less than before? Should children be encouraged to read more?", "Leadership: what makes a good leader? Are leaders born or made?", "Travel: does tourism help or harm local communities? Will people travel more in the future?", "News & media: how do people get news today? Can we trust online news?"] },
       { heading: "Answering Part 3 well", paragraphs: ["Part 3 is where Band 7+ is decided. Don't give one-line answers. Take a position, justify it with a reason and example, then acknowledge another view. Useful frames: \"It depends on…\", \"On the one hand… on the other hand…\", \"I'd argue that…\". Speculating about the future (\"I imagine that…\", \"it's likely that…\") shows grammatical range examiners reward."] },
       { heading: "Turn topics into real practice", paragraphs: ["Pick three cue cards above and record a full two-minute answer for each. On IELTSVega you can do exactly that with real IELTS Speaking questions and instant AI band feedback on fluency, vocabulary, grammar and pronunciation, so you find and fix your weak criterion before the exam."] },
+    ],
+    faqs: [
+      { q: "How often do IELTS Speaking questions change?", a: "Part 1 topics are stable across months. Part 2 cue cards rotate on a broad cycle, so a card reported in one month can reappear later in the year with different wording. Treat any monthly list as a guide to the themes in circulation rather than a set of questions to learn." },
+      { q: "How long do I get for the Part 2 cue card?", a: "One minute to make notes, then one to two minutes to speak. The examiner will stop you at two minutes. Use the preparation minute to note a sequence of points rather than full sentences, because reading aloud from notes breaks your fluency." },
+      { q: "Does the examiner mark my ideas or my English?", a: "Your English. There are no right or wrong opinions in IELTS Speaking, and an unusual or even implausible answer costs you nothing as long as it is expressed well. You are marked on fluency, vocabulary, grammar and pronunciation, never on the quality of your argument." },
+      { q: "What happens if I do not understand the question?", a: "Ask. In Parts 1 and 3 you can ask the examiner to repeat a question, and asking for clarification in natural English is not penalised. What is penalised is answering a different question because you guessed. In Part 2 the cue card stays in front of you, so you can re-read it." },
     ],
   },
   {
@@ -119,6 +131,12 @@ export const POSTS: BlogPost[] = [
       { heading: "Reported question 3: Environment (problem/solution)", paragraphs: ["\"Many cities are becoming increasingly polluted. What are the causes of this, and what measures can be taken to solve the problem?\"", "Plan: Body 1, causes: traffic, industry, poor planning. Body 2, solutions: public transport investment, emissions rules, green urban design. Keep causes and solutions in separate paragraphs.", "Band 8 opening: \"Urban pollution has worsened sharply in recent decades, driven largely by traffic and unchecked industrial growth; addressing it will require decisive action from both governments and individuals.\""] },
       { heading: "How to prepare Task 2 efficiently", bullets: ["Prepare ideas by theme, not by memorising essays. You can't predict the exact prompt.", "Always write a clear thesis in the introduction and hold it to the conclusion.", "Develop each idea fully: point → explain → example → link. Two developed ideas beat five listed ones.", "Practise under 40 minutes so timing is automatic on test day."] },
       { heading: "Get your essays scored instantly", paragraphs: ["Writing a plan is easy; hitting the band descriptors under time is the hard part. On IELTSVega you can write real Task 2 essays on prompts like these and get instant AI band scoring on all four criteria, Task Response, Coherence, Lexical Resource and Grammar, with feedback on exactly what's holding your band down. Fix the pattern, not just one essay."] },
+    ],
+    faqs: [
+      { q: "Do IELTS Writing Task 2 topics repeat?", a: "The theme areas repeat far more than the questions do. Education, technology, environment, work and society account for the large majority of Task 2 prompts, so building a bank of arguments and examples in those areas transfers directly to whatever question you are given. The specific statement will be new." },
+      { q: "How many words should IELTS Writing Task 2 be?", a: "At least 250. Aim for 260 to 290. Writing under the minimum is penalised directly, but writing 400 words is not rewarded and usually costs you accuracy and time. Task 2 is worth twice Task 1, so give it 40 of your 60 minutes." },
+      { q: "Is it better to agree or disagree in an opinion essay?", a: "Neither. Examiners mark how clearly you hold and support a position, not which position you take. Pick whichever side you can argue with more specific examples, state it in the introduction, and keep it consistent to the conclusion. A partial agreement is fine if it is stated clearly rather than used to avoid committing." },
+      { q: "Do I need real facts and statistics in Task 2?", a: "No, and inventing statistics is a common way to sound less credible rather than more. Hypothetical and general examples are entirely acceptable. What earns marks is developing an idea to its consequence, not the citation attached to it." },
     ],
   },
   /* ---------------------------------------------------------------- *
@@ -250,6 +268,12 @@ export const POSTS: BlogPost[] = [
       { heading: "Task 1 vs Task 2: don't confuse them", paragraphs: ["Task 1 is a factual description (150+ words, 20 minutes); Task 2 is an argumentative essay (250+ words, 40 minutes) worth double. If you're short on time, protect Task 2. A strong essay lifts your Writing band more than a perfect Task 1."] },
       { heading: "Practise with instant band feedback", paragraphs: ["Task 1 improves fastest when you write under time and get specific feedback on your overview and data accuracy. On IELTSVega you can practise real Academic Task 1 charts (and General Training letters), then get instant AI band scoring against all four criteria, so you know exactly which paragraph is costing you marks before test day."] },
     ],
+    faqs: [
+      { q: "How many words should IELTS Writing Task 1 be?", a: "At least 150 words, with 160 to 190 being a comfortable target. Spend about 20 minutes on it, leaving 40 for Task 2. Under-length answers are penalised under Task Achievement, and there is no benefit to a 250-word Task 1 beyond the extra chances it gives you to make errors." },
+      { q: "Do I need a conclusion in Academic Writing Task 1?", a: "No. Task 1 needs an overview, which is not the same thing. An overview states the main trends or the most striking features of the data and belongs near the start, immediately after the introduction, or at the end if you prefer. A conclusion that draws inferences beyond the data is not required and can hurt you." },
+      { q: "Should I give my opinion in Academic Task 1?", a: "No. Academic Task 1 asks you to report and compare what the data shows. Explaining why a trend happened, or saying whether it is good, goes outside the task and is penalised under Task Achievement. Save opinion for Task 2." },
+      { q: "What is the most common reason for losing marks in Task 1?", a: "Missing or burying the overview. It is the single feature most directly tied to the Task Achievement band, and a Task 1 answer with no clear overview is capped regardless of how accurate the rest of the description is. Signpost it explicitly with a phrase such as overall." },
+    ],
   },
   {
     slug: "ielts-reading-tips-improve-score",
@@ -280,6 +304,12 @@ export const POSTS: BlogPost[] = [
       { heading: "Watch the word limit", paragraphs: ["Completion questions specify a limit like \"NO MORE THAN TWO WORDS\". Exceeding it, even with a correct answer, scores zero. Copy words exactly from the passage, and check your spelling: a misspelt answer is marked wrong."] },
       { heading: "Habits that raise your band", bullets: ["Practise under strict timing from day one: accuracy without speed won't help on test day.", "Build synonym awareness: IELTS almost never uses the exact question word in the passage.", "Do the questions you can answer quickly first; flag hard ones and return to them.", "Never leave a blank: there's no negative marking, so always guess."] },
       { heading: "Practise the exact question types", paragraphs: ["The fastest way to improve is drilling the specific types that cost you marks, True/False/Not Given, matching headings, sentence completion, until the pattern is automatic. On IELTSVega you can practise every IELTS Reading question type for both Academic and General Training, with instant answers and explanations so you learn from each mistake, plus full timed mock tests to build your pace."] },
+    ],
+    faqs: [
+      { q: "How do I finish IELTS Reading in time?", a: "Give each of the three passages 20 minutes and move on whether or not it is finished. The habit that costs most candidates the paper is reading the passage in full before looking at the questions. Read the questions first, then scan for the answer, and accept that you will never read every word." },
+      { q: "What is the difference between False and Not Given?", a: "False means the passage states something that contradicts the statement. Not Given means the passage simply does not address it. The test is not whether the statement seems true in the real world, only whether this passage supports, contradicts or ignores it. If you find yourself reasoning from outside knowledge, the answer is almost always Not Given." },
+      { q: "Do spelling mistakes count in IELTS Reading?", a: "Yes. A correct answer spelled incorrectly is marked wrong, and every answer you need is written somewhere in the passage, so there is no excuse for transcribing it inaccurately. Copy it exactly, and respect the word limit, because exceeding it also scores zero." },
+      { q: "How many correct answers do I need for Band 7 in Reading?", a: "Roughly 30 out of 40 on Academic Reading, and higher on General Training, where the passages are easier and the conversion is stricter. The exact conversion varies slightly between test versions, so treat 30 as a working target rather than a guarantee." },
     ],
   },
   {
@@ -423,6 +453,12 @@ export const POSTS: BlogPost[] = [
       { heading: "Which should you choose?", paragraphs: ["If you type faster than you write, want results quickly, and are comfortable reading on screen, choose computer-delivered. If you prefer writing by hand and reading on paper, choose paper-based. Whatever you pick, practise in that format so the interface feels familiar on test day."] },
       { heading: "Practise the way you'll test", paragraphs: ["If you're taking the computer-delivered test, prepare on a computer. IELTSVega runs entirely in your browser with a typed Writing editor, on-screen Listening and Reading tools, and full timed mock tests, so your practice mirrors the real computer-delivered experience, and you get instant AI band scores to track your progress."] },
     ],
+    faqs: [
+      { q: "Is computer-delivered IELTS easier than paper-based?", a: "Neither is easier. The questions, the marking criteria and the band scales are identical, and the two results are treated as equivalent by every organisation that accepts IELTS. The differences are practical, not academic, and the right choice depends on how you work rather than on which is scored more generously." },
+      { q: "How much faster are computer-delivered IELTS results?", a: "Typically one to five days, against about 13 days for paper-based. If you are working to an application deadline, that difference is usually the deciding factor on its own." },
+      { q: "Is the Speaking test different on computer-delivered IELTS?", a: "No. Speaking is a face-to-face interview with a human examiner in both formats. The choice of format affects only Listening, Reading and Writing." },
+      { q: "Can I handwrite my essay on computer-delivered IELTS?", a: "No, Writing is typed. You are given paper for notes and planning, but the answer itself must be typed, so if your typing is slow or inaccurate that is worth testing before you choose the format. On the other hand, editing a typed essay is far easier than rewriting a handwritten one." },
+    ],
   },
   {
     slug: "how-to-book-ielts-test",
@@ -452,6 +488,12 @@ export const POSTS: BlogPost[] = [
       { heading: "Step 4: Prepare for test day", bullets: ["Bring the same identity document you registered with, no exceptions.", "Arrive early; latecomers are usually refused entry.", "Know your test centre's rules on what you can bring into the room.", "For computer-delivered tests, arrive familiar with the on-screen interface."] },
       { heading: "Step 5: Get results and plan a retake if needed", paragraphs: ["Results (the Test Report Form) arrive within a few days for computer-delivered tests, or up to about two weeks for paper. If you fall short in one skill, you can now retake a single section with 'One Skill Retake' in many locations, rather than sitting the whole test again, check availability in your country."] },
       { heading: "Be ready before you book", paragraphs: ["The best time to book is when your practice scores are consistently at or above your target band. On IELTSVega you can benchmark yourself with full mock tests on real timing and get AI band scoring on Writing and Speaking, so you book your test date with confidence, not hope."] },
+    ],
+    faqs: [
+      { q: "How far in advance should I book IELTS?", a: "Four to six weeks is a sensible window in most cities. It gives you time to prepare to a target rather than to a date, and popular slots in large centres do fill. Book earlier if you need a specific date for an application deadline, and later only if you already know your mock scores are consistently at target." },
+      { q: "What ID do I need for the IELTS test?", a: "Normally a valid passport, and the document you register with must be the same one you bring on the day, with matching details. Some centres accept a national identity card for local candidates. Your ID is checked at registration and again before Speaking, and a mismatch will stop you sitting the test." },
+      { q: "Can I change or cancel my IELTS test date?", a: "Usually yes. Moving your date more than about five weeks before the test normally carries an administrative fee, and cancelling in that window typically returns a partial refund. Inside five weeks you will generally lose most or all of the fee. Documented medical cases are handled separately." },
+      { q: "Should I book IELTS Academic or General Training?", a: "It depends entirely on what the organisation receiving your score requires, not on which you would find easier. Academic is the usual requirement for university study and professional registration, General Training for most work and migration routes. Confirm the requirement in writing before you pay, because the two are not interchangeable." },
     ],
   },
   {
@@ -483,6 +525,12 @@ export const POSTS: BlogPost[] = [
       { heading: "Pronunciation: 6 vs 7 vs 8", paragraphs: ["Band 6: generally understood, though mispronunciation occasionally reduces clarity. Band 7: uses a range of pronunciation features (stress, rhythm, intonation) with control, and is easy to understand. Band 8: a wide range of features, sustained and flexible, with first-language accent having minimal effect.", "The fix: accent is not marked. Clarity is what counts. Work on word and sentence stress and natural intonation rather than trying to erase your accent."] },
       { heading: "The mindset shift from 6.5 to 7.5", paragraphs: ["Most candidates stuck at 6.5 are playing it safe: short answers, simple grammar, and cautious vocabulary. The higher bands reward controlled risk: extended answers, complex structures, precise idiomatic language, and expressive intonation. Practise stretching every answer just beyond your comfort zone."] },
       { heading: "Track your bands as you practise", paragraphs: ["You improve fastest when you can see which criterion is holding you back. On IELTSVega, every Speaking answer you record is AI-scored against all four descriptors, Fluency, Lexical Resource, Grammar and Pronunciation, so you know precisely where your Band 6 is really a 7, and which one to push next."] },
+    ],
+    faqs: [
+      { q: "What are the four IELTS Speaking marking criteria?", a: "Fluency and Coherence, Lexical Resource, Grammatical Range and Accuracy, and Pronunciation. Each carries equal weight, and your Speaking band is the average of the four rounded to the nearest half band. Because they are equally weighted, one weak criterion drags the whole score down, which is why it pays to know which one is holding you back." },
+      { q: "Does my accent affect my IELTS Speaking score?", a: "No. Accent is not marked and examiners are trained to assess speakers from every first-language background. What Pronunciation measures is whether you can be understood and whether you use stress, rhythm and intonation to carry meaning. Working on word and sentence stress raises your band; trying to erase your accent does not." },
+      { q: "How is the IELTS Speaking band score calculated?", a: "The examiner awards a whole-number band from 0 to 9 on each of the four criteria, and those four are averaged. Averages ending in .25 are rounded up to the next half band, and averages ending in .75 are rounded up to the next whole band. So criteria of 7, 7, 6 and 6 average exactly 6.5 and give 6.5, while 7, 7, 7 and 6 average 6.75 and give 7." },
+      { q: "Why am I stuck at Band 6.5 in IELTS Speaking?", a: "Almost always because you are playing it safe. Short answers, simple sentence structures and cautious everyday vocabulary are exactly what the Band 6 descriptors describe. Band 7 rewards controlled risk: extended answers, complex structures used with frequent accuracy, and less common vocabulary attempted even if occasionally imprecise." },
     ],
   },
   /* ---------------------------------------------------------------- *
@@ -668,13 +716,58 @@ export const POSTS: BlogPost[] = [
       { paragraphs: ["IELTS reports scores on a 9-band scale, from Band 1 (non-user) to Band 9 (expert). You receive a band for each of the four skills, Listening, Reading, Writing and Speaking, plus an overall band. Understanding exactly how those numbers are produced is the fastest way to stop losing marks you don't need to."] },
       { heading: "Listening and Reading: raw score → band", paragraphs: ["Both are marked out of 40. Your raw score (the number of correct answers) is converted to a band using a fixed conversion table. As a rough guide, around 30/40 maps to Band 7 and 35/40 to Band 8, though the exact table varies slightly by test. Every mark counts, and spelling and grammar must be correct."] },
       { heading: "Writing and Speaking: four criteria", paragraphs: ["These are marked by criteria, each weighted equally:"], bullets: ["Task Achievement / Task Response", "Coherence & Cohesion (Fluency & Coherence in Speaking)", "Lexical Resource", "Grammatical Range & Accuracy (plus Pronunciation in Speaking)"] },
-      { heading: "How the overall band is rounded", paragraphs: ["Your overall band is the average of the four skill bands, rounded to the nearest half-band. A .25 average rounds up to the next half-band, and .75 rounds up to the next whole band. So a 6.75 average becomes 7.0. Meaning a single half-band in your weakest skill can lift your overall score.", "Within Writing, Task 2 counts twice as much as Task 1, so protect your Task 2 time."] },
+      { heading: "How the overall band is rounded", paragraphs: ["Your overall band is the average of the four skill bands, rounded to the nearest half-band. A .25 average rounds up to the next half-band, and .75 rounds up to the next whole band. So a 6.75 average becomes 7.0. Meaning a single half-band in your weakest skill can lift your overall score."] },
+      {
+        heading: "The rounding rule worked through",
+        paragraphs: ["This is where people lose half a band without understanding why. The two rules that matter are that .25 rounds up to the next half-band and .75 rounds up to the next whole band; everything else goes to whichever half-band is nearer. Five real profiles:"],
+        table: {
+          caption: "L = Listening, R = Reading, W = Writing, S = Speaking.",
+          headers: ["L", "R", "W", "S", "Average", "Overall band"],
+          rows: [
+            ["6.5", "6.5", "6.0", "6.0", "6.25", "6.5 — .25 rounds up"],
+            ["7.0", "7.0", "7.0", "6.0", "6.75", "7.0 — .75 rounds up a whole band"],
+            ["7.0", "7.0", "6.5", "6.0", "6.625", "6.5 — nearer 6.5 than 7.0"],
+            ["6.0", "6.0", "5.5", "6.0", "5.875", "6.0 — nearer 6.0 than 5.5"],
+            ["8.0", "7.5", "6.5", "7.0", "7.25", "7.5 — .25 rounds up"],
+          ],
+        },
+      },
+      {
+        heading: "Why one weak skill is worth fixing first",
+        paragraphs: ["Because the overall band is a mean, half a band anywhere moves the average by 0.125, and the rounding boundaries sit close together. Take the third row above: 7.0, 7.0, 6.5, 6.0 gives an overall 6.5. Lifting Speaking alone from 6.0 to 6.5 makes the average 6.75, which rounds up to a 7.0 overall. The same half-band added to Listening instead, taking it from 7.0 to 7.5, produces an average of 6.75 as well — so either works, but the weak skill is almost always the cheaper place to find it.", "This is also why chasing your strongest skill is a poor strategy. Going from 7.0 to 8.0 in Reading, which is hard, moves the overall by the same amount as going from 6.0 to 7.0 in Speaking, which for most candidates is considerably easier."],
+      },
+      {
+        heading: "Writing: why Task 2 counts double",
+        paragraphs: ["Your single reported Writing band is weighted, with Task 2 counting roughly twice Task 1. The practical effect is larger than most candidates expect, and it is the strongest argument for the standard 20/40 minute split.", "Take the same two task scores in each order. The figures below are illustrative — centres report one Writing band rather than publishing the internal arithmetic — but the direction is exactly right:"],
+        table: {
+          headers: ["Task 1 band", "Task 2 band", "Weighted average", "Reported Writing band"],
+          rows: [
+            ["8.0", "6.0", "(8 + 12) ÷ 3 = 6.67", "≈ 6.5"],
+            ["6.0", "8.0", "(6 + 16) ÷ 3 = 7.33", "≈ 7.5"],
+            ["7.0", "7.0", "(7 + 14) ÷ 3 = 7.00", "7.0"],
+          ],
+        },
+      },
+      { heading: "A strong Task 1 cannot rescue a weak Task 2", paragraphs: ["The two rows above use the same pair of numbers and land a full band apart. That is the whole case for protecting Task 2 time: 20 minutes on Task 1 and 40 on Task 2, and if you are running out of time, an under-developed Task 1 costs you far less than an unfinished Task 2."] },
       { heading: "Where the easiest half-bands hide", bullets: ["Listening/Reading: fix careless spelling and word-limit errors, pure lost marks.", "Writing: add a clear overview (Task 1) and a consistent position (Task 2).", "Speaking: extend every answer with a reason and an example.", "Target your weakest skill: rounding rewards lifting the lowest number."] },
+      {
+        heading: "Where to go next",
+        paragraphs: ["This guide covers the method. Two companion pages cover the numbers themselves:"],
+        links: [
+          { label: "IELTS band score chart: raw score to band conversion for Listening and Reading", href: "/blog/ielts-band-score-chart" },
+          { label: "IELTS band scores explained: what each band means to a university or visa route", href: "/ielts-band-scores" },
+          { label: "IELTS band score calculator: work out your overall band from four skill scores", href: "/ielts-band-score-calculator" },
+        ],
+      },
     ],
     faqs: [
       { q: "Is Band 6.5 a good IELTS score?", a: "Band 6.5 shows a competent user and is enough for many undergraduate courses and some visa routes. However, competitive universities and professional registrations often ask for 7.0 or higher, so check your specific requirement." },
       { q: "How is the overall IELTS band calculated?", a: "It's the average of your four skill bands (Listening, Reading, Writing, Speaking), rounded to the nearest half-band. An average ending in .25 rounds up to the next half-band and .75 rounds up to the next whole band." },
       { q: "Can I raise my IELTS band quickly?", a: "Yes, because the overall band is an average, lifting your single weakest skill by half a band is often the fastest route. Fixing careless Listening/Reading errors and adding a clear Writing structure are the quickest wins." },
+      { q: "What does an IELTS average of 6.25 round to?", a: "6.5. An average ending in .25 is rounded up to the next half-band. So skill bands of 6.5, 6.5, 6.0 and 6.0 average 6.25 and are reported as an overall 6.5." },
+      { q: "Does 6.75 round up or down in IELTS?", a: "Up, and to a whole band rather than a half. An average ending in .75 is rounded up to the next whole band, so 6.75 is reported as 7.0. Skill bands of 7.0, 7.0, 7.0 and 6.0 average 6.75 and give an overall 7.0." },
+      { q: "Does Task 2 really count more than Task 1 in IELTS Writing?", a: "Yes, roughly twice as much. The practical effect is large: the same two task scores swapped over can land a full band apart, because a strong Task 1 cannot compensate for a weak Task 2. This is why the standard advice is 20 minutes on Task 1 and 40 on Task 2, and why an unfinished Task 2 is far more costly than a thin Task 1." },
+      { q: "Which skill should I improve to raise my overall IELTS band?", a: "Your weakest one, almost always. Every skill contributes equally to the average, so half a band gained in Speaking counts exactly as much as half a band gained in Reading. Since the last half-band of a strong skill is much harder to win than the first half-band of a weak one, the lowest number on your Test Report Form is where the cheapest improvement lives." },
     ],
   },
   {
@@ -695,6 +788,12 @@ export const POSTS: BlogPost[] = [
       { heading: "6. Repetitive vocabulary", paragraphs: ["Reusing the same words (especially the topic's keywords) limits Lexical Resource. Paraphrase and use precise collocations, not rare 'big words' used wrongly."] },
       { heading: "7. Ignoring proofreading", paragraphs: ["Articles, subject-verb agreement, plurals and tense slips add up. Leave three minutes to check, it's the cheapest half-band available."] },
     ],
+    faqs: [
+      { q: "Why is my IELTS Writing stuck at 6.5?", a: "Usually because fluent writing and high-band writing are not the same thing. Most candidates at 6.5 write clearly but lose marks on a small set of recurring habits: no clear position, no overview in Task 1, ideas that stop at the assertion, and mechanical linking. These are structural faults rather than vocabulary faults, which is why more practice at the same habits does not move the band." },
+      { q: "Do linking words improve my IELTS Writing score?", a: "Only when they reflect the actual logic of your argument. Examiners penalise mechanical or over-used cohesion explicitly, so opening every paragraph with Firstly, Moreover and In conclusion signals a template rather than coherence. Use a linker when the relationship between two ideas genuinely needs marking, and not otherwise." },
+      { q: "Are memorised phrases penalised in IELTS Writing?", a: "Yes. Learned sentences that could be attached to any question carry no credit and are visible to examiners, who mark them down under Lexical Resource. They also crowd out your word count with language that does not address the specific task, which costs you under Task Response as well." },
+      { q: "Does writing more words raise my IELTS Writing band?", a: "No. Beyond the minimum of 250 for Task 2 and 150 for Task 1, length is not rewarded. Longer answers generally contain more errors and are written under more time pressure, so they tend to score lower. Depth of development raises the band; volume does not." },
+    ],
   },
   {
     slug: "ielts-4-week-study-plan",
@@ -711,6 +810,12 @@ export const POSTS: BlogPost[] = [
       { heading: "Week 3: Productive skills under time", paragraphs: ["Write and speak daily under timed conditions with AI band feedback. Build templates you can adapt (not memorise), and log your recurring errors so you stop repeating them."] },
       { heading: "Week 4: Full mocks and exam stamina", paragraphs: ["Sit full-length mock tests on real timing to build endurance and iron out pacing. Review every mistake, do light targeted practice on your weakest type, and rest before test day."] },
       { heading: "Daily habits that compound", bullets: ["Practise Listening with a single play, never replaying.", "Keep an error log and review it before each session.", "Read/listen to English daily for range and speed.", "Sit at least two full mock tests before the real exam."] },
+    ],
+    faqs: [
+      { q: "Is four weeks enough to prepare for IELTS?", a: "Four weeks is enough to learn the format, fix technique and build exam stamina, which is often worth half a band on its own. It is usually not enough to raise underlying English proficiency by a full band. If your diagnostic mock is within about 0.5 of your target, four weeks is realistic; if the gap is 1.5 bands or more, plan for longer." },
+      { q: "How do I create an IELTS study plan?", a: "Start with a full timed mock to find out where you actually are, because planning around a guess wastes the first week. Then spend week one on format, week two drilling your weakest question types, week three on Writing and Speaking under time, and week four on full mocks. Fix the diagnosis first and the schedule follows from it." },
+      { q: "Does the study plan change for IELTS UKVI?", a: "The preparation is the same. IELTS for UKVI tests identical content under the same band descriptors, and differs only in the administrative and identity requirements imposed by the UK Home Office and in where you can sit it. Prepare exactly as you would for Academic or General Training, and put the extra effort into booking at an approved centre." },
+      { q: "How many hours a day should I study for IELTS?", a: "Ninety minutes to two hours of focused work beats four hours of unfocused reading, and consistency matters more than volume. Protect at least one longer block each week for a full timed section, because stamina under exam conditions is a separate skill from accuracy on individual questions." },
     ],
   },
 ];

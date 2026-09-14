@@ -133,9 +133,24 @@ export default async function BlogArticle({ params }: { params: Promise<Params> 
   // Related articles — same category first, then fill from the rest. Internal
   // links like these help Google discover and index every post (they stop being
   // orphan pages) and keep readers on-site.
+  //
+  // Both lists are ROTATED by the current post's index, and that rotation is
+  // the whole point. Taking them in plain array order meant every post whose
+  // category ran short filled its remaining slots from the top of POSTS, so on
+  // 14 Sep 2026 the post at index 0 collected 19 inbound links while 7 posts
+  // collected none — among them `how-to-book-ielts-test`, which is the single
+  // URL sitting in GSC's "Crawled – currently not indexed" bucket. Rotating
+  // spreads the same number of links across the whole archive: measured
+  // afterwards, zero posts have no inbound link and the range is 1–6.
+  //
+  // Keep this deterministic. Randomising would give Google a different link
+  // graph on every request, which is worse than concentrating it.
+  const idx = POSTS.findIndex((p) => p.slug === post.slug);
+  const rotate = <T,>(arr: T[], by: number): T[] =>
+    arr.length === 0 ? arr : [...arr.slice(by % arr.length), ...arr.slice(0, by % arr.length)];
   const related = [
-    ...POSTS.filter((p) => p.slug !== post.slug && p.category === post.category),
-    ...POSTS.filter((p) => p.slug !== post.slug && p.category !== post.category),
+    ...rotate(POSTS.filter((p) => p.slug !== post.slug && p.category === post.category), idx),
+    ...rotate(POSTS.filter((p) => p.slug !== post.slug && p.category !== post.category), idx),
   ].slice(0, 3);
 
   return (
@@ -189,6 +204,54 @@ export default async function BlogArticle({ params }: { params: Promise<Params> 
                     </li>
                   ))}
                 </ul>
+              )}
+              {/* In-body internal links. These are the ones that actually pass
+                  equity to the pages we want indexed, so the anchor text is the
+                  author's descriptive label rather than a bare URL. */}
+              {s.links && s.links.length > 0 && (
+                <ul className="mt-3 space-y-2">
+                  {s.links.map((l) => (
+                    <li key={l.href} className="flex gap-2.5">
+                      <span className="mt-2.5 size-1.5 shrink-0 rounded-full bg-brand/50" />
+                      <Link
+                        href={l.href}
+                        className="font-medium text-brand underline decoration-brand/30 underline-offset-4 transition-colors hover:decoration-brand"
+                      >
+                        {l.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {/* Tables are wrapped in their own horizontal scroller so a wide
+                  fee or band-conversion table never forces the article body to
+                  scroll sideways on a phone. */}
+              {s.table && (
+                <div className="mt-4 overflow-x-auto">
+                  <table className="w-full min-w-[32rem] border-collapse text-sm">
+                    {s.table.caption && (
+                      <caption className="pb-2 text-left text-xs text-ink-muted">{s.table.caption}</caption>
+                    )}
+                    <thead>
+                      <tr className="border-b border-line">
+                        {s.table.headers.map((h) => (
+                          <th key={h} scope="col" className="px-3 py-2 text-left font-semibold text-ink">
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {s.table.rows.map((row, r) => (
+                        <tr key={r} className="border-b border-line/60">
+                          {row.map((cell, c) => (
+                            <td key={c} className="px-3 py-2 align-top text-ink-soft">{cell}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </section>
           ))}
