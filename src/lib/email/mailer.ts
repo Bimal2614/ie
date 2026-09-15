@@ -25,6 +25,14 @@ export async function sendEmail(opts: {
   subject: string;
   html: string;
   text: string;
+  /**
+   * Who a reply should go to, when that is not us.
+   *
+   * Only one caller needs it so far: the partner lead sent to ADMIN_EMAILS,
+   * where the useful reply is to the class that applied, not to the no-reply
+   * From: address. Left unset everywhere else, which keeps the default.
+   */
+  replyTo?: string;
 }): Promise<{ ok: boolean; skipped?: boolean; error?: string }> {
   if (!isEmailConfigured()) {
     console.warn(`[email] SMTP not configured: skipped "${opts.subject}" to ${opts.to}`);
@@ -38,6 +46,7 @@ export async function sendEmail(opts: {
     await transport().sendMail({
       from: env.EMAIL_FROM!,
       to: opts.to,
+      replyTo: opts.replyTo,
       subject: opts.subject,
       html: opts.html,
       text: opts.text,

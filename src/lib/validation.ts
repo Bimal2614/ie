@@ -133,6 +133,56 @@ export const editPartnerSchema = createPartnerSchema.pick({
   website: true,
 });
 
+/**
+ * Roughly how many candidates a class puts through at a time. A band, not a
+ * number, because nobody knows their exact roll on the day they enquire — and a
+ * band is all that is needed to tell a ten-seat tutor from a chain.
+ */
+export const PARTNER_BATCH_SIZES = ["1-25", "26-100", "101-300", "300+"] as const;
+export type PartnerBatchSize = (typeof PARTNER_BATCH_SIZES)[number];
+
+/**
+ * A class applying to partner with us, filled in by the class itself.
+ *
+ * SAME FIELDS AS `createPartnerSchema`, MINUS THE LOGIN, AND THAT IS THE POINT.
+ * An application is what an admin will retype into the onboarding form, so every
+ * field missing here is a reply-and-wait before the partner can exist. What it
+ * deliberately does NOT take is a password: nothing is created from this form,
+ * so a password typed here could only be discarded or emailed, and both are
+ * worse than asking for one later. See src/app/actions/partner-apply.ts.
+ *
+ * It validates exactly as hard as the admin form does. A typo'd email on an
+ * application costs us the lead silently — the confirmation bounces to nobody
+ * and the class assumes we ignored them.
+ */
+export const partnerApplicationSchema = z.object({
+  name: z.string().trim().min(2, "Name your institute").max(120),
+  location: z.string().trim().max(120).optional().transform((v) => (v ? v : null)),
+  website: website.optional().default(null),
+  /** Who we will actually talk to — a person, unlike the admin form's desk. */
+  contactName: z.string().trim().min(2, "Tell us who to ask for").max(80),
+  email: z.string().trim().toLowerCase().email("Enter a valid email").max(254),
+  phone,
+  students: z
+    .union([z.enum(PARTNER_BATCH_SIZES), z.literal("")])
+    .optional()
+    .transform((v) => (v ? v : null)),
+  message: z
+    .string()
+    .trim()
+    .max(1000, "Keep this under 1000 characters")
+    .optional()
+    .transform((v) => (v ? v : null)),
+  /**
+   * Honeypot. Hidden from people, irresistible to the bots that fill every
+   * input on a public form. A filled value is never an error the visitor sees —
+   * see the action, which thanks them and sends nothing.
+   */
+  company: z.string().max(200).optional(),
+});
+export type PartnerApplicationInput = z.input<typeof partnerApplicationSchema>;
+export type PartnerApplication = z.output<typeof partnerApplicationSchema>;
+
 /** A class enrolling a student: the signup form, filled in by somebody else. */
 export const enrolStudentSchema = z.object({
   name: z.string().trim().min(2, "Enter the student's name").max(80),
