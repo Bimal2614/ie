@@ -238,7 +238,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
     seoTitle: "Computer-Delivered IELTS: On-Screen Guide (2026)",
     title: "Computer-delivered IELTS: a screen-by-screen guide for 2026",
     excerpt:
-      "Paper IELTS is gone in most markets. Here is exactly what the computer-delivered test looks like on screen, the tools you get, and the habits you need to change.",
+      "Paper IELTS is gone in most markets. Exactly what the computer-delivered test looks like on screen, the tools you get, and the habits you need to change.",
     category: "Test format",
     date: "August 2026",
     publishedAt: "2026-08-07",
@@ -354,7 +354,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
     seoTitle: "IELTS for UKVI vs IELTS Academic: Which Do You Need?",
     title: "IELTS for UKVI vs IELTS Academic: which one does your visa need?",
     excerpt:
-      "IELTS for UKVI, IELTS Academic, General Training and Life Skills are four different bookings. Booking the wrong one invalidates your application. Here is how to choose.",
+      "IELTS for UKVI, Academic, General Training and Life Skills are four different bookings. Booking the wrong one invalidates your application. How to choose.",
     category: "Requirements",
     date: "August 2026",
     publishedAt: "2026-08-11",

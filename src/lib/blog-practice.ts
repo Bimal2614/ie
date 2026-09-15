@@ -180,7 +180,7 @@ export const PRACTICE_POSTS: BlogPost[] = [
     seoTitle: "AI IELTS Writing Checker: How to Use One Properly",
     title: "AI IELTS Writing checkers: how they score, and how to actually use one",
     excerpt:
-      "How AI essay scoring works against the four IELTS Writing criteria, where it is reliable, where it is not, and the review routine that turns feedback into a band.",
+      "How AI essay scoring works against the four IELTS Writing criteria, where it is reliable, where it is not, and the routine that turns feedback into a band.",
     category: "Tools",
     date: "August 2026",
     publishedAt: "2026-08-19",
@@ -337,7 +337,7 @@ export const PRACTICE_POSTS: BlogPost[] = [
     seoTitle: "IELTS General Training Practice: Letters & Reading",
     title: "IELTS General Training practice: the letter task and what else differs",
     excerpt:
-      "General Training is not the easy option. What differs from Academic, why the Task 1 letter catches people out, and how to practise the parts that decide your band.",
+      "General Training is not the easy option. What differs from Academic, why the Task 1 letter catches people out, and how to practise what decides your band.",
     category: "Practice",
     date: "August 2026",
     publishedAt: "2026-08-23",
@@ -572,7 +572,7 @@ export const PRACTICE_POSTS: BlogPost[] = [
     seoTitle: "IELTS Self-Study vs Coaching: Which Do You Need?",
     title: "IELTS self-study vs coaching classes: which one do you actually need?",
     excerpt:
-      "Coaching sells structure and accountability. Self-study sells volume and flexibility. An honest look at which one fixes your particular problem, and the cost of each.",
+      "Coaching sells structure and accountability. Self-study sells volume and flexibility. An honest look at which one fixes your problem, and the cost of each.",
     category: "Study plan",
     date: "August 2026",
     publishedAt: "2026-08-29",
@@ -734,7 +734,7 @@ export const PRACTICE_POSTS: BlogPost[] = [
     seoTitle: "IELTS in 7 Days: A Last-Minute Practice Plan",
     title: "IELTS in 7 days: what to do when the test is next week",
     excerpt:
-      "A day-by-day plan for the final week: what still moves in seven days, what does not, and what to do in the last 48 hours so you arrive sharp rather than exhausted.",
+      "A day-by-day plan for the final week: what still moves in seven days, what does not, and what to do in the last 48 hours so you arrive sharp, not exhausted.",
     category: "Study plan",
     date: "September 2026",
     publishedAt: "2026-08-10",

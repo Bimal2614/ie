@@ -181,8 +181,18 @@ export function pageMeta(opts: {
    * title is a minor CTR loss, while failing a production build over one would
    * be an outage. The warning appears in `next build` output, which is where
    * anyone adding a page will see it.
+   *
+   * `NEXT_PHASE` is load-bearing, and leaving it out was a silent bug for as
+   * long as this guard has existed. `next build` runs with NODE_ENV set to
+   * "production", so `NODE_ENV !== "production"` is false during the build and
+   * the check never ran there — exactly the place the comment above promises it
+   * would. `npm run build | grep '[seo]'` therefore returned nothing on a site
+   * that had six descriptions over the limit, and everyone read that silence as
+   * a pass. Ahrefs Site Audit found them on 14 Sep 2026; our own tooling could
+   * not have. Keep both conditions: NEXT_PHASE covers the build, NODE_ENV
+   * covers `next dev`, and production *runtime* stays quiet.
    */
-  if (process.env.NODE_ENV !== "production") {
+  if (process.env.NEXT_PHASE === "phase-production-build" || process.env.NODE_ENV !== "production") {
     if (title.length < 30 || title.length > 60) {
       console.warn(`[seo] ${path}: title is ${title.length} chars (want 30-60) — "${title}"`);
     }
