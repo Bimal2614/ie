@@ -15,6 +15,7 @@ import {
 } from "@/lib/session";
 import { getCurrentUser } from "@/lib/dal";
 import { isUniqueViolation } from "@/lib/db-errors";
+import { referringPartner } from "@/lib/partners";
 import { sendEmail } from "@/lib/email/mailer";
 import { welcomeTemplate } from "@/lib/email/templates";
 import { env } from "@/lib/env";
@@ -73,11 +74,42 @@ export async function signup(
 
   const passwordHash = await hashPassword(password);
 
+  /*
+   * The class whose invite link this signup came through, if any.
+   *
+   * THE ID IS RE-READ HERE, not taken on trust from the form: the page rendered
+   * the welcome straight from the URL (see src/lib/partner-referral.ts), so
+   * until this line nothing has checked that the class exists, is still ours,
+   * or is still active. A `ref` that fails any of those is dropped in silence
+   * and the account is created as an ordinary one — a broken link must cost the
+   * candidate their institution, not their account.
+   */
+  const referrer = await referringPartner(formData.get("ref"));
+
   let userId: string;
   try {
     const [created] = await db
       .insert(users)
-      .values({ name, email, emailNormalized: email, phone, passwordHash, targetModule })
+      .values({
+        name,
+        email,
+        emailNormalized: email,
+        phone,
+        passwordHash,
+        targetModule,
+        partnerId: referrer?.id ?? null,
+        /*
+         * A signup IS a sign-in — `createSession` runs three lines below.
+         *
+         * Left NULL, this row reads as "never signed in" everywhere the column
+         * is used as last-seen, which is a partner's roster telling a class
+         * that a student who just joined through its link has never turned up.
+         * Only the `login` action used to set it, and only logins used to
+         * create accounts we cared about that way.
+         */
+        lastLoginAt: new Date(),
+        lastLoginIp: ip,
+      })
       .returning({ id: users.id });
     userId = created.id;
   } catch (err) {
@@ -89,6 +121,17 @@ export async function signup(
 
   await createSession(userId); // rotates in a fresh session token
   await audit(userId, "signup", ip, userAgent);
+  /*
+   * A SEPARATE EVENT FROM `partner.student.enrolled`, deliberately. Both end in
+   * a row carrying the same `partner_id`, but one account was created by the
+   * class — which chose the password and handed it over in the room — and this
+   * one was created by the candidate, who chose their own. That is the
+   * difference that matters the day anyone asks what a class may do to one of
+   * its students' accounts, and it cannot be reconstructed later.
+   */
+  if (referrer) {
+    await audit(userId, "partner.student.referred", ip, userAgent, { partnerId: referrer.id });
+  }
   const destination = safeNext(formData.get("next"));
 
   // Send the welcome email (best-effort — must never block signup, and the try

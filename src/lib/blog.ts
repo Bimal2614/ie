@@ -10,6 +10,7 @@
 import type { BlogPost } from "./blog-types";
 import { TOPIC_POSTS_2026 } from "./blog-2026-topics";
 import { PRACTICE_POSTS } from "./blog-practice";
+import { PARTNER_POSTS } from "./blog-partners";
 
 /** Re-exported so `import type { BlogPost } from "@/lib/blog"` keeps working. */
 export type { BlogPost, BlogSection } from "./blog-types";
@@ -153,6 +154,15 @@ export const POSTS: BlogPost[] = [
    * per-skill practice queries. Lives in blog-practice.ts.
    * ---------------------------------------------------------------- */
   ...PRACTICE_POSTS,
+
+  /* ---------------------------------------------------------------- *
+   * B2B cluster (Sep 2026) — the only posts on the site written for
+   * someone who BUYS for candidates rather than for a candidate:
+   * "ielts software for coaching institutes", "white label ielts
+   * platform", "ielts franchise cost". Every one converts to
+   * /partners, not to a free account. Lives in blog-partners.ts.
+   * ---------------------------------------------------------------- */
+  ...PARTNER_POSTS,
 
   /* ---------------------------------------------------------------- *
    * SEO pillar posts (2026) — targeting the highest-volume and rising

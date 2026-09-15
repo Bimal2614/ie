@@ -3,8 +3,11 @@ import { BadgeIndianRupee, GraduationCap, LogIn, UserPlus, Users } from "lucide-
 
 import { Roster, type RosterStudent } from "@/components/partner/roster";
 import { StatTile } from "@/components/dashboard/ui";
+import { InviteLink } from "@/components/partner/invite-link";
 import { RateCard } from "@/components/partner/plan-picker";
+import { env } from "@/lib/env";
 import { parsePageRequest, toPage } from "@/lib/pagination";
+import { referralLink } from "@/lib/partner-referral";
 import { quotesFor } from "@/lib/partner-pricing";
 import { DEFAULT_CURRENCY } from "@/lib/plans";
 import { formatDate } from "@/lib/format-date";
@@ -57,6 +60,13 @@ export default async function PartnerHome({
   const req = parsePageRequest(await searchParams, STUDENT_LIST_DEFAULTS);
   // Priced once, on the server, and handed to every picker on the page.
   const quotes = quotesFor(DEFAULT_CURRENCY, rate);
+  // Built here, not in the browser: `location.origin` would read localhost in
+  // development and a preview domain on a preview deploy, and a class that
+  // copied either would hand its students a link to nowhere.
+  const invite = referralLink(env.APP_URL ?? "https://ieltsvega.com", {
+    id: partner.id,
+    name: partner.name,
+  });
 
   const [students, overview] = await Promise.all([
     partnerStudents(partner.id, req),
@@ -84,6 +94,8 @@ export default async function PartnerHome({
       </div>
 
       <RateCard quotes={quotes} />
+
+      <InviteLink url={invite} />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile

@@ -1,3 +1,5 @@
+import { referralQuery, type Referral } from "@/lib/partner-referral";
+
 /**
  * "Continue with Google" button. A plain anchor (full navigation, not client
  * routing) to the OAuth start route. Server component — no client JS needed.
@@ -10,10 +12,22 @@
 export function GoogleButton({
   label = "Continue with Google",
   position = "bottom",
+  referral,
 }: {
   label?: string;
   position?: "top" | "bottom";
+  /**
+   * The class whose invite link this signup came through.
+   *
+   * IT HAS TO TRAVEL ON THE HREF. Google sign-in leaves the site entirely and
+   * comes back to a callback route that never sees this page's URL, so a
+   * referral held only in the form's hidden field is lost the moment the
+   * candidate presses this button instead. The start route parks the id in a
+   * short-lived cookie for the round trip — see /api/auth/google.
+   */
+  referral?: Referral | null;
 }) {
+  const href = referral ? `/api/auth/google?${referralQuery(referral)}` : "/api/auth/google";
   const divider = (
     <div className="my-4 flex items-center gap-3 text-xs text-ink-muted">
       <span className="h-px flex-1 bg-line" /> or <span className="h-px flex-1 bg-line" />
@@ -24,7 +38,7 @@ export function GoogleButton({
     <div>
       {position === "bottom" && divider}
       <a
-        href="/api/auth/google"
+        href={href}
         className="flex h-11 w-full items-center justify-center gap-2.5 rounded-xl border border-line bg-paper-elev text-sm font-medium text-ink transition-colors hover:bg-paper-sunken"
       >
         <GoogleIcon />

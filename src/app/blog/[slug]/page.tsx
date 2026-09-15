@@ -9,6 +9,30 @@ import { SITE_URL } from "@/lib/site";
 
 type Params = { slug: string };
 
+/**
+ * The category that marks a post as written for a BUYER rather than a
+ * candidate. Set in `blog-partners.ts`; kept as one constant so the closing CTA
+ * and this page never drift apart. Adding a second B2B category means turning
+ * this into a Set, not copying the string.
+ */
+const B2B_CATEGORY = "For institutes";
+
+/** Closing CTA per audience. See the note above the CTA block below. */
+const CTA_BY_AUDIENCE = {
+  candidate: {
+    heading: "Put it into practice.",
+    body: "Get AI-scored on your Writing and Speaking, free to start.",
+    href: "/signup",
+    label: "Start practising free",
+  },
+  institute: {
+    heading: "Run your classes on IELTSVega.",
+    body: "Wholesale rates, a student roster and instant AI band scores. No joining fee, no minimum.",
+    href: "/partners",
+    label: "Become a partner",
+  },
+} as const;
+
 export function generateStaticParams() {
   return POSTS.map((p) => ({ slug: p.slug }));
 }
@@ -153,6 +177,8 @@ export default async function BlogArticle({ params }: { params: Promise<Params> 
     ...rotate(POSTS.filter((p) => p.slug !== post.slug && p.category !== post.category), idx),
   ].slice(0, 3);
 
+  const cta = CTA_BY_AUDIENCE[post.category === B2B_CATEGORY ? "institute" : "candidate"];
+
   return (
     <MarketingShell>
       <ArticleJsonLd post={post} />
@@ -258,12 +284,20 @@ export default async function BlogArticle({ params }: { params: Promise<Params> 
         </div>
       </article>
 
-      {/* CTA */}
+      {/*
+        CTA — and it has to match who is reading.
+
+        Every post used to close on "Start practising free" pointing at /signup,
+        which is right for a candidate and wrong for the B2B cluster: an
+        institute owner who has just read about franchise costs is not looking
+        for a free student account, and sending them to one wastes the only
+        conversion the post exists to produce. The category decides.
+      */}
       <div className="mt-12 flex flex-col items-center gap-4 rounded-2xl border border-line bg-paper-elev p-8 text-center">
-        <h2 className="font-serif text-2xl tracking-tight">Put it into practice.</h2>
-        <p className="max-w-md text-sm text-ink-soft">Get AI-scored on your Writing and Speaking, free to start.</p>
-        <Link href="/signup" className="inline-flex items-center gap-2 rounded-lg bg-green px-6 py-3 text-sm font-semibold text-green-ink transition-[filter] hover:brightness-105">
-          Start practising free <ArrowRight className="size-4" />
+        <h2 className="font-serif text-2xl tracking-tight">{cta.heading}</h2>
+        <p className="max-w-md text-sm text-ink-soft">{cta.body}</p>
+        <Link href={cta.href} className="inline-flex items-center gap-2 rounded-lg bg-green px-6 py-3 text-sm font-semibold text-green-ink transition-[filter] hover:brightness-105">
+          {cta.label} <ArrowRight className="size-4" />
         </Link>
       </div>
 

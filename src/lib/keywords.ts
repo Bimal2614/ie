@@ -413,6 +413,90 @@ export const PRACTICE_MATERIAL_LONG_TAIL = [
   "IELTS practice test that feels like the real exam",
 ] as const;
 
+/* ──────────────────── INSTITUTES / B2B (SEP 2026) ──────────────────── */
+
+/**
+ * The only cluster on this site that is NOT written for a candidate.
+ *
+ * Everything above targets someone sitting the exam. This targets whoever BUYS
+ * for them — a coaching institute owner, a study-abroad consultant, a freelance
+ * trainer. Different searcher, different intent, different landing page: these
+ * convert to `/partners`, never to a free account.
+ *
+ * WHY IT WAS ADDED. Until 15 Sep 2026 the library held ~430 terms and not one
+ * was B2B, so a domain that already ranked for candidate queries was invisible
+ * to its own resellers. The cluster is served by `blog-partners.ts`.
+ *
+ * THREE THINGS WORTH KNOWING BEFORE YOU EXTEND IT:
+ *
+ *   - Commercial intent runs far higher than anything above. "ielts franchise
+ *     cost" is typed by someone with capital who has already decided to start
+ *     an IELTS business — published Indian franchise fees run ₹1.5-5 lakh on a
+ *     ₹4-15 lakh total investment with three-year terms, and our partner
+ *     programme has no joining fee at all. That comparison converts.
+ *   - White-label terms are included deliberately even though the capability is
+ *     enquiry-gated rather than built. Every competitor in the category sells
+ *     it, so the demand is proven and worth ranking for — but read the rules at
+ *     the top of `blog-partners.ts` before writing a word of that copy.
+ *   - Do NOT add competitor brand names here. The house rule from
+ *     `blog-practice.ts` applies with more force in B2B: we win these queries by
+ *     publishing the buyer's evaluation criteria, not by ranking rivals.
+ */
+export const INSTITUTE_LONG_TAIL = [
+  // Platform / software intent — the category head terms.
+  "IELTS software for coaching institutes",
+  "IELTS institute software with mock tests",
+  "IELTS platform for coaching centres",
+  "mock test software for IELTS institute",
+  "IELTS LMS for trainers and institutes",
+  "online IELTS test platform for institutes",
+  "IELTS exam software for training centres",
+  // White-label — enquiry-gated, see the note above.
+  "white label IELTS platform for institutes",
+  "white label IELTS mock test software",
+  "branded IELTS platform with my own logo",
+  "IELTS software on my own subdomain",
+  "semi white label IELTS software for trainers",
+  // Franchise and business-model intent — highest commercial value here.
+  "IELTS franchise cost in India",
+  "IELTS coaching franchise investment required",
+  "start IELTS institute without a franchise",
+  "cheapest way to start IELTS coaching business",
+  "how to start an IELTS coaching institute",
+  "IELTS coaching centre registration requirements",
+  "IELTS institute setup cost breakdown",
+  // Operations — what an owner searches once they have students.
+  "how to conduct IELTS mock test for students",
+  "run IELTS mock tests for a whole batch",
+  "bulk IELTS mock tests for institutes",
+  "IELTS mock test in computer delivered format for classes",
+  // Marking and evaluation at scale — the real bottleneck.
+  "AI IELTS writing evaluation for institutes",
+  "automatic IELTS band scoring software",
+  "IELTS writing correction tool for teachers",
+  "IELTS speaking evaluation software for trainers",
+  "how to mark thirty IELTS essays a week",
+  // Reporting.
+  "IELTS student progress tracking for institutes",
+  "IELTS batch performance report",
+  "IELTS cohort analytics for coaching centres",
+  "track IELTS student performance software",
+  // Buying / pricing.
+  "IELTS institute software price per student",
+  "bulk IELTS practice licences for institutes",
+  "IELTS platform pricing for coaching centres",
+  "IELTS test credits for institutes expiry",
+  // Adjacent verticals.
+  "IELTS coaching for study abroad consultancy",
+  "add IELTS prep to education consultancy",
+  "IELTS partner programme for institutes",
+  "IELTS reseller programme India",
+  // Independent trainers — smallest deal, largest audience.
+  "teach IELTS online as a freelance trainer",
+  "tools for online IELTS tutors",
+  "IELTS trainer platform for private students",
+] as const;
+
 /* ─────────────────────── ENTIRE LIBRARY ─────────────────────── */
 
 /**
@@ -441,6 +525,7 @@ export const LONG_TAIL = {
   aiTools: AI_TOOL_LONG_TAIL,
   logistics: LOGISTICS_LONG_TAIL,
   practiceMaterial: PRACTICE_MATERIAL_LONG_TAIL,
+  institutes: INSTITUTE_LONG_TAIL,
 } as const;
 
 /** Flat list of every long-tail term. Used by the coverage audit script. */

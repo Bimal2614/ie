@@ -4,10 +4,13 @@ import { ArrowLeft } from "lucide-react";
 
 import { PartnerControls } from "@/components/admin/partner-controls";
 import { cardClass, StatTile } from "@/components/dashboard/ui";
+import { InviteLink } from "@/components/partner/invite-link";
 import { ListControls, Pager } from "@/components/ui/list-controls";
 import { couponOptions } from "@/lib/admin";
 import { requireAdmin } from "@/lib/dal";
 import { parsePageRequest } from "@/lib/pagination";
+import { env } from "@/lib/env";
+import { referralLink } from "@/lib/partner-referral";
 import { partnerForAdmin, STUDENT_LIST_DEFAULTS } from "@/lib/partners";
 import { formatPrice, PLANS } from "@/lib/plans";
 import { cn } from "@/lib/utils";
@@ -75,6 +78,15 @@ export default async function AdminPartnerPage({
           icon={null}
         />
       </div>
+
+      {/* The same link the class sees in its own panel — here so it can be
+          sent over at onboarding, before anyone has signed in to fetch it. */}
+      <InviteLink
+        url={referralLink(env.APP_URL ?? "https://ieltsvega.com", {
+          id: partner.id,
+          name: partner.name,
+        })}
+      />
 
       <section className={cn(cardClass, "p-5")}>
         <PartnerControls

@@ -26,6 +26,7 @@ import {
   type PageRequest,
 } from "@/lib/pagination";
 import { requirePartner, type PartnerUser } from "@/lib/dal";
+import { isReferralId } from "@/lib/partner-referral";
 import type { PartnerRate } from "@/lib/partner-pricing";
 import { revenueByPartner } from "@/lib/payments/transactions";
 import { effectivePlan, toPlanKey, type PlanKey } from "@/lib/plans";
@@ -41,6 +42,11 @@ import { destroyAllSessions } from "@/lib/session";
  * away from showing one class another class's students, so the two functions a
  * partner screen actually calls — `partnerStudents` and `partnerStudentDetail` —
  * take the id and then re-check that the row they found belongs to it.
+ *
+ * `referringPartner` is the one deliberate exception, and it is marked as such
+ * where it is defined: it takes an id off a public URL. It is allowed to
+ * because it reads nothing belonging to anybody — a trading name and whether
+ * the class is active — and answers the only question a signup can ask.
  *
  * The panel is a handful of screens over at most a few hundred students, so
  * everything here is a live query against the indexes in src/db/schema.ts.
@@ -627,6 +633,33 @@ export async function partnerStudentDetail(
 /* ------------------------------------------------------------------ *
  * Writes — enrolling, and the credentials that come with it
  * ------------------------------------------------------------------ */
+
+/**
+ * The class behind a `?ref=` on the signup page — or null.
+ *
+ * THE ONE READ HERE THAT IS NOT SESSION-SCOPED (see the file header), because
+ * the id comes off a link a stranger may have opened. That is safe for exactly
+ * two reasons and they are worth keeping true: it returns only what the link
+ * already claimed — a trading name — so it leaks nothing that guessing a uuid
+ * did not already require, and it is never used to READ anything. Its answer
+ * decides one thing: whether `users.partner_id` is set on the row about to be
+ * created.
+ *
+ * SUSPENDED CLASSES GET NOBODY. A class we have stopped doing business with
+ * must not keep collecting students through a link that is already printed on
+ * a handout — the account is still created, just not as anyone's student.
+ */
+export async function referringPartner(
+  value: unknown,
+): Promise<{ id: string; name: string } | null> {
+  if (!isReferralId(value)) return null;
+  const [row] = await db
+    .select({ id: partners.id, name: partners.name })
+    .from(partners)
+    .where(and(eq(partners.id, value), eq(partners.status, "active")))
+    .limit(1);
+  return row ?? null;
+}
 
 export type EnrolInput = {
   partnerId: string;
