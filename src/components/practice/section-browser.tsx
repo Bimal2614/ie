@@ -82,16 +82,20 @@ const ACCENT_ICON_BG: Record<SectionKey, string> = {
 
 export function SectionBrowser({
   initialModule = "academic",
+  initialSources = null,
 }: {
   /** From the profile. The server re-resolves it anyway — this only picks
    *  which way the toggle starts. */
   initialModule?: "academic" | "general";
+  /** Step 1, rendered by the page — see its comment. Null falls back to
+   *  fetching, which is what the section filter does on every later change. */
+  initialSources?: SourceSummary[] | null;
 }) {
   const router = useRouter();
 
   const [section, setSection] = useState<SectionKey | null>(null);
   const [module, setModule] = useState<"academic" | "general">(initialModule);
-  const [sources, setSources] = useState<SourceSummary[] | null>(null);
+  const [sources, setSources] = useState<SourceSummary[] | null>(initialSources);
   const [openSource, setOpenSource] = useState<string | null>(null);
   const [books, setBooks] = useState<BookSummary[] | null>(null);
   const [booksLoading, setBooksLoading] = useState(false);
@@ -104,7 +108,15 @@ export function SectionBrowser({
 
   /* -- Step 1: sources. Reloaded when the section filter changes, because a
         source with only listening material must disappear under "Writing". -- */
+  const seeded = useRef(initialSources !== null);
   useEffect(() => {
+    // The page already rendered this exact list (no filter, profile module), so
+    // the first pass has nothing to fetch. Every later run does: the filter or
+    // the module has changed by then.
+    if (seeded.current) {
+      seeded.current = false;
+      return;
+    }
     let alive = true;
     setSources(null);
     getSources(section, module)

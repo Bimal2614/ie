@@ -18,6 +18,7 @@ import { anyUploadPending, isAnswered, type Answer, type SetLayout } from "@/lib
 import { getSetPaginated, type PaginatedSetResult } from "@/app/actions/questions";
 import { submitPractice, type SetSubmissionResult } from "@/app/actions/practice";
 import { isPlanBlock, type PlanBlock } from "@/lib/plans";
+import { readCache, writeCache } from "@/lib/tab-cache";
 import { PlanBlockDialog } from "./plan-block-dialog";
 import { FullscreenButton } from "@/components/exam/fullscreen-button";
 import { TextSizeControl } from "@/components/exam/text-size-control";
@@ -56,6 +57,88 @@ export function PracticeSession({
   const [loading, setLoading] = useState(false);
   const [restartKey, setRestartKey] = useState(0);
 
+  /**
+   * Sets already fetched, so "Next" does not have to wait for the network.
+   *
+   * A page turn used to be a blocking server action behind a "Loading passage…"
+   * spinner, and the wait is nearly all transit: the functions run in
+   * us-east-1, so from India a request that does NO work still costs ~280 ms
+   * round trip — measured against a 45 ms hit on the same origin served from
+   * the Mumbai edge. The query itself is a handful of milliseconds. Nothing in
+   * the query can fix that, so the fetch is moved OFF the click: while the
+   * candidate reads passage N we quietly pull N+1, and the click that follows
+   * is a state update.
+   *
+   * A ref, not state — filling it must never re-render, and every read of it
+   * happens inside an effect or a handler.
+   *
+   * Backed by `sessionStorage` (src/lib/tab-cache.ts), which is what carries it
+   * across a reload and across a trip out to the section page and back — the
+   * Map dies with the component, and remounting is the common flow, not the
+   * rare one. The tab closing clears it, so nothing is left behind on a shared
+   * classroom machine.
+   */
+  const setCache = useRef(new Map<number, PaginatedSetResult>([[1, initialData]]));
+  /** Pages with a prefetch in the air, so a re-render cannot start a second. */
+  const prefetching = useRef(new Set<number>());
+  /** Keep the last few; 115 passages held at once is a leak, not a cache. */
+  const CACHE_LIMIT = 6;
+
+  /** Cache identity for one task type's sets — see `tabKey` below. */
+  const tabKey = useCallback(
+    (page: number) => `set:${section}:${questionType}:${page}`,
+    [section, questionType],
+  );
+
+  /**
+   * Remember a set in BOTH tiers.
+   *
+   * The Map is this component's working set and stays small; sessionStorage is
+   * the tab's, and outlives it. Written together so no call site can fill one
+   * and forget the other.
+   */
+  const remember = useCallback(
+    (page: number, res: PaginatedSetResult) => {
+      const cache = setCache.current;
+      cache.set(page, res);
+      while (cache.size > CACHE_LIMIT) {
+        const oldest = cache.keys().next().value;
+        if (oldest === undefined || oldest === page) break;
+        cache.delete(oldest);
+      }
+      writeCache(tabKey(page), res);
+    },
+    [tabKey],
+  );
+
+  /** This component's Map first, then the tab's store. Null means fetch it. */
+  const recall = useCallback(
+    (page: number): PaginatedSetResult | null => {
+      const inMemory = setCache.current.get(page);
+      if (inMemory) return inMemory;
+      const stored = readCache<PaginatedSetResult>(tabKey(page));
+      if (stored) setCache.current.set(page, stored);
+      return stored;
+    },
+    [tabKey],
+  );
+
+  /**
+   * Same component, different task type — drop the cache with it.
+   *
+   * The router can keep this instance mounted across a param change, and page 3
+   * of Matching Headings is not page 3 of True/False/Not Given. Done during
+   * render rather than in an effect so a stale entry can never be read by the
+   * effects below, which run after.
+   */
+  const cacheKey = `${section}:${questionType}`;
+  const lastCacheKey = useRef(cacheKey);
+  if (lastCacheKey.current !== cacheKey) {
+    lastCacheKey.current = cacheKey;
+    setCache.current = new Map([[1, initialData]]);
+    prefetching.current = new Set();
+  }
+
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const [flagged, setFlagged] = useState<Set<string>>(new Set());
   const [result, setResult] = useState<SetSubmissionResult | null>(null);
@@ -87,16 +170,68 @@ export function PracticeSession({
   useEffect(() => {
     if (setPage === 1 && data === initialData) return;
 
-    setLoading(true);
     setAnswers({});
     setFlagged(new Set());
     setResult(null);
 
+    // Already pulled while the previous passage was on screen, or still in the
+    // tab's store from before a reload — show it now. No spinner, no request:
+    // this is the whole point of the prefetch.
+    const ready = recall(setPage);
+    if (ready) {
+      setData(ready);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    let alive = true;
     getSetPaginated(section, questionType, setPage)
-      .then((res) => setData(res))
-      .finally(() => setLoading(false));
+      .then((res) => {
+        remember(setPage, res);
+        if (alive) setData(res);
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => {
+      // Jumping twice quickly must not let the first answer overwrite the
+      // second — the cache still keeps it, so the work is not wasted.
+      alive = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setPage, section, questionType]);
+
+  /**
+   * Pull the NEXT set in the background, once the current one is on screen.
+   *
+   * Deliberately after a short delay: a candidate paging quickly through a
+   * catalogue would otherwise fire a request per passage they skim past, and
+   * the one that matters — the set they actually stop on — would queue behind
+   * them. A set that is still in flight when its page is opened is not
+   * re-requested; the effect above finds nothing cached and starts its own, and
+   * whichever lands first fills the cache.
+   */
+  useEffect(() => {
+    if (!data.hasNextSet) return;
+    const nextPage = data.currentSetIndex + 2; // currentSetIndex is 0-indexed
+    if (recall(nextPage) || prefetching.current.has(nextPage)) return;
+
+    const timer = setTimeout(() => {
+      prefetching.current.add(nextPage);
+      getSetPaginated(section, questionType, nextPage)
+        .then((res) => remember(nextPage, res))
+        .catch(() => {
+          // A failed prefetch is not an error the candidate needs to see: the
+          // page turn itself will retry and report for real if it also fails.
+        })
+        .finally(() => prefetching.current.delete(nextPage));
+    }, 500);
+
+    return () => clearTimeout(timer);
+    // `recall`/`remember` are stable for a given section+type, both of which
+    // are already here — so naming them costs no extra run of this effect.
+  }, [data, section, questionType, recall, remember]);
 
   const goToSet = useCallback((page: number) => {
     setSetPage(page);
@@ -123,9 +258,49 @@ export function PracticeSession({
   const [focusQuestionId, setFocusQuestionId] = useState<string | null>(null);
   const handleSequentialFocus = useCallback((id: string) => setFocusQuestionId(id), []);
 
+  const backHref = `/practice/${section}`;
+
   const goBack = useCallback(() => {
-    router.push(`/practice/${section}`);
-  }, [router, section]);
+    router.push(backHref);
+  }, [router, backHref]);
+
+  /**
+   * Warm the page Back goes to, because `router.push` does not.
+   *
+   * Every other destination in the shell is a `<Link>`, and Next prefetches
+   * those on sight — a page load here fires ~22 of them. The one place this
+   * player actually navigates to was the exception: a programmatic push has no
+   * prefetch, so Back paid a full round trip to the function region every time
+   * (303 ms measured warm, and the whole of a cold start otherwise). The
+   * section player next door never had the problem because its Exit is a
+   * `<Link>`.
+   *
+   * Twice, deliberately. The router holds a dynamic route for 30 s
+   * (`experimental.staleTimes.dynamic`), and nobody leaves a passage inside 30
+   * seconds — so the mount-time prefetch is always stale by the time it is
+   * needed, and on its own would fix nothing. The second call happens when the
+   * pointer reaches the control, a moment before the click; it is free when the
+   * entry is still fresh, because the router serves prefetch from its own
+   * cache.
+   *
+   * This is also why Back felt worse than Next and worse still on Writing:
+   * page turns come minutes apart at most, but an essay is twenty silent
+   * minutes in which nothing keeps a function instance alive, so Back is the
+   * click most likely to meet a cold one.
+   *
+   * `result` is in the dependencies as the third trigger, for the paths with no
+   * pointer to hover: Escape, and the "Go back" on an empty type. It changes
+   * when a set is submitted — the moment a candidate is most likely to leave —
+   * and again on every page turn, which costs at most one small RSC request
+   * each, and nothing at all while the cached entry is still fresh.
+   */
+  useEffect(() => {
+    router.prefetch(backHref);
+  }, [router, backHref, result]);
+
+  const primeBack = useCallback(() => {
+    router.prefetch(backHref);
+  }, [router, backHref]);
 
   const handleRestart = useCallback(() => {
     setAnswers({});
@@ -418,7 +593,14 @@ export function PracticeSession({
       <div className={cn("surface pb-0", fixedFrame && "lg:flex lg:min-h-0 lg:flex-1 lg:flex-col")}>
         {/* ── Top bar ── */}
         <div className="flex shrink-0 items-center gap-2 border-b border-line px-3 py-2.5 sm:px-4">
-          <Button variant="ghost" size="sm" onClick={goBack} className="text-ink-soft">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={goBack}
+            onPointerEnter={primeBack}
+            onFocus={primeBack}
+            className="text-ink-soft"
+          >
             <ArrowLeft className="mr-1 h-4 w-4" />
             <span className="hidden sm:inline">Back</span>
           </Button>
@@ -549,6 +731,8 @@ export function PracticeSession({
             variant="ghost"
             size="icon"
             onClick={goBack}
+            onPointerEnter={primeBack}
+            onFocus={primeBack}
             title="Exit session"
             aria-label="Exit session"
             className="text-danger hover:text-danger"
@@ -782,7 +966,7 @@ export function PracticeSession({
             <div className="flex flex-col items-center justify-center gap-3 py-20">
               <AlertCircle className="h-8 w-8 text-ink-muted" />
               <p className="text-sm text-ink-muted">No sets available for this type yet.</p>
-              <Button variant="outline" onClick={goBack}>
+              <Button variant="outline" onClick={goBack} onPointerEnter={primeBack} onFocus={primeBack}>
                 Go back
               </Button>
             </div>

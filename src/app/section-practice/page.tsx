@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Library } from "lucide-react";
 import { requireUser } from "@/lib/dal";
+import { listSources } from "@/lib/practice-sections";
 import { SectionBrowser } from "@/components/practice/section-browser";
 
 export const metadata: Metadata = {
@@ -20,6 +21,22 @@ export const metadata: Metadata = {
  */
 export default async function SectionPracticePage() {
   const user = await requireUser();
+  const initialModule = user.targetModule === "general" ? "general" : "academic";
+
+  // Step 1 of the browser's drill-down, rendered rather than fetched.
+  //
+  // The list arrived through a client effect calling `getSources`, so opening
+  // this page cost a round trip the page had already paid for: the request that
+  // rendered the shell knew the module and could have carried the answer back
+  // with it. From India that second trip is ~300 ms warm and the whole of a
+  // cold start otherwise.
+  //
+  // It shortens the drill-down rather than ending it: expanding a source still
+  // fetches its books, and opening a test still fetches its parts. Those are
+  // answers to a click, and neither can be rendered here without shipping the
+  // whole library to every visitor. The action stays for the same reason — the
+  // section filter re-queries through it on every change.
+  const initialSources = await listSources(null, initialModule);
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-6">
@@ -40,7 +57,7 @@ export default async function SectionPracticePage() {
       </div>
 
       {/* The candidate sits one module; the library opens on theirs. */}
-      <SectionBrowser initialModule={user.targetModule === "general" ? "general" : "academic"} />
+      <SectionBrowser initialModule={initialModule} initialSources={initialSources} />
     </div>
   );
 }
