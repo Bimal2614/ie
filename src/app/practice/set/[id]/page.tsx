@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { questionSets, questions } from "@/db/schema";
 import { QUESTION_TYPES, SECTIONS, type QuestionTypeKey, type SectionKey } from "@/lib/ielts";
 import { mediaUrl, safeQuestionContent } from "@/lib/media-urls";
+import { isUuid } from "@/lib/uuid";
 import type { SetLayout } from "@/lib/question-content";
 import { QuestionPlayer, type PlayerSet, type PlayerQuestion } from "@/components/practice/question-player";
 
@@ -27,6 +28,7 @@ export const metadata: Metadata = { title: "Practice task · IELTSVega", robots:
 
 export default async function PracticeSetPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  if (!isUuid(id)) notFound(); // see src/lib/uuid.ts
 
   // `is_active` matters here, not just in the library listing: a retired set
   // still has a working URL, and a deep link is exactly how a retired question

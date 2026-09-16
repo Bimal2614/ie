@@ -5,6 +5,7 @@ import { mockTestAnswers, mockTestSessions, userResponses } from "@/db/schema";
 import { getCurrentUser } from "@/lib/dal";
 import { guardGeneral, RateLimitError } from "@/lib/security/rate-guard";
 import { keyFromUrl, presignGetUrl } from "@/lib/speech/s3";
+import { isUuid } from "@/lib/uuid";
 
 /**
  * Playback for a candidate's OWN speaking recording.
@@ -28,7 +29,6 @@ import { keyFromUrl, presignGetUrl } from "@/lib/speech/s3";
  * so a valid uuid belonging to somebody else is a 404, not a 200.
  */
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** The stored `s3://` location, but only if this user owns the row. */
 async function ownedAudioUrl(id: string, userId: string): Promise<string | null> {
@@ -64,7 +64,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   }
 
   const { id } = await params;
-  if (!UUID.test(id)) return new NextResponse("Not found", { status: 404 });
+  if (!isUuid(id)) return new NextResponse("Not found", { status: 404 });
 
   const audioUrl = await ownedAudioUrl(id, user.id);
   // Deliberately indistinguishable from "no such row": a different response for

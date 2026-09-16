@@ -2,9 +2,9 @@ import "server-only";
 
 import { getObjectStream, keyFromUrl, presignGetUrl } from "@/lib/speech/s3";
 import { guardMedia, RateLimitError } from "@/lib/security/rate-guard";
+import { isUuid } from "@/lib/uuid";
 
 /** Every media route is addressed by uuid; a malformed one never reaches the db. */
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Serving exam audio so it can be HEARD but not KEPT.
@@ -255,7 +255,7 @@ export async function serveProtectedAudio(
   // Shape-check before touching the database: a malformed id is a 404, not a
   // query, and certainly not a cast error surfacing as a 500.
   for (const id of opts.uuids ?? []) {
-    if (!id || !UUID.test(id)) return new Response("Not found", { status: 404 });
+    if (!id || !isUuid(id)) return new Response("Not found", { status: 404 });
   }
 
   const stored = await opts.locate();
@@ -298,7 +298,7 @@ export async function serveProtectedImage(opts: {
   }
 
   for (const id of opts.uuids ?? []) {
-    if (!id || !UUID.test(id)) return new Response("Not found", { status: 404 });
+    if (!id || !isUuid(id)) return new Response("Not found", { status: 404 });
   }
 
   const stored = await opts.locate();

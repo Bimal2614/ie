@@ -5,6 +5,7 @@ import { questionSets } from "@/db/schema";
 import { getCurrentUser } from "@/lib/dal";
 import { streamProtectedAudio } from "@/lib/protected-media";
 import { guardMedia, RateLimitError } from "@/lib/security/rate-guard";
+import { isUuid } from "@/lib/uuid";
 
 /**
  * Auth-gated listening audio for a `question_sets` row.
@@ -29,7 +30,6 @@ export const dynamic = "force-dynamic";
  */
 export const maxDuration = 60;
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function GET(req: Request, { params }: { params: Promise<{ setId: string }> }) {
   const user = await getCurrentUser();
@@ -45,7 +45,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ setId: s
   }
 
   const { setId } = await params;
-  if (!UUID.test(setId)) return new NextResponse("Not found", { status: 404 });
+  if (!isUuid(setId)) return new NextResponse("Not found", { status: 404 });
 
   const [set] = await db
     .select({ audioUrl: questionSets.audioUrl })

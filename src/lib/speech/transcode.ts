@@ -62,8 +62,17 @@ const MAX_OUTPUT_BYTES = 64 * 1024 * 1024;
  * concurrency shares an instance between invocations, which is what makes a
  * module-level count meaningful here at all.
  *
- * FFMPEG_CONCURRENCY overrides it — set it to the function's vCPU count if that
- * is ever raised above the default of one.
+ * THE DEFAULT OF 2 IS CORRECT AS OF 2026-09-16, and was not before. The function
+ * ran on Vercel's Standard size (1 vCPU) while this defaulted to 2 — read the
+ * table above on the 1 vCPU row: 1.57 recordings/sec at two, against 1.81 at
+ * one. The setting was costing ~13% of the throughput it was meant to protect.
+ * The size is now Performance (2 vCPU), where two is the optimum at 3.69/sec —
+ * so the same default is now the right one, and speaking uploads clear about
+ * 2.3× faster than they did on Standard.
+ *
+ * FFMPEG_CONCURRENCY overrides it — keep it equal to the function's vCPU count.
+ * Check this comment against Project Settings → Functions → CPU if that changes
+ * again; the mismatch above is silent and only shows up as a slow queue.
  */
 const MAX_CONCURRENT_FFMPEG = (() => {
   const raw = Number(process.env.FFMPEG_CONCURRENCY);

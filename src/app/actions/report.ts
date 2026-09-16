@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { auditLog } from "@/db/schema";
 import { getRequestContext } from "@/lib/session";
 import { rateLimit } from "@/lib/security/rate-limit";
+import { isUuid } from "@/lib/uuid";
 
 /**
  * Report a problem with a question (wrong key, typo, media issue, offensive
@@ -18,7 +19,6 @@ const REASONS = [
   "inappropriate",
   "other",
 ] as const;
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function reportQuestion(input: {
   questionId: string;
@@ -28,7 +28,7 @@ export async function reportQuestion(input: {
   const user = await requireUser();
 
   const questionId = String(input.questionId ?? "");
-  if (!UUID.test(questionId)) return { ok: false, error: "Invalid question." };
+  if (!isUuid(questionId)) return { ok: false, error: "Invalid question." };
 
   const reason = (REASONS as readonly string[]).includes(input.reason) ? input.reason : "other";
   const note = String(input.note ?? "").trim().slice(0, 1000);

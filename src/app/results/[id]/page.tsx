@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { getMockResult } from "@/app/actions/mock";
+import { isUuid } from "@/lib/uuid";
 import { SECTIONS } from "@/lib/ielts";
 import { buttonVariants } from "@/components/ui/button";
 import { LocalTime } from "@/components/history/local-time";
@@ -23,6 +24,7 @@ export const metadata: Metadata = { title: "Mock result · IELTSVega", robots: {
 
 export default async function ResultPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  if (!isUuid(id)) notFound(); // see src/lib/uuid.ts
   const result = await getMockResult(id);
   if (!result) notFound();
 

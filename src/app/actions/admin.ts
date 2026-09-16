@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { users, auditLog } from "@/db/schema";
 import { requireAdmin } from "@/lib/dal";
+import { isUuid } from "@/lib/uuid";
 import { DEFAULT_OFFERED_PLAN, isOfferedPlan, priceFor, type PlanKey } from "@/lib/plans";
 import {
   grantPlan,
@@ -22,6 +23,7 @@ import {
  */
 export async function reactivateAccount(userId: string): Promise<{ ok: boolean }> {
   const admin = await requireAdmin();
+  if (!isUuid(userId)) return { ok: false }; // see src/lib/uuid.ts
 
   await db
     .update(users)
@@ -78,6 +80,7 @@ export async function adminGrantPlan(input: {
 /** End a subscription now and drop the account to free (refund, abuse, mistake). */
 export async function adminRevokePlan(userId: string, reason?: string): Promise<{ ok: boolean }> {
   const admin = await requireAdmin();
+  if (!isUuid(userId)) return { ok: false }; // see src/lib/uuid.ts
 
   const { revoked } = await revokePlan(userId, {
     reason: reason ?? null,
@@ -91,6 +94,7 @@ export async function adminRevokePlan(userId: string, reason?: string): Promise<
 /** One account's subscriptions and its billing ledger, for a support screen. */
 export async function adminBillingFor(userId: string) {
   await requireAdmin();
+  if (!isUuid(userId)) return { subscriptions: [], log: [] }; // see src/lib/uuid.ts
   const [subs, log] = await Promise.all([subscriptionHistory(userId), billingLog(userId)]);
   return { subscriptions: subs, log };
 }
@@ -167,7 +171,9 @@ export async function verifyStudent(input: VerifyStudentInput): Promise<AdminAct
 /** Undo a verification: end the plan now and drop the account back to free. */
 export async function unverifyStudent(userId: string): Promise<AdminActionResult> {
   const admin = await requireAdmin();
-  if (!z.uuid().safeParse(userId).success) return { ok: false, error: "That request wasn't valid." };
+  // Was `z.uuid().safeParse` — the same question had three answers in this
+  // codebase (this, a retyped regex, and nothing at all). One answer now.
+  if (!isUuid(userId)) return { ok: false, error: "That request wasn't valid." };
 
   await revokePlan(userId, {
     reason: `Verification removed by ${admin.email}`,

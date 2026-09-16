@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getMockSitting } from "@/app/actions/mock";
 import { MockPlayer } from "@/components/mock/mock-player";
+import { isUuid } from "@/lib/uuid";
 
 /**
  * Room for the scoring that runs after the response.
@@ -20,11 +21,10 @@ export const maxDuration = 300;
 
 export const metadata: Metadata = { title: "Full mock · IELTSVega", robots: { index: false } };
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default async function MockTestPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  if (!UUID.test(id)) redirect("/mock-tests");
+  if (!isUuid(id)) redirect("/mock-tests");
 
   // A sitting under way is NEVER interrupted by a plan check. Starting one is
   // gated (see startMock, where nothing has been written yet); three hours in,

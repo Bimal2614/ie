@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/dal";
 import { openSection, sectionNeighbours, toClientSection } from "@/lib/practice-sections";
 import { SECTIONS, type SectionKey } from "@/lib/ielts";
 import { SectionPlayer } from "@/components/practice/section-player";
+import { isUuid } from "@/lib/uuid";
 
 /**
  * Room for the scoring that runs after the response.
@@ -25,7 +26,6 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default async function PracticeSectionPage({
   params,
@@ -35,7 +35,7 @@ export default async function PracticeSectionPage({
   const user = await requireUser();
 
   const { id } = await params;
-  if (!UUID.test(id)) notFound();
+  if (!isUuid(id)) notFound();
 
   const section = await openSection(id);
   if (!section) notFound();

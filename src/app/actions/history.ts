@@ -7,6 +7,7 @@ import { requireUser } from "@/lib/dal";
 import type { SectionKey, QuestionTypeKey } from "@/lib/ielts";
 import type { SetLayout, QuestionGroup, QuestionItem } from "@/lib/question-content";
 import { mediaUrl, safeQuestionContent } from "@/lib/media-urls";
+import { isUuid } from "@/lib/uuid";
 
 /* ------------------------------------------------------------------ *
  * Day boundaries
@@ -372,6 +373,13 @@ async function loadAttempt(
 ): Promise<AttemptDetail | null> {
   const user = await requireUser();
 
+  // Guarded HERE, not only in the page, because every export of a "use server"
+  // module is a callable endpoint — `getAttemptDetail` and `getAttemptPreview`
+  // both land here and both can be posted any string at all. Unchecked it
+  // reaches a `uuid` column and Postgres raises 22P02, which is served as a 500.
+  // "No such attempt" is the honest answer to an id that cannot exist.
+  if (!isUuid(attemptId)) return null;
+
   /**
    * THE SET IS FETCHED ONCE, NOT JOINED PER ROW.
    *
@@ -624,7 +632,6 @@ const MAX_RECENT_ATTEMPTS = 30;
 
 /** Cheap shape check: the panel's key is a uuid for sets but an exam number for
  *  section documents, and handing Postgres the latter is a 22P02, not a miss. */
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Both panel lists take the same cap, so neither can be talked past it. */
 function panelLimit(limit: number): number {
@@ -641,7 +648,7 @@ function panelLimit(limit: number): number {
  */
 export async function getSetAttempts(setId: string, limit = 12): Promise<AttemptRow[]> {
   const user = await requireUser();
-  if (!UUID.test(setId)) return [];
+  if (!isUuid(setId)) return [];
 
   return rollUpAttempts(
     and(eq(userResponses.userId, user.id), eq(userResponses.setId, setId)),
@@ -736,7 +743,7 @@ export async function getQuestionAnswers(
   limit = 12,
 ): Promise<QuestionHistory | null> {
   const user = await requireUser();
-  if (!UUID.test(questionId)) return null;
+  if (!isUuid(questionId)) return null;
 
   /**
    * The question ONCE, the answers separately.

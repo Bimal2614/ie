@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Check, X } from "lucide-react";
 import { getAttemptDetail, type AttemptDetail } from "@/app/actions/history";
+import { isUuid } from "@/lib/uuid";
 import { practiceInstruction, QUESTION_TYPES, SECTIONS } from "@/lib/ielts";
 import type { Answer } from "@/lib/question-content";
 import type { PlayerSet, PlayerQuestion, PlayerResult } from "@/components/practice/set-body";
@@ -13,11 +14,23 @@ export const metadata: Metadata = { title: "Attempt · IELTSVega", robots: { ind
 
 export default async function AttemptPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  // A stale bookmark or a truncated shared link is a 404, not a crash: the
+  // attempt id reaches a `uuid` column, where "abc" is a driver cast error
+  // served as a 500. See src/lib/uuid.ts.
+  if (!isUuid(id)) notFound();
+
   const a = await getAttemptDetail(id);
   if (!a) notFound();
 
+  // Defensive, and NOT a diagnosed cause — said plainly so nobody reads this as
+  // a fixed bug. `section` and `question_type` are Postgres enums, and every one
+  // of their 17 values has an entry in SECTIONS/QUESTION_TYPES today, so these
+  // lookups cannot currently miss. The guard is for the day a value is added to
+  // the enum without a matching entry here: `meta.family` on the next line
+  // would then be a TypeError, i.e. a 500 on a row the candidate owns.
   const sec = SECTIONS[a.section];
   const meta = QUESTION_TYPES[a.questionType];
+  if (!sec || !meta) notFound();
 
   // Writing and speaking are read back as prose and audio — a disabled textarea
   // or a dead record button would be a worse review than the response itself.

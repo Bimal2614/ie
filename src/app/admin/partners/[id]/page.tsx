@@ -6,6 +6,7 @@ import { PartnerControls } from "@/components/admin/partner-controls";
 import { cardClass, StatTile } from "@/components/dashboard/ui";
 import { InviteLink } from "@/components/partner/invite-link";
 import { ListControls, Pager } from "@/components/ui/list-controls";
+import { isUuid } from "@/lib/uuid";
 import { couponOptions } from "@/lib/admin";
 import { requireAdmin } from "@/lib/dal";
 import { parsePageRequest } from "@/lib/pagination";
@@ -27,6 +28,7 @@ export default async function AdminPartnerPage({
 }) {
   await requireAdmin();
   const { id } = await params;
+  if (!isUuid(id)) notFound(); // see src/lib/uuid.ts
   const req = parsePageRequest(await searchParams, STUDENT_LIST_DEFAULTS);
   const [data, allCoupons] = await Promise.all([partnerForAdmin(id, req), couponOptions()]);
   if (!data) notFound();
