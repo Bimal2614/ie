@@ -10,11 +10,16 @@ import {
 } from "@/db/schema";
 import { QUESTION_TYPES, type QuestionTypeKey } from "@/lib/ielts";
 import { keyFromUrl, presignGetUrl } from "@/lib/speech/s3";
-import { analyzeSpeaking, partFor } from "@/lib/speech/ielts-speaking";
+import { analyzeSpeaking, partFor, type CriterionId } from "@/lib/speech/ielts-speaking";
 import { scoreWriting, type WritingTaskType } from "@/lib/writing/openai";
 import { mockScoringIncomplete } from "./pending";
 import { resolvePrompts } from "./prompts";
-import { failureFeedback, speakingFeedback, unscorableFeedback } from "./speaking-feedback";
+import {
+  failureFeedback,
+  isCurrentSpeakingFeedback,
+  speakingFeedback,
+  unscorableFeedback,
+} from "./speaking-feedback";
 import { mapWithConcurrency } from "./concurrency";
 
 /**
@@ -323,38 +328,63 @@ export async function scoreMockSpeakingAnswerFor(
 }
 
 /**
- * Work out the Speaking band for a sitting — from ALL of it, and only once all
- * of it is in.
+ * The four criteria a Speaking band is built from, in the order IELTS states
+ * them. Fluency & Coherence is separated out below because it is the one
+ * coverage acts on directly.
+ */
+const FLUENCY: CriterionId = "fluency_coherence";
+const OTHER_CRITERIA: CriterionId[] = [
+  "lexical_resource",
+  "grammatical_range_accuracy",
+  "pronunciation",
+];
+
+/** The per-criterion bands stored on one scored answer, if they survived. */
+function criterionBandsOf(feedback: unknown): Partial<Record<CriterionId, number>> {
+  const out: Partial<Record<CriterionId, number>> = {};
+  if (!isCurrentSpeakingFeedback(feedback) || !("overall" in feedback)) return out;
+  const raw = feedback.overall?.criteriaBands ?? {};
+  for (const [id, band] of Object.entries(raw)) {
+    const n = Number(band);
+    if (Number.isFinite(n)) out[id as CriterionId] = n;
+  }
+  return out;
+}
+
+/**
+ * Work out the Speaking band for a sitting — and work it out the way the test is
+ * actually marked.
  *
- * TWO BUGS LIVED IN THE THREE LINES THIS REPLACES, and they compounded.
+ * REAL IELTS SPEAKING IS ONE PERFORMANCE, NOT ELEVEN. An examiner sits through
+ * the whole interview and gives a single score on each of four criteria; the
+ * band is the average of those four. There is no per-question band anywhere in
+ * the real test, and nothing averages a zero.
  *
- * It averaged `bands`, which is what THIS RUN scored. The run only ever selects
- * rows with no band, so a sitting scored in two passes — `after()` at hand-in
- * and the sweeper cron for whatever that missed — ended up with a module band
- * that was the mean of the stragglers alone. One late answer at 4.0 turned a
- * 7.0 module into a 4.0, and nothing about the report said so.
+ * WHICH IS WHY AVERAGING ZEROS WAS WRONG, even though it replaced something
+ * worse. Scoring unanswered questions as 0 and taking the mean put three Band 7
+ * answers out of eleven at 1.5 — and Band 1 is "no ability to use the language
+ * beyond a few isolated words", which is not a description of someone who just
+ * produced three Band 7 answers. The number came from the shape of our data
+ * rather than from the rubric.
  *
- * And it published whatever it had. A provider hiccup that dropped eight of
- * eleven answers still produced a confident Speaking band, computed from the
- * three that survived and presented exactly like one computed from all eleven.
- * That is not a slightly-off band; it is a band for a test that was not marked.
+ * SO COVERAGE IS APPLIED WHERE AN EXAMINER APPLIES IT. Not answering does not
+ * make the language that WAS produced worse — an examiner cannot unhear it — so
+ * the criteria are averaged over the answers actually given, undiluted. What
+ * silence destroys is the ability to sustain and extend speech, and that is
+ * Fluency & Coherence by definition, so coverage scales it in full. The other
+ * three take half that penalty: thin evidence genuinely weakens a judgement
+ * about range, but it does not turn a Band 7 vocabulary into a Band 2 one.
  *
- * SO: the mean is taken over every banded answer in the sitting, and it is not
- * written at all while any answer might still be scored. Held back, the report
- * keeps saying "marking your answers" — true, and far better than a number.
- * `mockScoringIncomplete` is what decides that, and it has no time limit: giving
- * up on scoring an answer is not the same as deciding the module can be graded
- * without it. A module we could not mark has no band, and says so.
- *
- * AN ANSWER THAT CAN NEVER BE SCORED DOES NOT HOLD THE BAND, and does not join
- * the mean either. A recording with no speech in it is settled — the candidate
- * is told so against that question — and there is no band to average in.
+ * Three of eleven at Band 7 now comes out at 4.0, which is where a real examiner
+ * lands; a complete module is untouched, and missing one question of eleven
+ * costs about half a band. The report shows the coverage beside the band so a
+ * candidate can see which half of this produced their number.
  */
 async function publishSpeakingBand(sessionId: string): Promise<void> {
   if ((await mockScoringIncomplete(sessionId, "speaking")) > 0) return;
 
   const rows = await db
-    .select({ band: mockTestAnswers.band })
+    .select({ band: mockTestAnswers.band, aiFeedback: mockTestAnswers.aiFeedback })
     .from(mockTestAnswers)
     .where(
       and(
@@ -364,28 +394,56 @@ async function publishSpeakingBand(sessionId: string): Promise<void> {
       ),
     );
 
-  const all = rows.map((r) => Number(r.band)).filter((b) => Number.isFinite(b));
-  if (all.length === 0) return;
+  const scored = rows.filter((r) => Number.isFinite(Number(r.band)));
+  if (scored.length === 0) return;
 
   /**
-   * OUT OF WHAT THE PAPER ASKED, not out of what came back.
+   * How much of the interview was actually given.
    *
-   * Every question the candidate did not answer — never recorded, or recorded
-   * with no speech in it — counts as a zero, which is what IELTS means by Band 0:
-   * did not attempt. Averaging over the answers alone marked a quarter-sat test
-   * out of a quarter and reported the result as a Speaking band.
+   * Out of what the PAPER asked, because a question nobody answered leaves no
+   * row behind — counting rows would measure the module against itself. An
+   * answer recorded with no speech in it has no band and is not in `scored`, so
+   * it counts against coverage exactly like one never given, which is right:
+   * the candidate was asked and said nothing.
    *
-   * `Math.max` guards the arithmetic rather than the policy: if a paper's stored
-   * question count ever disagreed with the rows we hold, the denominator must
-   * still not be smaller than the number of bands going into it, or a module
-   * could score above 9.
+   * `Math.max` guards the arithmetic, not the policy — a stored question count
+   * that disagreed with the rows we hold must never make coverage exceed 1.
    */
-  const asked = Math.max(await askedInModule(sessionId, "speaking"), all.length);
+  const asked = Math.max(await askedInModule(sessionId, "speaking"), scored.length);
+  const coverage = Math.min(1, scored.length / asked);
 
-  // The module band is the mean of its answers, rounded to the nearest half
-  // band — the IELTS convention.
-  const mean = all.reduce((a, b) => a + b, 0) / asked;
-  await recomputeOverall(sessionId, "speaking", Math.round(mean * 2) / 2);
+  // Each criterion averaged over the answers that have it. An answer whose
+  // per-criterion detail did not survive still counts, at its own overall band —
+  // dropping it would quietly weight the module towards the newer answers.
+  const totals = new Map<CriterionId, { sum: number; n: number }>();
+  for (const row of scored) {
+    const overall = Number(row.band);
+    const bands = criterionBandsOf(row.aiFeedback);
+    for (const id of [FLUENCY, ...OTHER_CRITERIA]) {
+      const value = bands[id] ?? overall;
+      const t = totals.get(id) ?? { sum: 0, n: 0 };
+      t.sum += value;
+      t.n += 1;
+      totals.set(id, t);
+    }
+  }
+
+  const meanOf = (id: CriterionId): number => {
+    const t = totals.get(id);
+    return t && t.n > 0 ? t.sum / t.n : 0;
+  };
+
+  // Sustaining speech across the interview IS Fluency & Coherence, so coverage
+  // scales it in full. The other three take half the penalty: less evidence is a
+  // weaker judgement, not worse language.
+  const fluency = meanOf(FLUENCY) * coverage;
+  const evidenceWeight = 0.5 + 0.5 * coverage;
+  const others = OTHER_CRITERIA.map((id) => meanOf(id) * evidenceWeight);
+
+  // The IELTS Speaking band is the mean of the four criteria, to the nearest
+  // half band.
+  const band = (fluency + others.reduce((a, b) => a + b, 0)) / 4;
+  await recomputeOverall(sessionId, "speaking", Math.round(band * 2) / 2);
 }
 
 export async function scoreMockWritingFor(
