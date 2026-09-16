@@ -1,6 +1,6 @@
 "use server";
 
-import { and, asc, desc, eq, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import {
@@ -39,10 +39,9 @@ import {
   timelineEnd,
   type MockTimeline,
 } from "@/lib/mock-timing";
-import { scoreMockSpeakingFor, scoreMockWritingFor } from "@/lib/scoring/score-mock";
 import { scheduleMockScoring } from "@/lib/scoring/background";
-import { guardGeneral, tryConsumeAi } from "@/lib/security/rate-guard";
-import { checkAiScoring, checkMockAccess } from "@/lib/security/plan-guard";
+import { guardGeneral } from "@/lib/security/rate-guard";
+import { checkMockAccess } from "@/lib/security/plan-guard";
 import { mediaUrl } from "@/lib/media-urls";
 
 /**
@@ -82,10 +81,19 @@ export type MockTestCard = MockTestSummary & {
  * The module is resolved SERVER-SIDE from the profile unless the caller asks for
  * the other one deliberately — the same rule the section browser uses, so a
  * General candidate is never shown an Academic paper by default.
+ *
+ * `openSitting` is looked up SEPARATELY from the per-paper history below, and
+ * not as a column of it, because the rule it serves is not per-paper: one open
+ * sitting blocks every other paper (see `startMock`), including ones in the
+ * other stream that this catalogue is not even showing. Folding it into a query
+ * already filtered to `tests` would miss exactly those, and the candidate would
+ * be offered a Start that the server then refuses.
  */
-export async function getMockCatalogue(
-  moduleOverride?: string | null,
-): Promise<{ module: "academic" | "general"; tests: MockTestCard[] }> {
+export async function getMockCatalogue(moduleOverride?: string | null): Promise<{
+  module: "academic" | "general";
+  tests: MockTestCard[];
+  openSitting: OpenSitting | null;
+}> {
   const user = await requireUser();
   await guardGeneral(user.id);
 
@@ -94,8 +102,11 @@ export async function getMockCatalogue(
   // identifier is reserved, and shadowing it is a build error.
   const stream: "academic" | "general" = wanted === "general" ? "general" : "academic";
 
-  const tests = await listMockTests(stream);
-  if (tests.length === 0) return { module: stream, tests: [] };
+  const [tests, openSitting] = await Promise.all([
+    listMockTests(stream),
+    openSittingFor(user.id),
+  ]);
+  if (tests.length === 0) return { module: stream, tests: [], openSitting };
 
   // This candidate's history against these papers, REDUCED IN POSTGRES to one
   // row per paper. The four things a card shows — the open sitting, the
@@ -141,6 +152,7 @@ export async function getMockCatalogue(
 
   return {
     module: stream,
+    openSitting,
     tests: tests.map((t) => {
       const mine = byTest.get(t.id);
       return {
@@ -160,12 +172,74 @@ export async function getMockCatalogue(
  * Starting and resuming
  * ------------------------------------------------------------------ */
 
+/** The sitting a candidate is in the middle of, whichever paper it is on. */
+export type OpenSitting = {
+  sessionId: string;
+  mockTestId: string;
+  /** The paper's own name — "Cambridge 19 · Test 2" — for the block message. */
+  title: string;
+};
+
+/**
+ * The one sitting this candidate has open, or null.
+ *
+ * NOT MERELY `status = 'in_progress'`. A sitting is only closed when someone
+ * opens it — `getMockSitting` grades a lapsed paper on the way past — so a
+ * candidate who started a mock and never came back leaves a row that says
+ * "in progress" for as long as nobody looks at it. Treating that as an open
+ * sitting would lock them out of every other paper forever on the strength of a
+ * clock that ran out weeks ago, which is the trap the one-at-a-time rule would
+ * otherwise set for exactly the people least likely to work out why.
+ *
+ * So the deadline decides, not the status: a sitting is open while it still has
+ * time on it. One that has run out is over whether or not the row has caught up,
+ * and opening it grades it. Runs on mock_sessions_expiry_idx (status,
+ * expires_at).
+ */
+async function openSittingFor(userId: string): Promise<OpenSitting | null> {
+  const [row] = await db
+    .select({
+      sessionId: mockTestSessions.id,
+      mockTestId: mockTestSessions.mockTestId,
+      title: mockTests.title,
+    })
+    .from(mockTestSessions)
+    .innerJoin(mockTests, eq(mockTests.id, mockTestSessions.mockTestId))
+    .where(
+      and(
+        eq(mockTestSessions.userId, userId),
+        eq(mockTestSessions.status, "in_progress"),
+        gt(mockTestSessions.expiresAt, new Date()),
+      ),
+    )
+    // Newest first, so the sitting a candidate is actually in wins over an older
+    // one that somehow survived — they go to the paper they just started.
+    .orderBy(desc(mockTestSessions.startedAt))
+    .limit(1);
+
+  return row ?? null;
+}
+
 /**
  * Open a paper: resume the sitting already in progress, or start a new one.
  *
- * RESUME RATHER THAN RESTART is the point. Starting a second sitting of a paper
- * you are 20 minutes into would hand back the time the exam has already spent —
- * which is precisely the thing the timeline exists to prevent.
+ * ONE SITTING AT A TIME, ACROSS THE WHOLE ACCOUNT. A mock clock is wall-clock
+ * time that does not stop for anything — so two open sittings are not two
+ * candidates' worth of practice, they are one paper being destroyed in the
+ * background while the other is sat. Starting Test 2 twenty minutes into Test 1
+ * used to be a click, and the report it produced for Test 1 was of a paper
+ * nobody ever answered.
+ *
+ * RESUME RATHER THAN RESTART is the other half of the same rule, and it is why
+ * this redirects to the open sitting rather than refusing: starting a second
+ * sitting of a paper you are 20 minutes into would hand back the time the exam
+ * has already spent, which is precisely what the timeline exists to prevent.
+ * A candidate who does not want to go back to it abandons it (`abandonMock`) —
+ * that is a decision with a consequence, not a stray click.
+ *
+ * A COMPLETED PAPER CAN BE SAT AGAIN. Once the report exists the sitting is
+ * over, the band is recorded, and nothing is lost by taking the paper a second
+ * time. Only an OPEN sitting blocks.
  */
 export async function startMock(formData: FormData): Promise<void> {
   const user = await requireUser();
@@ -187,18 +261,12 @@ export async function startMock(formData: FormData): Promise<void> {
     .limit(1);
   if (!test) redirect("/mock-tests");
 
-  const [open] = await db
-    .select({ id: mockTestSessions.id })
-    .from(mockTestSessions)
-    .where(
-      and(
-        eq(mockTestSessions.userId, user.id),
-        eq(mockTestSessions.mockTestId, test.id),
-        eq(mockTestSessions.status, "in_progress"),
-      ),
-    )
-    .limit(1);
-  if (open) redirect(`/mock-test/${open.id}`);
+  // Deliberately NOT filtered to this paper — see the note above. Whichever
+  // sitting is open is the one this candidate is in, and it is where they go.
+  // This is the real gate; the catalogue's disabled buttons are only its
+  // manners.
+  const open = await openSittingFor(user.id);
+  if (open) redirect(`/mock-test/${open.sessionId}`);
 
   const order = await mockModuleOrder(test.id);
   if (order.length === 0) redirect("/mock-tests");
@@ -226,7 +294,20 @@ export async function startMock(formData: FormData): Promise<void> {
   redirect(`/mock-test/${session.id}`);
 }
 
-/** Abandon an unfinished sitting so the paper can be started fresh. */
+/**
+ * Give up on an unfinished sitting.
+ *
+ * THE WAY OUT OF THE ONE-AT-A-TIME RULE. A sitting holds every other paper shut
+ * while it runs (see `startMock`), so a mock opened by accident would otherwise
+ * cost the candidate three hours of not being able to sit anything. This closes
+ * it deliberately: the paper is spent, no report is produced, and the catalogue
+ * opens up again.
+ *
+ * NOT A RESTART, and the difference matters. The sitting is marked `abandoned`
+ * rather than deleted, so the time it burned is a fact that stays on the record;
+ * starting that paper again afterwards is a genuinely fresh sitting with a fresh
+ * timeline, not the old one's clock handed back.
+ */
 export async function abandonMock(formData: FormData): Promise<void> {
   const user = await requireUser();
   const sessionId = String(formData.get("sessionId") ?? "");
@@ -650,30 +731,21 @@ async function submitSitting(
  * ------------------------------------------------------------------ */
 
 /**
- * Retry Writing + Speaking scoring for a finished sitting.
+ * NO CLIENT-CALLABLE SCORER LIVES HERE ANY MORE, and that is deliberate.
  *
- * THE AUTHORITATIVE RUN IS `scheduleMockScoring` AT HAND-IN, and the sweeper
- * cron behind it — this is the ask-again path for when neither could finish,
- * kept because the report screen is where a candidate notices a missing band.
+ * There used to be `scoreMockSpeaking` and `scoreMockWriting` behind a "Try
+ * scoring again" button on the report. They existed from before the sweeper
+ * cron did, when a candidate noticing a missing band genuinely was the only
+ * recovery. Scoring now has two server-side sources — `scheduleMockScoring` via
+ * `after()` at hand-in, and /api/cron/scoring every five minutes for three hours
+ * after it — so the button asked a candidate to start work that was already
+ * queued, and every exported function in a "use server" module is a callable
+ * endpoint whether or not anything in the UI calls it.
  *
- * The work itself lives in src/lib/scoring/score-mock.ts. It cannot live here:
- * everything exported from a "use server" module is a callable endpoint, so a
- * userId-taking scorer exported from this file would let any client spend
- * someone else's AI quota. These wrappers establish the user themselves.
- *
- * Idempotent — only rows with no band are touched, so a retry or a second visit
- * cannot double-charge the API.
+ * The work itself is unchanged and still lives in src/lib/scoring/score-mock.ts,
+ * where the cron reaches it with a userId it established itself.
+ * `mockScoringStatus` below is all the report needs: it watches, and says so.
  */
-export async function scoreMockSpeaking(sessionId: string): Promise<{ scored: number }> {
-  const user = await requireUser();
-  // Defence in depth: starting the sitting was already gated, but a plan can
-  // lapse between hand-in and the report being opened.
-  if (checkAiScoring(user)) return { scored: 0 };
-
-  if (!(await tryConsumeAi(user.id)).allowed) return { scored: 0 };
-
-  return scoreMockSpeakingFor(user.id, sessionId);
-}
 
 /**
  * How many of a sitting's subjective answers are still waiting for a band.
@@ -717,16 +789,6 @@ export async function mockScoringStatus(sessionId: string): Promise<{ pending: n
     );
 
   return { pending: row?.pending ?? 0 };
-}
-
-/** Retry Writing scoring for a finished sitting. Mirrors scoreMockSpeaking. */
-export async function scoreMockWriting(sessionId: string): Promise<{ scored: number }> {
-  const user = await requireUser();
-  if (checkAiScoring(user)) return { scored: 0 };
-
-  if (!(await tryConsumeAi(user.id)).allowed) return { scored: 0 };
-
-  return scoreMockWritingFor(user.id, sessionId);
 }
 
 /* ------------------------------------------------------------------ *

@@ -41,6 +41,13 @@ import { ListeningTape, type Tape } from "./listening-tape";
 
 const AUTOSAVE_MS = 5000;
 
+/**
+ * The longest a hand-in will wait for a recording that has not finished
+ * uploading. See `awaitUploads` — it is a grace, not a timeout on the upload
+ * itself, which carries on regardless.
+ */
+const UPLOAD_GRACE_MS = 15_000;
+
 type Props = {
   sitting: MockSittingData;
 };
@@ -207,16 +214,44 @@ export function MockPlayer({ sitting }: Props) {
 
   /* --- Moving on --- */
 
+  /**
+   * Let a take that is still uploading land before the answers are sent.
+   *
+   * THE ONLY PLACE THE UPLOAD IS ALLOWED TO COST ANYTHING. Storing a recording
+   * is server work — the WebM is transcoded to WAV on the way in, because the
+   * scorer has no ffmpeg — and it used to be paid for at the front: the Finish
+   * button went dead, the footer said "don't leave yet", and a spinner sat
+   * beside the answer. None of that helped the candidate, who had already
+   * spoken and wanted the next question.
+   *
+   * So the wait moved here, where it is invisible. By the time a module is
+   * handed in the upload is almost always long finished, and when it is not,
+   * this happens under a spinner that was going up anyway. Submitting a
+   * `pendingUpload` answer would save a recording with no storage location,
+   * which the report can only ever show as "Not scored".
+   *
+   * TIME-BOXED, because the alternative to a lost recording must not be a lost
+   * paper. Past the grace the hand-in goes ahead regardless — an answer marked
+   * `uploadFailed` is one band missing from a report that otherwise exists.
+   */
+  const awaitUploads = useCallback(async () => {
+    const deadline = Date.now() + UPLOAD_GRACE_MS;
+    while (anyUploadPending(answersRef.current) && Date.now() < deadline) {
+      await new Promise((r) => window.setTimeout(r, 200));
+    }
+  }, []);
+
   const submit = useCallback(async () => {
     if (finished.current) return;
     finished.current = true;
     setSubmitting(true);
+    await awaitUploads();
     // The paper is gone; so are the notes on it. Left behind they would sit in
     // storage until the tab closed, and reappear on a re-sit of the same test.
     clearAnnotations(annotationScope);
     // finishMock redirects to the report; the spinner stays up until navigation.
     await finishMock(sitting.sessionId, answersRef.current, timings.current);
-  }, [annotationScope, sitting.sessionId]);
+  }, [annotationScope, awaitUploads, sitting.sessionId]);
 
   const advance = useCallback(async () => {
     if (finished.current || advancing) return;
@@ -227,6 +262,10 @@ export function MockPlayer({ sitting }: Props) {
       return;
     }
     setAdvancing(true);
+    // Speaking is the last module in every paper today, so this is belt and
+    // braces — but a module boundary is still a point of no return, and a take
+    // still in flight over one would be saved without its recording.
+    await awaitUploads();
     const res = await advanceMockModule(
       sitting.sessionId,
       module.index,
@@ -254,7 +293,7 @@ export function MockPlayer({ sitting }: Props) {
     setCurrent(null);
     lastTick.current = Date.now();
     setAdvancing(false);
-  }, [advancing, annotationScope, isLastModule, module.index, sitting.sessionId, submit]);
+  }, [advancing, annotationScope, awaitUploads, isLastModule, module.index, sitting.sessionId, submit]);
 
   // Countdown. At zero the module's time is up — the server is asked for the
   // next one, which is also what re-syncs the clock.
@@ -475,6 +514,11 @@ export function MockPlayer({ sitting }: Props) {
       // On test day a Speaking question is spoken and never printed, so the
       // paper plays it and hides the text. Section practice does the opposite.
       spokenPromptOnly
+      // And it is asked ONCE. No seek bar, no pause, no replay — the same rule
+      // ListeningTape imposes on the recording, for the same reason: scrubbing
+      // back through the examiner rehearses a repetition the real one will not
+      // give, and it was the last way left to hear a Speaking prompt twice.
+      promptPlaysOnce
       // One take: the interview cannot be walked back to, so a "Re-record"
       // button would offer something the navigation refuses.
       singleTake
@@ -528,7 +572,6 @@ export function MockPlayer({ sitting }: Props) {
     </div>
   );
 
-  const savingRecording = anyUploadPending(answers);
   const timerState = remaining < 60 ? "critical" : remaining < 300 ? "warning" : "ok";
 
   return (
@@ -593,17 +636,14 @@ export function MockPlayer({ sitting }: Props) {
           : current === null || partNumbers.indexOf(current) < partNumbers.length - 1
       }
       onSubmit={() => setConfirming(true)}
-      submitting={submitting || advancing || savingRecording}
-      submitLabel={
-        savingRecording
-          ? "Saving recording…"
-          : isLastModule
-            ? "Finish test"
-            : `Finish ${sec.label}`
-      }
+      // An upload in flight does NOT hold this shut — see `awaitUploads`. The
+      // candidate is never made to wait on the network for a take they have
+      // already given; the waiting, where any is needed at all, happens behind
+      // the hand-in spinner.
+      submitting={submitting || advancing}
+      submitLabel={isLastModule ? "Finish test" : `Finish ${sec.label}`}
       footerNote={
         <FooterNote
-          savingRecording={savingRecording}
           advancing={advancing}
           submitting={submitting}
           answered={answered.size}
@@ -722,7 +762,6 @@ function ModuleRail({
 }
 
 function FooterNote({
-  savingRecording,
   advancing,
   submitting,
   answered,
@@ -732,7 +771,6 @@ function FooterNote({
   lapsed,
   tapeFinished,
 }: {
-  savingRecording: boolean;
   advancing: boolean;
   submitting: boolean;
   answered: number;
@@ -756,7 +794,6 @@ function FooterNote({
       </span>
     );
   }
-  if (savingRecording) return <>Storing your recording — don&apos;t leave yet.</>;
   if (lapsed.length > 0) {
     return (
       <span className="inline-flex items-center gap-1.5 text-warning">

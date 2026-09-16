@@ -1,23 +1,24 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   BookOpen,
   Clock,
+  FileText,
   Headphones,
   ListChecks,
+  Lock,
   Mic,
   PenLine,
   Play,
-  RotateCcw,
   Search,
   Trophy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SECTIONS, type SectionKey } from "@/lib/ielts";
-import { startMock } from "@/app/actions/mock";
-import type { MockTestCard } from "@/app/actions/mock";
+import { abandonMock, startMock } from "@/app/actions/mock";
+import type { MockTestCard, OpenSitting } from "@/app/actions/mock";
 
 /**
  * The mock catalogue: every full-length paper we hold for the candidate's
@@ -44,9 +45,16 @@ const SECTION_ICON: Record<SectionKey, typeof Headphones> = {
 export function MockCatalogue({
   tests,
   module,
+  openSitting,
 }: {
   tests: MockTestCard[];
   module: "academic" | "general";
+  /**
+   * The one sitting this candidate has running, if any — see `startMock`. It may
+   * be a paper from the OTHER stream, which is why it arrives on its own rather
+   * than being read off `tests`.
+   */
+  openSitting: OpenSitting | null;
 }) {
   const [query, setQuery] = useState("");
 
@@ -74,8 +82,6 @@ export function MockCatalogue({
     return [...grouped.entries()];
   }, [query, tests]);
 
-  const open = tests.filter((t) => t.inProgressSessionId);
-
   if (tests.length === 0) {
     return (
       <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-line py-16 text-center">
@@ -93,27 +99,30 @@ export function MockCatalogue({
 
   return (
     <div className="space-y-6">
-      {/* Unfinished sittings come first — their clock is still running. */}
-      {open.length > 0 && (
+      {/* The sitting in progress comes first — its clock is still running, and
+          until it is finished or abandoned it is the only paper that opens. */}
+      {openSitting && (
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
             In progress · the clock is still running
           </p>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {open.map((t) => (
-              <Link
-                key={t.id}
-                href={`/mock-test/${t.inProgressSessionId}`}
-                className="flex items-center gap-3 rounded-xl border border-warning/40 bg-warning-soft px-4 py-3 transition-colors hover:border-warning"
-              >
-                <Clock className="size-4 shrink-0 text-warning" />
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-semibold text-ink">{t.title}</span>
-                  <span className="block text-xs text-ink-muted">Resume where the clock is now</span>
-                </span>
-                <Play className="size-4 shrink-0 text-warning" />
-              </Link>
-            ))}
+          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-warning/40 bg-warning-soft px-4 py-3">
+            <Clock className="size-4 shrink-0 text-warning" />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-semibold text-ink">
+                {openSitting.title}
+              </span>
+              <span className="block text-xs text-ink-muted">
+                Finish or abandon this before starting another paper.
+              </span>
+            </span>
+            <AbandonButton sessionId={openSitting.sessionId} />
+            <Link
+              href={`/mock-test/${openSitting.sessionId}`}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-warning px-3 py-1.5 text-xs font-semibold text-white transition-opacity hover:opacity-90"
+            >
+              <Play className="size-3.5" /> Resume
+            </Link>
           </div>
         </div>
       )}
@@ -144,7 +153,15 @@ export function MockCatalogue({
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             {papers.map((t) => (
-              <PaperCard key={t.id} test={t} />
+              <PaperCard
+                key={t.id}
+                test={t}
+                // Blocked by SOMETHING ELSE being open. A paper is never blocked
+                // by its own sitting — that one resumes.
+                blockedBy={
+                  openSitting && openSitting.mockTestId !== t.id ? openSitting.title : null
+                }
+              />
             ))}
           </div>
         </section>
@@ -153,7 +170,52 @@ export function MockCatalogue({
   );
 }
 
-function PaperCard({ test }: { test: MockTestCard }) {
+/**
+ * Walking away from a sitting, deliberately.
+ *
+ * THE ESCAPE HATCH THE ONE-AT-A-TIME RULE NEEDS. With one sitting allowed at a
+ * time, a paper opened by accident would otherwise hold every other paper shut
+ * until its three-hour clock ran out. `abandonMock` has existed for exactly this
+ * since the sittings did; it simply had nothing to press it.
+ *
+ * ARMED BEFORE IT FIRES, because it is not undoable: the sitting is closed, it
+ * never becomes a report, and the answers in it are gone. It disarms itself
+ * after a few seconds so a stray first click does not leave a live destructive
+ * button sitting on the page.
+ */
+function AbandonButton({ sessionId }: { sessionId: string }) {
+  const [armed, setArmed] = useState(false);
+
+  useEffect(() => {
+    if (!armed) return;
+    const t = window.setTimeout(() => setArmed(false), 4000);
+    return () => window.clearTimeout(t);
+  }, [armed]);
+
+  return (
+    <form action={abandonMock} className="shrink-0">
+      <input type="hidden" name="sessionId" value={sessionId} />
+      <button
+        type="submit"
+        onClick={(e) => {
+          if (armed) return;
+          e.preventDefault();
+          setArmed(true);
+        }}
+        className={cn(
+          "inline-flex items-center gap-1.5 rounded-md border bg-paper px-2.5 py-1.5 text-xs font-semibold transition-colors",
+          armed
+            ? "border-danger/60 text-danger"
+            : "border-line text-ink-soft hover:border-danger/50 hover:text-ink",
+        )}
+      >
+        {armed ? "Sure? This ends it" : "Abandon"}
+      </button>
+    </form>
+  );
+}
+
+function PaperCard({ test, blockedBy }: { test: MockTestCard; blockedBy: string | null }) {
   const resuming = Boolean(test.inProgressSessionId);
 
   return (
@@ -211,7 +273,7 @@ function PaperCard({ test }: { test: MockTestCard }) {
               href={`/results/${test.lastSessionId}`}
               className="inline-flex items-center gap-1 rounded-md border border-line px-2.5 py-1.5 text-xs font-semibold text-ink-soft transition-colors hover:border-brand/50 hover:text-ink"
             >
-              <RotateCcw className="size-3" /> Report
+              <FileText className="size-3" /> Report
             </Link>
           )}
           {resuming ? (
@@ -221,6 +283,19 @@ function PaperCard({ test }: { test: MockTestCard }) {
             >
               <Clock className="size-3.5" /> Resume
             </Link>
+          ) : blockedBy ? (
+            // One sitting at a time — `startMock` enforces it, and would send a
+            // press here straight back to the open paper. Saying so beforehand
+            // is kinder than a redirect nobody asked for.
+            <button
+              type="button"
+              disabled
+              title={`Finish or abandon ${blockedBy} first — only one mock runs at a time.`}
+              aria-label={`Start is unavailable: finish or abandon ${blockedBy} first`}
+              className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-md border border-line px-3 py-1.5 text-xs font-semibold text-ink-muted"
+            >
+              <Lock className="size-3.5" /> Start
+            </button>
           ) : (
             // A plain form post, so starting a paper works without JavaScript
             // and the sitting is created server-side where the clock lives.
