@@ -69,11 +69,25 @@ export type StoredSpeakingUnscorable = {
 /** True when a stored `ai_feedback` came from this service (not SpeechSuper). */
 export function isCurrentSpeakingFeedback(
   fb: unknown,
-): fb is StoredSpeakingFeedback | StoredSpeakingUnscorable {
+): fb is StoredSpeakingFeedback | StoredSpeakingUnscorable | StoredSpeakingFailure {
   return (
     typeof fb === "object" &&
     fb !== null &&
     (fb as { provider?: unknown }).provider === "ielts-speaking-eval"
+  );
+}
+
+/**
+ * True for a payload that is ONLY a record of a failed attempt.
+ *
+ * It has to be distinguishable, because callers reasonably assumed that "ours,
+ * and not unscorable" meant "scored" — and handed the payload to a renderer
+ * expecting bands and criteria. A breadcrumb has neither: there is nothing to
+ * show a candidate, and the answer is still waiting for a band.
+ */
+export function isSpeakingFailure(fb: unknown): fb is StoredSpeakingFailure {
+  return (
+    isCurrentSpeakingFeedback(fb) && "lastError" in fb && !("unscorable" in fb) && !("overall" in fb)
   );
 }
 
@@ -104,4 +118,42 @@ export function unscorableFeedback(
   detail?: string,
 ): StoredSpeakingUnscorable {
   return { provider: "ielts-speaking-eval", unscorable: { reason, detail: detail ?? null } };
+}
+
+/**
+ * What went wrong the last time we tried, for an answer that is NOT settled.
+ *
+ * WHY THIS EXISTS. `unscorable` is a verdict: no speech, bad audio, nothing more
+ * to try. Every other failure — the provider refusing, a bad gateway, a key
+ * problem, a throttle — used to be written down nowhere at all. The row was left
+ * band-less and reason-less, identical in the database to one that simply had not
+ * been reached yet, and the log line that knew the reason said `{}`. Working out
+ * that eleven answers had failed transiently rather than been recorded in
+ * silence took re-scoring one of them by hand.
+ *
+ * NOT A VERDICT, AND IT MUST NOT READ AS ONE. `lastError` sits alongside
+ * `unscorable` precisely so that the retry predicate can tell the two apart:
+ * `scorableMockAnswer` asks whether `unscorable` is absent, so an answer
+ * carrying only this is still in the queue and will be tried again. It is a
+ * breadcrumb for us, not a judgement on the candidate.
+ */
+export type StoredSpeakingFailure = {
+  provider: "ielts-speaking-eval";
+  lastError: { reason: string; status: number | null; detail: string | null; at: string };
+};
+
+export function failureFeedback(
+  reason: string,
+  status?: number,
+  detail?: string,
+): StoredSpeakingFailure {
+  return {
+    provider: "ielts-speaking-eval",
+    lastError: {
+      reason,
+      status: status ?? null,
+      detail: detail ?? null,
+      at: new Date().toISOString(),
+    },
+  };
 }

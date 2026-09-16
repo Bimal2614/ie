@@ -7,7 +7,12 @@ import { mockTestAnswers, userResponses } from "@/db/schema";
 import { tryConsumeAi } from "@/lib/security/rate-guard";
 import { userMayUseAiScoring } from "@/lib/security/plan-guard";
 import { scoreAttemptSpeakingFor, scoreAttemptWritingFor } from "./score-attempt";
-import { scoreMockSpeakingFor, scoreMockWritingFor } from "./score-mock";
+import {
+  publishMockBands,
+  scoreMockSpeakingAnswerFor,
+  scoreMockSpeakingFor,
+  scoreMockWritingFor,
+} from "./score-mock";
 
 /**
  * Kick off AI band scoring for an attempt AFTER the response has been sent.
@@ -108,7 +113,15 @@ export function scheduleMockScoring(userId: string, sessionId: string): void {
             inArray(mockTestAnswers.section, [...AI_SECTIONS]),
           ),
         );
-      if (pending.length === 0) return;
+      // NOTHING TO SCORE IS NOT NOTHING TO DO. Takes are marked as they are
+      // given (see scoreMockSpeakingAnswerFor), so a sitting often arrives here
+      // already complete — and returning without publishing is how a
+      // fully-marked module ends up with no band on the report. Publishing
+      // spends no provider call and no budget token.
+      if (pending.length === 0) {
+        await publishMockBands(sessionId);
+        return;
+      }
 
       // The last check before money is spent — this callback outlives the
       // request that scheduled it, and a plan can lapse in between.
@@ -124,6 +137,33 @@ export function scheduleMockScoring(userId: string, sessionId: string): void {
       if (sections.has("speaking")) await scoreMockSpeakingFor(userId, sessionId);
     } catch (e) {
       console.error("[scoring] background mock run failed", { sessionId, error: e });
+    }
+  });
+}
+
+/**
+ * Mark ONE speaking answer after the response has gone out.
+ *
+ * The live path's half of `scheduleMockScoring`: same `after()` reasoning, same
+ * last-moment plan and budget checks, one answer instead of a module. Called as
+ * each take lands during a Speaking module — see `recordMockSpeakingTake` — so
+ * the provider gets one call a minute rather than eleven at once, and the report
+ * is already marked by the time the paper is handed in.
+ *
+ * FAILING HERE COSTS NOTHING. The answer keeps its null band, the sweeper cron
+ * has it in the queue, and the batch run at hand-in would pick it up before that.
+ * This is an optimisation of WHEN marking happens, never the only chance at it.
+ */
+export function scheduleMockAnswerScoring(userId: string, answerId: string): void {
+  after(async () => {
+    try {
+      // This callback outlives the request that scheduled it, and a plan can
+      // lapse in between.
+      if (!(await userMayUseAiScoring(userId))) return;
+      if (!(await tryConsumeAi(userId)).allowed) return;
+      await scoreMockSpeakingAnswerFor(userId, answerId);
+    } catch (e) {
+      console.error(`[scoring] background mock answer failed answer=${answerId}`, e);
     }
   });
 }

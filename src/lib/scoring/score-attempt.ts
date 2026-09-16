@@ -6,7 +6,7 @@ import { userResponses } from "@/db/schema";
 import { QUESTION_TYPES, type QuestionTypeKey } from "@/lib/ielts";
 import { keyFromUrl, presignGetUrl } from "@/lib/speech/s3";
 import { analyzeSpeaking, partFor } from "@/lib/speech/ielts-speaking";
-import { speakingFeedback, unscorableFeedback } from "./speaking-feedback";
+import { failureFeedback, speakingFeedback, unscorableFeedback } from "./speaking-feedback";
 import { scoreWriting, type WritingTaskType } from "@/lib/writing/openai";
 import { resolvePrompts } from "./prompts";
 import { mapWithConcurrency } from "./concurrency";
@@ -156,20 +156,30 @@ export async function scoreAttemptSpeakingFor(
       // unscored answer, and without a line in the log there is nothing to tell
       // a missing key apart from a provider outage apart from a recording with
       // nothing in it.
-      console.error("[scoring] speaking: not scored", {
-        responseId: row.id,
-        reason: result.reason,
-        detail: result.detail,
-      });
+      // Interpolated rather than passed as an object: not every log sink formats
+      // the second argument, and the dev server's renders it as a bare `{}` —
+      // which is how a run of these ends up saying nothing at all.
+      console.error(
+        `[scoring] speaking: not scored response=${row.id} reason=${result.reason}` +
+          ` status=${result.status ?? "-"} detail=${result.detail ?? "-"}`,
+      );
       // No speech in the recording is a permanent fact about it, not an outage.
       // Recording that stops the report screen waiting for a band that is never
       // coming, and tells the candidate what to do instead.
-      if (result.reason === "no_speech" || result.reason === "bad_audio") {
-        await db
-          .update(userResponses)
-          .set({ aiFeedback: unscorableFeedback(result.reason, result.detail) })
-          .where(eq(userResponses.id, row.id));
-      }
+      //
+      // Everything else is written down too, as a breadcrumb rather than a
+      // verdict: `scorableResponse` keys off `unscorable`, so this keeps the row
+      // in the retry queue while making the reason survive the process that knew
+      // it. See failureFeedback().
+      await db
+        .update(userResponses)
+        .set({
+          aiFeedback:
+            result.reason === "no_speech" || result.reason === "bad_audio"
+              ? unscorableFeedback(result.reason, result.detail)
+              : failureFeedback(result.reason, result.status, result.detail),
+        })
+        .where(eq(userResponses.id, row.id));
       return false;
     }
 

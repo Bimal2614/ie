@@ -100,8 +100,9 @@ export function SpeakingScoreTrigger({ sessionId }: { sessionId: string }) {
       <p className="flex flex-wrap items-center gap-2 rounded-lg bg-info-soft px-3 py-2 text-xs text-ink-soft">
         <Sparkles className="size-3.5" />
         <span>
-          Some answers are still being marked. Your work is saved and scoring retries on its own —
-          open this report again shortly and the bands will be here.
+          Some answers couldn&apos;t be marked. Your work is saved, and a module is left without a
+          band rather than scored on the answers that did come back — so the bands you can see are
+          still worth comparing. Get in touch and we&apos;ll look at it.
         </span>
       </p>
     );

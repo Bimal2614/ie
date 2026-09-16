@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { and, asc, eq, gt, inArray, isNotNull, isNull, lt, or, sql } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, isNotNull, isNull, lt, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { mockTestAnswers, mockTestSessions, userResponses } from "@/db/schema";
 import { isAuthorizedCron } from "@/lib/security/cron-auth";
@@ -7,6 +7,13 @@ import { userMayUseAiScoring } from "@/lib/security/plan-guard";
 import { tryConsumeAi } from "@/lib/security/rate-guard";
 import { scoreAttemptSpeakingFor, scoreAttemptWritingFor } from "@/lib/scoring/score-attempt";
 import { scoreMockSpeakingFor, scoreMockWritingFor } from "@/lib/scoring/score-mock";
+import {
+  AI_SECTIONS,
+  SCORING_GRACE_MINUTES,
+  SCORING_LOOKBACK_HOURS,
+  scorableMockAnswer,
+  scorableResponse,
+} from "@/lib/scoring/pending";
 
 /**
  * The scoring sweeper: everything `after()` could not finish.
@@ -47,46 +54,6 @@ export const runtime = "nodejs";
  */
 export const maxDuration = 300;
 
-/**
- * How long an unscored answer is left alone before this touches it.
- *
- * PAST THE LONGEST `after()` CAN POSSIBLY RUN, which is what sets the number.
- * `after()` gets first refusal on every submit, and the two must never work the
- * same rows at once: the scorers claim nothing when they read, so a race is not
- * a no-op — both runs see `band IS NULL` and both pay a provider for every
- * answer. The submit routes cap at maxDuration = 300s, so nothing scheduled
- * there can still be running six minutes later, and this cannot overlap it.
- *
- * Three minutes was the first guess and it was too close: a full sitting's
- * thirteen subjective answers at six-way concurrency is three waves of speaking
- * calls, and a slow provider makes that a two-to-three minute batch. The cost of
- * the extra three minutes is latency on answers that were already late; the cost
- * of getting it wrong is paying twice for every one of them.
- *
- * (The airtight version is a claim — stamping rows as taken before scoring, so
- * lateness stops mattering. That needs a column, and this closes the window
- * without one.)
- */
-const GRACE_MINUTES = 6;
-
-/**
- * How far back to look.
- *
- * A row still failing hours later is not going to be rescued by another call: it
- * is an outage that outlived its answer, or a payload the provider will keep
- * rejecting. Past this it stops costing provider requests and becomes a support
- * question instead — visible in the logs, and in the same "no band" state the
- * report already knows how to explain.
- */
-const LOOKBACK_HOURS = 3;
-
-/**
- * The most attempts/sittings one run will pick up.
- *
- * A backlog after an outage could otherwise fire hundreds of provider calls from
- * one invocation and re-trip the very limit that caused the backlog. Small
- * batches run often drain just as fast, and keep each run short.
- */
 const MAX_ATTEMPTS_PER_RUN = 5;
 const MAX_SITTINGS_PER_RUN = 3;
 
@@ -101,54 +68,6 @@ const MAX_SITTINGS_PER_RUN = 3;
  * to, with its log line written.
  */
 const START_DEADLINE_MS = 240_000;
-
-/**
- * Answers this can score, and the condition under which scoring one is possible.
- *
- * Kept beside each other deliberately: this is the definition of "pending", and
- * it has to stay honest about what score-attempt.ts and score-mock.ts will
- * actually attempt.
- */
-const scorableResponse = or(
-  // A writing task with something written in it. `->>` yields NULL for a missing
-  // key and for JSON null alike, which coalesce folds into the empty case.
-  and(
-    eq(userResponses.section, "writing"),
-    sql`coalesce(btrim(${userResponses.response}->>'text'), '') <> ''`,
-  ),
-  // A speaking answer with a recording that has not already been judged
-  // unscorable (no speech in it — a permanent fact, recorded as feedback).
-  and(
-    eq(userResponses.section, "speaking"),
-    isNotNull(userResponses.audioUrl),
-    isNull(userResponses.aiFeedback),
-  ),
-);
-
-/** The same definition, for a mock sitting's answers. */
-const scorableMockAnswer = or(
-  and(
-    eq(mockTestAnswers.section, "writing"),
-    sql`coalesce(btrim(${mockTestAnswers.response}->>'text'), '') <> ''`,
-  ),
-  and(
-    eq(mockTestAnswers.section, "speaking"),
-    isNotNull(mockTestAnswers.audioUrl),
-    isNull(mockTestAnswers.aiFeedback),
-  ),
-);
-
-/**
- * The two AI-scored sections, stated as their own condition.
- *
- * Redundant against the section equalities inside the predicates above — and
- * kept anyway, because it is what makes the partial index on
- * (band IS NULL AND section IN (…)) usable. Postgres has to PROVE a query
- * implies an index's predicate before it may use it, and proving that from a
- * two-branch OR is not something to rely on: without this the sweep silently
- * degrades to a sequential scan of the busiest table, every five minutes.
- */
-const AI_SECTIONS = ["writing", "speaking"] as const;
 
 type Sweep = { picked: number; scored: number; skipped: number };
 
@@ -295,8 +214,8 @@ export async function GET(request: Request) {
   }
 
   const startedAt = Date.now();
-  const until = new Date(startedAt - GRACE_MINUTES * 60_000);
-  const from = new Date(startedAt - LOOKBACK_HOURS * 3600_000);
+  const until = new Date(startedAt - SCORING_GRACE_MINUTES * 60_000);
+  const from = new Date(startedAt - SCORING_LOOKBACK_HOURS * 3600_000);
 
   // One after the other, not concurrently: both spend the same provider budget,
   // and the deadline is shared so whatever the first sweep uses the second sees.

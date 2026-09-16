@@ -1,7 +1,7 @@
 import { Check, X, Mic, ArrowRight } from "lucide-react";
 import { QUESTION_TYPES, type QuestionTypeKey } from "@/lib/ielts";
 import type { SetLayout, OptionsLayout } from "@/lib/question-content";
-import { isCurrentSpeakingFeedback } from "@/lib/scoring/speaking-feedback";
+import { isCurrentSpeakingFeedback, isSpeakingFailure } from "@/lib/scoring/speaking-feedback";
 import {
   LegacySpeakingAnalysis,
   SpeakingAnalysis,
@@ -90,8 +90,13 @@ export function AttemptAnswers({
     // SpeechSuper left behind on older attempts. `provider` tells them apart, so
     // a candidate's history keeps its feedback across the switch.
     const fb = aiFeedback ?? null;
-    const current = isCurrentSpeakingFeedback(fb) ? fb : null;
-    const legacy = current ? null : (fb as LegacySpeakingFeedback | null);
+    const ours = isCurrentSpeakingFeedback(fb);
+    // A bare failure breadcrumb is ours but is not a report: no bands, no
+    // criteria, nothing to show. It must not reach the analysis renderer, and it
+    // must not fall through to the legacy one either — it is not legacy data, it
+    // is an answer still waiting for a band. See failureFeedback().
+    const current = ours && !isSpeakingFailure(fb) ? fb : null;
+    const legacy = ours ? null : (fb as LegacySpeakingFeedback | null);
     return (
       <Block title="Your response">
         {ans.recorded ? (

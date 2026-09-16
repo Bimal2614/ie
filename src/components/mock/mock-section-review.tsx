@@ -34,6 +34,8 @@ export function MockSectionReviewBlock({
   pending,
   raw,
   total,
+  answered,
+  asked,
 }: {
   sessionId: string;
   section: SectionKey;
@@ -43,6 +45,9 @@ export function MockSectionReviewBlock({
   pending: boolean;
   raw?: number | null;
   total?: number | null;
+  /** Writing and Speaking: how much of the module came back with a band. */
+  answered?: number | null;
+  asked?: number | null;
 }) {
   const [open, setOpen] = useState(false);
   const [data, setData] = useState<MockSectionReview | null>(null);
@@ -77,7 +82,16 @@ export function MockSectionReviewBlock({
               ? "Awaiting AI band score"
               : raw !== null && raw !== undefined && total
                 ? `${raw} of ${total} marks · tap to review`
-                : "Tap to review each question"}
+                : // COVERAGE, BECAUSE IT IS MOST OF THE EXPLANATION. A Writing or
+                  // Speaking band is a mean over everything the paper asked, and
+                  // an unanswered question counts as a zero — so "4.0" on its own
+                  // leaves a candidate unable to tell a weak performance from a
+                  // module they only half finished, or from a recorder of ours
+                  // that failed. Shown only when something is actually missing;
+                  // a complete module says nothing, as it should.
+                  asked && answered !== null && answered !== undefined && answered < asked
+                  ? `Answered ${answered} of ${asked} · unanswered count as 0 · tap to review`
+                  : "Tap to review each question"}
           </span>
         </span>
         <span className="display shrink-0 text-xl tabular-nums text-ink">

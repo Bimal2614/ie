@@ -1,15 +1,17 @@
 "use server";
 
-import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import {
   mockTests,
+  mockTestSections,
   mockTestSessions,
   mockTestAnswers,
   mockTestResults,
 } from "@/db/schema";
 import { requireUser } from "@/lib/dal";
+import { isUuid } from "@/lib/uuid";
 import {
   QUESTION_TYPES,
   isObjective,
@@ -39,9 +41,11 @@ import {
   timelineEnd,
   type MockTimeline,
 } from "@/lib/mock-timing";
-import { scheduleMockScoring } from "@/lib/scoring/background";
+import { scheduleMockAnswerScoring, scheduleMockScoring } from "@/lib/scoring/background";
+import { mockScoringArriving } from "@/lib/scoring/pending";
 import { guardGeneral } from "@/lib/security/rate-guard";
-import { checkMockAccess } from "@/lib/security/plan-guard";
+import { checkAiScoring, checkMockAccess } from "@/lib/security/plan-guard";
+import { keyFromUrl } from "@/lib/speech/s3";
 import { mediaUrl } from "@/lib/media-urls";
 
 /**
@@ -487,6 +491,117 @@ export async function saveMockProgress(
     );
 }
 
+/**
+ * A speaking take has landed — write its answer row and mark it in the
+ * background.
+ *
+ * WHY MID-SITTING AT ALL. Speaking answers used to exist only as jsonb inside
+ * `draft_answers` until hand-in, when eleven of them became eleven rows and were
+ * marked in one six-way-concurrent burst. That burst is what tripped the scoring
+ * provider — on one observed sitting eight of eleven answers came back refused,
+ * and every one scored perfectly on a later retry. An interview hands us one
+ * recording a minute; there is no reason to save them all up and then ask for
+ * everything at once.
+ *
+ * So the row is written as the take arrives and scored on its own. By hand-in
+ * the module is usually already marked, and the report opens with bands on it.
+ *
+ * NOTHING HERE IS TAKEN ON THE CLIENT'S WORD EXCEPT WHICH QUESTION IT IS.
+ * `section`, `questionType`, `marks` and the sheet number are read off the paper
+ * server-side; the recording location is checked to be a key in THIS candidate's
+ * own prefix before anything is stored; and the band, as everywhere, is computed
+ * server-side and never accepted from a browser. The worst a forged call can do
+ * is ask us to score the candidate's own recording against their own sitting,
+ * which is what it is for.
+ *
+ * IDEMPOTENT. The unique index on (session_id, section_id, question_number) makes
+ * a repeat an update, and the scorer skips a row that already has a band — so a
+ * resumed sitting replaying its takes costs nothing.
+ */
+export async function recordMockSpeakingTake(
+  sessionId: string,
+  sectionId: string,
+  sheetNumber: number,
+): Promise<void> {
+  const user = await requireUser();
+  if (!isUuid(sessionId) || !isUuid(sectionId)) return;
+
+  const [session] = await db
+    .select({ id: mockTestSessions.id, mockTestId: mockTestSessions.mockTestId })
+    .from(mockTestSessions)
+    .where(
+      and(
+        eq(mockTestSessions.id, sessionId),
+        eq(mockTestSessions.userId, user.id),
+        eq(mockTestSessions.status, "in_progress"),
+      ),
+    )
+    .limit(1);
+  if (!session) return;
+
+  // A lapsed plan must not be scored on. Starting the sitting was gated, but
+  // this runs up to three hours later.
+  if (checkAiScoring(user)) return;
+
+  const draft = await db
+    .select({ draftAnswers: mockTestSessions.draftAnswers })
+    .from(mockTestSessions)
+    .where(eq(mockTestSessions.id, sessionId))
+    .limit(1);
+  const answers = (draft[0]?.draftAnswers ?? {}) as AnswerMap;
+  const ans = answers[answerKey(sectionId, sheetNumber)];
+  const audioUrl = typeof ans?.audioUrl === "string" ? ans.audioUrl : null;
+  if (!audioUrl) return;
+
+  // THE RECORDING MUST BE THIS CANDIDATE'S. Keys are minted as
+  // `<prefix><userId>/<uuid>.<ext>` (see uploadSpeakingAudio), so the owner is
+  // in the key and can be checked without a round trip. Without this, a crafted
+  // call could have us transcribe and score somebody else's recording.
+  const key = keyFromUrl(audioUrl);
+  if (!key || !key.split("/").includes(user.id)) return;
+
+  // The paper decides what this question is — not the caller. ONE MODULE, not
+  // the whole paper: this runs once per take, and `openMockPaper` would load all
+  // twelve parts eleven times over the course of an interview.
+  const parts = await openMockModule(session.mockTestId, "speaking");
+  const part = parts.find((pt) => pt.sectionId === sectionId);
+  if (!part) return;
+
+  let found: { qt: QuestionTypeKey; n: number; marks: number } | null = null;
+  for (const group of part.questions?.groups ?? []) {
+    for (const item of group.items) {
+      if (item.n + part.numberOffset !== sheetNumber) continue;
+      found = { qt: group.questionType as QuestionTypeKey, n: item.n, marks: item.marks ?? 1 };
+    }
+  }
+  if (!found) return;
+
+  const [row] = await db
+    .insert(mockTestAnswers)
+    .values({
+      sessionId,
+      sectionId,
+      questionNumber: found.n,
+      sheetNumber,
+      section: "speaking",
+      questionType: found.qt,
+      marks: found.marks,
+      response: ans,
+      audioUrl,
+    })
+    .onConflictDoUpdate({
+      target: [mockTestAnswers.sessionId, mockTestAnswers.sectionId, mockTestAnswers.questionNumber],
+      // The answer and its recording only. A band, a transcript or feedback
+      // already on the row belongs to a scoring run that has finished, and this
+      // is not the place to throw it away.
+      set: { response: ans, audioUrl },
+    })
+    .returning({ id: mockTestAnswers.id });
+  if (!row) return;
+
+  scheduleMockAnswerScoring(user.id, row.id);
+}
+
 export type AdvanceResult =
   | { done: true }
   | {
@@ -692,7 +807,35 @@ async function submitSitting(
 
   if (rows.length > 0) {
     // A full paper is 80+ answers — one insert, not 80 round trips.
-    await db.insert(mockTestAnswers).values(rows).onConflictDoNothing();
+    //
+    // UPSERT, BECAUSE SOME ROWS ARE ALREADY HERE. A speaking take writes its own
+    // row as it is given, so it can be marked while the interview is still going
+    // (see `recordMockSpeakingTake`). `onConflictDoNothing` would then silently
+    // drop the only thing hand-in knows that the live path did not — how long
+    // the candidate spent on the question.
+    //
+    // WHAT IS DELIBERATELY NOT IN THE `set`: band, transcript and ai_feedback.
+    // Those are a finished scoring run's output. Hand-in has nothing better to
+    // say about them, and overwriting them here would throw away marking we have
+    // already paid for. `audio_url` is coalesced for the same reason — a draft
+    // that somehow lost the location must not erase a recording we hold.
+    await db
+      .insert(mockTestAnswers)
+      .values(rows)
+      .onConflictDoUpdate({
+        target: [
+          mockTestAnswers.sessionId,
+          mockTestAnswers.sectionId,
+          mockTestAnswers.questionNumber,
+        ],
+        set: {
+          response: sql`excluded.response`,
+          audioUrl: sql`coalesce(excluded.audio_url, ${mockTestAnswers.audioUrl})`,
+          isCorrect: sql`excluded.is_correct`,
+          rawScore: sql`excluded.raw_score`,
+          timeSpentSec: sql`excluded.time_spent_sec`,
+        },
+      });
   }
 
   // A full mock draws a complete 40-mark Listening and Reading paper, so the
@@ -765,30 +908,17 @@ async function submitSitting(
 export async function mockScoringStatus(sessionId: string): Promise<{ pending: number }> {
   const user = await requireUser();
 
-  const [row] = await db
-    .select({ pending: sql<number>`count(*)::int` })
-    .from(mockTestAnswers)
-    .innerJoin(mockTestSessions, eq(mockTestSessions.id, mockTestAnswers.sessionId))
-    .where(
-      and(
-        eq(mockTestAnswers.sessionId, sessionId),
-        eq(mockTestSessions.userId, user.id),
-        isNull(mockTestAnswers.band),
-        or(
-          and(
-            eq(mockTestAnswers.section, "writing"),
-            sql`coalesce(btrim(${mockTestAnswers.response}->>'text'), '') <> ''`,
-          ),
-          and(
-            eq(mockTestAnswers.section, "speaking"),
-            isNotNull(mockTestAnswers.audioUrl),
-            isNull(mockTestAnswers.aiFeedback),
-          ),
-        ),
-      ),
-    );
+  // Ownership first and separately: `mockScoringArriving` answers about a
+  // sitting, not about a candidate, and it must not be handed a session id
+  // nobody has checked.
+  const [owned] = await db
+    .select({ id: mockTestSessions.id })
+    .from(mockTestSessions)
+    .where(and(eq(mockTestSessions.id, sessionId), eq(mockTestSessions.userId, user.id)))
+    .limit(1);
+  if (!owned) return { pending: 0 };
 
-  return { pending: row?.pending ?? 0 };
+  return { pending: await mockScoringArriving(sessionId) };
 }
 
 /* ------------------------------------------------------------------ *
@@ -930,7 +1060,23 @@ export type MockResultData = {
   module: "academic" | "general";
   completedAt: Date | null;
   overallBand: string | null;
-  bands: { section: SectionKey; band: string | null; raw: number | null; total: number | null }[];
+  bands: {
+    section: SectionKey;
+    band: string | null;
+    raw: number | null;
+    total: number | null;
+    /**
+     * Writing and Speaking only: how much of the module was actually answered.
+     *
+     * A band from these two is a mean over everything the paper asked, with an
+     * unanswered question counting as zero — so coverage is most of the
+     * explanation for a low one, and without it a candidate has no way to tell a
+     * weak performance from a half-finished module (or from a recorder of ours
+     * that failed). Null for Listening and Reading, which report marks instead.
+     */
+    answered: number | null;
+    asked: number | null;
+  }[];
 };
 
 export async function getMockResult(sessionId: string): Promise<MockResultData | null> {
@@ -952,6 +1098,45 @@ export async function getMockResult(sessionId: string): Promise<MockResultData |
   const breakdown = (row.r.sectionBreakdown ?? {}) as Record<string, Tally>;
   const totalOf = (s: SectionKey) => breakdown[s]?.total ?? null;
 
+  // What the paper asked in each AI-scored module, and how much of it came back
+  // with a band. Two grouped counts, not a per-question load.
+  const [asked, answered] = await Promise.all([
+    db
+      .select({
+        section: mockTestSections.section,
+        n: sql<number>`coalesce(sum(${mockTestSections.totalQuestions}), 0)::int`,
+      })
+      .from(mockTestSections)
+      .innerJoin(mockTestSessions, eq(mockTestSessions.mockTestId, mockTestSections.mockTestId))
+      .where(
+        and(
+          eq(mockTestSessions.id, sessionId),
+          inArray(mockTestSections.section, ["writing", "speaking"]),
+        ),
+      )
+      .groupBy(mockTestSections.section),
+    db
+      .select({
+        section: mockTestAnswers.section,
+        n: sql<number>`count(*) filter (where ${mockTestAnswers.band} is not null)::int`,
+      })
+      .from(mockTestAnswers)
+      .where(
+        and(
+          eq(mockTestAnswers.sessionId, sessionId),
+          inArray(mockTestAnswers.section, ["writing", "speaking"]),
+        ),
+      )
+      .groupBy(mockTestAnswers.section),
+  ]);
+
+  const askedBy = new Map(asked.map((a) => [a.section, Number(a.n)]));
+  const answeredBy = new Map(answered.map((a) => [a.section, Number(a.n)]));
+  const coverage = (sec: "writing" | "speaking") => ({
+    answered: answeredBy.get(sec) ?? 0,
+    asked: askedBy.get(sec) ?? null,
+  });
+
   return {
     sessionId: row.r.sessionId,
     mockTestId: row.r.mockTestId,
@@ -960,10 +1145,24 @@ export async function getMockResult(sessionId: string): Promise<MockResultData |
     completedAt: row.completedAt,
     overallBand: row.r.overallBand,
     bands: [
-      { section: "listening", band: row.r.listeningBand, raw: row.r.listeningRaw, total: totalOf("listening") },
-      { section: "reading", band: row.r.readingBand, raw: row.r.readingRaw, total: totalOf("reading") },
-      { section: "writing", band: row.r.writingBand, raw: null, total: null },
-      { section: "speaking", band: row.r.speakingBand, raw: null, total: null },
+      {
+        section: "listening",
+        band: row.r.listeningBand,
+        raw: row.r.listeningRaw,
+        total: totalOf("listening"),
+        answered: null,
+        asked: null,
+      },
+      {
+        section: "reading",
+        band: row.r.readingBand,
+        raw: row.r.readingRaw,
+        total: totalOf("reading"),
+        answered: null,
+        asked: null,
+      },
+      { section: "writing", band: row.r.writingBand, raw: null, total: null, ...coverage("writing") },
+      { section: "speaking", band: row.r.speakingBand, raw: null, total: null, ...coverage("speaking") },
     ],
   };
 }

@@ -9,6 +9,7 @@ import { MOCK_MODULE_NOTE, moduleSeconds } from "@/lib/mock-timing";
 import {
   advanceMockModule,
   finishMock,
+  recordMockSpeakingTake,
   saveMockProgress,
   type MockModuleView,
   type MockSittingData,
@@ -334,6 +335,59 @@ export function MockPlayer({ sitting }: Props) {
       document.removeEventListener("visibilitychange", onHide);
     };
   }, [sitting.sessionId]);
+
+  /* --- Speaking: each take is marked while the interview carries on --- */
+
+  /**
+   * Tell the server about a finished take as soon as it is stored.
+   *
+   * THE MARKING IS SPREAD OVER THE INTERVIEW, not piled up at the end. A
+   * Speaking module is eleven recordings; asking for all eleven bands at hand-in
+   * was one burst of provider calls, and that burst is what got them refused —
+   * eight of eleven on one sitting, every one of which scored fine on a retry.
+   * Reported as it happens, the provider sees one call a minute and the report
+   * is already marked by the time the paper is handed in.
+   *
+   * IT FIRES ON THE URL, NOT ON THE TAKE. A recording is reported twice: once
+   * the moment it stops, flagged `pendingUpload` with nowhere to fetch it from,
+   * and again when the upload completes and it has a location. Only the second
+   * is worth sending — there is nothing to score without it.
+   *
+   * ONCE PER ANSWER, and nothing waits for it. The call is fire-and-forget: it
+   * costs the candidate nothing, and a failure is picked up by the batch run at
+   * hand-in and the sweeper cron behind that. A resumed sitting replays the takes
+   * it restored, which the server absorbs — the row is an upsert and a scored
+   * answer is skipped.
+   */
+  const takeSent = useRef(new Set<string>());
+  useEffect(() => {
+    if (module.section !== "speaking") return;
+    for (const [key, a] of Object.entries(answers)) {
+      const url = (a as { audioUrl?: unknown }).audioUrl;
+      if (typeof url !== "string" || !url || takeSent.current.has(key)) continue;
+      takeSent.current.add(key);
+      const at = key.lastIndexOf(":");
+      if (at === -1) continue;
+      const sectionId = key.slice(0, at);
+      const n = Number(key.slice(at + 1));
+      if (!Number.isFinite(n)) continue;
+      // SAVED FIRST, AND IT HAS TO BE. The server reads the recording's location
+      // out of the sitting's saved draft rather than taking it from this call —
+      // but the autosave runs on a five-second timer, so a take reported the
+      // instant it uploads can easily beat its own draft to the database. The
+      // server would then find no recording for that question and quietly do
+      // nothing. Saving on the way past costs one request the timer was about to
+      // make anyway.
+      void saveMockProgress(sitting.sessionId, answersRef.current, timings.current)
+        .then(() => recordMockSpeakingTake(sitting.sessionId, sectionId, n))
+        .catch(() => {
+          // Deliberately swallowed. Hand-in and the sweeper both cover this, and
+          // a candidate mid-interview must never be shown a marking error. The
+          // key is left in `takeSent` regardless: a retry loop against a failing
+          // server is the last thing a timed module needs.
+        });
+    }
+  }, [answers, module.section, sitting.sessionId]);
 
   /* --- Speaking: the examiner moves on --- */
 

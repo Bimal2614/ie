@@ -85,6 +85,8 @@ export default async function ResultPage({ params }: { params: Promise<{ id: str
               pending={b.band === null}
               raw={b.raw}
               total={b.total}
+              answered={b.answered}
+              asked={b.asked}
             />
           );
         })}
