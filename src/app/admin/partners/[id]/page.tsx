@@ -33,14 +33,14 @@ export default async function AdminPartnerPage({
   const [data, allCoupons] = await Promise.all([partnerForAdmin(id, req), couponOptions()]);
   if (!data) notFound();
 
-  const { partner, logins, students, overview, payments } = data;
+  const { partner, logins, students, overview, revenue, payments } = data;
   const basePath = `/admin/partners/${partner.id}`;
-  const collected = payments
-    .filter((p) => p.status === "paid")
-    .reduce<Record<string, number>>((acc, p) => {
-      acc[p.currency] = (acc[p.currency] ?? 0) + p.amountCents;
-      return acc;
-    }, {});
+  /* Straight from the ledger, like /admin/partners — NOT summed from the
+     payments panel below, which only holds the twenty most recent orders. */
+  const collected =
+    Object.entries(revenue)
+      .map(([c, cents]) => formatPrice(cents, c))
+      .join(" + ") || "—";
 
   return (
     <div className="space-y-6">
@@ -71,12 +71,18 @@ export default async function AdminPartnerPage({
         <StatTile label="Awaiting payment" value={overview.awaitingPayment} sub="Enrolled, not paid for" icon={null} />
         <StatTile
           label="Collected"
+          /* Straight through to the rows behind it. The ledger is site-wide by
+             default, and the gap between this figure and that screen's total is
+             the first thing anyone comparing the two asks about. */
           value={
-            Object.entries(collected)
-              .map(([c, cents]) => formatPrice(cents, c))
-              .join(" + ") || "—"
+            <Link
+              href={`/admin/transactions?q=${encodeURIComponent(partner.name)}`}
+              className="hover:underline"
+            >
+              {collected}
+            </Link>
           }
-          sub="Recent payments"
+          sub="All money received"
           icon={null}
         />
       </div>

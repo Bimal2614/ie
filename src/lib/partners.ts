@@ -928,7 +928,7 @@ export async function partnerForAdmin(
   const [partner] = await db.select().from(partners).where(eq(partners.id, partnerId)).limit(1);
   if (!partner) return null;
 
-  const [students, overview, logins, payments] = await Promise.all([
+  const [students, overview, logins, payments, revenue] = await Promise.all([
     partnerStudents(partnerId, req, now),
     partnerOverview(partnerId, now),
     partnerLogins(partnerId),
@@ -951,6 +951,14 @@ export async function partnerForAdmin(
       .where(eq(partnerPayments.partnerId, partnerId))
       .orderBy(desc(partnerPayments.createdAt))
       .limit(20),
+    /*
+     * The SAME read the admin list uses, and the reason this screen no longer
+     * adds up the payments below it: that list is capped at twenty rows, so
+     * summing it reported a class's lifetime income as whatever its last twenty
+     * orders happened to come to — a number that shrank as the class grew, and
+     * disagreed with /admin/partners on the very same class.
+     */
+    revenueByPartner([partnerId]),
   ]);
 
   return {
@@ -958,6 +966,8 @@ export async function partnerForAdmin(
     logins,
     students,
     overview,
+    /** Lifetime, from the ledger. Per currency — never flattened to one number. */
+    revenue: revenue.get(partnerId) ?? {},
     // The twenty most recent. The full history lives on /admin/payments, which
     // pages properly; this is the "what happened lately" panel.
     payments: payments.map((r) => ({ ...r, plan: toPlanKey(r.plan) })),
