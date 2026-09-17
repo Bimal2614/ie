@@ -6,7 +6,7 @@ import { mockTests, mockTestSections, practiceSections } from "@/db/schema";
 import { SECTION_ORDER, type SectionKey } from "@/lib/ielts";
 import { shiftLayoutGaps, type SectionQuestions } from "@/lib/question-content";
 import { mediaUrl } from "@/lib/media-urls";
-import { MOCK_MODULE_MINUTES } from "@/lib/mock-timing";
+import { MOCK_MODULE_MINUTES, totalMinutes } from "@/lib/mock-timing";
 
 /**
  * Read layer for mock tests — the catalogue, and one paper's parts.
@@ -60,7 +60,6 @@ export async function listMockTests(module: "academic" | "general"): Promise<Moc
       module: mockTests.module,
       book: mockTests.book,
       testNumber: mockTests.testNumber,
-      totalMinutes: mockTests.totalMinutes,
       totalQuestions: mockTests.totalQuestions,
       totalParts: mockTests.totalParts,
     })
@@ -118,7 +117,15 @@ export async function listMockTests(module: "academic" | "general"): Promise<Moc
       module: t.module,
       book: t.book,
       testNumber: t.testNumber,
-      totalMinutes: t.totalMinutes,
+      // DERIVED, not read back from `mock_tests.total_minutes`.
+      //
+      // That column is a snapshot of MOCK_MODULE_MINUTES taken by the seed
+      // builder, so changing a module's allowance leaves every stored row a
+      // minute out of date — and this page prints both, the stored figure on
+      // each paper card and the computed one in the header beside it. Summing
+      // the same constant the cards' per-module minutes already come from
+      // makes the two disagreeing impossible rather than merely unlikely.
+      totalMinutes: totalMinutes(SECTION_ORDER.filter((s) => byTest.has(s))),
       totalQuestions: t.totalQuestions,
       totalParts: t.totalParts,
       // Exam order, not the order Postgres happened to return.
@@ -203,7 +210,9 @@ export async function outlineMockTest(mockTestId: string): Promise<MockPaperOutl
     module: test.module,
     book: test.book,
     testNumber: test.testNumber,
-    totalMinutes: test.totalMinutes,
+    // Same reason as the catalogue's: summed from the modules this paper
+    // actually has, never from the stored snapshot.
+    totalMinutes: totalMinutes(modules.map((m) => m.section)),
     modules,
   };
 }

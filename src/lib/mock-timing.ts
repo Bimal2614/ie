@@ -35,14 +35,32 @@ import { SECTION_ORDER, type SectionKey } from "@/lib/ielts";
  *    recording; the paper-based test then gives 10 minutes to transfer answers,
  *    so the module is 40.
  *  - Speaking is quoted as "11-14 minutes", so a fixed clock has to pick the
- *    top of the range plus a little, or a candidate mid-answer is cut off.
+ *    top of the range plus a little, or a candidate mid-answer is cut off. It
+ *    then carries the set-up minute in front of the interview — see
+ *    SPEAKING_PREP_SECONDS.
  */
 export const MOCK_MODULE_MINUTES: Record<SectionKey, number> = {
   listening: 40, // 30 min recording + 10 min transfer
   reading: 60,
   writing: 60, // Task 1 ~20 + Task 2 ~40, sat as one 60-minute block
-  speaking: 15, // an 11-14 minute interview, with a margin
+  speaking: 16, // 1 min set-up + an 11-14 minute interview, with a margin
 };
+
+/**
+ * The set-up window in front of the interview, spent on <SpeakingPrep/>.
+ *
+ * INSIDE the Speaking module's own budget, which is why the module is 16
+ * minutes and not 15. A written paper ends with a pen going down; an interview
+ * starts with a microphone that has never been tested, and on test day the walk
+ * to the examiner's room is where that gets sorted out.
+ *
+ * Charging it to the module is what makes every route through the hand-over
+ * cost the same. Sit Writing out to the bell or finish it half an hour early:
+ * either way the minute is spent here and the interview still has its fifteen.
+ * Taking it out of the module instead would have made the early finisher's
+ * minute free and the bell-ringer's minute come out of Part 3.
+ */
+export const SPEAKING_PREP_SECONDS = 60;
 
 /** One line of exam-hall guidance per module, shown before it starts. */
 export const MOCK_MODULE_NOTE: Record<SectionKey, string> = {
@@ -50,7 +68,8 @@ export const MOCK_MODULE_NOTE: Record<SectionKey, string> = {
     "The recording plays once. The last 10 minutes are for checking and transferring your answers.",
   reading: "60 minutes for all three passages. No extra transfer time.",
   writing: "Spend about 20 minutes on Task 1 and 40 on Task 2. Task 2 is worth twice as much.",
-  speaking: "Answer out loud and record each turn. Part 2 gives you 1 minute to prepare.",
+  speaking:
+    "Starts with a set-up minute, then the interview. Answer out loud — Part 2 gives you 1 minute to prepare.",
 };
 
 export function moduleSeconds(section: SectionKey): number {

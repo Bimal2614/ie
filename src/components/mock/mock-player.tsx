@@ -73,12 +73,10 @@ export function MockPlayer({ sitting }: Props) {
   const [flagged, setFlagged] = useState<Set<string>>(new Set());
   const [advancing, setAdvancing] = useState(false);
   /**
-   * The ready-check between the written paper and the interview.
+   * The set-up minute at the front of the Speaking module.
    *
-   * Set INSTEAD of handing the module over, not after it — see `advance`. While
-   * it is up the candidate is off the paper entirely: the shell is not rendered,
-   * so a Writing textarea cannot be typed into for another minute by anyone who
-   * noticed that Finish no longer ends the module immediately.
+   * Set once the module is OPEN, so the exam clock covers it and every route
+   * into the interview — bell or early finish — costs the same. See `advance`.
    */
   const [preparing, setPreparing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -95,7 +93,7 @@ export function MockPlayer({ sitting }: Props) {
   /** One sitting's working notes, kept apart from practice and from other sittings. */
   const annotationScope = `mock:${sitting.sessionId}`;
   const isLastModule = module.index === sitting.modules.length - 1;
-  /** What the paper turns to next, or null on the last module. */
+  /** What the paper turns to next, or null on the last module. Copy only. */
   const nextSection = sitting.modules[module.index + 1]?.section ?? null;
   const part = module.parts.find((p) => p.id === activePartId) ?? module.parts[0];
 
@@ -266,14 +264,14 @@ export function MockPlayer({ sitting }: Props) {
     await finishMock(sitting.sessionId, answersRef.current, timings.current);
   }, [annotationScope, awaitUploads, sitting.sessionId]);
 
-  /**
-   * The module hand-over itself: send this module's work, open the next one.
-   *
-   * Split out from `advance` so the Speaking ready-check can sit in front of it
-   * — this is the call that starts the next module's exam clock, so anything
-   * that makes the candidate wait has to happen BEFORE it, not after.
-   */
-  const handOver = useCallback(async () => {
+  const advance = useCallback(async () => {
+    if (finished.current || advancing || preparing) return;
+    // The last module ends the paper, so it hands in rather than moving on —
+    // finishMock grades and redirects server-side.
+    if (isLastModule) {
+      void submit();
+      return;
+    }
     setAdvancing(true);
     // Speaking is the last module in every paper today, so this is belt and
     // braces — but a module boundary is still a point of no return, and a take
@@ -288,12 +286,11 @@ export function MockPlayer({ sitting }: Props) {
         timings.current,
       );
     } catch {
-      // Put the candidate back on the paper they were on rather than leaving
-      // them on a screen with no way out. Their answers are untouched and the
-      // exam clock never stopped, so finishing again is the whole retry — and
-      // if it keeps failing the bell still moves them on.
+      // Leave the candidate on the paper they were on rather than on a dead
+      // screen. Their answers are untouched and the exam clock never stopped,
+      // so pressing Finish again is the whole retry — and if it keeps failing
+      // the bell moves them on regardless.
       setAdvancing(false);
-      setPreparing(false);
       return;
     }
     if (res.done) {
@@ -316,30 +313,22 @@ export function MockPlayer({ sitting }: Props) {
     setActivePartId(res.current.parts[0]?.id ?? "");
     setCurrent(null);
     lastTick.current = Date.now();
-    // Cleared last, and together: the ready-check stays up over the request so
-    // the candidate never sees the finished paper flash back between the two.
-    setPreparing(false);
+    // A WRITTEN PAPER DOES NOT RUN STRAIGHT INTO AN INTERVIEW. The module is
+    // open and its clock is running — the first minute of it is spent on
+    // <SpeakingPrep/> rather than on question 1, which is what the sixteenth
+    // minute in MOCK_MODULE_MINUTES pays for.
+    if (res.current.section === "speaking") setPreparing(true);
     setAdvancing(false);
-  }, [annotationScope, awaitUploads, module.index, sitting.sessionId]);
-
-  const advance = useCallback(async () => {
-    if (finished.current || advancing || preparing) return;
-    // The last module ends the paper, so it hands in rather than moving on —
-    // finishMock grades and redirects server-side.
-    if (isLastModule) {
-      void submit();
-      return;
-    }
-    // WRITING DOES NOT RUN STRAIGHT INTO SPEAKING. A written module ends with a
-    // pen going down; an interview starts with a microphone that has never been
-    // tested. <SpeakingPrep/> is that minute, and the hand-over waits behind it
-    // so the interview's own clock starts when the interview does.
-    if (nextSection === "speaking") {
-      setPreparing(true);
-      return;
-    }
-    await handOver();
-  }, [advancing, handOver, isLastModule, nextSection, preparing, submit]);
+  }, [
+    advancing,
+    annotationScope,
+    awaitUploads,
+    isLastModule,
+    module.index,
+    preparing,
+    sitting.sessionId,
+    submit,
+  ]);
 
   // Countdown. At zero the module's time is up — the server is asked for the
   // next one, which is also what re-syncs the clock.
@@ -649,15 +638,27 @@ export function MockPlayer({ sitting }: Props) {
   }
 
   /**
-   * The ready-check REPLACES the paper rather than covering it.
+   * The set-up minute REPLACES the paper rather than covering it.
    *
-   * An overlay would leave the Writing module mounted and focusable underneath,
-   * which turns a minute of preparation into a minute of extra writing time for
-   * anyone who clicks through it. Nothing is lost by unmounting: answers and
-   * timings live in refs on this component, which stays.
+   * An overlay would leave the interview mounted and audible underneath: the
+   * examiner's first clip auto-plays on the focused question, and the recorder
+   * starts itself when the clip ends. A candidate reading the checklist would
+   * have had question 1 asked and answered behind it.
    */
   if (preparing) {
-    return <SpeakingPrep handingOver={advancing} onDone={() => void handOver()} />;
+    return (
+      <SpeakingPrep
+        firstPromptUrl={promptBySheet.get(sheet.all[0]) ?? null}
+        onDone={() => {
+          // Restart the think-time clock. It was last set when the module
+          // opened, and the minute spent reading a checklist is not time spent
+          // thinking about question 1 — left alone it is reported as such on
+          // the section review.
+          lastTick.current = Date.now();
+          setPreparing(false);
+        }}
+      />
+    );
   }
 
   /* --- Rendering --- */
