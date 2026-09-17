@@ -20,6 +20,7 @@ import { SplitPane } from "@/components/exam/split-pane";
 import { SectionBody, type ClientSectionView } from "@/components/practice/section-body";
 import { clearAnnotations } from "@/components/practice/renderers/annotations";
 import { ListeningTape, type Tape } from "./listening-tape";
+import { SpeakingPrep } from "./speaking-prep";
 
 /**
  * The full-mock player.
@@ -71,6 +72,15 @@ export function MockPlayer({ sitting }: Props) {
    */
   const [flagged, setFlagged] = useState<Set<string>>(new Set());
   const [advancing, setAdvancing] = useState(false);
+  /**
+   * The ready-check between the written paper and the interview.
+   *
+   * Set INSTEAD of handing the module over, not after it — see `advance`. While
+   * it is up the candidate is off the paper entirely: the shell is not rendered,
+   * so a Writing textarea cannot be typed into for another minute by anyone who
+   * noticed that Finish no longer ends the module immediately.
+   */
+  const [preparing, setPreparing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   /** Set while the hand-in check is on screen. Never set by the clock. */
   const [confirming, setConfirming] = useState(false);
@@ -85,6 +95,8 @@ export function MockPlayer({ sitting }: Props) {
   /** One sitting's working notes, kept apart from practice and from other sittings. */
   const annotationScope = `mock:${sitting.sessionId}`;
   const isLastModule = module.index === sitting.modules.length - 1;
+  /** What the paper turns to next, or null on the last module. */
+  const nextSection = sitting.modules[module.index + 1]?.section ?? null;
   const part = module.parts.find((p) => p.id === activePartId) ?? module.parts[0];
 
   /* --- Per-question timing: the think-time before an answer belongs to that
@@ -254,25 +266,36 @@ export function MockPlayer({ sitting }: Props) {
     await finishMock(sitting.sessionId, answersRef.current, timings.current);
   }, [annotationScope, awaitUploads, sitting.sessionId]);
 
-  const advance = useCallback(async () => {
-    if (finished.current || advancing) return;
-    // The last module ends the paper, so it hands in rather than moving on —
-    // finishMock grades and redirects server-side.
-    if (isLastModule) {
-      void submit();
-      return;
-    }
+  /**
+   * The module hand-over itself: send this module's work, open the next one.
+   *
+   * Split out from `advance` so the Speaking ready-check can sit in front of it
+   * — this is the call that starts the next module's exam clock, so anything
+   * that makes the candidate wait has to happen BEFORE it, not after.
+   */
+  const handOver = useCallback(async () => {
     setAdvancing(true);
     // Speaking is the last module in every paper today, so this is belt and
     // braces — but a module boundary is still a point of no return, and a take
     // still in flight over one would be saved without its recording.
     await awaitUploads();
-    const res = await advanceMockModule(
-      sitting.sessionId,
-      module.index,
-      answersRef.current,
-      timings.current,
-    );
+    let res: Awaited<ReturnType<typeof advanceMockModule>>;
+    try {
+      res = await advanceMockModule(
+        sitting.sessionId,
+        module.index,
+        answersRef.current,
+        timings.current,
+      );
+    } catch {
+      // Put the candidate back on the paper they were on rather than leaving
+      // them on a screen with no way out. Their answers are untouched and the
+      // exam clock never stopped, so finishing again is the whole retry — and
+      // if it keeps failing the bell still moves them on.
+      setAdvancing(false);
+      setPreparing(false);
+      return;
+    }
     if (res.done) {
       // The clock ran out mid-request: the server has already graded and closed
       // the sitting, so there is nothing left to do but go and read the report.
@@ -293,8 +316,30 @@ export function MockPlayer({ sitting }: Props) {
     setActivePartId(res.current.parts[0]?.id ?? "");
     setCurrent(null);
     lastTick.current = Date.now();
+    // Cleared last, and together: the ready-check stays up over the request so
+    // the candidate never sees the finished paper flash back between the two.
+    setPreparing(false);
     setAdvancing(false);
-  }, [advancing, annotationScope, awaitUploads, isLastModule, module.index, sitting.sessionId, submit]);
+  }, [annotationScope, awaitUploads, module.index, sitting.sessionId]);
+
+  const advance = useCallback(async () => {
+    if (finished.current || advancing || preparing) return;
+    // The last module ends the paper, so it hands in rather than moving on —
+    // finishMock grades and redirects server-side.
+    if (isLastModule) {
+      void submit();
+      return;
+    }
+    // WRITING DOES NOT RUN STRAIGHT INTO SPEAKING. A written module ends with a
+    // pen going down; an interview starts with a microphone that has never been
+    // tested. <SpeakingPrep/> is that minute, and the hand-over waits behind it
+    // so the interview's own clock starts when the interview does.
+    if (nextSection === "speaking") {
+      setPreparing(true);
+      return;
+    }
+    await handOver();
+  }, [advancing, handOver, isLastModule, nextSection, preparing, submit]);
 
   // Countdown. At zero the module's time is up — the server is asked for the
   // next one, which is also what re-syncs the clock.
@@ -603,6 +648,18 @@ export function MockPlayer({ sitting }: Props) {
     );
   }
 
+  /**
+   * The ready-check REPLACES the paper rather than covering it.
+   *
+   * An overlay would leave the Writing module mounted and focusable underneath,
+   * which turns a minute of preparation into a minute of extra writing time for
+   * anyone who clicks through it. Nothing is lost by unmounting: answers and
+   * timings live in refs on this component, which stays.
+   */
+  if (preparing) {
+    return <SpeakingPrep handingOver={advancing} onDone={() => void handOver()} />;
+  }
+
   /* --- Rendering --- */
 
   const sec = SECTIONS[module.section];
@@ -788,7 +845,11 @@ export function MockPlayer({ sitting }: Props) {
         detail={
           isLastModule
             ? "This submits every module and produces your band report. You can't return to the paper."
-            : `You won't be able to come back to ${sec.label} once you move on.`
+            : nextSection === "speaking"
+              ? // Said here so the minute that follows is expected rather than
+                // read as the page having frozen.
+                `You won't be able to come back to ${sec.label}. You then get one minute to check your microphone and headphones before the interview starts.`
+              : `You won't be able to come back to ${sec.label} once you move on.`
         }
         unanswered={sheet.all.length - answered.size}
         flagged={flaggedNumbers.size}
