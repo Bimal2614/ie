@@ -477,39 +477,6 @@ export function QuestionBody({
    */
   const autoPlayPrompt = !disabled && (config.focusNumber != null || allItems.length === 1);
 
-  /**
-   * Fetch the NEXT examiner clip while this question is still being answered.
-   *
-   * The mock turns the page by itself: a take ends, and a moment later the next
-   * question is on screen and expected to start talking. Cold, that clip is a
-   * round trip to the media route, a 302 to a presigned URL and then the bytes —
-   * seconds of silence where the examiner should already be speaking, and the
-   * candidate's upload is competing for the same connection. Asking for it a
-   * question early costs one request that was going to happen anyway and turns
-   * that gap into a cache hit.
-   *
-   * MOCK ONLY, and deliberately so: practice does not turn its own page, so
-   * there is no "next" to be early for.
-   */
-  const focusNumber = config.focusNumber;
-  const prefetchPrompts = Boolean(config.promptPlaysOnce) && focusNumber != null;
-  useEffect(() => {
-    if (!prefetchPrompts) return;
-    const next = allItems.find((i) => i.n > focusNumber! && i.promptAudioSrc)?.promptAudioSrc;
-    if (!next) return;
-    const warm = new Audio();
-    warm.preload = "auto";
-    warm.src = next;
-    warm.load();
-    return () => {
-      // Drop the transfer if the candidate moved on before it finished; the
-      // element is unreachable after this and would otherwise hold the stream.
-      // `removeAttribute` rather than `src = ""`, which resolves to the page's
-      // own URL and has the browser fetch the document as media.
-      warm.removeAttribute("src");
-      warm.load();
-    };
-  }, [prefetchPrompts, focusNumber, allItems]);
 
   /** Gaps resolve by exam number across every group in the document. */
   const resolve: GapResolver = (number) => {

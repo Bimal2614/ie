@@ -33,6 +33,45 @@ const CTA_BY_AUDIENCE = {
   },
 } as const;
 
+/**
+ * One guaranteed cross-category inbound link for every post.
+ *
+ * Computed once at module load, in POSTS order, assigning each post the eligible
+ * partner that currently has the fewest inbound bridges. Greedy least-loaded is
+ * enough: with 58 posts and 58 assignments it lands one on each, so no post is
+ * reachable only from inside its own category.
+ *
+ * Why this exists rather than "just take one from the other-category list": the
+ * related list is rotated by post index, and categories sit in contiguous blocks
+ * in POSTS, so rotation alone sent whole runs of posts to the same target and
+ * left 12 posts with no cross-category link at all — among them four of the "For
+ * institutes" posts this was supposed to rescue. Balancing by inbound count is
+ * what makes the guarantee hold instead of approximately holding.
+ *
+ * Deterministic by construction: same POSTS, same map, same link graph on every
+ * request and every build.
+ */
+const CROSS_CATEGORY_BRIDGE: ReadonlyMap<string, string> = (() => {
+  const inboundBridges = new Map<string, number>(POSTS.map((p) => [p.slug, 0]));
+  const bridge = new Map<string, string>();
+
+  for (const post of POSTS) {
+    let best: (typeof POSTS)[number] | null = null;
+    for (const candidate of POSTS) {
+      if (candidate.slug === post.slug || candidate.category === post.category) continue;
+      if (best === null || (inboundBridges.get(candidate.slug) ?? 0) < (inboundBridges.get(best.slug) ?? 0)) {
+        best = candidate;
+      }
+    }
+    if (best) {
+      bridge.set(post.slug, best.slug);
+      inboundBridges.set(best.slug, (inboundBridges.get(best.slug) ?? 0) + 1);
+    }
+  }
+
+  return bridge;
+})();
+
 export function generateStaticParams() {
   return POSTS.map((p) => ({ slug: p.slug }));
 }
@@ -169,13 +208,36 @@ export default async function BlogArticle({ params }: { params: Promise<Params> 
   //
   // Keep this deterministic. Randomising would give Google a different link
   // graph on every request, which is worse than concentrating it.
+  //
+  // One slot is RESERVED for the CROSS_CATEGORY_BRIDGE partner, the rest go to
+  // the post's own category. Rotation alone did not fix the real failure: any
+  // category with 3+ posts filled all three slots from itself and became a
+  // sealed island, reachable only from /blog and the sitemap. On 17 Sep 2026 all
+  // ten "For institutes" posts — published 15 Sep, crawled the same day — sat in
+  // "Crawled – currently not indexed" receiving inbound links from nothing but
+  // each other, and `how-to-book-ielts-test` had been stuck in that bucket since
+  // 1 Sep for the same reason inside "Basics". With the bridge reserved, every
+  // one of the 58 posts has at least one inbound link from outside its cluster.
   const idx = POSTS.findIndex((p) => p.slug === post.slug);
   const rotate = <T,>(arr: T[], by: number): T[] =>
     arr.length === 0 ? arr : [...arr.slice(by % arr.length), ...arr.slice(0, by % arr.length)];
+  const bridged = POSTS.find((p) => p.slug === CROSS_CATEGORY_BRIDGE.get(post.slug));
+  const sameCategory = rotate(
+    POSTS.filter((p) => p.slug !== post.slug && p.category === post.category),
+    idx,
+  );
+  const otherCategory = rotate(
+    POSTS.filter((p) => p.slug !== post.slug && p.category !== post.category),
+    idx,
+  );
   const related = [
-    ...rotate(POSTS.filter((p) => p.slug !== post.slug && p.category === post.category), idx),
-    ...rotate(POSTS.filter((p) => p.slug !== post.slug && p.category !== post.category), idx),
-  ].slice(0, 3);
+    ...(bridged ? [bridged] : []),
+    ...sameCategory.slice(0, 2),
+    ...otherCategory,
+    ...sameCategory.slice(2),
+  ]
+    .filter((p, i, all) => all.findIndex((x) => x.slug === p.slug) === i)
+    .slice(0, 3);
 
   const cta = CTA_BY_AUDIENCE[post.category === B2B_CATEGORY ? "institute" : "candidate"];
 

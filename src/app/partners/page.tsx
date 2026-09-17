@@ -4,6 +4,7 @@ import { ArrowRight, BadgePercent, LineChart, Mail, Users, Wallet } from "lucide
 import { MarketingShell, PageHead } from "@/components/marketing/marketing-shell";
 import { Reveal } from "@/components/marketing/motion";
 import { PartnerApplicationForm } from "@/components/marketing/partner-application-form";
+import { PARTNER_POSTS } from "@/lib/blog-partners";
 import { SUPPORT_EMAIL } from "@/lib/brand-links";
 import { pageMeta } from "@/lib/seo";
 
@@ -160,6 +161,43 @@ export default function PartnersPage() {
             </div>
           ))}
         </dl>
+      </div>
+
+      {/*
+        Every article written for institutes, linked from here.
+
+        This is a crawl path, not decoration. /partners is the only page in the
+        B2B cluster carrying a site-wide footer link ("Become a partner"), and
+        until 17 Sep 2026 the links ran one way only: all ten posts CTA'd to
+        /partners and /partners linked back to none of them. Google crawled the
+        whole cluster on 15 Sep and indexed none of it. Linking down from the
+        hub gives each post a path from a page reachable on every screen of the
+        site, instead of only from /blog and sitemap.xml.
+
+        PARTNER_POSTS is the "For institutes" category in full, so this list
+        cannot drift out of sync with the cluster it is meant to cover.
+      */}
+      <div className="mt-16">
+        <h2 className="font-serif text-2xl tracking-tight text-ink sm:text-3xl">
+          Reading for institute owners
+        </h2>
+        <p className="mt-2 max-w-2xl text-sm text-ink-soft">
+          What we have written about running IELTS coaching as a business — buying
+          software, pricing it per student, and marking at scale.
+        </p>
+        <ul className="mt-6 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2">
+          {PARTNER_POSTS.map((p) => (
+            <li key={p.slug} className="bg-paper-elev">
+              <Link href={`/blog/${p.slug}`} className="group block h-full p-6">
+                <p className="font-medium text-ink group-hover:text-brand group-hover:underline">
+                  {p.title}
+                </p>
+                <p className="mt-1.5 text-sm text-ink-soft">{p.excerpt}</p>
+                <p className="mt-3 text-xs font-medium text-ink-muted">{p.readMins} min read</p>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
 
       {/* The two ways in that are not the form. */}

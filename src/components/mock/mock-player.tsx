@@ -524,6 +524,77 @@ export function MockPlayer({ sitting }: Props) {
   }, [activePartId, current, jumpTo, sheet.parts]);
   nextQuestion.current = nextInterviewQuestion;
 
+  /* --- Keeping the examiner's next question ready --- */
+
+  /**
+   * Every examiner clip in this module, by the number on the answer sheet.
+   *
+   * Flattened across PARTS on purpose. An interview is one continuous run of
+   * questions that happens to be stored as three parts, and the gap that needed
+   * fixing was exactly at a part boundary.
+   */
+  const promptBySheet = useMemo(() => {
+    const m = new Map<number, string>();
+    if (module.section !== "speaking") return m;
+    for (const p of module.parts) {
+      for (const group of p.questions.groups) {
+        for (const item of group.items) {
+          const src = (item as { promptAudioUrl?: string | null }).promptAudioUrl;
+          if (src) m.set(item.n, src);
+        }
+      }
+    }
+    return m;
+  }, [module]);
+
+  /** Where the interview stands, before the render below works it out again. */
+  const focusNow = module.section === "speaking" ? (current ?? partNumbers[0] ?? null) : null;
+
+  /**
+   * Fetch the next two examiner clips while the current question is being
+   * answered.
+   *
+   * THE GAP THIS CLOSES IS AT THE PART BOUNDARY, and it was the worst one in the
+   * paper. Part 2 ends with a two-minute recording going up — the largest upload
+   * of the sitting — and the page then turns straight to Part 3's first
+   * question. Cold, that clip costs an authenticated round trip to the media
+   * route, a redirect to a presigned URL and then the bytes, all competing with
+   * the upload for the same connection: three to five seconds of a candidate
+   * looking at a question nobody is asking.
+   *
+   * ACROSS PARTS, WHICH IS WHY IT LIVES HERE. The earlier version of this sat in
+   * QuestionBody, which only ever sees one part's questions — so it warmed the
+   * next clip happily in the middle of a part and did nothing at all at the end
+   * of one. Only the player knows the module's running order.
+   *
+   * ONE AHEAD IS ENOUGH. Warming question N+1 while N is still being heard and
+   * answered buys fifteen seconds at the very least — a Part 2 long turn buys
+   * two minutes — for a clip that is seconds long. Reaching further was
+   * insurance against nothing.
+   */
+  useEffect(() => {
+    if (focusNow === null) return;
+    const at = sheet.all.indexOf(focusNow);
+    if (at === -1) return;
+
+    const src = promptBySheet.get(sheet.all[at + 1]);
+    if (!src) return;
+
+    const warm = new Audio();
+    warm.preload = "auto";
+    warm.src = src;
+    warm.load();
+
+    return () => {
+      // Drop it if the interview moved on first; the element is unreachable
+      // after this and would otherwise hold the connection open.
+      // `removeAttribute` rather than `src = ""`, which resolves to the page's
+      // own URL and has the browser fetch the document as media.
+      warm.removeAttribute("src");
+      warm.load();
+    };
+  }, [focusNow, promptBySheet, sheet.all]);
+
   if (!part) {
     return (
       <div className="grid min-h-svh place-items-center bg-paper px-6 text-center text-sm text-ink-muted">
