@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { AlertCircle, CheckCircle2, Loader2, UserPlus } from "lucide-react";
 
+import { ReceiptLink } from "@/components/partner/receipt-link";
 import { useStudentCheckout } from "@/components/partner/use-student-checkout";
 import { cardClass } from "@/components/dashboard/ui";
 import { ListControls, Pager } from "@/components/ui/list-controls";
@@ -41,6 +42,8 @@ export type RosterStudent = {
   mocks: number;
   /** The last payment started for them, so an abandoned checkout is visible. */
   paymentStatus: "created" | "paid" | "failed" | null;
+  /** The last SETTLED payment, which is the one there is a receipt for. */
+  receiptPaymentId: string | null;
 };
 
 const FILTERS: ReadonlyArray<{ key: StudentFilter; label: string }> = [
@@ -211,6 +214,13 @@ function StudentRow({
       </div>
 
       <div className="flex shrink-0 items-center gap-2">
+        {/*
+          * Outside the `canPay` branch on purpose: a suspended class keeps its
+          * receipts. See `ReceiptLink`.
+          */}
+        {student.receiptPaymentId && (
+          <ReceiptLink paymentId={student.receiptPaymentId} studentName={student.name} />
+        )}
         {canPay ? (
           <>
             <PlanPicker

@@ -1,9 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { BadgeCheck, Loader2, Undo2 } from "lucide-react";
+import { Ban, BadgeCheck, Loader2, ShieldCheck, Undo2 } from "lucide-react";
 
-import { unverifyStudent, verifyStudent } from "@/app/actions/admin";
+import {
+  deactivateAccount,
+  reactivateAccount,
+  unverifyStudent,
+  verifyStudent,
+} from "@/app/actions/admin";
 import { ListControls, Pager } from "@/components/ui/list-controls";
 import type { AdminStudentFilter, AdminStudentRequest, AdminStudentSort } from "@/lib/admin";
 import type { Page } from "@/lib/pagination";
@@ -94,11 +99,14 @@ function Row({ student }: { student: AdminStudentDisplay }) {
   const [error, setError] = useState<string | null>(null);
   // Taking access away from someone mid-course asks once first.
   const [confirming, setConfirming] = useState(false);
+  // Locking an account out is its own question, asked on its own button.
+  const [confirmingDisable, setConfirmingDisable] = useState(false);
   const paid = student.plan !== "free";
 
   const run = (fn: () => Promise<{ ok: boolean; error?: string }>) => {
     setError(null);
     setConfirming(false);
+    setConfirmingDisable(false);
     startTransition(async () => {
       const res = await fn();
       if (!res.ok) setError(res.error ?? "That didn't work. Try again.");
@@ -194,6 +202,51 @@ function Row({ student }: { student: AdminStudentDisplay }) {
               Grant
             </button>
           </>
+        )}
+
+        {/* Lock-out, kept apart from the plan controls: a disabled account
+            keeps whatever it paid for — the two are not the same decision. */}
+        <span aria-hidden className="h-6 w-px bg-line" />
+
+        {student.disabled ? (
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => run(() => reactivateAccount(student.id))}
+            title={"Let this account sign in again"}
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-line px-3 text-sm font-semibold text-ink transition-colors hover:bg-paper-sunken disabled:opacity-50"
+          >
+            {pending ? <Loader2 className="size-3.5 animate-spin" /> : <ShieldCheck className="size-3.5" />}
+            Enable
+          </button>
+        ) : confirmingDisable ? (
+          <>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => run(() => deactivateAccount(student.id))}
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-destructive px-3 text-sm font-semibold text-destructive-foreground disabled:opacity-50"
+            >
+              {pending && <Loader2 className="size-3.5 animate-spin" />} Confirm
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmingDisable(false)}
+              className="h-9 rounded-lg px-3 text-sm font-medium text-ink-soft hover:text-ink"
+            >
+              Cancel
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => setConfirmingDisable(true)}
+            title={"Sign this account out everywhere and block sign-in"}
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-line px-3 text-sm font-semibold text-danger transition-colors hover:bg-danger-soft disabled:opacity-50"
+          >
+            <Ban className="size-3.5" /> Disable
+          </button>
         )}
       </div>
     </li>

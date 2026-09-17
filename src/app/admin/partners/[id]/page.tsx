@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import { PartnerControls } from "@/components/admin/partner-controls";
+import { PartnerStudentRow } from "@/components/admin/partner-student-row";
 import { cardClass, StatTile } from "@/components/dashboard/ui";
 import { InviteLink } from "@/components/partner/invite-link";
 import { ListControls, Pager } from "@/components/ui/list-controls";
@@ -136,20 +137,19 @@ export default async function AdminPartnerPage({
         ) : (
           <ul className="divide-y divide-line">
             {students.rows.map((s) => (
-              <li key={s.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 p-4 text-sm">
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-medium text-ink">{s.name}</span>
-                  <span className="block truncate text-xs text-ink-muted">{s.email}</span>
-                </span>
-                <span className="text-xs text-ink-muted">
-                  {s.plan === "free"
-                    ? "Free"
-                    : `${PLANS[s.plan].label}${s.planExpiresAt ? ` to ${date(s.planExpiresAt)}` : ""}`}
-                </span>
-                <span className="w-24 text-right text-xs tabular-nums text-ink-muted">
-                  {s.attempts} attempts
-                </span>
-              </li>
+              <PartnerStudentRow
+                key={s.id}
+                student={{
+                  id: s.id,
+                  name: s.name,
+                  email: s.email,
+                  planLabel:
+                    s.plan === "free"
+                      ? "Free"
+                      : `${PLANS[s.plan].label}${s.planExpiresAt ? ` to ${date(s.planExpiresAt)}` : ""}`,
+                  attempts: s.attempts,
+                }}
+              />
             ))}
           </ul>
         )}

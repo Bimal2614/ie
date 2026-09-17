@@ -153,6 +153,12 @@ export type PartnerStudent = {
 
   /** The most recent payment this class started for them, paid or not. */
   payment: PartnerStudentPayment | null;
+  /**
+   * The most recent SETTLED payment, so the roster can offer its receipt —
+   * separate from `payment` above on purpose. The latest attempt is often an
+   * abandoned or failed one, and there is no receipt for money we did not take.
+   */
+  receiptPaymentId: string | null;
 };
 
 const studentColumns = {
@@ -204,6 +210,7 @@ async function activityFor(ids: string[]) {
     // is cheaper than a window function and reads as what it is.
     db
       .select({
+        id: partnerPayments.id,
         studentUserId: partnerPayments.studentUserId,
         status: partnerPayments.status,
         plan: partnerPayments.plan,
@@ -217,21 +224,31 @@ async function activityFor(ids: string[]) {
   ]);
 
   const latestPayment = new Map<string, PartnerStudentPayment>();
+  // The newest SETTLED one, which is a different row from the newest one: a
+  // class that opened a checkout and closed it has a `created` row on top, and
+  // that row has no receipt. Same single pass, so it costs nothing.
+  const latestPaidId = new Map<string, string>();
   for (const p of payments) {
-    if (!p.studentUserId || latestPayment.has(p.studentUserId)) continue;
-    latestPayment.set(p.studentUserId, {
-      status: p.status,
-      plan: toPlanKey(p.plan),
-      amountCents: p.amountCents,
-      currency: p.currency,
-      createdAt: p.createdAt,
-    });
+    if (!p.studentUserId) continue;
+    if (!latestPayment.has(p.studentUserId)) {
+      latestPayment.set(p.studentUserId, {
+        status: p.status,
+        plan: toPlanKey(p.plan),
+        amountCents: p.amountCents,
+        currency: p.currency,
+        createdAt: p.createdAt,
+      });
+    }
+    if (p.status === "paid" && !latestPaidId.has(p.studentUserId)) {
+      latestPaidId.set(p.studentUserId, p.id);
+    }
   }
 
   return {
     practice: new Map(practice.map((r) => [r.userId, r])),
     mocks: new Map(mocks.map((r) => [r.userId, r])),
     latestPayment,
+    latestPaidId,
   };
 }
 
@@ -359,7 +376,7 @@ export async function partnerStudents(
   const total = totals[0]?.total ?? 0;
   if (rows.length === 0) return toPage<PartnerStudent>([], total, req);
 
-  const { practice, mocks, latestPayment } = await activityFor(rows.map((r) => r.id));
+  const { practice, mocks, latestPayment, latestPaidId } = await activityFor(rows.map((r) => r.id));
 
   const mapped = rows.map((u) => {
     const p = practice.get(u.id);
@@ -381,6 +398,7 @@ export async function partnerStudents(
       bestMockBand: m?.best ?? null,
       lastActiveAt: p?.lastAt ?? null,
       payment: latestPayment.get(u.id) ?? null,
+      receiptPaymentId: latestPaidId.get(u.id) ?? null,
     };
   });
 
@@ -622,6 +640,7 @@ export async function partnerStudentDetail(
       bestMockBand: m?.best ?? null,
       lastActiveAt: p?.lastAt ?? null,
       payment: activity.latestPayment.get(row.id) ?? null,
+      receiptPaymentId: activity.latestPaidId.get(row.id) ?? null,
     },
     sections,
     attempts,

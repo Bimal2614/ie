@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
+import { ReceiptLink } from "@/components/partner/receipt-link";
 import { StudentActions } from "@/components/partner/student-actions";
 import { BandCell, cardClass } from "@/components/dashboard/ui";
 import { QUESTION_TYPES, SECTIONS } from "@/lib/ielts";
@@ -197,6 +198,10 @@ export default async function PartnerStudentPage({
                 <span className="ml-auto text-xs text-ink-muted">
                   {dateTime(p.paidAt ?? p.createdAt)}
                 </span>
+                {/* Only a settled payment has one — see `ReceiptLink`. */}
+                {p.status === "paid" && (
+                  <ReceiptLink paymentId={p.id} label="Receipt" studentName={student.name} />
+                )}
               </li>
             ))}
           </ul>

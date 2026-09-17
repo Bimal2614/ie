@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { users, auditLog } from "@/db/schema";
 import { requireAdmin } from "@/lib/dal";
+import { destroyAllSessions } from "@/lib/session";
 import { isUuid } from "@/lib/uuid";
 import { DEFAULT_OFFERED_PLAN, isOfferedPlan, priceFor, type PlanKey } from "@/lib/plans";
 import {
@@ -21,9 +22,9 @@ import {
  * deactivation). Admin-only. Clears the deactivation flag; the user can sign in
  * again and old rate-limit violation counters expire on their own window.
  */
-export async function reactivateAccount(userId: string): Promise<{ ok: boolean }> {
+export async function reactivateAccount(userId: string): Promise<AdminOpResult> {
   const admin = await requireAdmin();
-  if (!isUuid(userId)) return { ok: false }; // see src/lib/uuid.ts
+  if (!isUuid(userId)) return { ok: false, error: "That request wasn't valid." }; // see src/lib/uuid.ts
 
   await db
     .update(users)
@@ -36,6 +37,7 @@ export async function reactivateAccount(userId: string): Promise<{ ok: boolean }
     metadata: { by: admin.id },
   });
 
+  revalidatePath("/admin/students");
   return { ok: true };
 }
 
@@ -183,4 +185,136 @@ export async function unverifyStudent(userId: string): Promise<AdminActionResult
 
   revalidatePath("/verify-students");
   return { ok: true, expiresAt: null };
+}
+
+/* ------------------------------------------------------------------ *
+ * Account state
+ *
+ * Until now the only thing that ever set `users.deactivated_at` was the
+ * automatic rate-limit guard (src/lib/security/rate-guard.ts), and the only
+ * thing that ever cleared it was `reactivateAccount` below — which nothing
+ * called. Disabling an account by hand meant SQL against the database, and so
+ * did putting it back. These two are that job, done from the console.
+ *
+ * SUPER-ADMIN ONLY. `requireAdmin` is the gate on both, and neither is exported
+ * to the partner panel: a class may enrol a candidate and pay for them, but
+ * taking an account away is ours to do.
+ * ------------------------------------------------------------------ */
+
+export type AdminOpResult = { ok: true } | { ok: false; error: string };
+
+/**
+ * Disable an account: reject its sessions and lock it out.
+ *
+ * Mirrors what the rate guard does automatically — flag, reason, sessions
+ * revoked, one audit row — so an account disabled from here is in exactly the
+ * state the automatic path produces, and `reactivateAccount` undoes either.
+ *
+ * The plan is deliberately left alone. A disabled account that was on premium
+ * is still on premium when it comes back; deactivation is a lock, not a refund,
+ * and conflating the two would quietly destroy what someone paid for.
+ */
+export async function deactivateAccount(userId: string, reason?: string): Promise<AdminOpResult> {
+  const admin = await requireAdmin();
+  if (!isUuid(userId)) return { ok: false, error: "That request wasn't valid." };
+
+  const [target] = await db
+    .select({ role: users.role, deactivatedAt: users.deactivatedAt })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  if (!target) return { ok: false, error: "That account no longer exists." };
+  /*
+   * Never an admin — which is also what stops the caller locking themselves
+   * out, since `requireAdmin` has just proved the caller is one. There is no
+   * second console to undo it from: the action that clears the flag needs an
+   * admin session to run, so a panel that could disable every admin could
+   * permanently disable itself.
+   */
+  if (target.role === "admin") return { ok: false, error: "Admin accounts can't be deactivated here." };
+  // Already disabled: say so without a second audit row or a fresh timestamp.
+  if (target.deactivatedAt) return { ok: true };
+
+  const note = reason?.trim();
+  await db
+    .update(users)
+    .set({
+      deactivatedAt: new Date(),
+      deactivationReason: note ? `${note} (by ${admin.email})` : `Deactivated by ${admin.email}`,
+      updatedAt: new Date(),
+    })
+    .where(eq(users.id, userId));
+
+  // Revoked, not deleted — the same thing every other sign-out in the app does,
+  // so the rows stay for an audit of where the account was signed in.
+  await destroyAllSessions(userId);
+
+  await db.insert(auditLog).values({
+    userId,
+    event: "account.deactivated",
+    metadata: { by: admin.id, reason: note ?? null, via: "admin" },
+  });
+
+  revalidatePath("/admin/students");
+  return { ok: true };
+}
+
+/* ------------------------------------------------------------------ *
+ * Partner membership
+ * ------------------------------------------------------------------ */
+
+/**
+ * Detach a student from the institution that enrolled them.
+ *
+ * `users.partner_id` is the entire link (see src/db/schema.ts), so clearing it
+ * is the whole operation: the account becomes an ordinary personal one and
+ * keeps its history, which is precisely what we promise a candidate who asks
+ * for it in the privacy notice (src/lib/legal-content.ts).
+ *
+ * NOTHING BILLED IS TOUCHED. `partner_payments` rows point at the student by id
+ * and stay exactly as they are — the class did pay for that term, and a roster
+ * change must not rewrite what money did.
+ *
+ * Admin-side only, and that is a deliberate asymmetry: the class's own panel
+ * cannot do this. A partner removing a student would be removing our record of
+ * who they had bought a plan for.
+ */
+export async function removeStudentFromPartner(userId: string): Promise<AdminOpResult> {
+  const admin = await requireAdmin();
+  if (!isUuid(userId)) return { ok: false, error: "That request wasn't valid." };
+
+  const [target] = await db
+    .select({ role: users.role, partnerId: users.partnerId })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  if (!target) return { ok: false, error: "That account no longer exists." };
+  /*
+   * A class's OWN LOGIN carries `partner_id` too — it is how `partnerContext`
+   * finds the institution behind the session. Clearing it there would not
+   * detach a student, it would strand the login: `partnerContext` finds no
+   * partner for it and sends it to /logout on every attempt to sign in. Only a
+   * candidate row may be detached.
+   */
+  if (target.role !== "user") {
+    return { ok: false, error: "That's the class's own login, not a student." };
+  }
+  if (!target.partnerId) return { ok: true }; // already detached
+
+  await db
+    .update(users)
+    .set({ partnerId: null, updatedAt: new Date() })
+    .where(eq(users.id, userId));
+
+  // The old id lives in the audit row, so a detach made in error can be undone
+  // from the ledger rather than from somebody's memory.
+  await db.insert(auditLog).values({
+    userId,
+    event: "partner.student.detached",
+    metadata: { partnerId: target.partnerId, by: admin.id, via: "admin" },
+  });
+
+  revalidatePath(`/admin/partners/${target.partnerId}`);
+  revalidatePath("/admin/students");
+  return { ok: true };
 }

@@ -48,6 +48,7 @@ function toRow(s: PartnerStudent): RosterStudent {
     avgBand: s.avgBand,
     mocks: s.mocks,
     paymentStatus: s.payment?.status ?? null,
+    receiptPaymentId: s.receiptPaymentId,
   };
 }
 
