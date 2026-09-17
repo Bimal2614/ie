@@ -3,8 +3,20 @@ import "server-only";
 import { and, count, desc, eq, inArray, isNotNull, not, or, sql } from "drizzle-orm";
 
 import { db } from "@/db";
-import { coupons, partnerPayments, partners, users, type Coupon } from "@/db/schema";
-import { revenueThisAndLastMonth } from "@/lib/payments/transactions";
+import {
+  coupons,
+  partnerPayments,
+  partners,
+  users,
+  type Coupon,
+  type Subscription,
+} from "@/db/schema";
+import {
+  revenueForUser,
+  revenueThisAndLastMonth,
+  userLedger,
+  type UserLedgerRow,
+} from "@/lib/payments/transactions";
 import {
   LIKE_ESCAPE,
   likeTerm,
@@ -15,6 +27,13 @@ import {
 } from "@/lib/pagination";
 import { onAPlan } from "@/lib/partners";
 import { effectivePlan, toPlanKey, type PlanKey } from "@/lib/plans";
+import {
+  studentProgress,
+  studentTotals,
+  type StudentProgress,
+  type StudentTotals,
+} from "@/lib/student-progress";
+import { subscriptionHistory } from "@/lib/subscriptions";
 
 /**
  * The admin console's own queries — the ones that are NOT scoped to a partner.
@@ -139,6 +158,160 @@ export async function adminStudents(
     totals[0]?.total ?? 0,
     req,
   );
+}
+
+/* ------------------------------------------------------------------ *
+ * One student
+ *
+ * The partner panel's student screen, without the partner. A class sees this
+ * for the candidates it enrolled; the console has to answer the same questions
+ * about EVERY candidate, including the great majority who signed up alone and
+ * belong to no class at all.
+ *
+ * The practice half is literally the same code — src/lib/student-progress.ts.
+ * The money half is not, and cannot be: a partner is shown the orders it placed
+ * (`partner_payments`), whereas support is asked "what were they charged, and
+ * what are they entitled to", which is the ledger plus `subscriptions`.
+ * ------------------------------------------------------------------ */
+
+export type AdminStudentPayment = {
+  id: string;
+  status: "created" | "paid" | "failed";
+  plan: PlanKey;
+  amountCents: number;
+  currency: string;
+  razorpayPaymentId: string | null;
+  paidAt: Date | null;
+  createdAt: Date;
+  partnerId: string;
+  partnerName: string | null;
+};
+
+export type AdminStudentProfile = {
+  id: string;
+  name: string;
+  email: string;
+  emailVerified: boolean;
+  phone: string | null;
+  country: string | null;
+  targetModule: "academic" | "general";
+  targetBand: string | null;
+  examDate: Date | null;
+  /** Entitlement RIGHT NOW — the expiry is already applied, as at every gate. */
+  plan: PlanKey;
+  /** What the column actually says, which differs while a lapse awaits the sweep. */
+  storedPlan: PlanKey;
+  planExpiresAt: Date | null;
+  createdAt: Date;
+  lastLoginAt: Date | null;
+  deactivatedAt: Date | null;
+  deactivationReason: string | null;
+  partnerId: string | null;
+  partnerName: string | null;
+  razorpayCustomerId: string | null;
+};
+
+export type AdminStudentDetail = {
+  student: AdminStudentProfile;
+  totals: StudentTotals;
+  progress: StudentProgress;
+  subscriptions: Subscription[];
+  ledger: UserLedgerRow[];
+  /** Everything received for this account, by currency — the whole ledger. */
+  revenue: Money;
+  /** Orders a class placed for this seat — empty for a self-serve candidate. */
+  partnerOrders: AdminStudentPayment[];
+};
+
+/**
+ * Everything the console knows about one candidate, or null if there is no such
+ * row.
+ *
+ * NO ACCESS CHECK HERE, by the same convention as the rest of this file: the
+ * route calls `requireAdmin()` first, and an admin may look at anybody. The
+ * null is "no such student" and nothing more — unlike `partnerStudentDetail`,
+ * where it is the access check itself.
+ *
+ * `role = 'user'` is still a predicate, because this screen grants plans and
+ * disables accounts: an admin or a partner login reached through it would be
+ * offered controls that mean nothing for them (see `verifyStudent`, which
+ * refuses admins outright).
+ */
+export async function adminStudentDetail(
+  studentId: string,
+  now: Date = new Date(),
+): Promise<AdminStudentDetail | null> {
+  const [row] = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      emailVerified: users.emailVerified,
+      phone: users.phone,
+      country: users.country,
+      targetModule: users.targetModule,
+      targetBand: users.targetBand,
+      examDate: users.examDate,
+      plan: users.plan,
+      planExpiresAt: users.planExpiresAt,
+      createdAt: users.createdAt,
+      lastLoginAt: users.lastLoginAt,
+      deactivatedAt: users.deactivatedAt,
+      deactivationReason: users.deactivationReason,
+      partnerId: users.partnerId,
+      partnerName: partners.name,
+      razorpayCustomerId: users.razorpayCustomerId,
+    })
+    .from(users)
+    .leftJoin(partners, eq(partners.id, users.partnerId))
+    .where(and(eq(users.id, studentId), eq(users.role, "user")))
+    .limit(1);
+  if (!row) return null;
+
+  const [totals, progress, subs, ledger, revenue, orders] = await Promise.all([
+    studentTotals(studentId),
+    studentProgress(studentId),
+    subscriptionHistory(studentId),
+    userLedger(studentId),
+    revenueForUser(studentId),
+    // Not scoped to `row.partnerId`: a student detached from a class — or moved
+    // to another one — keeps the orders that were placed for them, and hiding
+    // those is how "who paid for this seat" stops having an answer.
+    db
+      .select({
+        id: partnerPayments.id,
+        status: partnerPayments.status,
+        plan: partnerPayments.plan,
+        amountCents: partnerPayments.amountCents,
+        currency: partnerPayments.currency,
+        razorpayPaymentId: partnerPayments.razorpayPaymentId,
+        paidAt: partnerPayments.paidAt,
+        createdAt: partnerPayments.createdAt,
+        partnerId: partnerPayments.partnerId,
+        partnerName: partners.name,
+      })
+      .from(partnerPayments)
+      .leftJoin(partners, eq(partners.id, partnerPayments.partnerId))
+      .where(eq(partnerPayments.studentUserId, studentId))
+      .orderBy(desc(partnerPayments.createdAt))
+      .limit(50),
+  ]);
+
+  const storedPlan = toPlanKey(row.plan);
+
+  return {
+    student: {
+      ...row,
+      plan: effectivePlan(storedPlan, row.planExpiresAt, now),
+      storedPlan,
+    },
+    totals,
+    progress,
+    subscriptions: subs,
+    ledger,
+    revenue,
+    partnerOrders: orders.map((o) => ({ ...o, plan: toPlanKey(o.plan) })),
+  };
 }
 
 /* ------------------------------------------------------------------ *

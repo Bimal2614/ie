@@ -18,6 +18,19 @@ import {
 } from "@/lib/subscriptions";
 
 /**
+ * Both screens that show a candidate: the list, and that candidate's own page.
+ *
+ * The `"page"` form is what makes the second one work — /admin/students/[id] is
+ * a dynamic route, and `revalidatePath` given a literal path with a parameter
+ * in it matches nothing. Every action below changes something both screens
+ * display, so they are revalidated together rather than one at a time.
+ */
+function revalidateStudentScreens() {
+  revalidatePath("/admin/students");
+  revalidatePath("/admin/students/[id]", "page");
+}
+
+/**
  * Reactivate an account that was disabled (e.g. by automatic rate-limit
  * deactivation). Admin-only. Clears the deactivation flag; the user can sign in
  * again and old rate-limit violation counters expire on their own window.
@@ -37,7 +50,7 @@ export async function reactivateAccount(userId: string): Promise<AdminOpResult> 
     metadata: { by: admin.id },
   });
 
-  revalidatePath("/admin/students");
+  revalidateStudentScreens();
   return { ok: true };
 }
 
@@ -167,6 +180,7 @@ export async function verifyStudent(input: VerifyStudentInput): Promise<AdminAct
   });
 
   revalidatePath("/verify-students");
+  revalidateStudentScreens();
   return { ok: true, expiresAt: sub.currentPeriodEnd?.toISOString() ?? null };
 }
 
@@ -184,6 +198,7 @@ export async function unverifyStudent(userId: string): Promise<AdminActionResult
   });
 
   revalidatePath("/verify-students");
+  revalidateStudentScreens();
   return { ok: true, expiresAt: null };
 }
 
@@ -255,7 +270,7 @@ export async function deactivateAccount(userId: string, reason?: string): Promis
     metadata: { by: admin.id, reason: note ?? null, via: "admin" },
   });
 
-  revalidatePath("/admin/students");
+  revalidateStudentScreens();
   return { ok: true };
 }
 
@@ -315,6 +330,6 @@ export async function removeStudentFromPartner(userId: string): Promise<AdminOpR
   });
 
   revalidatePath(`/admin/partners/${target.partnerId}`);
-  revalidatePath("/admin/students");
+  revalidateStudentScreens();
   return { ok: true };
 }

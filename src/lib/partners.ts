@@ -30,6 +30,7 @@ import { isReferralId } from "@/lib/partner-referral";
 import type { PartnerRate } from "@/lib/partner-pricing";
 import { revenueByPartner } from "@/lib/payments/transactions";
 import { effectivePlan, toPlanKey, type PlanKey } from "@/lib/plans";
+import { studentProgress, type StudentProgress } from "@/lib/student-progress";
 import { hashPassword } from "@/lib/security/password";
 import { destroyAllSessions } from "@/lib/session";
 
@@ -480,25 +481,10 @@ export async function partnerOverview(
  * One student
  * ------------------------------------------------------------------ */
 
-export type SectionProgress = {
-  section: "listening" | "reading" | "writing" | "speaking";
-  attempts: number;
-  answers: number;
-  graded: number;
-  correct: number;
-  avgBand: number | null;
-  lastAt: Date | null;
-};
-
-export type StudentAttempt = {
-  attemptId: string;
-  section: string;
-  questionType: string;
-  answers: number;
-  correct: number;
-  avgBand: number | null;
-  at: Date;
-};
+/* The practice record itself lives in src/lib/student-progress.ts, which the
+   admin console reads too — re-exported here so a partner-panel caller still
+   has one import. */
+export type { SectionProgress, StudentAttempt, StudentMock } from "@/lib/student-progress";
 
 export type StudentPaymentRow = {
   id: string;
@@ -512,20 +498,8 @@ export type StudentPaymentRow = {
   createdAt: Date;
 };
 
-export type PartnerStudentDetail = {
+export type PartnerStudentDetail = StudentProgress & {
   student: PartnerStudent;
-  sections: SectionProgress[];
-  attempts: StudentAttempt[];
-  mocks: Array<{
-    id: string;
-    module: string;
-    overallBand: string | null;
-    listeningBand: string | null;
-    readingBand: string | null;
-    writingBand: string | null;
-    speakingBand: string | null;
-    at: Date;
-  }>;
   payments: StudentPaymentRow[];
 };
 
@@ -549,53 +523,9 @@ export async function partnerStudentDetail(
     .limit(1);
   if (!row) return null;
 
-  const [activity, sections, attempts, mockRows, payments] = await Promise.all([
+  const [activity, progress, payments] = await Promise.all([
     activityFor([row.id]),
-    db
-      .select({
-        section: userResponses.section,
-        attempts: sql<number>`count(distinct ${userResponses.attemptId})::int`,
-        answers: sql<number>`count(*)::int`,
-        graded: sql<number>`count(*) filter (where ${userResponses.isCorrect} is not null or ${userResponses.band} is not null)::int`,
-        correct: sql<number>`count(*) filter (where ${userResponses.isCorrect})::int`,
-        avgBand: sql<number | null>`avg(${userResponses.band})::float`,
-        lastAt: sql<Date | null>`max(${userResponses.createdAt})`,
-      })
-      .from(userResponses)
-      .where(eq(userResponses.userId, studentId))
-      .groupBy(userResponses.section),
-    // One row per SUBMIT, not per gap — a four-gap table is one thing the
-    // student did, and listing its rows fills the feed with four of it.
-    db
-      .select({
-        attemptId: userResponses.attemptId,
-        section: userResponses.section,
-        questionType: userResponses.questionType,
-        answers: sql<number>`count(*)::int`,
-        correct: sql<number>`count(*) filter (where ${userResponses.isCorrect})::int`,
-        avgBand: sql<number | null>`avg(${userResponses.band})::float`,
-        at: sql<Date>`max(${userResponses.createdAt})`,
-      })
-      .from(userResponses)
-      .where(eq(userResponses.userId, studentId))
-      .groupBy(userResponses.attemptId, userResponses.section, userResponses.questionType)
-      .orderBy(sql`max(${userResponses.createdAt}) desc`)
-      .limit(20),
-    db
-      .select({
-        id: mockTestResults.id,
-        module: mockTestResults.module,
-        overallBand: mockTestResults.overallBand,
-        listeningBand: mockTestResults.listeningBand,
-        readingBand: mockTestResults.readingBand,
-        writingBand: mockTestResults.writingBand,
-        speakingBand: mockTestResults.speakingBand,
-        at: mockTestResults.createdAt,
-      })
-      .from(mockTestResults)
-      .where(eq(mockTestResults.userId, studentId))
-      .orderBy(desc(mockTestResults.createdAt))
-      .limit(10),
+    studentProgress(studentId),
     db
       .select({
         id: partnerPayments.id,
@@ -642,9 +572,7 @@ export async function partnerStudentDetail(
       payment: activity.latestPayment.get(row.id) ?? null,
       receiptPaymentId: activity.latestPaidId.get(row.id) ?? null,
     },
-    sections,
-    attempts,
-    mocks: mockRows,
+    ...progress,
     payments: payments.map((r) => ({ ...r, plan: toPlanKey(r.plan) })),
   };
 }

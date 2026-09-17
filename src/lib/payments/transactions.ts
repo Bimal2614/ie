@@ -229,6 +229,65 @@ export async function ledgerBetween(from: Date, to: Date): Promise<LedgerRow[]> 
     .orderBy(desc(transactions.createdAt));
 }
 
+/** What ONE candidate has actually paid us, by currency. Over every row, not
+ *  just the page of them `userLedger` returns. */
+export async function revenueForUser(userId: string): Promise<Money> {
+  const rows = await db
+    .select({
+      currency: transactions.currency,
+      cents: sql<number>`sum(${transactions.amountCents})::int`,
+    })
+    .from(transactions)
+    .where(eq(transactions.userId, userId))
+    .groupBy(transactions.currency);
+
+  return toMoney(rows.map((r) => ({ currency: r.currency, cents: Number(r.cents) })));
+}
+
+export type UserLedgerRow = {
+  id: string;
+  createdAt: Date;
+  amountCents: number;
+  currency: string;
+  provider: "manual" | "razorpay" | "partner";
+  providerPaymentId: string | null;
+  note: string | null;
+  partnerId: string | null;
+  partnerName: string | null;
+};
+
+/**
+ * Every rupee and dollar that has ever moved for ONE candidate, newest first.
+ *
+ * For the support screen at /admin/students/<id>, and it comes from here rather
+ * than from `partner_payments` or `subscriptions` for the reason at the top of
+ * this file: those tables hold orders and entitlement, which are not the same
+ * question as "what were they actually charged". A class that paid for this
+ * seat shows up here too — the row carries both ids — which is why the partner
+ * is joined in.
+ *
+ * Bounded at `limit`: a candidate renewing quarterly for a decade is forty rows.
+ */
+export async function userLedger(userId: string, limit = 50): Promise<UserLedgerRow[]> {
+  return db
+    .select({
+      id: transactions.id,
+      createdAt: transactions.createdAt,
+      amountCents: transactions.amountCents,
+      currency: transactions.currency,
+      provider: transactions.provider,
+      providerPaymentId: transactions.providerPaymentId,
+      note: transactions.note,
+      partnerId: transactions.partnerId,
+      partnerName: partners.name,
+    })
+    .from(transactions)
+    .leftJoin(partners, eq(partners.id, transactions.partnerId))
+    .where(eq(transactions.userId, userId))
+    .orderBy(desc(transactions.createdAt))
+    .limit(limit);
+}
+
 /* ------------------------------------------------------------------ *
  * The admin list
  * ------------------------------------------------------------------ */

@@ -1,18 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Ban, BadgeCheck, Loader2, ShieldCheck, Undo2 } from "lucide-react";
+import Link from "next/link";
 
-import {
-  deactivateAccount,
-  reactivateAccount,
-  unverifyStudent,
-  verifyStudent,
-} from "@/app/actions/admin";
+import { StudentControls } from "@/components/admin/student-controls";
 import { ListControls, Pager } from "@/components/ui/list-controls";
 import type { AdminStudentFilter, AdminStudentRequest, AdminStudentSort } from "@/lib/admin";
 import type { Page } from "@/lib/pagination";
-import { DEFAULT_OFFERED_PLAN, PLANS, type PlanKey } from "@/lib/plans";
+import { PLANS, type PlanKey } from "@/lib/plans";
 
 /**
  * Every candidate, and the manual grant that stands in for a checkout.
@@ -49,18 +43,6 @@ const SORTS: ReadonlyArray<{ key: AdminStudentSort; label: string }> = [
   { key: "expires", label: "Plan ends" },
 ];
 
-/** 0 means "never lapses". Kept in step with the bound in the action. */
-const DURATIONS = [
-  { months: 1, label: "1 month" },
-  { months: 3, label: "3 months" },
-  { months: 6, label: "6 months" },
-  { months: 12, label: "12 months" },
-  { months: 0, label: "No expiry" },
-] as const;
-
-const CONTROL =
-  "h-9 rounded-lg border border-line bg-paper-elev px-2.5 text-sm text-ink outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand/15 disabled:opacity-50";
-
 export function StudentsTable({
   page,
   req,
@@ -94,31 +76,18 @@ export function StudentsTable({
 }
 
 function Row({ student }: { student: AdminStudentDisplay }) {
-  const [months, setMonths] = useState<number>(3);
-  const [pending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-  // Taking access away from someone mid-course asks once first.
-  const [confirming, setConfirming] = useState(false);
-  // Locking an account out is its own question, asked on its own button.
-  const [confirmingDisable, setConfirmingDisable] = useState(false);
-  const paid = student.plan !== "free";
-
-  const run = (fn: () => Promise<{ ok: boolean; error?: string }>) => {
-    setError(null);
-    setConfirming(false);
-    setConfirmingDisable(false);
-    startTransition(async () => {
-      const res = await fn();
-      if (!res.ok) setError(res.error ?? "That didn't work. Try again.");
-    });
-  };
-
   return (
     <li className="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:gap-4">
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="truncate font-medium text-ink">{student.name}</span>
-          {paid ? (
+          {/* The whole record — progress, sittings, what they were charged. */}
+          <Link
+            href={`/admin/students/${student.id}`}
+            className="truncate font-medium text-ink hover:text-brand hover:underline"
+          >
+            {student.name}
+          </Link>
+          {student.plan !== "free" ? (
             <span className="rounded-full bg-green-soft px-2 py-0.5 text-[11px] font-semibold text-green-ink">
               {PLANS[student.plan].label}
               {student.expiresLabel ? ` · to ${student.expiresLabel}` : ""}
@@ -143,112 +112,15 @@ function Row({ student }: { student: AdminStudentDisplay }) {
           {student.email} · joined {student.joinedLabel}
           {student.lastSeenLabel ? ` · last seen ${student.lastSeenLabel}` : " · never signed in"}
         </p>
-        {error && <p className="mt-1 text-xs text-danger">{error}</p>}
       </div>
 
-      <div className="flex shrink-0 items-center gap-2">
-        {paid ? (
-          confirming ? (
-            <>
-              <button
-                type="button"
-                disabled={pending}
-                onClick={() => run(() => unverifyStudent(student.id))}
-                className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-destructive px-3 text-sm font-semibold text-destructive-foreground disabled:opacity-50"
-              >
-                {pending && <Loader2 className="size-3.5 animate-spin" />} Confirm
-              </button>
-              <button
-                type="button"
-                onClick={() => setConfirming(false)}
-                className="h-9 rounded-lg px-3 text-sm font-medium text-ink-soft hover:text-ink"
-              >
-                Cancel
-              </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setConfirming(true)}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-line px-3 text-sm font-semibold text-ink transition-colors hover:bg-paper-sunken"
-            >
-              <Undo2 className="size-3.5" /> Remove access
-            </button>
-          )
-        ) : (
-          <>
-            <select
-              value={months}
-              onChange={(e) => setMonths(Number(e.target.value))}
-              disabled={pending}
-              aria-label={`Duration for ${student.name}`}
-              className={CONTROL}
-            >
-              {DURATIONS.map((d) => (
-                <option key={d.months} value={d.months}>
-                  {d.label}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() =>
-                run(() => verifyStudent({ userId: student.id, plan: DEFAULT_OFFERED_PLAN, months }))
-              }
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-brand-hover disabled:opacity-50"
-            >
-              {pending ? <Loader2 className="size-3.5 animate-spin" /> : <BadgeCheck className="size-3.5" />}
-              Grant
-            </button>
-          </>
-        )}
-
-        {/* Lock-out, kept apart from the plan controls: a disabled account
-            keeps whatever it paid for — the two are not the same decision. */}
-        <span aria-hidden className="h-6 w-px bg-line" />
-
-        {student.disabled ? (
-          <button
-            type="button"
-            disabled={pending}
-            onClick={() => run(() => reactivateAccount(student.id))}
-            title={"Let this account sign in again"}
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-line px-3 text-sm font-semibold text-ink transition-colors hover:bg-paper-sunken disabled:opacity-50"
-          >
-            {pending ? <Loader2 className="size-3.5 animate-spin" /> : <ShieldCheck className="size-3.5" />}
-            Enable
-          </button>
-        ) : confirmingDisable ? (
-          <>
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() => run(() => deactivateAccount(student.id))}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-destructive px-3 text-sm font-semibold text-destructive-foreground disabled:opacity-50"
-            >
-              {pending && <Loader2 className="size-3.5 animate-spin" />} Confirm
-            </button>
-            <button
-              type="button"
-              onClick={() => setConfirmingDisable(false)}
-              className="h-9 rounded-lg px-3 text-sm font-medium text-ink-soft hover:text-ink"
-            >
-              Cancel
-            </button>
-          </>
-        ) : (
-          <button
-            type="button"
-            disabled={pending}
-            onClick={() => setConfirmingDisable(true)}
-            title={"Sign this account out everywhere and block sign-in"}
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-line px-3 text-sm font-semibold text-danger transition-colors hover:bg-danger-soft disabled:opacity-50"
-          >
-            <Ban className="size-3.5" /> Disable
-          </button>
-        )}
-      </div>
+      <StudentControls
+        studentId={student.id}
+        name={student.name}
+        plan={student.plan}
+        disabled={student.disabled}
+        className="shrink-0 sm:items-end"
+      />
     </li>
   );
 }
