@@ -17,6 +17,82 @@ import type { BlogPost } from "./blog-types";
  * number. Rules quoted here reflect the 2026 test year.
  */
 export const TOPIC_POSTS_2026: BlogPost[] = [
+  /**
+   * Timely policy post (18 Sep 2026) — the dependants announcement of
+   * 17 September 2026. High, sudden intent ("can I bring my wife on an
+   * Australian student visa"), and nothing on the site answered it.
+   *
+   * Everything here is an ANNOUNCEMENT, not yet a regulation: no start date
+   * has been published. Written so it stays true either way, and hedged to
+   * the official source, because this one will move.
+   */
+  {
+    slug: "australia-student-visa-dependants-ban-2026",
+    seoTitle: "Australia Student Visa 2026: Can You Still Bring a Spouse?",
+    title: "Australia student visa 2026: can you still bring your spouse?",
+    excerpt:
+      "Australia announced on 17 September 2026 that most international students will no longer be able to bring a partner or children. What changed, who is exempt, when it starts, and why your IELTS requirement is unaffected.",
+    category: "Requirements",
+    date: "September 2026",
+    publishedAt: "2026-09-18",
+    readMins: 8,
+    keywords: [
+      "australia student visa spouse",
+      "australia student visa dependants",
+      "can i bring my wife on australia student visa",
+      "australia student visa family ban 2026",
+      "australia student visa new rules 2026",
+      "australia student visa 500 dependent",
+      "ielts score for australia student visa",
+      "australia 485 visa ielts",
+      "study in australia 2026",
+      "ielts practice",
+    ],
+    sections: [
+      { paragraphs: ["Short answer: for most people, soon, no. On 17 September 2026, Home Affairs and Immigration Minister Tony Burke announced at the National Press Club in Canberra that most student visas will no longer allow secondary applicants, which is the visa term for the partner and dependent children who travel with you. A narrow set of exemptions survives.", "One thing to be clear about before you panic or cancel anything: this is an announcement, not yet a rule. No commencement date has been published. Because the change is expected to be made by regulation rather than by an act of parliament, it can take effect quickly and without a vote, so treat it as coming rather than as hypothetical. Always confirm the current position on the Department of Home Affairs website before you lodge."] },
+      { heading: "What was actually announced", paragraphs: ["The dependants change is one part of a wider migration package aimed at cutting net overseas migration from roughly 292,000 a year to 245,000 in 2026-27 and 225,000 in 2027-28. The measures that affect students:"], bullets: ["Most student visas will no longer permit secondary applicants, so a partner or child cannot be included in the application.", "Changing your education provider or your course will require a new student visa application, rather than a variation of the one you hold.", "You will generally only be able to continue studying in Australia by moving up a qualification level, for example bachelor's to master's. Sideways moves between institutions and drops to a lower qualification are being blocked as \"visa hopping\".", "Visitor visas used for short English-language or vocational courses of three months or less will carry a \"no further stay\" condition.", "Second- and third-year Working Holiday visas move to a ballot with regional work requirements."] },
+      { heading: "Who can still bring family", paragraphs: ["The exemptions announced are narrow, and they turn on the type of student you are rather than on the strength of your relationship."], table: {
+        caption: "Exemptions as described in the 17 September 2026 announcement. Detail will be settled when the regulation is made — confirm on immi.homeaffairs.gov.au before lodging.",
+        headers: ["Student", "Can bring partner / children?", "Note"],
+        rows: [
+          ["PhD and postgraduate research candidates", "Yes", "Burke pointed to doctoral students typically being at a different life stage"],
+          ["Students from designated Pacific nations", "Yes", "Named as an exemption; the specific country list follows the regulation"],
+          ["Students from ASEAN partner nations", "Yes", "Announced as exempt"],
+          ["Overseas government-sponsored students", "Yes", "Sponsored cohorts are carved out"],
+          ["Everyone else: undergraduate, coursework master's, VET, ELICOS", "No", "The great majority of student visa applicants"],
+        ],
+      } },
+      { heading: "When does it start?", paragraphs: ["No date has been given. The government has said the measures do not all commence at once, and that each takes effect as the relevant visa conditions, regulations or administrative arrangements are put in place. What is known is the direction of travel, and that it applies to future grants rather than retrospectively to visas already held."] },
+      { heading: "If your family is already in Australia", paragraphs: ["Nobody is being separated onshore. The government has stated that families already attached to a visa in Australia keep their arrangements until they leave the country or become eligible for a permanent visa. If your partner is already there on your student visa, this announcement does not remove them."] },
+      { heading: "The scale of it", paragraphs: ["Australia granted 337,427 student visas in the last financial year. Of those, 45,991 went to secondary applicants — partners and children rather than students. That is the population this measure targets, and it is why the government describes student visa numbers themselves as unaffected: the students still come, the families do not."] },
+      { heading: "What this does NOT change: your English requirement", paragraphs: ["No English test or IELTS score requirement was touched by the 17 September announcement. The English rules that apply to you are still the ones that came into force on 7 August 2025, and they are worth knowing precisely, because two of them catch people out."], table: {
+        caption: "Current IELTS positions for the main Australian visa routes. Thresholds change on a schedule nobody controls — verify on the Department of Home Affairs site before you book a test.",
+        headers: ["Route", "IELTS position", "Status"],
+        rows: [
+          ["Student visa (subclass 500)", "Set by your education provider and the visa English requirement", "Unchanged in September 2026"],
+          ["Temporary Graduate (subclass 485)", "6.5 overall with no band below 5.5", "Raised from 6.0 on 7 August 2025"],
+          ["Competent English", "6.0 in each of the four skills", "Unchanged"],
+          ["Proficient English", "7.0 in each of the four skills", "Unchanged"],
+          ["Superior English", "8.0 in each of the four skills", "Unchanged"],
+        ],
+      } },
+      { heading: "Two English rules people still get wrong", bullets: ["At-home and remote-proctored tests are not accepted for any Australian visa, from any provider. You must sit the test in person at a secure test centre, and booking IELTS Online by mistake is an expensive way to lose a month.", "IELTS One Skill Retake is accepted for the Temporary Graduate visa, so if you land 6.5 overall with a single 5.0 band, you can retake that one skill rather than the whole test.", "Results from a test sat on or before 6 August 2025 remain usable as evidence until 6 August 2028."], links: [
+        { label: "IELTS One Skill Retake: how it works and when it is worth it", href: "/blog/ielts-one-skill-retake-guide" },
+        { label: "IELTS vs PTE vs Duolingo: which test to sit", href: "/blog/ielts-vs-pte-vs-duolingo" },
+        { label: "IELTS band score calculator", href: "/ielts-band-score-calculator" },
+      ] },
+      { heading: "What to do now", bullets: ["If you were planning to bring a partner, check whether any exemption applies to you before you change your plan. A PhD offer instead of a coursework master's is a materially different visa outcome now.", "If you are close to lodging, lodge on the rules as they stand and watch immi.homeaffairs.gov.au for the commencement date rather than following news coverage.", "If Australia was your choice because of dependant work rights, it is reasonable to price Canada, the UK and Ireland again — but do that on the current rules for each, not on the version you read last year.", "Whatever you decide, the English requirement is the one part of this you fully control, and a higher band widens every option at once. Get the score first."] },
+      { heading: "Get the band that keeps your options open", paragraphs: ["A 6.5 with nothing below 5.5 is now the floor for the Temporary Graduate route, and a 7.0 across the board opens skilled pathways in every destination country, not just Australia. On IELTSVega you can sit full timed mock tests, practise Writing and Speaking with instant AI band feedback against the official criteria, and see exactly which skill is holding your overall band down — which is the difference between retaking one skill and retaking the whole test."] },
+    ],
+    faqs: [
+      { q: "Can I bring my wife on an Australian student visa in 2026?", a: "For most students, this is being removed. On 17 September 2026 the Australian government announced that most student visas will no longer allow secondary applicants, which covers partners and dependent children. Exemptions apply to PhD and postgraduate research candidates, students from designated Pacific and ASEAN nations, and government-sponsored students. No commencement date has been published yet, so check the Department of Home Affairs website for the position on the day you lodge." },
+      { q: "Is the student dependants ban already law?", a: "Not yet. It was announced on 17 September 2026 and has not commenced. It is expected to be implemented by regulation rather than legislation, which means it does not need a parliamentary vote and can take effect faster than a change that does. Treat it as imminent rather than speculative, and confirm before lodging." },
+      { q: "What happens to my family who are already in Australia?", a: "They are not affected. The government has said families already attached to a visa in Australia will not be separated onshore, and that existing arrangements continue until they leave Australia or become eligible for a permanent visa. The change applies to future visa grants." },
+      { q: "Does the change affect PhD students?", a: "No. Postgraduate research candidates, including PhD students, are exempt and can still bring a partner and children. The minister linked the exemption to doctoral students typically being at a different stage of life from undergraduates." },
+      { q: "Has the IELTS score for an Australian student visa changed?", a: "No. The 17 September 2026 announcement contained no change to English testing. The current English rules date from 7 August 2025: the Temporary Graduate visa needs 6.5 overall with no band below 5.5, Competent English remains 6.0 in each skill, and remote-proctored or at-home tests are not accepted for any Australian visa regardless of provider." },
+      { q: "Can I still change my course or university in Australia?", a: "It is becoming harder. Under the announced changes you will need a new student visa application to change provider or course, and you will generally only be able to continue by progressing to a higher qualification. Lateral transfers between institutions and moves down to a lower qualification are being blocked as visa hopping, with exceptions only in extenuating circumstances." },
+    ],
+  },
   {
     slug: "ielts-test-centres-near-me",
     seoTitle: "IELTS Centres Near Me: How to Find & Choose One",
