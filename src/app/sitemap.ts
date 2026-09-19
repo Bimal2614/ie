@@ -77,12 +77,29 @@ export default function sitemap(): MetadataRoute.Sitemap {
    * `publishedAt` must therefore never be set in the future; two posts briefly
    * were, which is what surfaced this.
    */
-  const blogEntries: MetadataRoute.Sitemap = POSTS.map((p) => ({
-    url: `${BASE}/blog/${p.slug}`,
-    ...(p.publishedAt ? { lastModified: new Date(p.publishedAt) } : {}),
-    changeFrequency: "weekly",
-    priority: 0.7,
-  }));
+  const blogEntries: MetadataRoute.Sitemap = POSTS.map((p) => {
+    /**
+     * `<lastmod>` is the ONLY date the sitemap protocol carries, and it means
+     * last modification. So a revised post reports `updatedAt` and an untouched
+     * one falls back to `publishedAt`.
+     *
+     * There is deliberately no creation date here because the format has no
+     * element for one — `<lastmod>` is it. The creation date is published in
+     * the BlogPosting JSON-LD as `datePublished` (see blog/[slug]/page.tsx),
+     * which is where Google reads it from and where it can actually surface in
+     * a result. Do not try to encode it here.
+     *
+     * Still subject to the rule above: a date we did not earn is worse than no
+     * date, because Google stops trusting the whole file.
+     */
+    const lastmod = p.updatedAt ?? p.publishedAt;
+    return {
+      url: `${BASE}/blog/${p.slug}`,
+      ...(lastmod ? { lastModified: new Date(lastmod) } : {}),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    };
+  });
 
   return [...staticEntries, ...blogEntries];
 }

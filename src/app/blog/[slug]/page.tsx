@@ -87,6 +87,10 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
     keywords: post.keywords,
     type: "article",
     publishedTime: post.publishedAt,
+    // pageMeta has always accepted modifiedTime; nothing ever passed one, so
+    // og:article:modified_time was absent on every post. Falls back to the
+    // published date so the tag is never a date we did not earn.
+    modifiedTime: post.updatedAt ?? post.publishedAt,
   });
 
   /**
@@ -106,6 +110,20 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   delete (twitter as { images?: unknown }).images;
 
   return { ...meta, openGraph, twitter };
+}
+
+/**
+ * "2026-09-19" -> "September 2026".
+ *
+ * Pinned to UTC on purpose: an ISO date parses as UTC midnight, so formatting
+ * it in a server timezone behind UTC renders the *previous* month on the 1st of
+ * any month. The string is user-facing and must agree with the `dateModified`
+ * in the JSON-LD below, because Google's Article guidance is that a declared
+ * date be visible to readers — markup claiming a freshness the page does not
+ * show is exactly the mismatch that gets structured data discounted.
+ */
+function monthYear(iso: string) {
+  return new Date(iso).toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" });
 }
 
 /** BlogPosting structured data — helps Google surface the article richly.
@@ -146,12 +164,25 @@ function ArticleJsonLd({ post }: { post: (typeof POSTS)[number] }) {
       logo: { "@type": "ImageObject", url: LOGO_URL },
     },
     /**
-     * Thirteen of the 46 posts leave `publishedAt` unset, so they emit no
-     * date at all rather than a fabricated one — same rule the sitemap now
-     * follows. Giving those posts real dates is a content job, not a code one.
+     * The two dates are emitted INDEPENDENTLY, because they are independently
+     * known.
+     *
+     * Most of the evergreen posts leave `publishedAt` unset: nobody recorded
+     * when they were written and we will not fabricate it — the same rule the
+     * sitemap follows. But git does record when each was last revised, so those
+     * posts can honestly declare a `dateModified` with no `datePublished`
+     * beside it. schema.org allows either alone, and a real modification date
+     * is worth more than a matched pair of invented ones.
+     *
+     * `dateModified` used to be a copy of `datePublished`, which meant a post
+     * we had genuinely rewritten had no way to say so — a standing disadvantage
+     * on any query where every competing result shows a recent update date.
+     * `updatedAt` now carries it, falling back to the published date for posts
+     * that have never been revised.
      */
-    ...(post.publishedAt
-      ? { datePublished: post.publishedAt, dateModified: post.publishedAt }
+    ...(post.publishedAt ? { datePublished: post.publishedAt } : {}),
+    ...(post.updatedAt ?? post.publishedAt
+      ? { dateModified: post.updatedAt ?? post.publishedAt }
       : {}),
   };
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(json) }} />;
@@ -271,6 +302,9 @@ export default async function BlogArticle({ params }: { params: Promise<Params> 
           ) : (
             <span className="text-ink-muted">· {post.date}</span>
           )}
+          {post.updatedAt && post.updatedAt !== post.publishedAt ? (
+            <time dateTime={post.updatedAt} className="text-ink-muted">· Updated {monthYear(post.updatedAt)}</time>
+          ) : null}
         </div>
 
         <h1 className="font-serif mt-4 text-4xl leading-tight tracking-tight sm:text-5xl">{post.title}</h1>

@@ -102,6 +102,11 @@ audio-que-generation/
 seo-reports/
 .claude/skills/
 
+# Content-research working notes and the keyword ownership register. Same
+# reasoning as seo-reports/: the research reports are dated working notes, and
+# keyword-map.md is rebuilt from Search Console whenever it is missing.
+content-research/
+
 # Reddit channel — the daily output only. policy.md, communities.md,
 # activity-log.md and channels.md ARE tracked: they are the operating rules and
 # the ledger the 9:1 promotion ratio is enforced from, and losing them on a

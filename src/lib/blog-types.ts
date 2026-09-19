@@ -50,6 +50,22 @@ export type BlogPost = {
   date: string; // display string, e.g. "July 2026"
   /** ISO date (YYYY-MM-DD) for JSON-LD datePublished + freshness signals. */
   publishedAt?: string;
+  /**
+   * ISO date (YYYY-MM-DD) of the last substantive revision.
+   *
+   * Separate from `publishedAt` because they answer different questions and
+   * Google reads both: `datePublished` is when the article was written,
+   * `dateModified` is whether it is still current. Until this field existed,
+   * `dateModified` was emitted as a copy of `publishedAt`, so a post we had
+   * genuinely rewritten had no way to say so — a real disadvantage on queries
+   * where every competing result shows a recent update date.
+   *
+   * Set it ONLY for a real content change: new sections, corrected facts,
+   * refreshed figures. A typo fix is not a revision. Claiming freshness that
+   * did not happen is the fastest way to teach Google to ignore our dates, and
+   * it is the same failure the sitemap's `lastModified` rules guard against.
+   */
+  updatedAt?: string;
   readMins: number;
   /** SEO target queries for this post (meta keywords + JSON-LD). */
   keywords: string[];

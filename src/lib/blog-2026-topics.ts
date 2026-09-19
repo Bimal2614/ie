@@ -31,7 +31,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
     seoTitle: "Australia Student Visa 2026: Can You Still Bring a Spouse?",
     title: "Australia student visa 2026: can you still bring your spouse?",
     excerpt:
-      "Australia announced on 17 September 2026 that most international students will no longer be able to bring a partner or children. What changed, who is exempt, when it starts, and why your IELTS requirement is unaffected.",
+      "Most international students in Australia can no longer bring a partner or children. What changed, who is exempt, when it starts, and why IELTS is unaffected.",
     category: "Requirements",
     date: "September 2026",
     publishedAt: "2026-09-18",
@@ -179,6 +179,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
     category: "Booking",
     date: "August 2026",
     publishedAt: "2026-08-06",
+    updatedAt: "2026-09-14",
     readMins: 8,
     keywords: [
       "ielts exam fee",
@@ -340,7 +341,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       { heading: "Writing: the word count is free information", bullets: ["You type both tasks. There is a live word count, so the old skill of estimating 250 words by eye is obsolete. Use the count and stop guessing.", "Cut, copy and paste work, so restructuring a paragraph is cheap. Take advantage: write your Task 2 body paragraphs in whatever order they come, then reorder.", "There is no spell-checker and no grammar checker. Proofreading is entirely on you, and it is worth the last three minutes.", "Typing speed matters. If you type under about 30 words per minute, that is a real risk to your Writing band, and it is the single most improvable thing on this list."] },
       { heading: "Results arrive faster, which changes your planning", paragraphs: ["Computer-delivered results usually arrive within 3 to 5 days, against up to 13 days for paper. If you are working to an application deadline, that shortens the buffer you need. It also means a One Skill Retake, which must happen within 60 days of your original test, is genuinely usable rather than theoretical."] },
       { heading: "The 'Writing on Paper' option", paragraphs: ["In selected markets you can choose to handwrite the Writing component while Listening and Reading run on computer. It is an option at some centres, not the default, and availability varies. If handwriting is genuinely faster for you than typing, check whether your centre offers it before you book, but be aware that you are also giving up the live word count and free editing."] },
-      { heading: "Practise on the screen you will sit", paragraphs: ["Familiarity with the interface is worth real marks, and it is free. IELTSVega runs entirely in your browser with a typed Writing editor and word count, on-screen Listening and Reading with highlighting, and full timed mock tests that mirror the computer-delivered experience, plus instant AI band scoring on Writing and Speaking so you know where you actually stand."] },
+      { heading: "Practise on the screen you will sit", paragraphs: ["Familiarity with the interface is worth real marks, and it is free. IELTSVega runs entirely in your browser with a typed Writing editor and word count, on-screen Listening and Reading with highlighting, and full timed mock tests that mirror the computer-delivered experience, plus instant AI band scoring on Writing and Speaking so you know where you actually stand."], links: [{ label: "Computer or paper: which to choose", href: "/blog/ielts-online-vs-paper-based" }] },
     ],
     faqs: [
       { q: "Is IELTS fully computer-based now?", a: "In most markets, yes. Paper-based delivery was retired from mid-2026, with the final paper date in most locations on 27 June 2026. A \"Writing on Paper\" option exists in selected markets, where you handwrite the Writing component while the rest runs on computer." },
@@ -358,7 +359,8 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
     category: "Test format",
     date: "August 2026",
     publishedAt: "2026-08-08",
-    readMins: 8,
+    updatedAt: "2026-09-19",
+    readMins: 9,
     keywords: [
       "ielts one skill retake",
       "ielts osr",
@@ -378,6 +380,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       { heading: "The catch: not everyone accepts it", paragraphs: ["This is the part that matters most and gets the least attention. One Skill Retake produces a valid Test Report Form, but the organisation receiving it decides whether it will accept a score assembled from two sittings. Most universities do. Some immigration authorities and professional registration bodies require all four skills from a single test date.", "Check with your specific university, employer, visa route or registration body before you pay for a retake. If they require a single sitting, a One Skill Retake result is worth nothing to them and you have spent the fee for nothing."] },
       { heading: "When it is the right call", bullets: ["One skill is below requirement and the other three are comfortably above. Classic case, clear yes.", "Two skills are short. It cannot help you, because you can only retake one. Book a full test.", "Your weak skill is Speaking or Writing. These are the most improvable in a few weeks of focused work with feedback, so a retake has the best odds.", "Your weak skill is Listening or Reading and you missed by one or two raw marks. Often fixable with targeted question-type practice and spelling discipline.", "You are close to the 60-day deadline and have not improved yet. Do not burn the retake to meet a deadline. An unimproved retake is a wasted fee and it uses up your one attempt."] },
       { heading: "How to actually use the 60 days", paragraphs: ["Sixty days is enough to move one skill by half to a full band if you spend it on that skill alone. Do not revise everything. Diagnose the specific loss: is it Task Response or Grammar in Writing? Is it Matching Headings or True/False/Not Given in Reading? Then drill that, under time, with feedback on every attempt.", "The biggest waste of a retake window is general practice. You already know your other three skills are fine. Spend all of it on the one number that has to move."] },
+      { heading: "Can you just retake the whole test instead?", paragraphs: ["Yes, and for many candidates it is the better option. There is no limit on how many times you can sit IELTS, and no mandatory waiting period between attempts: you can rebook as soon as there is a seat, subject only to your centre's calendar. You pay the full test fee each time, and your new Test Report Form replaces the old one rather than being combined with it.", "A full re-sit is the right call when two or more skills are short, when the gap is more than half a band, when your 60-day One Skill Retake window has already closed, or when the organisation receiving your score will not accept a combined report. It is also the only route if your original test was paper-based.", "A One Skill Retake is the right call when exactly one skill is short, you know why, and you can name what you would do differently. If you cannot name it, the retake will reproduce the same band and you will have paid for the privilege."], links: [{ label: "Plan the preparation before you rebook", href: "/blog/ielts-4-week-study-plan" }, { label: "When a remark is worth trying first", href: "/blog/ielts-results-trf-validity-remark" }] },
       { heading: "Fix the one skill that is costing you", paragraphs: ["A retake window is short and narrow, which is exactly the situation targeted practice is for. On IELTSVega you can drill one skill by question type, sit timed single sections rather than whole tests, and get instant AI band scoring on Writing and Speaking against all four official criteria, so you know before you rebook whether the number has actually moved."] },
     ],
     faqs: [
@@ -385,6 +388,9 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       { q: "How long do I have to book a One Skill Retake?", a: "You must take it within 60 days of your original test date, in the same country where you sat that test, and your original test must have been computer-delivered. You can use it once per full test." },
       { q: "Do universities accept IELTS One Skill Retake?", a: "Most universities do, but acceptance is decided by the receiving organisation, and some immigration authorities and professional bodies require all four skills from one sitting. Confirm with your specific institution or visa route before you pay for the retake." },
       { q: "Is there a minimum score needed to qualify for One Skill Retake?", a: "No. There is no minimum band requirement. Any candidate who sat a computer-delivered test can book a retake of one skill within the 60-day window, regardless of the original scores." },
+      { q: "Can I retake IELTS as many times as I want?", a: "Yes. There is no limit on the number of attempts and no mandatory waiting period between them, so you can rebook as soon as your test centre has a seat. You pay the full fee each time, and each new Test Report Form replaces the previous one rather than being merged with it. The practical limit is preparation: sitting the test again without changing anything about how you prepare generally reproduces the same band." },
+      { q: "How much does IELTS One Skill Retake cost?", a: "Centres set their own price and it varies by country, but it is normally lower than a full test fee while still being a substantial proportion of it. Check your own centre's booking page for the exact amount, and weigh it against a full re-sit: if more than one skill is short, paying for a One Skill Retake first and a full test afterwards costs more than going straight to the re-sit." },
+      { q: "How many times can you take a One Skill Retake?", a: "One Skill Retake is tied to a specific original test and its 60-day window, and you cannot chain retakes off a retake — a further attempt means sitting a full test again, which then opens its own new window. Confirm the current rule with your test centre when you book, since the policy has been extended to new markets since launch and centre-level detail varies." },
     ],
   },
   {
@@ -454,7 +460,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       { heading: "Do you actually need UKVI?", paragraphs: ["Two questions decide it. First: are you applying to the UK Home Office for a visa, as opposed to applying to a university? Second: has your university told you it can assess your English itself?", "Many UK universities are permitted to assess English proficiency for degree-level students and will accept standard IELTS Academic. Many still require UKVI. The university's own admissions page is the authority here, not a general article, and it is worth asking admissions directly in writing. For Skilled Worker, family and settlement routes you are dealing with the Home Office directly, and UKVI or Life Skills is required."] },
       { heading: "The scores the UK asks for", bullets: ["Degree-level Student visa: CEFR B2, which on IELTS for UKVI means at least 5.5 in each of the four skills. That is a per-skill minimum, not an overall average.", "From 8 January 2026, first-time Skilled Worker, Scale-up and High Potential Individual applicants must meet B2 rather than the previous B1, again meaning 5.5 in every skill.", "Below degree level, the requirement is usually B1, meaning 4.0 in each skill on IELTS for UKVI.", "Universities set their own, higher, requirements on top of the visa minimum, commonly 6.5 to 7.0 overall with 6.0 or 6.5 in Writing.", "Always check the current Home Office guidance and your institution's page. Thresholds change, and 2026 already moved one of them."] },
       { heading: "The per-skill trap", paragraphs: ["An overall 6.5 with 5.0 in Writing does not meet a B2 requirement, because B2 is defined per skill. Candidates fail visa applications on this constantly, having comfortably exceeded the overall figure. Read your requirement carefully and find the lowest number you are allowed to score in any single skill, then treat that as your real target."] },
-      { heading: "Practise for the per-skill minimum", paragraphs: ["If your requirement is per-skill, your weakest skill is the only one that matters. On IELTSVega you can see your band by skill after every practice set and mock test, get instant AI scoring on Writing and Speaking against all four criteria, and drill the one skill sitting below your threshold, which is exactly where visa applications are won or lost."] },
+      { heading: "Practise for the per-skill minimum", paragraphs: ["If your requirement is per-skill, your weakest skill is the only one that matters. On IELTSVega you can see your band by skill after every practice set and mock test, get instant AI scoring on Writing and Speaking against all four criteria, and drill the one skill sitting below your threshold, which is exactly where visa applications are won or lost."], links: [{ label: "Build a UKVI study plan", href: "/blog/ielts-4-week-study-plan" }, { label: "Academic vs General Training", href: "/blog/ielts-academic-vs-general-training" }] },
     ],
     faqs: [
       { q: "What is the difference between IELTS for UKVI and IELTS Academic?", a: "The test content, questions and marking are identical. IELTS for UKVI is delivered at UK Home Office approved centres under extra identity and security requirements, and your details are reported to the Home Office. It costs slightly more and produces a Test Report Form a visa caseworker can verify." },
@@ -549,6 +555,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
     category: "Scoring",
     date: "August 2026",
     publishedAt: "2026-08-14",
+    updatedAt: "2026-09-05",
     readMins: 8,
     keywords: [
       "ielts results",
