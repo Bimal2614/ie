@@ -103,7 +103,8 @@ function buildCsp(nonce: string): string {
     `frame-ancestors 'none'`, // clickjacking protection (with X-Frame-Options)
     // The Checkout modal itself. Without this it falls back to default-src
     // 'self' and the button opens a blank white box.
-    `frame-src ${RAZORPAY}`,
+    // ...and GTM's noscript fallback iframe.
+    `frame-src ${RAZORPAY} https://www.googletagmanager.com`,
     `connect-src 'self' ${S3} ${RAZORPAY} ${ANALYTICS_CONNECT}`,
     `upgrade-insecure-requests`,
   ].join("; ");

@@ -62,3 +62,41 @@ export async function Analytics() {
     </>
   );
 }
+
+/*
+ * Google Tag Manager, in its two halves: the loader goes as high in <head> as
+ * possible, the noscript iframe immediately after <body> opens. The container
+ * id is public (it ships in the page source), so it lives here rather than in
+ * an env var. The loader carries the nonce,
+ * so the gtm.js it injects (and every tag the container then inserts) inherits
+ * the trust `strict-dynamic` grants. The iframe needs `frame-src` in proxy.ts.
+ *
+ * GA4 is ALREADY loaded directly above. A GA4 tag added inside the container
+ * as well would count every page view twice.
+ */
+const GTM_ID = "GTM-TH9BSXRL";
+
+export async function GoogleTagManager() {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+  return (
+    <script
+      nonce={nonce}
+      dangerouslySetInnerHTML={{
+        __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;var n=d.querySelector('script[nonce]');if(n)j.setAttribute('nonce',n.nonce||n.getAttribute('nonce'));f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','${GTM_ID}');`,
+      }}
+    />
+  );
+}
+
+export function GoogleTagManagerNoScript() {
+  return (
+    <noscript>
+      <iframe
+        src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+        height="0"
+        width="0"
+        style={{ display: "none", visibility: "hidden" }}
+      />
+    </noscript>
+  );
+}

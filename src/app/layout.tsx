@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { DevtoolsGuard } from "@/components/security/devtools-guard";
-import { Analytics } from "@/components/analytics/analytics";
+import { Analytics, GoogleTagManager, GoogleTagManagerNoScript } from "@/components/analytics/analytics";
 import { SITE_URL } from "@/lib/site";
 import { BRAND, DEFAULT_DESCRIPTION, DEFAULT_TITLE, KEYWORDS } from "@/lib/seo";
 import { LONG_TAIL, metaKeywordSlice } from "@/lib/keywords";
@@ -112,11 +112,15 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} h-full antialiased`}
     >
+      <head>
+        <GoogleTagManager />
+      </head>
       {/* Browser extensions (password managers, etc.) inject attributes onto
           <body> before React hydrates, causing a benign attribute mismatch.
           suppressHydrationWarning silences it for this element only — not the
           tree — which is the documented fix for extension-injected attributes. */}
       <body className="min-h-full" suppressHydrationWarning>
+        <GoogleTagManagerNoScript />
         {/* Open DevTools and the whole tree below unmounts, then the tab leaves
             for about:blank. Development builds, crawlers and holders of the
             bypass token are exempt — see src/lib/devtools-watch.ts. */}
