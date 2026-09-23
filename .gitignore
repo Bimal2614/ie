@@ -102,6 +102,14 @@ audio-que-generation/
 seo-reports/
 .claude/skills/
 
+# The local SEO instruments those skills run (2026-09-22). Same reasoning: they
+# exist for the gitignored skills above and run by hand with `npx tsx`.
+# check-post-meta.ts is NOT listed here -- it is tracked on purpose.
+scripts/check-keyword-coverage.ts
+scripts/seo-crawl.ts
+scripts/serp-parity.ts
+scripts/lib/
+
 # Content-research working notes and the keyword ownership register. Same
 # reasoning as seo-reports/: the research reports are dated working notes, and
 # keyword-map.md is rebuilt from Search Console whenever it is missing.
@@ -117,3 +125,8 @@ reddit/posts/
 reddit/
 
 lesson-video/
+
+# WhatsApp inbox — a separate Next.js project that lives here by choice
+# (2026-09-22). Its own package.json, node_modules and .env.local; nothing in
+# it is part of IELTSVega.
+whatsapp/
