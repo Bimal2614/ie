@@ -74,12 +74,13 @@ const RAZORPAY = "https://*.razorpay.com";
  *            Clarity serves its recorder assets from the same hosts.
  *
  * c.bing.com is Clarity's, not a stray: the recorder pings it for consent state.
+ * facebook.com / connect.facebook.net are the Meta Pixel's beacon and loader.
  */
-const ANALYTICS_SCRIPT = "https://*.googletagmanager.com https://*.clarity.ms";
+const ANALYTICS_SCRIPT = "https://*.googletagmanager.com https://*.clarity.ms https://connect.facebook.net";
 const ANALYTICS_CONNECT =
-  "https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://*.clarity.ms https://c.bing.com";
+  "https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://*.clarity.ms https://c.bing.com https://www.facebook.com https://connect.facebook.net";
 const ANALYTICS_IMG =
-  "https://*.google-analytics.com https://*.googletagmanager.com https://*.clarity.ms";
+  "https://*.google-analytics.com https://*.googletagmanager.com https://*.clarity.ms https://www.facebook.com";
 
 function buildCsp(nonce: string): string {
   return [

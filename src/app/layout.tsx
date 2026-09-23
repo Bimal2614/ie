@@ -3,7 +3,13 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { DevtoolsGuard } from "@/components/security/devtools-guard";
-import { Analytics, GoogleTagManager, GoogleTagManagerNoScript } from "@/components/analytics/analytics";
+import {
+  Analytics,
+  GoogleTagManager,
+  GoogleTagManagerNoScript,
+  MetaPixel,
+  MetaPixelNoScript,
+} from "@/components/analytics/analytics";
 import { SITE_URL } from "@/lib/site";
 import { BRAND, DEFAULT_DESCRIPTION, DEFAULT_TITLE, KEYWORDS } from "@/lib/seo";
 import { LONG_TAIL, metaKeywordSlice } from "@/lib/keywords";
@@ -114,6 +120,7 @@ export default function RootLayout({
     >
       <head>
         <GoogleTagManager />
+        <MetaPixel />
       </head>
       {/* Browser extensions (password managers, etc.) inject attributes onto
           <body> before React hydrates, causing a benign attribute mismatch.
@@ -121,6 +128,7 @@ export default function RootLayout({
           tree — which is the documented fix for extension-injected attributes. */}
       <body className="min-h-full" suppressHydrationWarning>
         <GoogleTagManagerNoScript />
+        <MetaPixelNoScript />
         {/* Open DevTools and the whole tree below unmounts, then the tab leaves
             for about:blank. Development builds, crawlers and holders of the
             bypass token are exempt — see src/lib/devtools-watch.ts. */}

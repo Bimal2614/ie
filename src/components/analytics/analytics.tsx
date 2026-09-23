@@ -100,3 +100,39 @@ export function GoogleTagManagerNoScript() {
     </noscript>
   );
 }
+
+/*
+ * Meta (Facebook) Pixel. Same shape as GTM: the loader in <head> with the
+ * nonce, so fbevents.js and the config script it pulls in are trusted under
+ * `strict-dynamic`; its connect-src / img-src origins are in proxy.ts. The
+ * noscript <img> goes in <body> — an <img> inside a <head> noscript is invalid
+ * HTML, and the parser would move it there anyway.
+ */
+const META_PIXEL_ID = "1513171907515104";
+
+export async function MetaPixel() {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+  return (
+    <script
+      nonce={nonce}
+      dangerouslySetInnerHTML={{
+        __html: `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${META_PIXEL_ID}');fbq('track','PageView');`,
+      }}
+    />
+  );
+}
+
+export function MetaPixelNoScript() {
+  return (
+    <noscript>
+      {/* eslint-disable-next-line @next/next/no-img-element -- a tracking beacon, not content */}
+      <img
+        height="1"
+        width="1"
+        style={{ display: "none" }}
+        alt=""
+        src={`https://www.facebook.com/tr?id=${META_PIXEL_ID}&ev=PageView&noscript=1`}
+      />
+    </noscript>
+  );
+}
