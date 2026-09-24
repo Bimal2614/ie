@@ -18,6 +18,77 @@ import type { BlogPost } from "./blog-types";
  */
 export const TOPIC_POSTS_2026: BlogPost[] = [
   /**
+   * Timely policy post (24 Sep 2026) — DHS final rule ending "duration of
+   * status" for F/J/I (Federal Register 2026-14439, 17 July 2026), due in force
+   * 15 September 2026, BLOCKED by a nationwide preliminary injunction in the
+   * District of Massachusetts on 14 September 2026. Nothing in the rule is in
+   * force. Written so it stays true whether the injunction holds, is appealed
+   * or is lifted; update on every court step.
+   */
+  {
+    slug: "us-f1-duration-of-status-rule-blocked-2026",
+    seoTitle: "F-1 Visa 4-Year Limit Blocked: How Long Can You Stay?",
+    title: "How long can you stay on an F-1 visa now the 4-year rule is blocked?",
+    excerpt:
+      "A court has blocked the rule that would have capped F-1 stays at four years. What is in force today, what changes if it returns, and what to do now.",
+    category: "Requirements",
+    date: "September 2026",
+    publishedAt: "2026-09-24",
+    readMins: 6,
+    keywords: [
+      "f1 visa new rules 2026",
+      "duration of status rule blocked",
+      "how long can you stay in the us on an f1 visa",
+      "f1 4 year limit",
+      "f1 duration of status injunction",
+      "f1 extension of stay i-539",
+      "f1 grace period 30 days",
+      "f1 transfer rules 2026",
+      "ielts score for us student visa",
+    ],
+    sections: [
+      { paragraphs: ["Short answer: for now, as long as your program lasts and you keep your status, exactly as before. On 14 September 2026, one day before it was due to start, a federal judge in Massachusetts blocked the Department of Homeland Security rule that would have capped F-1 admission at four years. Duration of status, the system that ties your stay to your studies rather than to a fixed date, is still the rule.", "The block is a preliminary injunction, not the end of the case. The rule itself still exists, the government can appeal, and the court has not yet decided the case in full. So the useful question is not only what applies today, but what would change for you if the rule came back. This post covers both, and it will be updated as the case moves."] },
+      { heading: "What the court did", paragraphs: ["Judge F. Dennis Saylor IV of the US District Court for the District of Massachusetts granted a nationwide preliminary injunction on 14 September 2026. It stops DHS and Immigration and Customs Enforcement from implementing or enforcing the rule while the lawsuit continues. The judge found that the challengers, a coalition of higher-education groups, were likely to succeed in arguing that the rule broke the Administrative Procedure Act, the law that governs how federal agencies make regulations.", "Because the order is nationwide, it protects every F-1 and J-1 student, not only those at the universities that sued."] },
+      { heading: "Is the 4-year rule in force?", paragraphs: ["No. As of 24 September 2026 no part of it is in force. Students are still admitted for duration of status, shown as \"D/S\" on the I-94, and you can stay as long as you are enrolled, making normal progress and following the terms of your status, plus the existing 60-day grace period after you finish.", "One thing to watch: the DHS Study in the States summary of the rule still describes it without mentioning the injunction. That page describes the rule as written, not what is in force. Your school's international office is the best day-to-day source."] },
+      { heading: "What the rule would change if it comes back", paragraphs: ["If the injunction is lifted on appeal or the government wins the case, these are the provisions that would apply. None of them apply today."], table: {
+        caption: "Provisions of the DHS final rule published 17 July 2026 (Federal Register 2026-14439), all blocked by the 14 September 2026 injunction. Check studyinthestates.dhs.gov and your school's international office before acting on any of them.",
+        headers: ["Issue", "Today (duration of status)", "Under the blocked rule"],
+        rows: [
+          ["How long you are admitted", "For as long as you are enrolled and maintain status", "Until the program end date on your I-20, capped at four years"],
+          ["Grace period after your program", "60 days", "30 days"],
+          ["Needing more time", "Your school extends the I-20", "Updated I-20 plus Form I-539 filed with USCIS, with a fee and biometrics, or leave and re-enter"],
+          ["Changing major or level (graduate students)", "Allowed with your school's approval", "Not allowed, except in limited circumstances"],
+          ["Transferring university (graduate students)", "Allowed", "Not allowed, except in limited circumstances"],
+          ["Transferring or changing major (undergraduates)", "Allowed", "Not in the first academic year"],
+          ["English language programs", "No fixed overall limit", "24 months in total"],
+        ],
+      } },
+      { heading: "If you are already in the US", paragraphs: ["Do nothing new. You do not need to file Form I-539 or request a fixed-date I-94. Keep your enrolment full-time, keep your I-20 current, and speak to your designated school official before changing program, school or level, as you always should.", "Even under the blocked rule, students already here on duration of status would have been allowed to stay until their current program end date, up to four years, plus 60 days, without filing anything. Those who had filed for OPT or STEM OPT on time would not have needed a separate extension. Existing students were never the hardest-hit group."] },
+      { heading: "If you start in spring or fall 2027", paragraphs: ["This is the group with the most at stake. If the injunction holds, you will be admitted for duration of status like everyone before you. If it is overturned before you enter, you would be admitted to the end date on your I-20, capped at four years, and a graduate student would lose the ability to transfer or switch programs freely.", "In practice that matters most for PhD students, whose programs often run past four years, and for anyone who might want to change course after arriving. If you already have an I-20 and a visa appointment, nothing about the appointment changes: the visa itself is the same F-1, and the rule governs how long you are admitted at the border, not whether you get the visa."] },
+      { heading: "What happens next", paragraphs: ["The government is widely expected to appeal to the First Circuit Court of Appeals, but as of 24 September 2026 no appeal has been reported. A status conference in the district court has been reported for 2 October 2026. Any of these steps can change the answer above, so check the date at the top of this post."] },
+      { heading: "What this does NOT change: your English requirement", paragraphs: ["The court case is about how long you can stay, not how you qualify. Nothing in the rule or the injunction touches English testing. The US has no single visa-level IELTS score. Your university sets its own minimum, usually 6.5 to 7.0 for graduate programs and around 6.0 to 6.5 for undergraduate, and your I-20 records whether you have met it. The consular officer can still ask you questions in English at the interview.", "One provision does have an English-learning angle. If the rule returns, English language programs would be capped at 24 months in total. If you plan to do an intensive English course before your degree, raising your IELTS band before you travel shortens the time you need in that program, and it may let you skip it altogether."], links: [
+        { label: "IELTS vs TOEFL: which one US universities prefer", href: "/blog/ielts-vs-toefl" },
+        { label: "IELTS exam fee in the USA", href: "/blog/ielts-exam-fee-usa" },
+        { label: "IELTS band score calculator", href: "/ielts-band-score-calculator" },
+      ] },
+      { heading: "What to do now", bullets: ["If you are in the US on F-1: carry on as normal and do not file anything because of this rule.", "If you start in 2027: keep your plans, but check with your university's international office before you travel, because the answer can change between your offer and your arrival.", "If you are a PhD applicant with a program longer than four years, ask your school now how it would handle an extension of stay if the rule came back.", "Do not pay anyone to file an I-539 \"to be safe\". There is nothing to file while the injunction stands.", "Get your English score settled early. It is the one part of the application that no court case will change, and a stronger band gives you more universities to choose from."] },
+      { heading: "Sources", paragraphs: ["Checked on 24 September 2026. Court cases move quickly, so check the date at the top of this post."], links: [
+        { label: "Federal Register: DHS final rule ending duration of status (17 July 2026)", href: "https://www.federalregister.gov/documents/2026/07/17/2026-14439/establishing-a-fixed-time-period-of-admission-and-an-extension-of-stay-procedure-for-nonimmigrant" },
+        { label: "Study in the States (DHS): quick facts on the final rule", href: "https://studyinthestates.dhs.gov/final-rule-establishing-a-fixed-time-period-of-admission-and-an-extension-of-stay-procedure-quick" },
+        { label: "NAFSA: the legal challenge and the 14 September injunction", href: "https://www.nafsa.org/legal-defense-DS" },
+        { label: "AIP FYI: court temporarily blocks the duration of status rule", href: "https://www.aip.org/fyi/court-temporarily-blocks-rule-ending-duration-of-status-for-international-students" },
+      ] },
+    ],
+    faqs: [
+      { q: "How long can you stay in the US on an F-1 visa?", a: "For as long as you are enrolled in your program and maintain your status, plus a 60-day grace period after you finish. This is called duration of status. A DHS rule that would have capped admission at four years was blocked by a federal court on 14 September 2026, so duration of status still applies." },
+      { q: "Is the F-1 4-year limit in effect?", a: "No. The rule was due to take effect on 15 September 2026 but was blocked nationwide by a preliminary injunction the day before. It stays blocked while the lawsuit continues, unless an appeals court lifts the injunction." },
+      { q: "Do I need to file Form I-539 for an extension of stay?", a: "No, not while the injunction stands. Form I-539 extensions were part of the blocked rule. Your school keeps extending your I-20 as it did before." },
+      { q: "Is the F-1 grace period 60 or 30 days?", a: "It is 60 days. The blocked rule would have cut it to 30 days for new admissions, but that provision is not in force." },
+      { q: "Can I transfer universities on an F-1 visa in 2026?", a: "Yes, under the normal transfer process with your current and new schools. The blocked rule would have stopped most graduate students from transferring, but it is not in force." },
+      { q: "Has the IELTS score for a US student visa changed?", a: "No. There is no visa-level IELTS minimum for the F-1. Each university sets its own score, and neither the rule nor the court ruling changed any English test requirement." },
+    ],
+  },
+  /**
    * Timely policy post (18 Sep 2026) — the dependants announcement of
    * 17 September 2026. High, sudden intent ("can I bring my wife on an
    * Australian student visa"), and nothing on the site answered it.
@@ -79,7 +150,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       { heading: "If you are from India, Nepal, Bangladesh, Bhutan or Sri Lanka", paragraphs: ["This change falls hardest on South Asia. More than 70% of the student dependant visas granted offshore last financial year, about 10,448 visas, went to applicants from Nepal, Bangladesh, Bhutan, India and Sri Lanka. None of these countries is covered by the Pacific or ASEAN exemptions, so for most students from the region the PhD exemption is the only one available.", "Bhutan stands out. Many Bhutanese students travel with a spouse, and Bhutan sits outside both exempt groups. If you are from any of these countries and your plan depended on bringing family, compare your options before you pay a deposit or lodge."] },
       { heading: "Can your partner work in Australia?", paragraphs: ["For families who already have a partner attached to a student visa, work rights under the current rules depend on the main student's course. If the student is enrolled in a master's degree or a doctorate, the family member can work unlimited hours. For other courses, the family member is limited to 48 hours a fortnight. In both cases the partner cannot start work until the student's course has begun. None of this changes for families already onshore, but new applicants outside the exemptions will not have a partner on the visa to begin with."] },
       { heading: "The scale of it", paragraphs: ["Australia granted 337,427 student visas in the last financial year. Of those, 45,991 went to secondary applicants — partners and children rather than students. That is the population this measure targets, and it is why the government describes student visa numbers themselves as unaffected: the students still come, the families do not. Applying has also become more expensive: the standard student visa application charge rose to AUD 2,500 on 1 July 2026."] },
-      { heading: "How Australia now compares", paragraphs: ["If bringing your partner is the deciding factor, here is where the main destinations stand. Australia is following the UK, which restricted student dependants in 2024."], table: {
+      { heading: "How Australia now compares", paragraphs: ["If bringing your partner is the deciding factor, here is where the main destinations stand. Australia is following the UK, which restricted student dependants in 2024."], links: [{ label: "US F-1 visa: how long you can stay now the 4-year rule is blocked", href: "/blog/us-f1-duration-of-status-rule-blocked-2026" }], table: {
         caption: "Rules in force as of September 2026, except Australia, where the change is announced but not yet in force. Each country revises these regularly — check the official immigration site before you decide.",
         headers: ["Country", "Can most students bring a partner?", "Who still can", "Can the partner work?"],
         rows: [
@@ -108,6 +179,12 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       ] },
       { heading: "What to do now", bullets: ["If you were planning to bring a partner, check whether any exemption applies to you before you change your plan. A PhD offer instead of a coursework master's is a materially different visa outcome now.", "If you are close to lodging, lodge on the rules as they stand and watch immi.homeaffairs.gov.au for the commencement date rather than following news coverage.", "If you already hold a visa and were planning to bring family as subsequent entrants, speak to a registered migration agent now rather than waiting for the regulation.", "If Australia was your choice because of family, compare Canada, New Zealand and the UK on their current rules using the table above, not on the version you read last year.", "Whatever you decide, the English requirement is the one part of this you fully control, and a higher band widens every option at once. Get the score first."] },
       { heading: "Get the band that keeps your options open", paragraphs: ["A 6.5 with nothing below 5.5 is now the floor for the Temporary Graduate route, and a 7.0 across the board opens skilled pathways in every destination country, not just Australia. On IELTSVega you can sit full timed mock tests, practise Writing and Speaking with instant AI band feedback against the official criteria, and see exactly which skill is holding your overall band down — which is the difference between retaking one skill and retaking the whole test."] },
+      { heading: "Sources", paragraphs: ["Checked on 24 September 2026. The dependants change is announced, not yet in force, so confirm on the Department of Home Affairs website before you lodge."], links: [
+        { label: "Transcript: Tony Burke, National Press Club address, 17 September 2026", href: "https://www.tonyburke.com.au/speechestranscripts/transcript-national-press-club-address-17-september-2026" },
+        { label: "Minister for Home Affairs: migration reform announcement", href: "https://minister.homeaffairs.gov.au/TonyBurke/Pages/migration-reform-end-rorts-bring-skills-australia-needs-strong-economy.aspx" },
+        { label: "Study Australia: student visa application charge increase", href: "https://www.studyaustralia.gov.au/en/tools-and-resources/news/student-visa-application-charge-increase" },
+        { label: "IRCC: changes to open work permits for family members (Canada)", href: "https://www.canada.ca/en/immigration-refugees-citizenship/news/notices/changes-open-work-permits-family-members-temporary-residents.html" },
+      ] },
     ],
     faqs: [
       { q: "Can I bring my wife on an Australian student visa in 2026?", a: "For most students, not for much longer. On 17 September 2026 the Australian government announced that most student visas, and graduate visas, will no longer allow family members to be attached. PhD students and students from Pacific and ASEAN nations are exempt. No commencement date has been published yet, so check the Department of Home Affairs website for the position on the day you lodge." },
@@ -306,7 +383,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       "ielts test centre usa cost",
     ],
     sections: [
-      { paragraphs: ["IELTS in the United States costs USD 285 for tests taken before 1 October 2026 and USD 325 from that date onward — an increase of USD 40, or about 14%. If you are planning to sit the test this autumn, the booking date is what matters, and there are only a few weeks left at the lower price."] },
+      { paragraphs: ["IELTS in the United States costs USD 285 for tests taken before 1 October 2026 and USD 325 from that date onward — an increase of USD 40, or about 14%. If you are planning to sit the test this autumn, the booking date is what matters, and there are only a few weeks left at the lower price."], links: [{ label: "The F-1 four-year rule and what the court ruling means", href: "/blog/us-f1-duration-of-status-rule-blocked-2026" }] },
       {
         heading: "IELTS fees in the USA",
         table: {

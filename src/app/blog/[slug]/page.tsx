@@ -335,12 +335,25 @@ export default async function BlogArticle({ params }: { params: Promise<Params> 
                   {s.links.map((l) => (
                     <li key={l.href} className="flex gap-2.5">
                       <span className="mt-2.5 size-1.5 shrink-0 rounded-full bg-brand/50" />
-                      <Link
-                        href={l.href}
-                        className="font-medium text-brand underline decoration-brand/30 underline-offset-4 transition-colors hover:decoration-brand"
-                      >
-                        {l.label}
-                      </Link>
+                      {/* Absolute URLs are source citations (official pages a
+                          policy post rests on): open them in a new tab. */}
+                      {l.href.startsWith("http") ? (
+                        <a
+                          href={l.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium text-brand underline decoration-brand/30 underline-offset-4 transition-colors hover:decoration-brand"
+                        >
+                          {l.label}
+                        </a>
+                      ) : (
+                        <Link
+                          href={l.href}
+                          className="font-medium text-brand underline decoration-brand/30 underline-offset-4 transition-colors hover:decoration-brand"
+                        >
+                          {l.label}
+                        </Link>
+                      )}
                     </li>
                   ))}
                 </ul>
