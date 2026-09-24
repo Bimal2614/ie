@@ -55,7 +55,7 @@ const SKILL_NAMES = { listening: "Listening", reading: "Reading", writing: "Writ
 
 /** Per-band raw-score targets for Listening/Reading (out of 40) — approximate. */
 const RAW: Record<string, { listening: string; reading: string }> = {
-  "6-5": { listening: "23-25 / 40", reading: "23-26 / 40 (Academic)" },
+  "6-5": { listening: "26-29 / 40", reading: "27-29 / 40 (Academic)" },
   "7": { listening: "30 / 40", reading: "30 / 40 (Academic)" },
   "8": { listening: "35 / 40", reading: "35 / 40 (Academic)" },
   "9": { listening: "39 / 40", reading: "39 / 40 (Academic)" },
@@ -67,12 +67,12 @@ const CONFIG: { slug: string; band: string; meaning: string; who: string; overal
   faqs: { q: string; a: string }[] }[] = [
   {
     slug: "6-5", band: "6.5",
-    meaning: "a 'competent' user: generally effective command of English with some inaccuracies.",
+    meaning: "a 'competent' user: generally effective command of English with some inaccuracies. On the CEFR scale that is B2.",
     who: "the common minimum for many undergraduate courses and some visa categories.",
     overall: "an average of 6.5 across the four skills (e.g. 6, 7, 6.5, 6.5).",
     takes: {
-      listening: "Around 23-25 correct out of 40: solid on completion tasks, most multiple choice.",
-      reading: "Around 23-26 correct: reliable on True/False/Not Given and completion.",
+      listening: "Around 26-29 correct out of 40: solid on completion tasks, most multiple choice.",
+      reading: "Around 27-29 correct (Academic): reliable on True/False/Not Given and completion.",
       writing: "A clear response to the task with an overview (Task 1) and a position (Task 2), organised paragraphs, and errors that don't impede meaning.",
       speaking: "Extended answers with a mix of tenses; some hesitation and errors are fine if meaning is clear.",
     },
@@ -97,7 +97,7 @@ const CONFIG: { slug: string; band: string; meaning: string; who: string; overal
     onScreen: "Computer-delivered Listening gives you roughly two minutes to check answers at the end, not the ten-minute transfer window paper allowed. At 6.5 that removes the safety net most candidates at this level were relying on to fix spelling. Type the answer correctly the first time, and practise the completion tasks on screen rather than on paper.",
     retake: "One Skill Retake is at its most valuable at this level, because a single weak skill is usually what is holding the average down. Sit the full test, find the skill sitting a band below the others, drill it for four to six weeks, then re-sit only that skill within 60 days. It only applies to computer-delivered IELTS, must be taken in the same country as the original test, and can be used once per full test.",
     faqs: [
-      { q: "How many correct answers do I need for Band 6.5 in IELTS Reading?", a: "Roughly 23-26 out of 40 on Academic Reading, and around 30 out of 40 on General Training Reading, which is marked to a stricter curve. Listening needs about 23-25 out of 40 in either module. These are close approximations - the exact conversion shifts slightly between papers to keep difficulty comparable." },
+      { q: "How many correct answers do I need for Band 6.5 in IELTS Reading?", a: "Roughly 27-29 out of 40 on Academic Reading, and 32-33 out of 40 on General Training Reading, which is marked to a stricter curve. Listening needs about 26-29 out of 40 in either module. These are close approximations - the exact conversion shifts slightly between papers to keep difficulty comparable." },
       { q: "Is Band 6.5 good enough for a UK university?", a: "For most taught undergraduate and master's courses, yes: 6.5 overall with no band below 6.0 is the standard requirement. Competitive courses, and law, medicine, journalism and teaching in particular, often ask for 7.0 or higher with per-skill minimums." },
       { q: "How long does it take to go from 5.5 to 6.5 in IELTS?", a: "Eight to twelve weeks of consistent, targeted practice is realistic for most candidates. The variable is not study hours but whether the practice is diagnosed - people who drill their weakest question types move roughly twice as fast as people who take full mock tests repeatedly without analysing them." },
       { q: "Can I get 6.5 overall with a 6.0 in Writing?", a: "Yes, arithmetically: 7, 7, 6, 6.5 averages to 6.625, which rounds up to 6.5. Whether it is accepted is a separate question - many universities and every visa category that specifies per-skill minimums will reject it regardless of the overall. Always read the per-skill requirement before deciding a band is enough." },
@@ -105,7 +105,7 @@ const CONFIG: { slug: string; band: string; meaning: string; who: string; overal
   },
   {
     slug: "7", band: "7",
-    meaning: "a 'good' user: operational command with occasional inaccuracies and misunderstandings.",
+    meaning: "a 'good' user: operational command with occasional inaccuracies and misunderstandings. On the CEFR scale that is C1.",
     who: "the most requested band for skilled migration and competitive university courses.",
     overall: "an average of 7.0, usually with no skill far below 6.5.",
     takes: {
@@ -143,7 +143,7 @@ const CONFIG: { slug: string; band: string; meaning: string; who: string; overal
   },
   {
     slug: "8", band: "8",
-    meaning: "a 'very good' user: fully operational command with only occasional unsystematic inaccuracies.",
+    meaning: "a 'very good' user: fully operational command with only occasional unsystematic inaccuracies. On the CEFR scale that is C1.",
     who: "a strong score for elite universities, professional registration, and standing out in migration.",
     overall: "an average of 8.0, with no skill much below 7.5.",
     takes: {
@@ -181,7 +181,7 @@ const CONFIG: { slug: string; band: string; meaning: string; who: string; overal
   },
   {
     slug: "9", band: "9",
-    meaning: "an 'expert' user. Fully operational command: appropriate, accurate and fluent, with complete understanding.",
+    meaning: "an 'expert' user. Fully operational command: appropriate, accurate and fluent, with complete understanding. On the CEFR scale that is C2.",
     who: "the maximum score: near-native, sought by a small number of candidates and for perfect scores.",
     overall: "an average of 9.0 (or 8.75+, which rounds to 9.0).",
     takes: {

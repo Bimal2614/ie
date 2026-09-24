@@ -25,19 +25,31 @@ import { LONG_TAIL } from "@/lib/keywords";
  * without moving it off the post first.
  */
 export const metadata: Metadata = pageMeta({
-  title: "IELTS Band Scores: What Each Band Means",
+  title: "IELTS Band Score Scale: What Each Band Means (0-9)",
   description:
-    "What each IELTS band actually means, from Band 5 to Band 9, which band universities and visa routes ask for, and how to tell which one you realistically need.",
+    "The IELTS band score scale from 0 to 9: what each band means, its CEFR level, which bands universities and visas ask for, and how the overall band works.",
   path: "/ielts-band-scores",
   keywords: ["IELTS band scores", "IELTS band score meaning", "what IELTS band do I need", "IELTS band 7 meaning", "IELTS band 8", "IELTS band requirements", ...LONG_TAIL.bandTargets],
 });
 
+/**
+ * Band labels are the official IELTS ones; the descriptions are our own
+ * summaries. CEFR follows the published IELTS alignment (C2 8.5-9, C1 7-8,
+ * B2 5.5-6.5, B1 4-5), which stops at B1 — bands below 4 get no level rather
+ * than an invented one. Keep in step with the CEFR line in each band's
+ * `meaning` in src/lib/band-content.ts.
+ */
 const SCALE = [
-  { band: "9", label: "Expert user" },
-  { band: "8", label: "Very good user" },
-  { band: "7", label: "Good user" },
-  { band: "6", label: "Competent user" },
-  { band: "5", label: "Modest user" },
+  { band: "9", label: "Expert user", cefr: "C2", desc: "Full command of English: accurate, appropriate and fluent, with complete understanding." },
+  { band: "8", label: "Very good user", cefr: "C1", desc: "Fully operational, with only occasional unsystematic errors. Handles complex, detailed argument well." },
+  { band: "7", label: "Good user", cefr: "C1", desc: "Operational command with occasional inaccuracies. Handles complex language and follows detailed reasoning." },
+  { band: "6", label: "Competent user", cefr: "B2", desc: "Generally effective despite some inaccuracies and misunderstandings, especially in familiar situations." },
+  { band: "5", label: "Modest user", cefr: "B1", desc: "Partial command. Copes with the overall meaning in most situations but makes many mistakes." },
+  { band: "4", label: "Limited user", cefr: "B1", desc: "Basic competence limited to familiar situations. Frequent problems in understanding and expression." },
+  { band: "3", label: "Extremely limited user", cefr: "", desc: "Conveys and understands only general meaning in very familiar situations. Communication often breaks down." },
+  { band: "2", label: "Intermittent user", cefr: "", desc: "Great difficulty understanding spoken and written English beyond isolated words." },
+  { band: "1", label: "Non-user", cefr: "", desc: "No ability to use the language beyond a few isolated words." },
+  { band: "0", label: "Did not attempt the test", cefr: "", desc: "No assessable answers were given." },
 ];
 
 export default function BandScoresPage() {
@@ -46,7 +58,7 @@ export default function BandScoresPage() {
       <PageHead
         eyebrow="IELTS scoring"
         title="IELTS band scores, explained."
-        lead="IELTS reports a score for each skill and an overall band on a 9-band scale. Here's exactly how those numbers are produced, and where the easiest half-bands hide."
+        lead="IELTS reports a band score from 0 to 9 for each skill and for the test overall, in half-band steps. Here is what every band score means, how it lines up with the CEFR, and which band you are likely to need."
       />
 
       {/* Straight to the tool. People searching "how is IELTS scored" overwhelmingly
@@ -65,25 +77,60 @@ export default function BandScoresPage() {
       </Link>
 
       {/* 9-band scale */}
-      <h2 className="mt-10 text-xl font-semibold text-ink">The 9-band scale</h2>
+      <h2 className="mt-10 text-xl font-semibold text-ink">The IELTS band score scale, 0 to 9</h2>
+      <p className="mt-3 text-sm leading-relaxed text-ink-soft">
+        Half bands such as 6.5 or 7.5 sit between the descriptions either side of them. The CEFR tag is the level
+        each IELTS band score is aligned to, which is what many European universities and some visa routes quote.
+      </p>
       <dl className="mt-4 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-paper-elev">
         {SCALE.map((s) => (
-          <div key={s.band} className="flex items-center gap-4 px-5 py-3">
-            <dt className="font-serif w-10 text-2xl tabular-nums text-brand">{s.band}</dt>
-            <dd className="text-sm text-ink-soft">{s.label}</dd>
+          <div key={s.band} className="flex gap-4 px-5 py-3">
+            <dt className="font-serif w-10 shrink-0 text-2xl tabular-nums text-brand">{s.band}</dt>
+            <dd className="text-sm text-ink-soft">
+              <span className="font-semibold text-ink">{s.label}</span>
+              {s.cefr && <span className="ml-2 rounded bg-brand-soft/40 px-1.5 py-0.5 text-xs font-medium text-ink">CEFR {s.cefr}</span>}
+              <span className="mt-0.5 block">{s.desc}</span>
+            </dd>
           </div>
         ))}
       </dl>
 
+      <h2 className="mt-12 text-xl font-semibold text-ink">IELTS band score to CEFR</h2>
+      <div className="mt-4 overflow-x-auto rounded-2xl border border-line bg-paper-elev">
+        <table className="w-full text-left text-sm">
+          <thead className="text-ink">
+            <tr className="border-b border-line">
+              <th className="px-5 py-3 font-semibold">IELTS band score</th>
+              <th className="px-5 py-3 font-semibold">CEFR level</th>
+              <th className="px-5 py-3 font-semibold">Typically enough for</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-line text-ink-soft">
+            {[
+              ["8.5 - 9", "C2", "Any course or profession"],
+              ["7 - 8", "C1", "Competitive universities, medicine, law and professional registration"],
+              ["5.5 - 6.5", "B2", "Most undergraduate and many postgraduate courses"],
+              ["4 - 5", "B1", "Foundation and pathway programmes"],
+            ].map(([band, cefr, use]) => (
+              <tr key={band}>
+                <td className="px-5 py-3 tabular-nums">{band}</td>
+                <td className="px-5 py-3">{cefr}</td>
+                <td className="px-5 py-3">{use}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
       {/* How each part is scored */}
-      <h2 className="mt-12 text-xl font-semibold text-ink">How each skill is scored</h2>
+      <h2 className="mt-12 text-xl font-semibold text-ink">How each skill gets its band score</h2>
       <div className="mt-4 space-y-3 text-sm leading-relaxed text-ink-soft">
         <p><span className="font-semibold text-ink">Listening &amp; Reading</span> are marked out of 40. Your raw score converts to a band with a fixed table. Roughly 30/40 is Band 7 and 35/40 is Band 8. Every mark counts, and spelling must be correct.</p>
         <p><span className="font-semibold text-ink">Writing &amp; Speaking</span> are marked on four equally-weighted criteria (Task Response, Coherence &amp; Cohesion, Lexical Resource, Grammatical Range &amp; Accuracy, plus Pronunciation in Speaking).</p>
       </div>
 
       {/* Overall band */}
-      <h2 className="mt-12 text-xl font-semibold text-ink">How the overall band is calculated</h2>
+      <h2 className="mt-12 text-xl font-semibold text-ink">How the overall band score is calculated</h2>
       <ul className="mt-4 space-y-2.5">
         {[
           "Your overall band is the average of the four skill bands, rounded to the nearest half-band.",

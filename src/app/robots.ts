@@ -28,10 +28,17 @@ import { SITE_URL as BASE } from "@/lib/site";
  *   /logout       — mutates session state on GET.
  *   /verify-email — one-shot token URL; a crawler fetch would burn the token.
  *
+ *   /*?_rsc=     — Next.js RSC flight payloads (text/x-component). Never
+ *                  indexable and not needed to render the served HTML. GSC
+ *                  crawl stats for 26 Aug–20 Sep showed them at 73% of all
+ *                  Googlebot requests (HTML 6%) while 11 sitemap URLs sat
+ *                  "Discovered – never crawled". The crawl-budget reasoning
+ *                  below was wrong for this site; this entry is the fix.
+ *
  * Everything else (/dashboard, /practice, /mock-tests, /login, /signup, …) is
  * crawlable and relies on its own `index: false`, which now actually gets read.
  */
-const DISALLOW = ["/api/", "/logout", "/verify-email"];
+const DISALLOW = ["/api/", "/logout", "/verify-email", "/*?_rsc="];
 
 export default function robots(): MetadataRoute.Robots {
   return {
