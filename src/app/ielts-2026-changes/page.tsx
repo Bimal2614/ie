@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowRight, Check, Globe, Info, Monitor, RefreshCw, PenLine, ShieldCheck, ExternalLink } from "lucide-react";
+import { ArrowRight, Check, Globe, Info, Monitor, RefreshCw, PenLine, ShieldCheck, ExternalLink, Users } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { MarketingShell, PageHead } from "@/components/marketing/marketing-shell";
 import { JsonLd } from "@/components/seo/json-ld";
 import { KEYWORDS, breadcrumbJsonLd, faqJsonLd, pageMeta } from "@/lib/seo";
@@ -16,7 +17,13 @@ export const metadata = pageMeta({
   keywords: [...KEYWORDS.changes2026, ...KEYWORDS.modules],
 });
 
-const CHANGES = [
+const CHANGES: {
+  Icon: LucideIcon;
+  title: string;
+  body: string;
+  /** Optional deeper read, rendered under the body as an internal link. */
+  link?: { label: string; href: string };
+}[] = [
   {
     Icon: Monitor,
     title: "Paper-based IELTS has been retired in most markets",
@@ -36,6 +43,12 @@ const CHANGES = [
     Icon: ShieldCheck,
     title: "The UK raised its work-visa English requirement to B2",
     body: "From 8 January 2026 the English requirement for first-time Skilled Worker, Scale-up and High Potential Individual applicants rose from B1 to B2. On IELTS for UKVI that is 5.5 in every one of the four skills — a per-skill benchmark, not an overall average, so a 6.5 overall with 5.0 in Writing does not qualify. UKVI IELTS also moved to computer-only delivery on 22 March 2026, ahead of the global transition.",
+  },
+  {
+    Icon: Users,
+    title: "Australia is restricting student and graduate visa dependants",
+    body: "On 17 September 2026 the Australian government announced that most new Student (subclass 500) and Temporary Graduate (subclass 485) visas will no longer allow a partner or children to be attached. PhD students and Pacific and ASEAN nationals are exempt, families already in Australia are not affected, and no start date has been published yet. No IELTS score requirement changed.",
+    link: { label: "Australia student visa 2026: can you still bring your spouse?", href: "/blog/australia-student-visa-dependants-ban-2026" },
   },
   {
     Icon: Globe,
@@ -133,6 +146,12 @@ export default function Ielts2026ChangesPage() {
               {c.title}
             </h2>
             <p className="mt-2.5 text-sm leading-relaxed text-ink-soft">{c.body}</p>
+            {c.link && (
+              <Link href={c.link.href} className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-brand hover:underline">
+                {c.link.label}
+                <ArrowRight className="size-4" />
+              </Link>
+            )}
           </section>
         ))}
       </div>

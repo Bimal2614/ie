@@ -130,3 +130,7 @@ lesson-video/
 # (2026-09-22). Its own package.json, node_modules and .env.local; nothing in
 # it is part of IELTSVega.
 whatsapp/
+
+# news-watch skill output (2026-09-24): the event ledger, drafts, Slack outbox
+# and run logs. Working notes, same reasoning as content-research/.
+news/
