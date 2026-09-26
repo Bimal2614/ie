@@ -1,5 +1,5 @@
 /**
- * Client-side conversion events for GA4 and Microsoft Clarity.
+ * Client-side conversion events for GA4, Microsoft Clarity and the Meta Pixel.
  *
  * WHY THIS FILE EXISTS AT ALL
  * ---------------------------
@@ -32,6 +32,7 @@ declare global {
   interface Window {
     gtag?: (command: string, ...args: unknown[]) => void;
     clarity?: (command: string, ...args: unknown[]) => void;
+    fbq?: (command: string, ...args: unknown[]) => void;
   }
 }
 
@@ -58,9 +59,34 @@ export function track(name: string, params: EventParams = {}): void {
   }
 }
 
+/**
+ * The same moment, reported to the Meta Pixel under Meta's STANDARD event
+ * name. Ads Manager can only optimise a campaign for an event it receives, and
+ * until this existed the pixel received nothing but PageView — so every paid
+ * social campaign could be optimised for clicks and nothing else, and a sale
+ * from an ad was never credited to it. Same no-op-and-swallow contract as
+ * `track`.
+ */
+function trackMeta(event: string, params: EventParams = {}): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.fbq?.("track", event, params);
+  } catch {
+    // Deliberately swallowed — see `track`.
+  }
+}
+
+/**
+ * Set by the server on the response that creates an account, read once by
+ * SignupBeacon. Signup ends in a server `redirect()`, so no client code ever
+ * sees a success state to report from; a cookie survives the redirect.
+ */
+export const SIGNED_UP_COOKIE = "vega_signed_up";
+
 /** A new account was created. The top of every funnel that ends in a sale. */
 export function trackSignUp(method = "email"): void {
   track("sign_up", { method });
+  trackMeta("CompleteRegistration", { content_name: method });
 }
 
 /**
@@ -70,6 +96,7 @@ export function trackSignUp(method = "email"): void {
  */
 export function trackBeginCheckout(plan: string, priceCents: number, currency: string): void {
   track("begin_checkout", { currency, value: priceCents / 100, items_plan: plan });
+  trackMeta("InitiateCheckout", { currency, value: priceCents / 100, content_name: plan });
 }
 
 /**
@@ -89,6 +116,7 @@ export function trackPurchase(
     items_plan: plan,
     transaction_id: transactionId,
   });
+  trackMeta("Purchase", { currency, value: priceCents / 100, content_name: plan });
 }
 
 /**

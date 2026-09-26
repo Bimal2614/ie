@@ -10,6 +10,7 @@ import { REFERRAL_COOKIE } from "@/lib/partner-referral";
 import { createSession, getRequestContext } from "@/lib/session";
 import { safeEqual } from "@/lib/security/tokens";
 import { normalizePhone } from "@/lib/phone";
+import { SIGNED_UP_COOKIE } from "@/lib/analytics";
 
 /**
  * Google OAuth callback → find-or-create the user, then create an app session.
@@ -132,6 +133,13 @@ export async function GET(req: Request) {
       })
       .returning({ id: users.id, deactivatedAt: users.deactivatedAt, phone: users.phone });
     user = created;
+    // A new account, not a returning sign-in — see SignupBeacon.
+    jar.set(SIGNED_UP_COOKIE, "google", {
+      path: "/",
+      maxAge: 600,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    });
 
     if (referrer) {
       // Same event the email signup writes, for the same reason: this account

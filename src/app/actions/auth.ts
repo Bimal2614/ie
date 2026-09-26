@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { users, auditLog } from "@/db/schema";
@@ -19,6 +20,7 @@ import { referringPartner } from "@/lib/partners";
 import { sendEmail } from "@/lib/email/mailer";
 import { welcomeTemplate } from "@/lib/email/templates";
 import { env } from "@/lib/env";
+import { SIGNED_UP_COOKIE } from "@/lib/analytics";
 
 // Identical message for "no such user" and "wrong password" — no enumeration.
 const INVALID_CREDENTIALS = "Incorrect email or password.";
@@ -121,6 +123,14 @@ export async function signup(
 
   await createSession(userId); // rotates in a fresh session token
   await audit(userId, "signup", ip, userAgent);
+  // Read once by SignupBeacon on the page this redirects to — the only way the
+  // browser can learn an account was created. Readable by script on purpose.
+  (await cookies()).set(SIGNED_UP_COOKIE, "email", {
+    path: "/",
+    maxAge: 600,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+  });
   /*
    * A SEPARATE EVENT FROM `partner.student.enrolled`, deliberately. Both end in
    * a row carrying the same `partner_id`, but one account was created by the

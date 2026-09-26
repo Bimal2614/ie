@@ -10,6 +10,7 @@ import {
   MetaPixel,
   MetaPixelNoScript,
 } from "@/components/analytics/analytics";
+import { SignupBeacon } from "@/components/analytics/signup-beacon";
 import { SITE_URL } from "@/lib/site";
 import { BRAND, DEFAULT_DESCRIPTION, DEFAULT_TITLE, KEYWORDS } from "@/lib/seo";
 import { LONG_TAIL, metaKeywordSlice } from "@/lib/keywords";
@@ -139,6 +140,7 @@ export default function RootLayout({
         {/* Outside DevtoolsGuard on purpose: the guard unmounts its subtree
             when DevTools opens, and analytics must not be torn down with it. */}
         <Analytics />
+        <SignupBeacon />
       </body>
     </html>
   );
