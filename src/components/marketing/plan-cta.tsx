@@ -144,8 +144,11 @@ export function PlanCta({
   /*
    * A visitor, or a probe that has not answered yet.
    *
-   * A PAID CARD SENDS THEM TO SIGN IN, carrying this page as `next` so they
-   * land back on the card and can press the same button again. Rendering the
+   * A PAID CARD SENDS THEM TO SIGN UP, carrying this page as `next` so they
+   * land back on the card and can press the same button again. Sign up, not
+   * sign in: most visitors here have no account, and a page headed "Sign in"
+   * read as a dead end — a watched session on 19 Sep clicked Go Pro, saw it,
+   * and left. Anyone with an account takes the log-in link from there. Rendering the
    * checkout button here instead would open a modal that the server action
    * behind it rejects for having no user — and it could not do otherwise: a
    * recurring mandate is created against an account, and the `notes.userId`
@@ -158,7 +161,7 @@ export function PlanCta({
   if (plan !== "free") {
     return (
       <Link
-        href={`/login?next=${encodeURIComponent("/pricing")}`}
+        href={`/signup?next=${encodeURIComponent("/pricing")}`}
         className={cn(base, featured ? primary : secondary)}
       >
         {label} <ArrowRight className="size-4" />

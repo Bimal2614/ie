@@ -346,7 +346,6 @@ export const PRACTICE_POSTS: BlogPost[] = [
       "ielts general training practice test",
       "ielts general practice",
       "ielts general training writing task 1",
-      "ielts letter writing practice",
       "ielts general reading practice",
       "ielts general training",
       "ielts general",
@@ -361,7 +360,7 @@ export const PRACTICE_POSTS: BlogPost[] = [
       { heading: "The GT Reading trap: reading too carefully", paragraphs: ["Section 1 texts look easy, so candidates read them properly, comfortably, at normal speed. That is how you arrive at section 3 with fifteen minutes left.", "Sections 1 and 2 should be fast: scan for the answer, take it, move. Budget about 15 minutes for section 1, 20 for section 2 and 25 for section 3. The marks are worth the same everywhere, but the time cost per mark rises steeply, so bank time early."] },
       { heading: "Task 1: the letter, and why it catches people out", paragraphs: ["GT Task 1 asks for a letter of at least 150 words responding to a situation, with three bullet points you must cover. It looks trivially easy compared with describing a chart, and it is where a lot of GT Writing bands quietly cap.", "Two things do the damage. First, missing a bullet, which caps Task Achievement immediately no matter how well written the rest is. Second, register: getting formal, semi-formal and informal wrong. A complaint to a company written in the tone of a message to a friend is a serious mismatch, and examiners mark it as one."] },
       { heading: "Getting register right", bullets: ["Formal (to someone you do not know, by role: a manager, a council, a company): \"Dear Sir or Madam\" or \"Dear Mr Smith\", no contractions, no phrasal verbs where a formal alternative exists, close with \"Yours faithfully\" for Sir/Madam and \"Yours sincerely\" for a name.", "Semi-formal (to someone you know in a formal relationship: a landlord, a colleague, a course tutor): \"Dear Mr Smith\", polite but warmer, contractions acceptable sparingly.", "Informal (to a friend or family member): \"Dear Anna\" or \"Hi Anna\", contractions, phrasal verbs, personal comments, close with \"Best wishes\" or \"Take care\".", "Read the prompt for who the recipient is before you write a word. It is stated, and it decides everything about the letter.", "Cover all three bullets, in order, roughly one short paragraph each. Then a closing line. That structure is worth memorising because it makes missing a bullet almost impossible."] },
-      { heading: "A GT letter template you can adapt", paragraphs: ["Opening line stating your purpose (\"I am writing to complain about…\" / \"I'm writing to let you know that…\"). Paragraph per bullet, in the order given. Closing line stating what you want to happen or a friendly sign-off. Correct sign-off for the register.", "Around 170 to 190 words is the sweet spot: comfortably over the 150 minimum without eating the 40 minutes Task 2 needs. And Task 2 is worth twice as much, so never let the letter overrun."] },
+      { heading: "A GT letter template you can adapt", paragraphs: ["Opening line stating your purpose (\"I am writing to complain about…\" / \"I'm writing to let you know that…\"). Paragraph per bullet, in the order given. Closing line stating what you want to happen or a friendly sign-off. Correct sign-off for the register.", "Around 170 to 190 words is the sweet spot: comfortably over the 150 minimum without eating the 40 minutes Task 2 needs. And Task 2 is worth twice as much, so never let the letter overrun."], links: [{ label: "Full IELTS letter writing guide with model letters", href: "/blog/ielts-letter-writing" }] },
       { heading: "Where to spend a GT preparation", paragraphs: ["Weight it: Listening and Speaking are half your band and identical to Academic, so do not neglect them because the module says General. If you are chasing a per-skill migration requirement, work out which single skill is furthest below your threshold and put most of your time there. For Canadian Express Entry candidates that is very often Listening, where CLB 9 needs 8.0.", "For Writing, split two thirds to Task 2 and one third to letters, and within letters, practise all three registers rather than only formal complaints."] },
       { heading: "Practise the General Training module specifically", paragraphs: ["On IELTSVega you can set your module to General Training and practise GT Reading sections and Task 1 letters across all three registers, with instant AI band scores on Writing against Task Achievement, Coherence and Cohesion, Lexical Resource and Grammatical Range and Accuracy, plus full timed GT mock tests so your pacing is built on the right paper."] },
     ],
@@ -806,6 +805,629 @@ export const PRACTICE_POSTS: BlogPost[] = [
       { q: "How many questions can I get wrong for Band 8 in Listening?", a: "Roughly five out of 40, and about the same in Academic Reading, though exact conversions vary slightly by test. At that margin a single misspelt answer is a meaningful fraction of your allowance, which is why careless-error elimination matters more than new technique at this level." },
       { q: "Is Band 8 much harder than Band 7?", a: "It is a different kind of difficulty. Band 7 is largely about removing faults; Band 8 is about range, precision and consistency across the whole answer. Many candidates plateau at 7.0 by writing carefully and plainly, which satisfies accuracy but not range." },
       { q: "Do I need Band 8 for university or immigration?", a: "Usually not. Most universities ask 6.5 to 7.0, and Canadian Express Entry's CLB 9 needs 8.0 only in Listening, with 7.0 in the other three. Check your specific requirement before spending weeks on a band nobody asked you for." },
+    ],
+  },
+  {
+    slug: "ielts-letter-writing",
+    seoTitle: "IELTS Letter Writing: Format, Samples & Phrases",
+    title: "IELTS letter writing: format, model letters and phrases for GT Task 1",
+    excerpt:
+      "How to write the IELTS General Training letter: the format, formal vs informal tone, three model letters, phrases for each purpose, and how it is marked.",
+    category: "Writing",
+    date: "September 2026",
+    publishedAt: "2026-09-26",
+    readMins: 14,
+    keywords: [
+      "ielts letter writing",
+      "ielts letter format",
+      "ielts general training letter",
+      "ielts general training writing task 1",
+      "ielts formal letter",
+      "ielts semi formal letter",
+      "ielts informal letter",
+      "ielts complaint letter sample",
+      "ielts letter writing samples",
+      "ielts letter phrases",
+      "ielts letter writing practice",
+    ],
+    sections: [
+      {
+        paragraphs: [
+          "IELTS letter writing is General Training Writing Task 1: you get a short situation and three bullet points, and you write a letter of at least 150 words in about 20 minutes. The letter can be formal, semi-formal or informal, and the prompt tells you which by naming the person you are writing to. Cover all three bullets, keep one tone from the first line to the sign-off, and you have done most of what the examiner is checking.",
+          "This guide gives you the one structure that works for every letter, the register rules, the opening line for each letter purpose, three model letters with notes, what the official band descriptors say separates Band 6 from Band 7, and six practice prompts. Academic candidates do not write a letter; if you are not sure which module you are sitting, settle that first.",
+        ],
+        links: [
+          { label: "Academic or General Training: which IELTS you need", href: "/blog/ielts-academic-vs-general-training" },
+          { label: "What else differs in General Training", href: "/blog/ielts-general-training-practice-test-guide" },
+        ],
+      },
+      {
+        heading: "IELTS letter format: one structure for every letter",
+        paragraphs: [
+          "Every IELTS letter, whatever its purpose, fits the same five-part shape. Learn it once and the only thing that changes between a complaint to a company and a note to a friend is the language inside it.",
+        ],
+        table: {
+          caption: "The IELTS letter structure",
+          headers: ["Part", "What goes in it", "Formal example"],
+          rows: [
+            ["Greeting", "Dear + the right name or title. The prompt often gives it: \"Begin your letter as follows: Dear Sir or Madam,\"", "Dear Sir or Madam,"],
+            ["Opening line", "One or two sentences saying why you are writing. No small talk in a formal letter.", "I am writing to complain about a delivery I received on 12 September."],
+            ["Body: one paragraph per bullet", "Three short paragraphs, in the order the bullets are given, each developed with a detail or reason", "The machine was due on 5 September but arrived a week late…"],
+            ["Closing line", "What you want to happen next, or a friendly line to end on", "I look forward to your prompt reply."],
+            ["Sign-off and name", "The sign-off that matches the greeting, then your name on its own line", "Yours faithfully, / Rahul Mehta"],
+          ],
+        },
+        bullets: [
+          "Do not write addresses or a date. Real prompts say \"You do NOT need to write any addresses\", and time spent on them earns nothing.",
+          "The minimum is 150 words. Around 170 to 190 is the comfortable range: enough to develop every bullet, short enough to leave the full 40 minutes for Task 2, which carries twice the weight.",
+          "Paragraphs matter. A letter written as one block is harder to follow, and Coherence and Cohesion is a quarter of the Task 1 score.",
+        ],
+      },
+      {
+        heading: "Formal, semi-formal or informal: read who the letter is to",
+        paragraphs: [
+          "The register is decided by one line of the prompt: who you are writing to. It is always stated. Read it before anything else, because it fixes your greeting, your sign-off and every sentence in between.",
+        ],
+        table: {
+          caption: "Choosing the register for an IELTS letter",
+          headers: ["Register", "You are writing to", "Greeting", "Sign-off", "Language"],
+          rows: [
+            ["Formal", "Someone you do not know, or know only by role: a company, a manager at another organisation, a council", "Dear Sir or Madam, / Dear Mr Khan,", "Yours faithfully (after Sir or Madam) / Yours sincerely (after a name)", "No contractions, no slang, full polite forms: \"I would be grateful if…\""],
+            ["Semi-formal", "Someone you know in a formal relationship: your manager, your landlord, a neighbour you rarely speak to, a tutor", "Dear Ms Clarke,", "Kind regards, / Yours sincerely,", "Polite and direct, warmer than formal; an occasional contraction is fine"],
+            ["Informal", "A friend or family member", "Dear Sam, / Hi Sam,", "Take care, / Best wishes, / See you soon,", "Contractions, phrasal verbs, personal comments, questions to the reader"],
+          ],
+        },
+        bullets: [
+          "\"Dear Sir or Madam\" goes with \"Yours faithfully\". A named greeting goes with \"Yours sincerely\" or, in a semi-formal letter, \"Kind regards\". Mixing the pairs is a small error, but it is the first thing a reader of a formal letter notices.",
+          "Semi-formal is where most people slip. A landlord you have met is not a stranger, so \"Dear Sir or Madam\" is wrong, but a note to them is not a message to a friend either. Use their title and surname and stay polite.",
+          "Whichever register you choose, hold it. A formal letter that ends \"Thanks a lot, see you!\" has an inconsistent tone, and tone is marked.",
+        ],
+      },
+      {
+        heading: "Letter purposes, and the line that opens each one",
+        paragraphs: [
+          "The bullets tell you what to say; the purpose tells you how to open. Most IELTS letters fall into one of these purposes, and each has a natural first sentence in each register. Adapt these to the situation rather than pasting them in unchanged.",
+        ],
+        table: {
+          caption: "Opening lines by purpose",
+          headers: ["Purpose", "Formal or semi-formal opener", "Informal opener"],
+          rows: [
+            ["Complaint", "I am writing to complain about the service I received at your branch on…", "I have to tell you about the awful time I had with…"],
+            ["Request", "I am writing to ask whether it would be possible to…", "I wonder if you could do me a favour."],
+            ["Apology", "I am writing to apologise for…", "I'm so sorry about…"],
+            ["Job or course application", "I am writing to apply for the position of… advertised on…", "Not usually informal"],
+            ["Invitation", "I would like to invite you to…", "Are you free on…? I'd love you to come to…"],
+            ["Thanks", "I am writing to thank you for…", "Thanks so much for…"],
+            ["Giving advice", "I am writing in response to your question about…", "You asked what I'd do about…, so here's what I think."],
+            ["Giving information or explaining", "I am writing to let you know that…", "Just a quick letter to tell you that…"],
+            ["Making arrangements", "I am writing to arrange…", "Shall we sort out the plans for…?"],
+          ],
+        },
+        bullets: [
+          "Closing lines follow the same logic. Formal: \"I look forward to hearing from you\" or \"I would appreciate a reply by Friday\". Informal: \"Write back soon and tell me your news\" or \"Let me know which day works\".",
+          "One purpose line is enough. Two sentences of throat-clearing before the first bullet use words that could have developed a bullet instead.",
+        ],
+      },
+      {
+        heading: "Model letter 1: a formal complaint",
+        paragraphs: [
+          "Prompt: You recently ordered a washing machine from an online store. It arrived late and does not work properly. Write a letter to the store. In your letter, explain what you bought and when; describe the problems; say what you would like the store to do. Begin your letter as follows: Dear Sir or Madam,",
+          "Dear Sir or Madam,",
+          "I am writing to complain about a washing machine I ordered from your website on 2 September, order number 48213, which has caused me considerable inconvenience.",
+          "The machine is an 8 kg front-loading model, and your confirmation email promised delivery within three working days. It finally arrived on 12 September, more than a week late, and nobody contacted me to explain the delay despite two calls to your helpline. As a result, I had to take a second day off work to wait for it.",
+          "Worse, it has not worked properly since it was installed. The drum stops turning halfway through every cycle and the display shows an error code, so my clothes come out soaking wet. I have followed every step in the troubleshooting section of the manual, without success.",
+          "I would therefore like you to collect the machine and replace it with a working one within seven days. If a replacement is not available, I expect a full refund, including the delivery charge.",
+          "I look forward to your prompt reply.",
+          "Yours faithfully,",
+          "Rahul Mehta",
+        ],
+        bullets: [
+          "About 180 words, counting the greeting and sign-off. Each bullet has its own paragraph, in the prompt's order.",
+          "Every bullet is extended with a detail: an order number and dates, a specific fault and what was tried, a deadline and a fallback. That extension is what the descriptors separate Band 7 from Band 6 on.",
+          "The tone is firm without being rude. \"Worse\" and \"I expect\" carry the annoyance; there are no insults and no exclamation marks.",
+        ],
+      },
+      {
+        heading: "Model letter 2: a semi-formal request",
+        paragraphs: [
+          "Prompt: You would like to take a week off work next month. Write a letter to your manager. In your letter, explain why you need the time off; suggest how your work could be covered; say when you would like to take the leave.",
+          "Dear Ms Clarke,",
+          "I am writing to ask whether I could take a week of annual leave next month.",
+          "My younger sister is getting married in Jaipur on 21 October, and as the eldest in the family I have agreed to help organise the celebrations. I realise this is a busy period for the team, which is why I wanted to ask as early as possible.",
+          "I have already spoken to Arjun, who is happy to take over the weekly supplier reports while I am away. I will also finish the October budget summary before I leave and brief him on anything outstanding, so nothing should be delayed.",
+          "Ideally I would be away from Monday 19 to Friday 23 October. If that is difficult, I could shorten it to three days, from the 20th to the 22nd, although the full week would make things much easier for my family. I would be grateful if you could let me know by Friday so that I can book my train tickets.",
+          "Kind regards,",
+          "Priya Nair",
+        ],
+        bullets: [
+          "About 175 words. The greeting uses the manager's name, so the sign-off is \"Kind regards\", not \"Yours faithfully\".",
+          "It is polite but not stiff: \"I realise this is a busy period\" shows awareness of the reader, which is what semi-formal tone looks like in practice.",
+          "The third bullet is answered with two options and a reason to reply, which is a stronger close than restating the request.",
+        ],
+      },
+      {
+        heading: "Model letter 3: an informal apology to a friend",
+        paragraphs: [
+          "Prompt: You were unable to go to a friend's birthday party last weekend. Write a letter to your friend. In your letter, apologise for missing the party; explain why you could not go; suggest a way to celebrate together soon.",
+          "Dear Sam,",
+          "I'm so sorry I missed your party on Saturday. I'd been looking forward to it for weeks, and I felt terrible sending you that last-minute message instead of turning up with your present.",
+          "What happened was completely unexpected. My dad slipped on the stairs on Friday evening and hurt his ankle quite badly, so I spent most of Saturday with him at the hospital waiting for X-rays. Thankfully nothing's broken, but by the time we got home it was nearly midnight and I was in no state to go anywhere. I should have called you properly instead of just texting, and I'm sorry about that too.",
+          "Anyway, I'd really like to make it up to you. How about I take you out for dinner next weekend? That new Lebanese place near the station has great reviews, and I know how much you love hummus. It's my treat, of course, and I'll bring your present along too.",
+          "Let me know which evening works for you, and tell me all about the party!",
+          "Take care,",
+          "Maya",
+        ],
+        bullets: [
+          "About 175 words. Contractions, \"Anyway\", a question to the reader and a personal detail about the friend are what make it genuinely informal rather than a formal letter with \"Hi\" at the top.",
+          "Informal does not mean careless. The grammar is still accurate and the paragraphs still follow the bullets.",
+          "No \"I hope this letter finds you well\" opener. Between friends, you get straight to the point, and here the point is the apology.",
+        ],
+      },
+      {
+        heading: "How an IELTS letter is marked",
+        paragraphs: [
+          "The letter is scored on four criteria: Task Achievement, Coherence and Cohesion, Lexical Resource, and Grammatical Range and Accuracy. The last three work as they do for any IELTS writing. Task Achievement is where General Training has its own lines, and they come down to two things: how well each bullet is covered, and whether the purpose and tone are clear and consistent.",
+        ],
+        table: {
+          caption: "General Training Task Achievement, from the public band descriptors",
+          headers: ["Band", "Bullet points", "Purpose and tone"],
+          rows: [
+            ["8", "All clearly presented, and appropriately illustrated or extended", "No separate line; the Band 7 standard is assumed"],
+            ["7", "All covered and clearly highlighted, but could be more fully or appropriately extended", "Clear purpose; tone consistent and appropriate, with minimal lapses"],
+            ["6", "All covered and adequately highlighted", "Purpose generally clear; minor inconsistencies in tone"],
+            ["5", "All presented, but one or more not adequately covered", "Purpose may be unclear at times; tone variable and sometimes inappropriate"],
+            ["4", "Not all bullet points presented", "Purpose not clearly explained; tone may be inappropriate"],
+          ],
+        },
+        bullets: [
+          "Missing a bullet entirely puts Task Achievement in Band 4 territory, however good the English is. It is the most expensive mistake in the task.",
+          "The step from 6 to 7 is extension. Mentioning each bullet in one line is \"adequately highlighted\". Developing it with a reason, a detail or an example is what the higher bands describe.",
+          "Tone appears in the descriptors at every band from 4 to 7. It is marked, not a matter of style.",
+        ],
+        links: [
+          { label: "Writing mistakes that hold people at 6.5", href: "/blog/writing-mistakes-stuck-at-6-5" },
+        ],
+      },
+      {
+        heading: "Mistakes that cap an IELTS letter",
+        bullets: [
+          "Skipping or skimming a bullet. Tick each one off as you write it.",
+          "Drifting between registers: a formal opening, a chatty middle, a formal sign-off. Decide once, from the recipient, and hold it.",
+          "Pairing the wrong sign-off with the greeting, such as \"Dear Sir or Madam… Yours sincerely\".",
+          "Stock openers that fit no situation. \"I hope this letter finds you in the pink of health\" is dated, and \"I am writing this letter to inform you that…\" at the top of every letter, whatever its purpose, reads as memorised rather than written for the task.",
+          "Inventing too little. The situation is fictional, so you are free to add names, dates, amounts and reasons. Details are how a bullet gets extended.",
+          "Contractions and phrasal verbs in a formal letter: \"can't\", \"sort it out\" and \"get back to me\" belong in the informal one.",
+          "Writing addresses and a date. They are not required and they cost minutes.",
+          "Letting the letter run to 250 words. Task 2 is worth twice as much, and a long letter is usually a letter that has taken its time.",
+        ],
+      },
+      {
+        heading: "How to write the letter in 20 minutes",
+        bullets: [
+          "Minutes 0–3: read the prompt, underline who you are writing to, decide the register, and number the three bullets. Jot one detail you will add to each.",
+          "Minutes 3–17: write. Greeting, purpose line, one paragraph per bullet in order, closing line, sign-off.",
+          "Minutes 17–20: check that every bullet is there, that the greeting and sign-off match, and that no contractions have crept into a formal letter. Fix spelling last.",
+          "On computer-delivered IELTS a live word count is shown, so there is no need to count. On paper, learn roughly how many lines 150 words fills in your handwriting before test day.",
+        ],
+        links: [
+          { label: "IELTS writing templates and sentence patterns", href: "/templates" },
+        ],
+      },
+      {
+        heading: "Practice prompts for all three registers",
+        paragraphs: [
+          "These are original prompts written in the style of the exam, not reported test questions. Write each in 20 minutes, and practise the register you avoid most, which for most candidates is informal.",
+        ],
+        bullets: [
+          "Formal: You stayed at a hotel last month and left a bag in your room. Write to the hotel manager. Describe the bag and its contents; explain when and where you left it; say how you would like it returned.",
+          "Formal: You have seen an advertisement for a part-time job at a local library. Write to the library. Say which job you are applying for; describe your relevant experience; explain when you are available to work.",
+          "Semi-formal: The heating in the flat you rent has stopped working. Write to your landlord. Describe the problem; explain how it is affecting you; say what you would like the landlord to do.",
+          "Semi-formal: A colleague is leaving your company and you are organising a farewell event. Write to your manager. Describe the event you have planned; explain what help you need; ask whether the company could contribute to the cost.",
+          "Informal: A friend is coming to visit your city for the first time. Write to your friend. Suggest where they should stay; recommend places to visit; explain what you would like to do together.",
+          "Informal: A friend recently lent you a book that you enjoyed. Write to your friend. Thank them for the book; say what you liked about it; recommend a book they might enjoy in return.",
+        ],
+      },
+      {
+        heading: "Practise a letter and get a band score",
+        paragraphs: [
+          "Reading model letters shows you what good looks like, but it does not tell you where your own letter falls short. On IELTSVega you can set your module to General Training, write a Task 1 letter under timed conditions, and get an instant band score against all four criteria, marked with the General Training descriptor lines for bullet coverage and tone. Write one of the prompts above, see which criterion is lowest, fix that one thing, and write the next.",
+        ],
+      },
+    ],
+    faqs: [
+      { q: "How many words should an IELTS letter be?", a: "At least 150 words, which is the minimum the prompt sets. Aim for roughly 170 to 190. That is enough to develop all three bullet points properly, and short enough to leave a full 40 minutes for Task 2, which carries twice the weight of the letter in your Writing band." },
+      { q: "Do I need to write addresses or a date in an IELTS letter?", a: "No. Exam prompts state that you do not need to write any addresses, and a date is not required either. Start with the greeting, usually given in the prompt, and spend the saved minutes developing the bullets, which is where the marks are." },
+      { q: "Is it \"Yours faithfully\" or \"Yours sincerely\" in an IELTS letter?", a: "Use \"Yours faithfully\" after \"Dear Sir or Madam\", when you do not know the reader's name. Use \"Yours sincerely\" after a named greeting such as \"Dear Mr Khan\". In a semi-formal letter to someone you know, \"Kind regards\" is also natural. Informal letters end with \"Take care\" or \"Best wishes\"." },
+      { q: "Can I use contractions in an IELTS letter?", a: "In an informal letter, yes, and you should: contractions are part of what makes the tone genuinely informal. In a semi-formal letter an occasional one is acceptable. In a formal letter, avoid them entirely and write \"I would\", \"I am\" and \"cannot\" in full." },
+      { q: "What if the IELTS letter prompt does not say whether it is formal or informal?", a: "It never says so directly, but it always tells you who the reader is, and that decides it. A company or someone you do not know means formal. Someone you know in a formal relationship, like a manager or landlord, means semi-formal. A friend or relative means informal." },
+      { q: "Do Academic candidates write a letter in IELTS?", a: "No. The letter is General Training Writing Task 1 only. Academic Task 1 asks you to describe a graph, chart, table, process or map instead. Task 2, the essay, exists in both modules, so check which module you are booked for before you start preparing letters." },
+      { q: "Can I use a memorised template for the IELTS letter?", a: "A structure, yes: greeting, purpose line, a paragraph per bullet, closing line, sign-off. Memorised sentences are riskier. Stock lines that do not fit the situation read as learned rather than written for the task, and they fill your word count without extending any bullet." },
+    ],
+  },
+  {
+    slug: "ielts-linking-words",
+    seoTitle: "IELTS Linking Words: List, Examples & How to Use Them",
+    title: "IELTS linking words: the list, examples, and how many to use",
+    excerpt:
+      "IELTS linking words by function for Writing Task 1, Task 2 and Speaking, with examples, and why overusing them costs you marks in Coherence and Cohesion.",
+    category: "Writing",
+    date: "September 2026",
+    publishedAt: "2026-09-26",
+    readMins: 10,
+    keywords: [
+      "ielts linking words",
+      "linking words for ielts writing task 2",
+      "linking words for ielts writing task 1",
+      "linking words for ielts speaking",
+      "ielts linking words list",
+      "ielts cohesive devices",
+      "ielts connectors",
+      "transition words ielts",
+      "coherence and cohesion ielts",
+      "reference and substitution ielts",
+      "ielts linking words examples",
+    ],
+    sections: [
+      {
+        paragraphs: [
+          "IELTS linking words, also called connectors, transition words or cohesive devices, are the words that show how one idea relates to the next: however, therefore, for example, in addition. In Writing they are marked under Coherence and Cohesion, a quarter of your score for each task; in Speaking, under Fluency and Coherence. Knowing a list of them is easy. What the examiner actually rewards is using them only where the logic needs marking, and using the other half of cohesion, reference and substitution, which almost every linking words list leaves out.",
+          "Below: what the official band descriptors say, the list by function with examples, the words that suit Task 1, Task 2, the General Training letter and Speaking, the mistakes that cost marks, and an exercise.",
+        ],
+      },
+      {
+        heading: "What the band descriptors say about linking words",
+        paragraphs: [
+          "The public Writing band descriptors are unusually direct on this. Overuse is named as a fault at Band 5 and Band 6. Band 7 asks for a range of cohesive devices including reference and substitution. Band 9 describes cohesion that very rarely attracts attention, which is the opposite of an essay with a connector at the start of every sentence.",
+        ],
+        table: {
+          caption: "Cohesion in the Writing band descriptors (Task 2 wording; Task 1 matches)",
+          headers: ["Band", "What the descriptor says about cohesion", "What it means in practice"],
+          rows: [
+            ["9", "Cohesion is used so that it very rarely attracts attention", "The reader notices the argument, not the connectors"],
+            ["8", "Ideas logically sequenced; cohesion well managed", "Linkers where needed, invisible where not"],
+            ["7", "A range of cohesive devices, including reference and substitution, used flexibly, with some inaccuracies or over/under use", "Variety, plus \"this\", \"such\", \"which\" and \"the former\" doing some of the linking"],
+            ["6", "Cohesive devices used to some good effect, but cohesion may be faulty or mechanical through misuse, overuse or omission", "The Firstly / Moreover / In conclusion essay lives here"],
+            ["5", "Limited or overused cohesive devices, with some inaccuracy; repetitive through weak reference and substitution", "The same two linkers everywhere, and the same noun repeated"],
+            ["4", "Some basic cohesive devices, which may be inaccurate or repetitive", "Mostly \"and\", \"but\" and \"because\", sometimes wrongly"],
+          ],
+        },
+        bullets: [
+          "The takeaway: more linking words is not a higher band. Accurate linking words, fewer of them, and some cohesion done by reference is.",
+        ],
+        links: [
+          { label: "Writing mistakes that hold people at 6.5", href: "/blog/writing-mistakes-stuck-at-6-5" },
+        ],
+      },
+      {
+        heading: "IELTS linking words list, by function",
+        paragraphs: [
+          "Learn these by what they do, not as one long list. If you know the relationship you want to show, you can pick the word; if you only know the word, you will use it in the wrong place. Watch the grammar column: many mistakes are about what follows the linker, not the linker itself.",
+        ],
+        table: {
+          caption: "Linking words by function",
+          headers: ["Function", "Linking words", "Example", "Grammar note"],
+          rows: [
+            ["Adding a point", "In addition, Furthermore, Moreover, Also, As well as", "Public transport cuts emissions. In addition, it reduces congestion.", "\"As well as\" is followed by a noun or -ing form"],
+            ["Contrast", "However, In contrast, On the other hand, Whereas, While", "Cities offer more jobs, whereas rural areas offer lower costs.", "\"However\" starts a new sentence, followed by a comma"],
+            ["Concession", "Although, Even though, Despite, In spite of, Admittedly", "Although fees have risen, applications keep growing.", "\"Despite\" takes a noun: despite the cost, never despite of"],
+            ["Cause", "Because, Since, As, Due to, Owing to", "Many graduates move abroad due to low salaries.", "\"Due to\" takes a noun, \"because\" takes a clause"],
+            ["Result", "Therefore, As a result, Consequently, Thus, So", "Housing is scarce. As a result, rents have doubled.", "\"So\" is informal at the start of a sentence"],
+            ["Example", "For example, For instance, Such as, In particular", "Some sports, such as swimming, need expensive facilities.", "\"Such as\" is followed by a noun, never a full sentence"],
+            ["Sequence", "First, Then, After that, Subsequently, Finally", "The grain is first dried and then ground.", "\"Finally\" is the last point; \"at last\" means after a long wait"],
+            ["Emphasis", "In fact, Indeed, Clearly, Above all", "Above all, the policy must be affordable.", "Use sparingly; emphasis on everything is emphasis on nothing"],
+            ["Clarifying", "In other words, That is to say, Namely", "Screen time, in other words time on phones and tablets, has doubled.", "Restates the same idea more simply"],
+            ["Condition", "If, Unless, Provided that, As long as", "Remote work succeeds provided that teams meet regularly.", "\"Unless\" already means \"if not\"; do not add another \"not\""],
+            ["Opinion", "In my view, I would argue that, From my perspective", "In my view, the benefits outweigh the costs.", "State it once clearly rather than in every paragraph"],
+            ["Concluding", "In conclusion, To sum up, Overall", "In conclusion, both approaches have merit.", "No new ideas after it; \"Overall\" also opens a Task 1 overview"],
+          ],
+        },
+      },
+      {
+        heading: "Linking words for IELTS Writing Task 2",
+        paragraphs: [
+          "Task 2 needs linking at three levels: between paragraphs, between the sentences inside a paragraph, and inside sentences. Paragraph-level links are where candidates overdo it. A clear topic sentence already tells the reader a new point has started, so \"Firstly\" and \"Secondly\" add little.",
+          "Here is a body paragraph that links well without leaning on connectors. The linkers are in brackets for reference.",
+          "\"Another reason cities should invest in cycle lanes is public health. [reference: Another reason] Commuters who cycle are more active than those who drive, and this [reference] daily exercise lowers the risk of heart disease. A city that builds protected lanes, for example [example], makes cycling a safe everyday choice rather than a risk. Such [reference] schemes are not cheap; however [contrast], they cost far less than treating the illnesses that inactivity causes.\"",
+          "Count the connectors proper: two. The rest of the cohesion comes from \"Another\", \"this\" and \"Such\", which point back to something already said. That mix is what the Band 7 descriptor means by reference and substitution.",
+        ],
+        bullets: [
+          "Introduction: \"This essay will argue that…\" or simply state your position; a thesis needs no linker.",
+          "Body paragraphs: a topic sentence, then \"This means…\", \"For example…\", \"As a result…\" to develop it.",
+          "Discussion essays: \"On the one hand… On the other hand…\" belong together; the second without the first reads as a slip.",
+          "Conclusion: \"In conclusion\" or \"Overall\", then restate the position. No new argument after it.",
+        ],
+      },
+      {
+        heading: "Linking words for IELTS Writing Task 1",
+        paragraphs: [
+          "Academic Task 1 has its own small set, because you are comparing figures and describing change rather than arguing.",
+        ],
+        table: {
+          caption: "Task 1 linking words by chart type",
+          headers: ["You are describing", "Useful linking words", "Example"],
+          rows: [
+            ["A comparison", "whereas, while, by contrast, similarly, likewise, compared with", "Sales in Japan doubled, whereas those in Korea fell slightly."],
+            ["A trend over time", "over the period, from… to…, by 2020, thereafter, before levelling off", "Numbers rose steadily until 2010 and levelled off thereafter."],
+            ["A process diagram", "first, next, once, after which, subsequently, finally, at the same time", "Once the bottles are sorted, they are washed, after which they are crushed."],
+            ["A map", "meanwhile, in place of, to the north of, whereas previously", "The park remains, whereas the factory has been replaced by housing."],
+            ["The overview", "Overall, In general, It is clear that", "Overall, car use rose while bus use declined."],
+          ],
+        },
+        links: [
+          { label: "IELTS writing templates and sentence patterns", href: "/templates" },
+        ],
+      },
+      {
+        heading: "Linking words for the General Training letter",
+        paragraphs: [
+          "The letter's linking words have to match its register. A formal complaint uses \"Furthermore\", \"In addition\" and \"I would therefore like…\". An informal letter to a friend uses \"Anyway\", \"Also\", \"By the way\" and \"So\". \"Moreover\" in a letter to your cousin is a tone mistake, and tone is marked in General Training Task 1.",
+        ],
+        links: [
+          { label: "IELTS letter writing: format and model letters", href: "/blog/ielts-letter-writing" },
+        ],
+      },
+      {
+        heading: "Linking words for IELTS Speaking",
+        paragraphs: [
+          "In Speaking, linking is marked under Fluency and Coherence, and the Band 7 descriptor asks for flexible use of spoken discourse markers. Spoken linkers are different from written ones. \"Furthermore\" and \"Moreover\" sound like an essay read aloud; natural speech uses shorter markers.",
+        ],
+        table: {
+          caption: "Spoken linking words by Speaking part",
+          headers: ["Part", "What you are doing", "Natural linking words"],
+          rows: [
+            ["Part 1", "Short personal answers", "Well, Actually, To be honest, I mean, That's why"],
+            ["Part 2", "A two-minute story", "It was back in…, At first, Then, After a while, In the end, Looking back"],
+            ["Part 3", "Discussing and justifying opinions", "I'd say that…, The thing is…, On the other hand, That said, It depends on…, For instance"],
+          ],
+        },
+        bullets: [
+          "Use them to buy thinking time naturally: \"Well, that's an interesting one. I'd say…\" is fluent; silence is not.",
+          "Do not recite a memorised chain. \"Firstly… secondly… thirdly… in conclusion\" in a Part 1 answer sounds rehearsed.",
+        ],
+        links: [
+          { label: "IELTS Speaking band descriptors explained", href: "/blog/ielts-speaking-band-descriptors" },
+        ],
+      },
+      {
+        heading: "Reference and substitution: the cohesion Band 7 asks for",
+        paragraphs: [
+          "Reference means pointing back to something already said instead of repeating it: this, these, it, they, such, the former, the latter. Substitution means replacing a word or phrase with a shorter one: one, ones, do so. Both link sentences without any connector, and both are named in the Band 7 descriptor.",
+          "Before: \"Many young people use social media every day. Social media can affect young people's sleep. Social media also affects young people's concentration.\"",
+          "After: \"Many young people use social media every day, and this habit can affect their sleep. It also affects their concentration.\"",
+          "The second version has no additional linking words at all. It is more cohesive because \"this habit\", \"their\" and \"It\" carry the reader from one idea to the next.",
+        ],
+      },
+      {
+        heading: "Common linking word mistakes in IELTS",
+        bullets: [
+          "Starting every sentence or paragraph with a connector. This is the \"mechanical\" cohesion the Band 6 descriptor describes.",
+          "\"On the other hand\" with no first hand. It introduces the second side of a comparison; for a simple contrast use \"However\".",
+          "\"Although… but\" in the same sentence. Use one: \"Although it is expensive, it is popular.\"",
+          "\"Despite of\". It is \"despite the cost\" or \"in spite of the cost\".",
+          "\"However\" joining two sentences with a comma: \"It is cheap, however it is slow.\" Use a full stop or semicolon before it.",
+          "\"Moreover\" to add a point that actually contrasts. The linker must match the relationship, or it misleads the reader.",
+          "\"On the contrary\" for a simple contrast. It rejects the previous statement; \"In contrast\" compares two things.",
+          "\"At last\" for a final point. It means \"after a long wait\"; use \"Finally\" or \"Lastly\".",
+          "A new idea after \"In conclusion\". The conclusion closes the argument you have made.",
+        ],
+      },
+      {
+        heading: "Exercise: fix a mechanical paragraph",
+        paragraphs: [
+          "Rewrite this paragraph so it keeps its meaning but uses no more than two connectors. Use reference words to do the rest.",
+          "\"Firstly, online learning is flexible. Moreover, online learning is cheaper. Furthermore, online learning lets students study at their own pace. However, online learning can be isolating. Therefore, online learning needs some face-to-face contact.\"",
+          "One possible answer: \"Online learning is flexible and usually cheaper, and it lets students study at their own pace. It can, however, be isolating, which is why the best courses combine it with some face-to-face contact.\"",
+          "Five connectors and five repetitions of \"online learning\" became two connectors, one \"it\" and one \"which\". The second version reads as one argument rather than a list, and that is the difference the descriptors describe between Band 6 and Band 7.",
+        ],
+      },
+      {
+        heading: "Check your own linking with a band score",
+        paragraphs: [
+          "It is hard to judge your own cohesion, because you always know what you meant. On IELTSVega you can write a Task 1 or Task 2 response and get an instant band score for each criterion, including Coherence and Cohesion, with written feedback on what held each one back. Write an essay, cut half the connectors, add reference words, and score it again.",
+        ],
+      },
+    ],
+    faqs: [
+      { q: "What are the 20 linking words?", a: "There is no official list of 20. A useful core set is: in addition, furthermore, also, however, whereas, although, despite, because, due to, therefore, as a result, consequently, for example, for instance, such as, first, finally, in fact, overall and in conclusion. What matters in IELTS is choosing the one that matches the relationship between two ideas." },
+      { q: "How many linking words should I use in an IELTS essay?", a: "There is no target number. Use a linker when the relationship between two ideas needs marking, and let topic sentences and reference words do the rest. The band descriptors name overuse as a fault at Bands 5 and 6, so an essay with a connector in every sentence scores lower, not higher." },
+      { q: "Is it wrong to use \"Firstly\" and \"Secondly\" in IELTS?", a: "Not wrong, but rarely the best choice. Used once to open two body paragraphs they are fine. Used with \"Moreover\", \"Furthermore\" and \"In conclusion\" to start every paragraph, they make cohesion look mechanical, which the descriptors place at Band 6. A clear topic sentence usually does the same job better." },
+      { q: "Are cohesive devices the same as linking words?", a: "Linking words are one kind of cohesive device. Cohesive devices also include reference words such as this, these, it and such, and substitution such as one or do so. The Band 7 Writing descriptor asks for a range of cohesive devices including reference and substitution, not only connectors." },
+      { q: "Can I start a sentence with \"And\" or \"But\" in IELTS Writing?", a: "It is common in journalism, but in an IELTS essay it reads as informal. Use \"In addition\" or \"However\" to start a sentence, or join the ideas with \"and\" or \"but\" inside one sentence. In an informal General Training letter, starting with \"And\" or \"But\" is acceptable." },
+      { q: "Which linking words should I use in IELTS Speaking?", a: "Short spoken markers: well, actually, to be honest, I mean, the thing is, that said, on the other hand, for instance. They sound natural and buy thinking time. Written connectors like moreover and furthermore sound like an essay read aloud, and a rehearsed chain of them can make answers sound memorised." },
+      { q: "Do linking words matter in IELTS Writing Task 1?", a: "Yes, but the set is different. Task 1 is mostly comparison and change over time, so whereas, while, by contrast, similarly and thereafter do most of the work, and process diagrams need sequence words such as once, after which and finally. Start the overview with \"Overall\"." },
+    ],
+  },
+  {
+    slug: "ielts-paraphrasing",
+    seoTitle: "IELTS Paraphrasing: Techniques, Examples & Exercises",
+    title: "IELTS paraphrasing: techniques, examples, and when not to paraphrase",
+    excerpt:
+      "IELTS paraphrasing for Writing, Reading, Listening and Speaking: five techniques with examples, what never to change, worked intros and practice exercises.",
+    category: "Writing",
+    date: "September 2026",
+    publishedAt: "2026-09-26",
+    readMins: 9,
+    keywords: [
+      "ielts paraphrasing",
+      "ielts paraphrasing techniques",
+      "how to paraphrase in ielts writing",
+      "ielts paraphrasing task 2 introduction",
+      "ielts paraphrasing task 1",
+      "ielts reading paraphrasing",
+      "ielts listening paraphrasing",
+      "ielts paraphrasing speaking",
+      "ielts paraphrasing exercises",
+      "ielts synonyms",
+    ],
+    sections: [
+      {
+        paragraphs: [
+          "IELTS paraphrasing means expressing the same meaning in different words, and the test uses it in all four skills. In Writing you paraphrase the question to open your answer. In Reading and Listening the questions paraphrase the text or recording, and recognising that is most of the skill. In Speaking, the official descriptors at Bands 7 and 8 both include \"effective use of paraphrase as required\". The techniques are simple: synonyms, changing the word form, changing the sentence structure, and restating numbers. The skill is knowing which words to leave alone.",
+          "One rule overrides the rest: in completion questions you do not paraphrase. The answer is the exact words from the passage or the recording, within the word limit.",
+        ],
+      },
+      {
+        heading: "Where paraphrasing matters in each part of IELTS",
+        table: {
+          caption: "Paraphrasing by skill",
+          headers: ["Skill", "What you do", "Paraphrase your answer?"],
+          rows: [
+            ["Listening", "Recognise that the question and the audio say the same thing in different words", "No. Completion answers are the words you hear"],
+            ["Reading", "Recognise paraphrase between questions and passage, especially in True/False/Not Given and matching headings", "No. Completion answers are copied from the passage"],
+            ["Writing Task 1", "Rewrite the chart description in your introduction", "Yes. Copying the prompt shows nothing of your vocabulary"],
+            ["Writing Task 2", "Rewrite the question in your introduction; avoid repeating the topic words all essay", "Yes"],
+            ["Speaking", "Explain a word you cannot remember, and avoid echoing the examiner's question word for word", "Yes"],
+          ],
+        },
+      },
+      {
+        heading: "Five IELTS paraphrasing techniques, with examples",
+        paragraphs: [
+          "Good paraphrases usually combine two or three of these. A single synonym swap is the weakest version: the sentence still looks copied.",
+        ],
+        table: {
+          caption: "Paraphrasing techniques",
+          headers: ["Technique", "Original", "Paraphrase"],
+          rows: [
+            ["1. Synonyms", "Many people prefer to live in cities.", "A large number of people choose to live in urban areas."],
+            ["2. Change the word form", "The government should invest in public transport.", "Government investment in public transport is needed."],
+            ["3. Active to passive, or back", "Governments should ban plastic bags.", "Plastic bags should be banned."],
+            ["4. Change the clause structure", "Because housing is expensive, young people live with their parents.", "The high cost of housing means that many young people still live with their parents."],
+            ["5. Restate numbers and quantities", "25% of households own a car.", "A quarter of households own a car."],
+            ["Combined", "Children who play sport are healthier than those who do not.", "Regular physical activity tends to improve young people's health."],
+          ],
+        },
+        bullets: [
+          "Word form is the most underused technique and the safest: \"invest\" becomes \"investment\" without any risk of choosing the wrong synonym.",
+          "Structure changes are what make a paraphrase look written rather than substituted. Moving the cause to the front, or turning a clause into a noun phrase, does more than any synonym.",
+        ],
+      },
+      {
+        heading: "What not to change when you paraphrase",
+        paragraphs: [
+          "Not every word needs replacing, and forcing a synonym is how paraphrasing lowers a score. The Writing descriptors reward \"an awareness of style and collocation\" at Band 7; a strange synonym is exactly the inappropriacy they penalise.",
+        ],
+        bullets: [
+          "Technical and specific terms: \"internet\", \"carbon emissions\", \"university\", \"public transport\" have no good synonym. Keep them.",
+          "Names, places and years in Task 1: \"the UK\" and \"2010\" stay as they are.",
+          "Words that change meaning when swapped: \"children\" is not \"offspring\" in an essay about schools, and \"old people\" is not \"ancient people\".",
+          "Register: \"kids\" for \"children\" and \"a lot of\" for \"many\" are paraphrases, but informal ones. In an essay they cost more than they gain.",
+          "It is fine to repeat a key term once or twice. Changing it every time, to \"youngsters\", \"juveniles\" and \"the younger generation\", reads as a thesaurus exercise.",
+        ],
+      },
+      {
+        heading: "How to paraphrase the Task 2 question: a worked example",
+        paragraphs: [
+          "Question: \"Some people believe that university education should be free for all students. Others think students should pay for their own studies. Discuss both views and give your own opinion.\"",
+          "Weak introduction: \"Some people believe that university education should be free for all students, while others think students should pay for their own studies. I will discuss both views.\" This is the question with a comma added.",
+          "Stronger introduction: \"Whether higher education should be funded by the state or by students themselves is widely debated. While some argue that tuition should cost nothing, others feel that those who benefit from a degree should cover its cost. This essay will discuss both positions before arguing that a shared model is the fairest.\"",
+          "What changed: \"university education\" became \"higher education\" (synonym); \"should be free\" became \"funded by the state\" and \"cost nothing\" (reframing); the two views were restructured into a \"Whether… or…\" noun clause; and the last sentence adds a position, which the question asked for. Two sentences of paraphrase plus a thesis is enough. Do not spend five minutes perfecting it.",
+        ],
+        links: [
+          { label: "IELTS writing templates and sentence patterns", href: "/templates" },
+        ],
+      },
+      {
+        heading: "Paraphrasing in Writing Task 1",
+        paragraphs: [
+          "Task 1 prompts follow a fixed pattern, so the paraphrase can be almost mechanical. Prompt: \"The line graph below shows the number of international students enrolled at universities in three countries between 2000 and 2020.\" Paraphrase: \"The line graph compares how many overseas students were enrolled at universities in three countries over the twenty years from 2000.\"",
+        ],
+        table: {
+          caption: "Common Task 1 prompt phrases and alternatives",
+          headers: ["Prompt says", "You can write"],
+          rows: [
+            ["shows", "illustrates, compares, gives information about"],
+            ["the number of", "how many"],
+            ["the proportion of", "what percentage of, the share of"],
+            ["between 2000 and 2020", "over a twenty-year period, from 2000 to 2020"],
+            ["in three countries", "in the UK, Canada and Australia (name them if the chart does)"],
+            ["the amount of money spent on", "spending on, expenditure on"],
+          ],
+        },
+        bullets: [
+          "Name the visual accurately. If the prompt says table, do not call it a graph; if it says bar chart, do not call it a line graph.",
+          "Follow the introduction with the overview. The paraphrase is one sentence; the overview is what Task Achievement is really judging.",
+        ],
+      },
+      {
+        heading: "Recognising paraphrase in IELTS Reading and Listening",
+        paragraphs: [
+          "Here the skill runs the other way: the test paraphrases and you have to notice. Question writers rarely use the passage's own words, so hunting for an exact match wastes time and leads you to distractors that do repeat the words.",
+        ],
+        table: {
+          caption: "How questions paraphrase the text",
+          headers: ["The question says", "The text says", "What to notice"],
+          rows: [
+            ["The scheme was unpopular with local residents", "People living nearby objected to the plan", "Synonyms plus a changed structure; still the same claim"],
+            ["Costs rose sharply after 2015", "Expenses increased dramatically in the years following 2015", "Every content word changed; the meaning did not"],
+            ["Most visitors come from abroad (True/False/Not Given)", "The majority of tourists are from overseas", "True: a paraphrase, not a different claim"],
+            ["What time does the tour start? (Listening)", "\"We used to leave at nine, but now we set off at half past\"", "\"Start\" became \"set off\"; the first time given is a distractor"],
+          ],
+        },
+        bullets: [
+          "Underline the key idea of each question, not just its keywords, and listen or read for that idea.",
+          "In True/False/Not Given, a paraphrase of the statement means True; a contradiction means False; nothing on the point means Not Given.",
+          "Then switch modes for completion answers: write the exact word you heard or read, not your own synonym. A correct meaning in different words can be marked wrong.",
+        ],
+        links: [
+          { label: "IELTS Reading tips, including True/False/Not Given", href: "/blog/ielts-reading-tips-improve-score" },
+          { label: "IELTS Listening strategies for synonyms and distractors", href: "/blog/ielts-listening-strategies" },
+        ],
+      },
+      {
+        heading: "Paraphrasing in IELTS Speaking",
+        paragraphs: [
+          "In Speaking, paraphrase is how you keep going when a word will not come. The official Lexical Resource descriptor at Bands 7 and 8 includes \"effective use of paraphrase as required\": the examiner is not expecting you to know every word, but to get round the ones you do not know.",
+        ],
+        bullets: [
+          "Describe it: \"It's a kind of…\", \"It's the thing you use to…\", \"It's a bit like… but…\".",
+          "Explain its purpose or effect: \"the people who look after the building at night\" for a word like caretaker.",
+          "Do not repeat the examiner's question back word for word. \"Do you enjoy cooking?\" can be answered \"I do, actually. Making meals at home is one of the ways I relax\", which already uses two paraphrases.",
+          "Do not stop to search. A fluent paraphrase is better than a long pause followed by the perfect word.",
+        ],
+      },
+      {
+        heading: "Should you use a paraphrasing tool?",
+        paragraphs: [
+          "Not for learning, and never as a model. Automatic paraphrasers swap words for dictionary synonyms without checking collocation or register, so they produce sentences like \"The administration ought to finance open conveyance\" for \"The government should fund public transport\". Learning from output like that trains exactly the errors the Band 7 descriptor calls inappropriacies in style and collocation. In the exam you have no tool anyway. Practise the techniques above until they are automatic.",
+        ],
+      },
+      {
+        heading: "IELTS paraphrasing exercises with answers",
+        paragraphs: [
+          "Paraphrase each sentence using at least two techniques. Then compare with the suggested answer; yours can be different and still correct.",
+        ],
+        table: {
+          caption: "Practice sentences",
+          headers: ["Sentence", "One possible answer"],
+          rows: [
+            ["Many young people spend too much time on social media.", "Young people often spend excessive amounts of time on social networking sites."],
+            ["The number of cars on the roads has increased.", "There has been a rise in road traffic."],
+            ["Some people think that zoos are cruel to animals.", "Zoos are considered cruel by some people."],
+            ["Online shopping is replacing traditional shops.", "Traditional retailers are increasingly losing customers to online stores."],
+            ["The chart shows the percentage of people who used public libraries in 2010 and 2020.", "The chart compares what proportion of the population visited public libraries in 2010 and a decade later."],
+            ["Governments should spend more money on healthcare.", "Increased public spending on healthcare is needed."],
+          ],
+        },
+      },
+      {
+        heading: "Practise paraphrasing where it is marked",
+        paragraphs: [
+          "Paraphrasing improves fastest when you can see whether it worked. On IELTSVega you can write a Task 1 or Task 2 answer and get an instant band score for each criterion, including Lexical Resource, then drill Reading and Listening question types where spotting paraphrase decides the answer.",
+        ],
+        links: [
+          { label: "Writing mistakes that hold people at 6.5", href: "/blog/writing-mistakes-stuck-at-6-5" },
+        ],
+      },
+    ],
+    faqs: [
+      { q: "How do you paraphrase in IELTS?", a: "Combine two or three techniques: replace some words with accurate synonyms, change a word's form (invest to investment), change the sentence structure (active to passive, or a clause to a noun phrase), and restate numbers (25% to a quarter). Keep technical terms and names unchanged. A single synonym swap on an otherwise copied sentence is not enough." },
+      { q: "Can I copy words from the question in IELTS Writing?", a: "You can reuse key terms that have no natural alternative, such as \"public transport\" or \"university\". Copying whole phrases or the full question, though, shows the examiner nothing about your own vocabulary and adds words without adding content. Paraphrase the question in your introduction, then write your own sentences." },
+      { q: "Should I paraphrase my answers in IELTS Listening?", a: "No. In completion questions, write the exact words you hear, spelled correctly and within the word limit. The questions paraphrase the audio, so you need to recognise paraphrase to find the answer, but the answer itself should be the speaker's word, not your synonym." },
+      { q: "How many words should I change when paraphrasing?", a: "There is no set number. Aim to change the structure of the sentence and the words that have natural alternatives, while keeping technical terms, names and numbers accurate. If your version would be recognised as the original sentence with two words swapped, change the structure as well." },
+      { q: "Is using synonyms enough for IELTS paraphrasing?", a: "Rarely. Synonyms alone often leave the sentence looking copied, and forced synonyms are a common source of collocation and register errors, which the Lexical Resource descriptors penalise. Combine synonyms with word form and structure changes, and keep any word that has no true equivalent." },
+      { q: "Should I paraphrase the question in IELTS Speaking?", a: "Briefly, yes. Echoing the examiner's question word for word sounds rehearsed, while starting your answer with a natural rephrasing shows range and buys a second of thinking time. Keep it short and move straight into your actual answer, with a reason or an example." },
+      { q: "Is it okay to use a paraphrasing tool to practise?", a: "It is better not to. Automatic paraphrasers choose dictionary synonyms without checking collocation or register, so they produce sentences that sound unnatural. Studying them trains the kind of word-choice errors that hold Lexical Resource down. Practise the techniques by hand, then get feedback on real answers." },
     ],
   },
 ];
