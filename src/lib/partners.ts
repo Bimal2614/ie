@@ -144,6 +144,8 @@ export type PartnerStudent = {
   planExpiresAt: Date | null;
   joinedAt: Date;
   lastLoginAt: Date | null;
+  /** Locked out (`users.deactivated_at`) — the admin roster offers Enable/Disable on it. */
+  deactivatedAt: Date | null;
 
   /** Practice activity, so a roster row shows progress without a click. */
   attempts: number;
@@ -173,6 +175,7 @@ const studentColumns = {
   planExpiresAt: users.planExpiresAt,
   createdAt: users.createdAt,
   lastLoginAt: users.lastLoginAt,
+  deactivatedAt: users.deactivatedAt,
 };
 
 /**
@@ -393,6 +396,7 @@ export async function partnerStudents(
       planExpiresAt: u.planExpiresAt,
       joinedAt: u.createdAt,
       lastLoginAt: u.lastLoginAt,
+      deactivatedAt: u.deactivatedAt,
       attempts: p?.attempts ?? 0,
       avgBand: p?.avgBand ?? null,
       mocks: m?.taken ?? 0,
@@ -564,6 +568,7 @@ export async function partnerStudentDetail(
       planExpiresAt: row.planExpiresAt,
       joinedAt: row.createdAt,
       lastLoginAt: row.lastLoginAt,
+      deactivatedAt: row.deactivatedAt,
       attempts: p?.attempts ?? 0,
       avgBand: p?.avgBand ?? null,
       mocks: m?.taken ?? 0,

@@ -4,13 +4,17 @@ import { useState, useTransition } from "react";
 import { Loader2, UserMinus } from "lucide-react";
 
 import { removeStudentFromPartner } from "@/app/actions/admin";
+import { StudentControls } from "@/components/admin/student-controls";
+import type { PlanKey } from "@/lib/plans";
 
 /**
  * One student on an institution's roster, in the ADMIN console.
  *
- * The row exists as a client component for one reason: the Remove button. The
- * class's own panel has no equivalent and is not getting one — a partner
- * removing a student would be editing our record of who it bought a plan for.
+ * The row exists as a client component for the Remove button, and it carries
+ * the same grant / lock-out controls as /admin/students so a class's trial
+ * week can be given from its own roster. The class's own panel gets none of
+ * this — a partner removing a student or granting a plan would be editing our
+ * record of who it bought a plan for.
  *
  * Labels arrive pre-formatted from the server for the same reason they do on
  * /admin/students: a date rendered here would read the viewer's timezone and
@@ -21,6 +25,9 @@ export type AdminPartnerStudent = {
   name: string;
   email: string;
   planLabel: string;
+  /** The EFFECTIVE plan, for the grant controls. */
+  plan: PlanKey;
+  disabled: boolean;
   attempts: number;
 };
 
@@ -53,6 +60,13 @@ export function PartnerStudentRow({ student }: { student: AdminPartnerStudent })
       <span className="w-24 text-right text-xs tabular-nums text-ink-muted">
         {student.attempts} attempts
       </span>
+
+      <StudentControls
+        studentId={student.id}
+        name={student.name}
+        plan={student.plan}
+        disabled={student.disabled}
+      />
 
       {confirming ? (
         <span className="flex items-center gap-2">

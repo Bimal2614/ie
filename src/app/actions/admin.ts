@@ -28,6 +28,8 @@ import {
 function revalidateStudentScreens() {
   revalidatePath("/admin/students");
   revalidatePath("/admin/students/[id]", "page");
+  // A class's roster carries the same controls, so it goes stale with them.
+  revalidatePath("/admin/partners/[id]", "page");
 }
 
 /**
@@ -143,6 +145,11 @@ const verifySchema = z.object({
     .refine(isOfferedPlan, "That plan is not on sale."),
   /** 0 means "never lapses"; anything else is that many months from now. */
   months: z.number().int().min(0).max(24),
+  /**
+   * A grant shorter than a month — a partner's free trial week. When present it
+   * wins over `months`, which the screen still sends as the select's fallback.
+   */
+  days: z.number().int().min(1).max(31).optional(),
 });
 
 export type VerifyStudentInput = z.input<typeof verifySchema>;
@@ -156,7 +163,7 @@ export async function verifyStudent(input: VerifyStudentInput): Promise<AdminAct
 
   const parsed = verifySchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "That request wasn't valid." };
-  const { userId, plan, months } = parsed.data;
+  const { userId, plan, months, days } = parsed.data;
 
   const [target] = await db
     .select({ role: users.role })
@@ -171,12 +178,16 @@ export async function verifyStudent(input: VerifyStudentInput): Promise<AdminAct
   const sub = await grantPlan({
     userId,
     plan,
-    periodEnd: months === 0 ? null : periodEndFor(new Date(), months),
+    periodEnd: days
+      ? new Date(Date.now() + days * 24 * 60 * 60 * 1000)
+      : months === 0
+        ? null
+        : periodEndFor(new Date(), months),
     priceCents: null,
     actor: "admin",
     actorUserId: admin.id,
     note: `Verified by ${admin.email} — manual grant, no payment gateway yet`,
-    metadata: { via: "verify-students", months },
+    metadata: { via: "verify-students", ...(days ? { days } : { months }) },
   });
 
   revalidatePath("/verify-students");

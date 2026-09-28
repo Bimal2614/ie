@@ -147,6 +147,8 @@ export default async function AdminPartnerPage({
                     s.plan === "free"
                       ? "Free"
                       : `${PLANS[s.plan].label}${s.planExpiresAt ? ` to ${date(s.planExpiresAt)}` : ""}`,
+                  plan: s.plan,
+                  disabled: Boolean(s.deactivatedAt),
                   attempts: s.attempts,
                 }}
               />

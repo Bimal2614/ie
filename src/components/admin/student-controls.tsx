@@ -27,14 +27,20 @@ import { cn } from "@/lib/utils";
  * the gate.
  */
 
-/** 0 means "never lapses". Kept in step with the bound in the action. */
+/**
+ * `months: 0` means "never lapses"; `days` is a sub-month grant (a partner's
+ * trial week) and wins over `months` in the action. Kept in step with the
+ * bounds there.
+ */
 const DURATIONS = [
-  { months: 1, label: "1 month" },
-  { months: 3, label: "3 months" },
-  { months: 6, label: "6 months" },
-  { months: 12, label: "12 months" },
-  { months: 0, label: "No expiry" },
+  { key: "7d", months: 0, days: 7, label: "7 days" },
+  { key: "1m", months: 1, label: "1 month" },
+  { key: "3m", months: 3, label: "3 months" },
+  { key: "6m", months: 6, label: "6 months" },
+  { key: "12m", months: 12, label: "12 months" },
+  { key: "none", months: 0, label: "No expiry" },
 ] as const;
+type DurationKey = (typeof DURATIONS)[number]["key"];
 
 const CONTROL =
   "h-9 rounded-lg border border-line bg-paper-elev px-2.5 text-sm text-ink outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand/15 disabled:opacity-50";
@@ -55,7 +61,7 @@ export function StudentControls({
   disabled: boolean;
   className?: string;
 }) {
-  const [months, setMonths] = useState<number>(3);
+  const [duration, setDuration] = useState<DurationKey>("3m");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   // Taking access away from someone mid-course asks once first.
@@ -108,14 +114,14 @@ export function StudentControls({
         ) : (
           <>
             <select
-              value={months}
-              onChange={(e) => setMonths(Number(e.target.value))}
+              value={duration}
+              onChange={(e) => setDuration(e.target.value as DurationKey)}
               disabled={pending}
               aria-label={`Duration for ${name}`}
               className={CONTROL}
             >
               {DURATIONS.map((d) => (
-                <option key={d.months} value={d.months}>
+                <option key={d.key} value={d.key}>
                   {d.label}
                 </option>
               ))}
@@ -123,9 +129,17 @@ export function StudentControls({
             <button
               type="button"
               disabled={pending}
-              onClick={() =>
-                run(() => verifyStudent({ userId: studentId, plan: DEFAULT_OFFERED_PLAN, months }))
-              }
+              onClick={() => {
+                const d = DURATIONS.find((x) => x.key === duration)!;
+                run(() =>
+                  verifyStudent({
+                    userId: studentId,
+                    plan: DEFAULT_OFFERED_PLAN,
+                    months: d.months,
+                    days: "days" in d ? d.days : undefined,
+                  }),
+                );
+              }}
               className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-brand-hover disabled:opacity-50"
             >
               {pending ? <Loader2 className="size-3.5 animate-spin" /> : <BadgeCheck className="size-3.5" />}
