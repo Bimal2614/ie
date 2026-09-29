@@ -45,10 +45,8 @@ const EnvSchema = z.object({
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_MODEL: z.string().default("gpt-5.4-mini"),
   // "1" makes every Writing scoring call fail without contacting OpenAI — for
-  // checking that failures show up in the logs. TEMPORARILY ON BY DEFAULT while
-  // the log lines are verified: set WRITING_AI_FORCE_FAIL=0 to score normally,
-  // and put this default back to off once the test is done.
-  WRITING_AI_FORCE_FAIL: z.string().default("1"),
+  // checking that failures show up in the logs. Off unless explicitly set.
+  WRITING_AI_FORCE_FAIL: z.string().default("0"),
 
   // --- Transactional email (SMTP — any provider). Optional: without it,
   //     verification/reset emails are skipped (link is logged in dev). ---

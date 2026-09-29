@@ -134,3 +134,6 @@ whatsapp/
 # news-watch skill output (2026-09-24): the event ledger, drafts, Slack outbox
 # and run logs. Working notes, same reasoning as content-research/.
 news/
+
+.vercel
+.env*
