@@ -228,12 +228,18 @@ export async function scoreAttemptWritingFor(
   // a two-task Writing paper shouldn't wait for Task 2 to show Task 1's band.
   // Contained per task, for the same reason as speaking above.
   const outcomes = await mapWithConcurrency(rows, SCORING_CONCURRENCY, (row) =>
-    gradeOne(row).catch(() => false),
+    gradeOne(row).catch((e) => {
+      console.error(`[scoring] writing: threw response=${row.id}`, e);
+      return false;
+    }),
   );
 
   const scored = outcomes.filter((o) => o === true).length;
   // `null` means there was nothing to grade — not a failure.
   const failed = outcomes.filter((o) => o === false).length;
+  // One line per run, as for speaking: without it a failing OpenAI key leaves
+  // nothing in the log but a 200 POST.
+  console.info(`[scoring] writing run attempt=${attemptId} scored=${scored} failed=${failed}`);
   return { scored, failed };
 
   async function gradeOne(row: (typeof rows)[number]): Promise<boolean | null> {
@@ -261,7 +267,16 @@ export async function scoreAttemptWritingFor(
       // section can set its own.
       wordMin: resolved?.wordLimitMin ?? meta.wordLimitMin ?? (qt === "writing_task2" ? 250 : 150),
     });
-    if (!result.ok) return false;
+    if (!result.ok) {
+      // Interpolated for the same reason as the speaking line: some log sinks
+      // drop an object argument. `detail` carries OpenAI's own error body,
+      // which is the only thing telling a spent quota from a wrong model.
+      console.error(
+        `[scoring] writing: not scored response=${row.id} reason=${result.reason}` +
+          ` status=${result.status ?? "-"} detail=${result.detail ?? "-"}`,
+      );
+      return false;
+    }
 
     const s = result.score;
     await db

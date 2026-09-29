@@ -44,6 +44,11 @@ const EnvSchema = z.object({
   //     runs without it; Writing simply stays unscored until the key is set. ---
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_MODEL: z.string().default("gpt-5.4-mini"),
+  // "1" makes every Writing scoring call fail without contacting OpenAI — for
+  // checking that failures show up in the logs. TEMPORARILY ON BY DEFAULT while
+  // the log lines are verified: set WRITING_AI_FORCE_FAIL=0 to score normally,
+  // and put this default back to off once the test is done.
+  WRITING_AI_FORCE_FAIL: z.string().default("1"),
 
   // --- Transactional email (SMTP — any provider). Optional: without it,
   //     verification/reset emails are skipped (link is logged in dev). ---
@@ -176,6 +181,7 @@ export const env = EnvSchema.parse({
   SPEAKING_API_KEY: process.env.SPEAKING_API_KEY,
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   OPENAI_MODEL: process.env.OPENAI_MODEL,
+  WRITING_AI_FORCE_FAIL: process.env.WRITING_AI_FORCE_FAIL,
   SMTP_HOST: process.env.SMTP_HOST,
   SMTP_PORT: process.env.SMTP_PORT,
   SMTP_USER: process.env.SMTP_USER,

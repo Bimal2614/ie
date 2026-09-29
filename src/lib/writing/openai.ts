@@ -333,6 +333,16 @@ export async function scoreWriting(params: {
   wordMin: number;
 }): Promise<WritingScoreResult> {
   if (!isWritingAiConfigured()) return { ok: false, reason: "not_configured" };
+  // Deliberate failure switch, for proving the failure path is visible in the
+  // logs. Returns before any request, so it costs nothing.
+  if (env.WRITING_AI_FORCE_FAIL === "1") {
+    return {
+      ok: false,
+      reason: "request_failed",
+      detail: "forced failure (WRITING_AI_FORCE_FAIL=1)",
+      status: 503,
+    };
+  }
 
   const written = params.text.trim();
   const wordCount = countWords(written);

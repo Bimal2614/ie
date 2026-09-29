@@ -64,12 +64,18 @@ export function scheduleAttemptScoring(userId: string, attemptId: string): void 
       // lapse in between, and a row written while entitled must not pull a
       // scoring call afterwards. Reads the tier from the row, since there is no
       // session here. Rows stay band-less, exactly as an outage leaves them.
-      if (!(await userMayUseAiScoring(userId))) return;
+      if (!(await userMayUseAiScoring(userId))) {
+        console.warn(`[scoring] skipped attempt=${attemptId} reason=plan_has_no_ai_scoring`);
+        return;
+      }
 
       const sections = new Set(pending.map((p) => p.section));
       // No allowance left: leave the rows band-less exactly as an outage would,
       // for the sweeper to pick up once the window rolls over.
-      if (!(await tryConsumeAi(userId)).allowed) return;
+      if (!(await tryConsumeAi(userId)).allowed) {
+        console.warn(`[scoring] skipped attempt=${attemptId} reason=ai_allowance_spent`);
+        return;
+      }
 
       // Sequential, not parallel: they share one per-account AI budget, and a
       // writing grade finishing first is worth more than both landing together.
