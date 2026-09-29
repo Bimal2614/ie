@@ -47,13 +47,15 @@ jobs:
           set -u
           if [ -z "$CRON_SECRET" ]; then echo "::error::CRON_SECRET secret is not set"; exit 1; fi
           # Up to ~10 minutes for the domain to switch to this build. A 409 is
-          # free: the route checks the commit before running anything.
+          # free: the route checks the commit before running anything. A 404 is
+          # retried too — the previous build may still hold an older CRON_SECRET
+          # (a rotated secret only takes effect with the next deploy).
           for attempt in $(seq 1 30); do
             code=$(curl -sS -o report.json -w '%{http_code}' --max-time 330 \
               -H "Authorization: Bearer $CRON_SECRET" \
               "$ENDPOINT?expect=$SHA" || echo 000)
-            [ "$code" != "409" ] && break
-            echo "attempt $attempt: site still serving $(jq -r .commit report.json), waiting for $SHA"
+            [ "$code" != "409" ] && [ "$code" != "404" ] && break
+            echo "attempt $attempt: HTTP $code, site not yet serving $SHA with this secret"
             sleep 20
           done
           echo "http=$code" >> "$GITHUB_OUTPUT"
@@ -75,7 +77,7 @@ jobs:
               + " · email " + (if .emailed.sent then "sent to \(.recipients) admin(s)" else "NOT sent (\(.emailed.reason))" end)
               + "\n```\n\(.mail.text)\n```\n<\($run)|Workflow run>"' report.json)
           elif [ "${HTTP:-000}" = "409" ]; then
-            text=":warning: *Smoke test skipped* for <$COMMIT_URL|$short> — www.ieltsvega.com was still serving $(jq -r .commit report.json) after 10 minutes, so the new build was never tested.
+            text=":warning: *Smoke test skipped* for <$COMMIT_URL|$short> — www.ieltsvega.com was still serving $(jq -r .commit report.json 2>/dev/null) after 10 minutes, so the new build was never tested.
           <$RUN_URL|Workflow run>"
           else
             text=":rotating_light: *Smoke test could not run* after deploy <$COMMIT_URL|$short> — HTTP ${HTTP:-000} from $ENDPOINT (404 means CRON_SECRET does not match production).
