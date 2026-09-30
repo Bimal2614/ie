@@ -1,6 +1,7 @@
 import "server-only";
 import { env, isWritingAiConfigured } from "@/lib/env";
 import { countWords, truncateToWords, writingWordCap } from "@/lib/ielts";
+import { alert } from "@/lib/monitoring/alert";
 import task1Descriptors from "@/app/utils/writing_band_descriptor_task_1.json";
 import task2Descriptors from "@/app/utils/writing_band_descriptor_task_2.json";
 
@@ -325,13 +326,35 @@ function isTaskCompliance(v: unknown): v is TaskCompliance {
  * Scoring
  * ------------------------------------------------------------------ */
 
-export async function scoreWriting(params: {
+type WritingScoreParams = {
   text: string;
   taskType: WritingTaskType;
   module: string;
   questionPrompt: string;
   wordMin: number;
-}): Promise<WritingScoreResult> {
+};
+
+/**
+ * Grade one Writing response. Every failure that is ours or OpenAI's — not the
+ * candidate's — also goes to Slack, so a spent balance or a retired model is
+ * noticed on the first answer it costs rather than at the next smoke test.
+ */
+export async function scoreWriting(params: WritingScoreParams): Promise<WritingScoreResult> {
+  const result = await requestWritingScore(params);
+  // "empty" is a candidate who wrote nothing, not an outage.
+  if (!result.ok && result.detail !== "empty") {
+    await alert({
+      source: "writing-ai",
+      title: `Writing scoring failed: ${result.reason}`,
+      status: result.status,
+      detail: result.detail ?? result.reason,
+      context: { provider: "OpenAI", model: env.OPENAI_MODEL, task: params.taskType },
+    });
+  }
+  return result;
+}
+
+async function requestWritingScore(params: WritingScoreParams): Promise<WritingScoreResult> {
   if (!isWritingAiConfigured()) return { ok: false, reason: "not_configured" };
   // Deliberate failure switch, for proving the failure path is visible in the
   // logs. Returns before any request, so it costs nothing.

@@ -16,6 +16,7 @@ import {
 } from "@/lib/payments/billing";
 import { RazorpayApiError, verifyCheckoutSignature } from "@/lib/payments/razorpay";
 import { currentSubscription, requestCancellation } from "@/lib/subscriptions";
+import { alert } from "@/lib/monitoring/alert";
 
 /**
  * The three things a candidate can do about their own subscription: start one,
@@ -106,6 +107,7 @@ export async function startCheckout(plan: string, currency?: string): Promise<Ch
      */
     if (error instanceof PlanConfigError) {
       console.error(`[billing] plan misconfigured: ${error.message}`);
+      await alert({ source: "billing", title: "Checkout refused: Razorpay plan does not match the pricing page", detail: error.message });
       return { ok: false, error: CHECKOUT_UNAVAILABLE };
     }
     // The most likely gateway failure is a currency the account is not approved
@@ -113,6 +115,7 @@ export async function startCheckout(plan: string, currency?: string): Promise<Ch
     // so it is logged whole.
     if (error instanceof RazorpayApiError) {
       console.error(`[billing] Razorpay refused to open a checkout: ${error.message}`);
+      await alert({ source: "billing", title: "Razorpay refused to open a checkout — a customer could not pay", detail: error.message });
       return { ok: false, error: CHECKOUT_UNAVAILABLE };
     }
     throw error;

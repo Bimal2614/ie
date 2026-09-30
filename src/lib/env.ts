@@ -91,6 +91,15 @@ const EnvSchema = z.object({
    * That way a misconfigured recipient list never turns into a failing cron.
    */
   ADMIN_EMAILS: z.string().transform(unquote).optional(),
+  /**
+   * Slack incoming webhook for production alerts (src/lib/monitoring/alert.ts)
+   * — the same channel news-watch and the post-deploy smoke test post to.
+   * Optional: without it, failures are only logged.
+   */
+  SLACK_WEBHOOK_URL: z.string().transform(unquote).optional(),
+  // "1" sends alerts from a dev server too. Off by default, since .env.local
+  // carries the production webhook.
+  ALERTS_IN_DEV: z.string().default("0"),
 
   // --- Razorpay (recurring subscriptions). Optional: the app boots without
   //     them and every paid button falls back to saying checkout is
@@ -196,6 +205,8 @@ export const env = EnvSchema.parse({
   RATE_LIMIT_VIOLATION_WINDOW_DAYS: process.env.RATE_LIMIT_VIOLATION_WINDOW_DAYS,
   CRON_SECRET: process.env.CRON_SECRET,
   ADMIN_EMAILS: process.env.ADMIN_EMAILS,
+  SLACK_WEBHOOK_URL: process.env.SLACK_WEBHOOK_URL,
+  ALERTS_IN_DEV: process.env.ALERTS_IN_DEV,
   RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
   RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET,
   RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET,

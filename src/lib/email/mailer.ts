@@ -1,6 +1,7 @@
 import "server-only";
 import nodemailer, { type Transporter } from "nodemailer";
 import { env, isEmailConfigured, isProd } from "@/lib/env";
+import { alert } from "@/lib/monitoring/alert";
 
 /**
  * SMTP mailer (provider-agnostic — SES, Mailgun, Postmark, Gmail, Resend-SMTP…).
@@ -54,6 +55,14 @@ export async function sendEmail(opts: {
     return { ok: true };
   } catch (e) {
     console.error("[email] send failed:", e);
+    // No recipient address: it is PII, and the subject says which mail it was.
+    await alert({
+      source: "email",
+      title: `Email send failed: "${opts.subject}"`,
+      error: e,
+      hint: "📧 SMTP rejected or unreachable — verification and reset emails are not arriving. Check SMTP_* credentials and the provider's sending limits.",
+      key: "email|send-failed",
+    });
     return { ok: false, error: e instanceof Error ? e.message : "send failed" };
   }
 }

@@ -14,6 +14,7 @@ import {
   scorableMockAnswer,
   scorableResponse,
 } from "@/lib/scoring/pending";
+import { alert } from "@/lib/monitoring/alert";
 
 /**
  * The scoring sweeper: everything `after()` could not finish.
@@ -149,6 +150,7 @@ async function sweepAttempts(from: Date, until: Date, startedAt: number): Promis
     } catch (e) {
       // One bad attempt must not end the sweep for the ones behind it.
       console.error("[cron/scoring] attempt failed", { attemptId: job.attemptId, error: e });
+      await alert({ source: "cron/scoring", title: "Scoring sweeper: attempt crashed", error: e, context: { attemptId: job.attemptId } });
     }
   }
 
@@ -200,6 +202,7 @@ async function sweepSittings(from: Date, until: Date, startedAt: number): Promis
       scored += w.scored + s.scored;
     } catch (e) {
       console.error("[cron/scoring] sitting failed", { sessionId: job.sessionId, error: e });
+      await alert({ source: "cron/scoring", title: "Scoring sweeper: mock sitting crashed", error: e, context: { sessionId: job.sessionId } });
     }
   }
 

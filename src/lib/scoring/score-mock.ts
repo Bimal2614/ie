@@ -21,6 +21,7 @@ import {
   unscorableFeedback,
 } from "./speaking-feedback";
 import { mapWithConcurrency } from "./concurrency";
+import { alert } from "@/lib/monitoring/alert";
 
 /**
  * AI band scoring for a finished mock sitting.
@@ -118,8 +119,9 @@ export async function scoreMockSpeakingFor(
   // call, a tab closed before the request went out, a sitting from before that
   // path existed.
   const results = await mapWithConcurrency(rows, MOCK_SCORING_CONCURRENCY, (row) =>
-    scoreSpeakingRow(row, prompts.get(row.id)).catch((e) => {
+    scoreSpeakingRow(row, prompts.get(row.id)).catch(async (e) => {
       console.error(`[scoring] mock speaking: threw answer=${row.id}`, e);
+      await alert({ source: "scoring", title: "Mock speaking answer scoring threw", error: e, context: { answerId: row.id } });
       return null;
     }),
   );
@@ -210,6 +212,12 @@ async function scoreSpeakingRow(
   const audioUrl = await presignGetUrl(key, MOCK_SIGNED_URL_TTL_SEC);
   if (!audioUrl) {
     console.warn(`[scoring] mock speaking: could not presign audio answer=${row.id} key=${key}`);
+    await alert({
+      source: "s3",
+      title: "Could not sign a speaking recording URL — speaking cannot be scored",
+      hint: "⚙️ S3 is not configured on this deployment (AWS_* / S3_BUCKET_NAME).",
+      context: { answerId: row.id },
+    });
     return null;
   }
 
@@ -319,8 +327,9 @@ export async function scoreMockSpeakingAnswerFor(
     { id: answer.id, questionId: null, setId: answer.sectionId, questionNumber: answer.questionNumber },
   ]);
 
-  const band = await scoreSpeakingRow(answer, prompts.get(answer.id)).catch((e) => {
+  const band = await scoreSpeakingRow(answer, prompts.get(answer.id)).catch(async (e) => {
     console.error(`[scoring] mock speaking live: threw answer=${answer.id}`, e);
+    await alert({ source: "scoring", title: "Live mock speaking answer threw", error: e, context: { answerId: answer.id } });
     return null;
   });
   console.info(`[scoring] mock speaking live answer=${answer.id} band=${band ?? "-"}`);
@@ -477,8 +486,9 @@ export async function scoreMockWritingFor(
 
   // Graded together; a two-task paper should not wait for Task 2 to record Task 1.
   const graded = await mapWithConcurrency(rows, MOCK_SCORING_CONCURRENCY, (row) =>
-    gradeOne(row).catch((e) => {
+    gradeOne(row).catch(async (e) => {
       console.error(`[scoring] mock writing: threw answer=${row.id}`, e);
+      await alert({ source: "scoring", title: "Mock writing answer scoring threw", error: e, context: { answerId: row.id } });
       return false;
     }),
   );

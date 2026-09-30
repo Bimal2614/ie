@@ -10,6 +10,7 @@ import { failureFeedback, speakingFeedback, unscorableFeedback } from "./speakin
 import { scoreWriting, type WritingTaskType } from "@/lib/writing/openai";
 import { resolvePrompts } from "./prompts";
 import { mapWithConcurrency } from "./concurrency";
+import { alert } from "@/lib/monitoring/alert";
 
 /**
  * AI band scoring for one attempt's subjective answers.
@@ -103,8 +104,9 @@ export async function scoreAttemptSpeakingFor(
     // question 3 must not cost questions 4 to 7 their bands, so each is
     // contained and reported as unscored — but never swallowed silently, or a
     // whole batch can fail with nothing anywhere to say why.
-    scoreOne(row).catch((e) => {
+    scoreOne(row).catch(async (e) => {
       console.error("[scoring] speaking: threw", { responseId: row.id, error: e });
+      await alert({ source: "scoring", title: "Speaking answer scoring threw", error: e, context: { responseId: row.id } });
       return false;
     }),
   );
@@ -129,6 +131,12 @@ export async function scoreAttemptSpeakingFor(
     const audioUrl = await presignGetUrl(key, SIGNED_URL_TTL_SEC);
     if (!audioUrl) {
       console.warn("[scoring] speaking: could not presign audio", { responseId: row.id, key });
+      await alert({
+        source: "s3",
+        title: "Could not sign a speaking recording URL — speaking cannot be scored",
+        hint: "⚙️ S3 is not configured on this deployment (AWS_* / S3_BUCKET_NAME).",
+        context: { responseId: row.id },
+      });
       return false;
     }
 
@@ -228,8 +236,9 @@ export async function scoreAttemptWritingFor(
   // a two-task Writing paper shouldn't wait for Task 2 to show Task 1's band.
   // Contained per task, for the same reason as speaking above.
   const outcomes = await mapWithConcurrency(rows, SCORING_CONCURRENCY, (row) =>
-    gradeOne(row).catch((e) => {
+    gradeOne(row).catch(async (e) => {
       console.error(`[scoring] writing: threw response=${row.id}`, e);
+      await alert({ source: "scoring", title: "Writing answer scoring threw", error: e, context: { responseId: row.id } });
       return false;
     }),
   );

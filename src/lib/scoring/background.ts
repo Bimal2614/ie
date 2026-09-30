@@ -13,6 +13,7 @@ import {
   scoreMockSpeakingFor,
   scoreMockWritingFor,
 } from "./score-mock";
+import { alert } from "@/lib/monitoring/alert";
 
 /**
  * Kick off AI band scoring for an attempt AFTER the response has been sent.
@@ -85,6 +86,7 @@ export function scheduleAttemptScoring(userId: string, attemptId: string): void 
       // An outage must never surface as a failed submit — the answers are
       // already saved, and the sweeper re-runs this.
       console.error("[scoring] background run failed", { attemptId, error: e });
+      await alert({ source: "scoring", title: "Practice scoring run crashed", error: e, context: { attemptId } });
     }
   });
 }
@@ -143,6 +145,7 @@ export function scheduleMockScoring(userId: string, sessionId: string): void {
       if (sections.has("speaking")) await scoreMockSpeakingFor(userId, sessionId);
     } catch (e) {
       console.error("[scoring] background mock run failed", { sessionId, error: e });
+      await alert({ source: "scoring", title: "Mock scoring run crashed", error: e, context: { sessionId } });
     }
   });
 }
@@ -170,6 +173,7 @@ export function scheduleMockAnswerScoring(userId: string, answerId: string): voi
       await scoreMockSpeakingAnswerFor(userId, answerId);
     } catch (e) {
       console.error(`[scoring] background mock answer failed answer=${answerId}`, e);
+      await alert({ source: "scoring", title: "Live mock speaking scoring crashed", error: e, context: { answerId } });
     }
   });
 }

@@ -4,6 +4,7 @@ import { sendEmail } from "@/lib/email/mailer";
 import { isAuthorizedCron } from "@/lib/security/cron-auth";
 import { smokeTestEmail } from "@/lib/monitoring/smoketest-email";
 import { runSmokeTest } from "@/lib/monitoring/smoketest";
+import { alert } from "@/lib/monitoring/alert";
 
 /**
  * The AI smoke test: does band scoring still work?
@@ -94,7 +95,19 @@ export async function GET(request: Request) {
     })),
   };
   if (report.ok) console.info("[cron/smoketest] passed", summary);
-  else console.error("[cron/smoketest] FAILED", summary);
+  else {
+    console.error("[cron/smoketest] FAILED", summary);
+    // Slack as well as mail: the mail is the full report, this is the page.
+    const failures = report.checks.filter((c) => c.failure);
+    await alert({
+      source: "smoketest",
+      title: `AI smoke test FAILED — ${report.failed} of ${report.checks.length} checks`,
+      detail: failures
+        .map((c) => `${c.id}  [${c.failure!.kind}]  HTTP ${c.status ?? "-"}  ${c.failure!.detail}`)
+        .join("\n"),
+      hint: "Real answers re-scored through the live clients did not come back with a band. Full report is in the admin email.",
+    });
+  }
 
   const mode = emailMode(url);
   const shouldEmail = mode === "always" || (mode === "failures" && !report.ok);
