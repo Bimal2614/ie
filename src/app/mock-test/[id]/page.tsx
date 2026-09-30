@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getMockSitting } from "@/app/actions/mock";
 import { MockPlayer } from "@/components/mock/mock-player";
-import { isUuid } from "@/lib/uuid";
+import { isUuid, redashUuid } from "@/lib/uuid";
 
 /**
  * Room for the scoring that runs after the response.
@@ -24,6 +24,8 @@ export const metadata: Metadata = { title: "Full mock · IELTSVega", robots: { i
 
 export default async function MockTestPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const redashed = redashUuid(id);
+  if (redashed) redirect(`/mock-test/${redashed}`);
   if (!isUuid(id)) redirect("/mock-tests");
 
   // A sitting under way is NEVER interrupted by a plan check. Starting one is

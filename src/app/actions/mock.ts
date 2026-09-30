@@ -2,6 +2,7 @@
 
 import { and, asc, desc, eq, gt, inArray, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import {
   mockTests,
@@ -328,6 +329,11 @@ export async function abandonMock(formData: FormData): Promise<void> {
       ),
     );
 
+  // The button sits ON /mock-tests, so this redirect lands on the page the
+  // candidate is already looking at — and without a revalidate the router
+  // served its cached copy, still showing the open sitting and every Start
+  // locked until a manual reload.
+  revalidatePath("/mock-tests");
   redirect("/mock-tests");
 }
 
@@ -421,6 +427,10 @@ export async function getMockSitting(sessionId: string): Promise<MockSittingStat
   const loaded = await loadSitting(sessionId, user.id);
   if (!loaded) return { status: "missing" };
   const { session, timeline } = loaded;
+  // An abandoned sitting has no report: `abandonMock` closes it without grading.
+  // Calling it "finished" sent the player's old tab, a reload or the back button
+  // to /results/<id>, which has no result row to show and 404'd.
+  if (session.status === "abandoned") return { status: "missing" };
   if (session.status !== "in_progress") return { status: "finished" };
 
   const outline = await outlineMockTest(session.mockTestId);

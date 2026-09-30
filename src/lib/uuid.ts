@@ -29,3 +29,20 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 export function isUuid(value: string | null | undefined): value is string {
   return typeof value === "string" && UUID_RE.test(value);
 }
+
+const BARE_HEX_RE = /^[0-9a-f]{32}$/i;
+
+/**
+ * The dashed form of an id that arrived with its hyphens stripped, else null.
+ *
+ * Chat apps and "copy link" paths sometimes drop the dashes from a shared URL,
+ * so a student reports `/results/739d5fc6b1e14466bc4e514d1cf3320e`. That is the
+ * same id, and Postgres would accept it, but `isUuid` rightly refuses it and the
+ * page 404s. Pages that candidates share call this first and redirect to the
+ * canonical URL, so the check above stays the single, strict shape.
+ */
+export function redashUuid(value: string | null | undefined): string | null {
+  if (typeof value !== "string" || !BARE_HEX_RE.test(value)) return null;
+  const v = value.toLowerCase();
+  return `${v.slice(0, 8)}-${v.slice(8, 12)}-${v.slice(12, 16)}-${v.slice(16, 20)}-${v.slice(20)}`;
+}

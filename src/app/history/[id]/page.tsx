@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, Check, X } from "lucide-react";
 import { getAttemptDetail, type AttemptDetail } from "@/app/actions/history";
-import { isUuid } from "@/lib/uuid";
+import { isUuid, redashUuid } from "@/lib/uuid";
 import { practiceInstruction, QUESTION_TYPES, SECTIONS } from "@/lib/ielts";
 import type { Answer } from "@/lib/question-content";
 import type { PlayerSet, PlayerQuestion, PlayerResult } from "@/components/practice/set-body";
@@ -17,6 +17,8 @@ export default async function AttemptPage({ params }: { params: Promise<{ id: st
   // A stale bookmark or a truncated shared link is a 404, not a crash: the
   // attempt id reaches a `uuid` column, where "abc" is a driver cast error
   // served as a 500. See src/lib/uuid.ts.
+  const redashed = redashUuid(id);
+  if (redashed) redirect(`/history/${redashed}`);
   if (!isUuid(id)) notFound();
 
   const a = await getAttemptDetail(id);

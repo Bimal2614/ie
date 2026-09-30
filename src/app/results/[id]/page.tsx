@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Sparkles } from "lucide-react";
 import { getMockResult } from "@/app/actions/mock";
-import { isUuid } from "@/lib/uuid";
+import { isUuid, redashUuid } from "@/lib/uuid";
 import { SECTIONS } from "@/lib/ielts";
 import { buttonVariants } from "@/components/ui/button";
 import { LocalTime } from "@/components/history/local-time";
@@ -24,6 +24,8 @@ export const metadata: Metadata = { title: "Mock result · IELTSVega", robots: {
 
 export default async function ResultPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const redashed = redashUuid(id);
+  if (redashed) redirect(`/results/${redashed}`);
   if (!isUuid(id)) notFound(); // see src/lib/uuid.ts
   const result = await getMockResult(id);
   if (!result) notFound();
