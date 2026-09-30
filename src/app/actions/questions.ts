@@ -1,13 +1,14 @@
 "use server";
 
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { questionSets, questions, userResponses } from "@/db/schema";
+import { questionSets, questions } from "@/db/schema";
 import { requireUser } from "@/lib/dal";
 import { getTypeTotals } from "@/lib/content-stats";
 import type { SectionKey, QuestionTypeKey } from "@/lib/ielts";
 import type { SetLayout } from "@/lib/question-content";
 import { mediaUrl, safeQuestionContent } from "@/lib/media-urls";
+import { attemptedSetIndexesFor } from "@/lib/practice-progress";
 
 /* ------------------------------------------------------------------ *
  * IELTS Set-Based Loading
@@ -209,25 +210,5 @@ export async function getAttemptedSets(
   questionType: string,
 ): Promise<{ setIndices: number[] }> {
   const user = await requireUser();
-
-  // One query: number the sets in paging order, keep those the user has
-  // answered. Previously this pulled every set AND every response for the type
-  // and intersected them in JS — two unbounded reads to produce a few integers.
-  const rows = await db.execute<{ idx: number }>(sql`
-    WITH ordered AS (
-      SELECT id,
-             (row_number() OVER (ORDER BY created_at, id) - 1)::int AS idx
-      FROM ${questionSets}
-      WHERE section = ${section}
-        AND question_type = ${questionType}
-        AND is_active = true
-    )
-    SELECT DISTINCT o.idx
-    FROM ordered o
-    JOIN ${userResponses} r ON r.set_id = o.id
-    WHERE r.user_id = ${user.id}
-    ORDER BY o.idx
-  `);
-
-  return { setIndices: rows.map((r) => Number(r.idx)) };
+  return { setIndices: await attemptedSetIndexesFor(user.id, section, questionType) };
 }

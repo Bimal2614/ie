@@ -37,6 +37,8 @@ import {
   signupSchema,
   profileSchema,
   passwordChangeSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
 } from "@/lib/validation";
 import {
   setPageQuery,
@@ -44,6 +46,8 @@ import {
   booksQuery,
   partsQuery,
   historyQuery,
+  sectionParam,
+  questionTypeParam,
 } from "@/lib/api/query-schemas";
 
 /** Convert a Zod schema to the JSON Schema dialect OpenAPI 3.1 speaks. */
@@ -104,6 +108,15 @@ function jsonBody(schema: z.ZodType) {
 function attemptIdParam() {
   return {
     name: "attemptId",
+    in: "path",
+    required: true,
+    schema: { type: "string", format: "uuid" },
+  };
+}
+
+function sectionIdParam() {
+  return {
+    name: "sectionId",
     in: "path",
     required: true,
     schema: { type: "string", format: "uuid" },
@@ -214,6 +227,34 @@ export function buildOpenApiSpec() {
         responses: { "200": okResponse("Signed out."), default: errorRef },
       },
     },
+    "/api/v1/auth/forgot-password": {
+      post: {
+        tags: ["auth"],
+        summary: "Email a password-reset link",
+        description:
+          "ALWAYS succeeds when it was allowed to run, whether or not the address " +
+          "belongs to an account — a 404 here would be a membership oracle. Show " +
+          "the same \"check your inbox\" screen either way. Throttled to 5 per IP " +
+          "per hour, which IS reported, so the app can back off.",
+        security: [],
+        requestBody: jsonBody(forgotPasswordSchema),
+        responses: { "200": okResponse("Sent, if the address is known."), default: errorRef },
+      },
+    },
+    "/api/v1/auth/reset-password": {
+      post: {
+        tags: ["auth"],
+        summary: "Set a new password from an emailed token",
+        description:
+          "SIGNS THE CANDIDATE OUT EVERYWHERE, including on this device — unlike " +
+          "`/api/v1/me/password`, which keeps every session. Clear the keychain " +
+          "and route to sign-in. A spent or expired token is a `conflict`, not a " +
+          "validation failure: there is nothing in the request to correct.",
+        security: [],
+        requestBody: jsonBody(resetPasswordSchema),
+        responses: { "200": okResponse("Password reset; all sessions revoked."), default: errorRef },
+      },
+    },
     "/api/v1/me": {
       get: {
         tags: ["account"],
@@ -295,6 +336,49 @@ export function buildOpenApiSpec() {
         responses: { "200": okResponse("The graded attempt."), default: errorRef },
       },
     },
+    "/api/v1/practice/sections/{sectionId}": {
+      get: {
+        tags: ["practice"],
+        summary: "One exam part, ready to sit",
+        description:
+          "What `step=parts` above leads to. A part is ONE stimulus answered " +
+          "against two or three task GROUPS — render them together, not as " +
+          "separate sets. The answer key and the transcript never leave the " +
+          "server.",
+        parameters: [sectionIdParam()],
+        responses: { "200": okResponse("The part, key stripped."), default: errorRef },
+      },
+    },
+    "/api/v1/practice/sections/{sectionId}/submit": {
+      post: {
+        tags: ["practice"],
+        summary: "Mark one exam part",
+        description:
+          "Answers are keyed by EXAM NUMBER — an item inside a section document " +
+          "has no uuid. (`/api/v1/practice/submit` keys by question id; a mock " +
+          "keys by `\"<sectionId>:<sheetNumber>\"`.) Writing and Speaking arrive " +
+          "in `subjective` with no band; poll `/api/v1/attempts/{attemptId}/score`.",
+        parameters: [sectionIdParam()],
+        requestBody: jsonBody(
+          z.object({
+            answers: z.record(z.string(), z.record(z.string(), z.unknown())),
+            timeSpentSec: z.number().int().min(0).optional(),
+          }),
+        ),
+        responses: { "200": okResponse("The graded part."), default: errorRef },
+      },
+    },
+    "/api/v1/practice/attempted-sets": {
+      get: {
+        tags: ["practice"],
+        summary: "Which sets of a task type are already done",
+        description:
+          "Zero-based indices in the same paging order `/api/v1/practice/sets` " +
+          "uses, so the set palette can tick square N directly.",
+        parameters: queryParams(z.object({ section: sectionParam, questionType: questionTypeParam })),
+        responses: { "200": okResponse("`setIndices`."), default: errorRef },
+      },
+    },
     "/api/v1/practice/recording": {
       post: {
         tags: ["practice"],
@@ -363,6 +447,16 @@ export function buildOpenApiSpec() {
           "200": okResponse("Existing sitting resumed."),
           default: errorRef,
         },
+      },
+    },
+    "/api/v1/mock/results": {
+      get: {
+        tags: ["mock"],
+        summary: "Every paper handed in, newest first",
+        description:
+          "Distinct from `/api/v1/history`, which lists practice attempts. A null " +
+          "`overallBand` means Writing and Speaking are still being marked.",
+        responses: { "200": okResponse("Past sittings."), default: errorRef },
       },
     },
     "/api/v1/mock/sessions/{sessionId}": {
@@ -442,6 +536,18 @@ export function buildOpenApiSpec() {
           "things for those two.",
         parameters: [sessionIdParam()],
         responses: { "200": okResponse("The report."), default: errorRef },
+      },
+    },
+    "/api/v1/mock/sessions/{sessionId}/review": {
+      get: {
+        tags: ["mock"],
+        summary: "One module of a finished paper, answer by answer",
+        description:
+          "UNANSWERED ITEMS ARE INCLUDED — a review that omitted them would hide " +
+          "what a candidate most needs to see. Numbers are this paper's " +
+          "answer-sheet numbers and the layouts' gaps are shifted to match.",
+        parameters: [sessionIdParam(), ...queryParams(z.object({ section: sectionParam }))],
+        responses: { "200": okResponse("The module review."), default: errorRef },
       },
     },
     "/api/v1/billing/plans": {

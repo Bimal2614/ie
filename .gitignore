@@ -112,3 +112,12 @@ reddit/posts/
 reddit/
 
 lesson-video/
+
+# The Flutter app, which is its own repository:
+#   https://github.com/HirenKuvadiya/IELTSVegaMobileApp
+#
+# Ignored here so the two never both claim the same files. The app is generated
+# against this server's contract (GET /api/v1/openapi, snapshotted by
+# `npm run api:spec`), so the coupling between them is that document — keep it
+# in step when a v1 route changes shape.
+mobileapp/
