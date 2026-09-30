@@ -16,6 +16,10 @@
     {
       "path": "/api/cron/daily-report",
       "schedule": "30 0 * * *"
+    },
+    {
+      "path": "/api/cron/student-contacts",
+      "schedule": "45 0 * * *"
     }
   ]
 }

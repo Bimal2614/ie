@@ -34,6 +34,8 @@ export async function sendEmail(opts: {
    * From: address. Left unset everywhere else, which keeps the default.
    */
   replyTo?: string;
+  /** Files to attach — so far only the student contact list's CSV. */
+  attachments?: { filename: string; content: string; contentType?: string }[];
 }): Promise<{ ok: boolean; skipped?: boolean; error?: string }> {
   if (!isEmailConfigured()) {
     console.warn(`[email] SMTP not configured: skipped "${opts.subject}" to ${opts.to}`);
@@ -48,6 +50,7 @@ export async function sendEmail(opts: {
       from: env.EMAIL_FROM!,
       to: opts.to,
       replyTo: opts.replyTo,
+      attachments: opts.attachments,
       subject: opts.subject,
       html: opts.html,
       text: opts.text,
