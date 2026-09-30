@@ -302,7 +302,7 @@ export async function scoreAttemptWritingFor(
           improvedExamples: s.improvedExamples,
           nextSteps: s.nextSteps,
           taskCompliance: s.taskCompliance,
-          provider: "openai",
+          provider: s.provider,
         },
       })
       .where(eq(userResponses.id, row.id));

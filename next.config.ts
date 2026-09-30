@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs/config";
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
 
@@ -112,4 +113,19 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+/**
+ * Uploads source maps on production builds so Sentry shows the original
+ * TypeScript instead of minified chunks. Needs SENTRY_AUTH_TOKEN at build time;
+ * without it the build still succeeds and just skips the upload. On Vercel the
+ * release is taken from VERCEL_GIT_COMMIT_SHA automatically.
+ *
+ * No tunnelRoute: the browser posts to Sentry directly (allowed in the CSP in
+ * proxy.ts) rather than through a function invocation per event.
+ */
+export default withSentryConfig(nextConfig, {
+  org: "vegaoverseas",
+  project: "ielts-vega",
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  widenClientFileUpload: true,
+  silent: !process.env.CI,
+});

@@ -1,4 +1,10 @@
+import * as Sentry from "@sentry/nextjs";
 import type { Instrumentation } from "next";
+
+export async function register() {
+  if (process.env.NEXT_RUNTIME === "nodejs") await import("./sentry.server.config");
+  if (process.env.NEXT_RUNTIME === "edge") await import("./sentry.edge.config");
+}
 
 /**
  * Every unhandled server error — a page that 500s, a route handler that throws,
@@ -10,6 +16,11 @@ import type { Instrumentation } from "next";
  * so 404s do not page.
  */
 export const onRequestError: Instrumentation.onRequestError = async (err, request, context) => {
+  // Sentry gets every runtime and the full stack; Slack below stays the
+  // nodejs-only page. Sentry groups by stack, so the stale-action noise that
+  // Slack filters out lands as one issue rather than one message per deploy.
+  Sentry.captureRequestError(err, request, context);
+
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
 
   const message = err instanceof Error ? err.message : String(err);

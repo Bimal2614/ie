@@ -126,6 +126,14 @@ const ANALYTICS_IMG =
   "https://*.google-analytics.com https://*.googletagmanager.com https://*.clarity.ms https://www.facebook.com";
 
 /**
+ * Sentry's ingest host for the ielts-vega project (US region). Errors, traces
+ * and replays POST here. Replay also compresses in a worker it starts from a
+ * blob: URL — hence the worker-src below, without which it falls back to
+ * script-src and the recorder is refused.
+ */
+const SENTRY = "https://*.ingest.us.sentry.io";
+
+/**
  * `nonce` present → the strict policy for app routes. Absent → the public one.
  *
  * The public `script-src` is `'unsafe-inline' https:` rather than a host list:
@@ -163,7 +171,8 @@ function buildCsp(nonce: string | null): string {
     // 'self' and the button opens a blank white box.
     // ...and GTM's noscript fallback iframe.
     `frame-src ${RAZORPAY} https://www.googletagmanager.com`,
-    `connect-src 'self' ${S3} ${RAZORPAY} ${ANALYTICS_CONNECT}`,
+    `connect-src 'self' ${S3} ${RAZORPAY} ${ANALYTICS_CONNECT} ${SENTRY}`,
+    `worker-src 'self' blob:`,
     `upgrade-insecure-requests`,
   ].join("; ");
 }

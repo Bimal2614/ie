@@ -552,7 +552,7 @@ export async function scoreMockWritingFor(
           improvedExamples: s.improvedExamples,
           nextSteps: s.nextSteps,
           taskCompliance: s.taskCompliance,
-          provider: "openai",
+          provider: s.provider,
         },
       })
       .where(eq(mockTestAnswers.id, row.id));

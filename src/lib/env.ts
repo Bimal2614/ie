@@ -47,6 +47,11 @@ const EnvSchema = z.object({
   // "1" makes every Writing scoring call fail without contacting OpenAI — for
   // checking that failures show up in the logs. Off unless explicitly set.
   WRITING_AI_FORCE_FAIL: z.string().default("0"),
+  // Backup Writing scorer: used only when the OpenAI call fails (outage, rate
+  // limit, spent balance). Optional — without it an OpenAI failure leaves the
+  // answer unscored for the sweeper, as before.
+  GEMINI_API_KEY: z.string().optional(),
+  GEMINI_MODEL: z.string().default("gemini-3.8-flash"),
 
   // --- Transactional email (SMTP — any provider). Optional: without it,
   //     verification/reset emails are skipped (link is logged in dev). ---
@@ -189,6 +194,8 @@ export const env = EnvSchema.parse({
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   OPENAI_MODEL: process.env.OPENAI_MODEL,
   WRITING_AI_FORCE_FAIL: process.env.WRITING_AI_FORCE_FAIL,
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+  GEMINI_MODEL: process.env.GEMINI_MODEL,
   SMTP_HOST: process.env.SMTP_HOST,
   SMTP_PORT: process.env.SMTP_PORT,
   SMTP_USER: process.env.SMTP_USER,
@@ -236,9 +243,14 @@ export function isSpeakingAiConfigured(): boolean {
   return Boolean(env.SPEAKING_API_URL && env.SPEAKING_API_KEY);
 }
 
-/** True when OpenAI is configured for Writing band scoring. */
+/** True when Writing can be band-scored: OpenAI, the Gemini backup, or both. */
 export function isWritingAiConfigured(): boolean {
-  return Boolean(env.OPENAI_API_KEY);
+  return Boolean(env.OPENAI_API_KEY || env.GEMINI_API_KEY);
+}
+
+/** True when the Gemini backup Writing scorer is available. */
+export function isGeminiConfigured(): boolean {
+  return Boolean(env.GEMINI_API_KEY);
 }
 
 /** True when SMTP is configured to actually send email. */

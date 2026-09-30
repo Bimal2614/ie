@@ -1,14 +1,23 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
+import { useEffect } from "react";
+
 // Global error boundary. Must render its own <html>/<body> because it replaces
-// the root layout when a top-level error occurs. Kept dependency-free so it can
-// always render, even when the app shell is broken.
+// the root layout when a top-level error occurs. Kept free of app code so it can
+// always render, even when the app shell is broken — Sentry is the one import,
+// because an error caught here never reaches the browser's global handler.
 export default function GlobalError({
+  error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
+
   return (
     <html lang="en">
       <body

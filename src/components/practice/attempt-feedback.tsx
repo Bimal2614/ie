@@ -251,13 +251,18 @@ export function AttemptFeedback({
               {!waiting && scored > 0 && (
                 <>
                   {scored > 1 ? `Mean of ${scored} answers.` : "One answer."}
-                  {pending > 0 && ` ${pending} could not be scored.`}
+                  {pending > 0 &&
+                    ` ${pending} still being marked: we keep retrying automatically, and the band will appear here within 2 hours.`}
                 </>
               )}
-              {!waiting && scored === 0 && !failed && configured !== false && "No answer could be scored."}
+              {!waiting && scored === 0 && !failed && configured !== false &&
+                (pending > 0
+                  ? "Marking is taking longer than usual. Your answers are saved and we keep retrying automatically: your band will appear here within 2 hours."
+                  : "No answer could be scored.")}
               {configured === false &&
                 `AI ${section} scoring is not configured on this server, so no band can be produced. Your answers are saved.`}
-              {failed && "Scoring is unavailable right now: your answers are saved."}
+              {failed &&
+                "Scoring is unavailable right now. Your answers are saved and will be scored automatically: your band will appear here within 2 hours."}
             </p>
           </div>
         </div>

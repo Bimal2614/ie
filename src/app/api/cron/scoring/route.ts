@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { and, asc, eq, gt, inArray, isNotNull, isNull, lt, sql } from "drizzle-orm";
+import { and, asc, eq, gt, gte, inArray, isNotNull, isNull, lt, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { mockTestAnswers, mockTestSessions, userResponses } from "@/db/schema";
 import { isAuthorizedCron } from "@/lib/security/cron-auth";
@@ -209,6 +209,77 @@ async function sweepSittings(from: Date, until: Date, startedAt: number): Promis
   return { picked: queue.length, scored, skipped };
 }
 
+/**
+ * Answers still band-less two hours after submit, which is the wait the
+ * candidate is promised on screen.
+ *
+ * Only the slice that crossed the two-hour mark since the last run is counted,
+ * so each stuck answer pages once rather than every five minutes, and there is
+ * still an hour of retries left (SCORING_LOOKBACK_HOURS) to fix the cause
+ * before the sweeper stops trying. Accounts whose plan has no AI scoring are
+ * left band-less by design and are not counted.
+ */
+const STUCK_AFTER_MINUTES = 120;
+const SWEEP_EVERY_MINUTES = 5;
+
+async function alertOnStuckAnswers(now: number): Promise<void> {
+  const until = new Date(now - STUCK_AFTER_MINUTES * 60_000);
+  const from = new Date(until.getTime() - SWEEP_EVERY_MINUTES * 60_000);
+
+  const practice = await db
+    .select({ userId: userResponses.userId, section: userResponses.section })
+    .from(userResponses)
+    .where(
+      and(
+        isNull(userResponses.band),
+        inArray(userResponses.section, [...AI_SECTIONS]),
+        isNotNull(userResponses.attemptId),
+        gte(userResponses.createdAt, from),
+        lt(userResponses.createdAt, until),
+        scorableResponse,
+      ),
+    );
+  const mock = await db
+    .select({ userId: mockTestSessions.userId, section: mockTestAnswers.section })
+    .from(mockTestAnswers)
+    .innerJoin(mockTestSessions, eq(mockTestSessions.id, mockTestAnswers.sessionId))
+    .where(
+      and(
+        isNull(mockTestAnswers.band),
+        inArray(mockTestAnswers.section, [...AI_SECTIONS]),
+        gte(mockTestAnswers.answeredAt, from),
+        lt(mockTestAnswers.answeredAt, until),
+        scorableMockAnswer,
+      ),
+    );
+
+  const rows = [...practice, ...mock];
+  if (rows.length === 0) return;
+
+  const entitled = new Map<string, boolean>();
+  for (const userId of new Set(rows.map((r) => r.userId))) {
+    entitled.set(userId, await userMayUseAiScoring(userId));
+  }
+  const stuck = rows.filter((r) => entitled.get(r.userId));
+  if (stuck.length === 0) return;
+
+  const count = (section: string) => stuck.filter((r) => r.section === section).length;
+  console.error("[cron/scoring] answers still unscored after 2h", { stuck: stuck.length });
+  await alert({
+    source: "cron/scoring",
+    title: `${stuck.length} answer(s) still unscored 2 hours after submit`,
+    context: {
+      writing: count("writing"),
+      speaking: count("speaking"),
+      candidates: new Set(stuck.map((r) => r.userId)).size,
+    },
+    hint:
+      "Students were told their band would appear within 2 hours. The sweeper retries for one more hour, then stops. " +
+      "Look for writing-ai / speaking-ai alerts just before this one; if there are none, a candidate's daily AI allowance may be spent.",
+    key: `stuck|${Math.floor(now / 3_600_000)}`,
+  });
+}
+
 export async function GET(request: Request) {
   if (!isAuthorizedCron(request)) {
     // 404, not 401: an unauthenticated caller learns nothing about whether this
@@ -224,6 +295,8 @@ export async function GET(request: Request) {
   // and the deadline is shared so whatever the first sweep uses the second sees.
   const attempts = await sweepAttempts(from, until, startedAt);
   const sittings = await sweepSittings(from, until, startedAt);
+
+  await alertOnStuckAnswers(startedAt);
 
   const result = { attempts, sittings, tookMs: Date.now() - startedAt };
   // Silent when there was nothing to do — this runs every five minutes forever,
