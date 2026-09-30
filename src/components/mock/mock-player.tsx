@@ -9,6 +9,7 @@ import { MOCK_MODULE_NOTE, moduleSeconds } from "@/lib/mock-timing";
 import {
   advanceMockModule,
   finishMock,
+  recordMockSpeakingTake,
   saveMockProgress,
   type MockModuleView,
   type MockSittingData,
@@ -19,6 +20,7 @@ import { SplitPane } from "@/components/exam/split-pane";
 import { SectionBody, type ClientSectionView } from "@/components/practice/section-body";
 import { clearAnnotations } from "@/components/practice/renderers/annotations";
 import { ListeningTape, type Tape } from "./listening-tape";
+import { SpeakingPrep } from "./speaking-prep";
 
 /**
  * The full-mock player.
@@ -40,6 +42,13 @@ import { ListeningTape, type Tape } from "./listening-tape";
  */
 
 const AUTOSAVE_MS = 5000;
+
+/**
+ * The longest a hand-in will wait for a recording that has not finished
+ * uploading. See `awaitUploads` — it is a grace, not a timeout on the upload
+ * itself, which carries on regardless.
+ */
+const UPLOAD_GRACE_MS = 15_000;
 
 type Props = {
   sitting: MockSittingData;
@@ -63,6 +72,13 @@ export function MockPlayer({ sitting }: Props) {
    */
   const [flagged, setFlagged] = useState<Set<string>>(new Set());
   const [advancing, setAdvancing] = useState(false);
+  /**
+   * The set-up minute at the front of the Speaking module.
+   *
+   * Set once the module is OPEN, so the exam clock covers it and every route
+   * into the interview — bell or early finish — costs the same. See `advance`.
+   */
+  const [preparing, setPreparing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   /** Set while the hand-in check is on screen. Never set by the clock. */
   const [confirming, setConfirming] = useState(false);
@@ -77,6 +93,8 @@ export function MockPlayer({ sitting }: Props) {
   /** One sitting's working notes, kept apart from practice and from other sittings. */
   const annotationScope = `mock:${sitting.sessionId}`;
   const isLastModule = module.index === sitting.modules.length - 1;
+  /** What the paper turns to next, or null on the last module. Copy only. */
+  const nextSection = sitting.modules[module.index + 1]?.section ?? null;
   const part = module.parts.find((p) => p.id === activePartId) ?? module.parts[0];
 
   /* --- Per-question timing: the think-time before an answer belongs to that
@@ -207,19 +225,47 @@ export function MockPlayer({ sitting }: Props) {
 
   /* --- Moving on --- */
 
+  /**
+   * Let a take that is still uploading land before the answers are sent.
+   *
+   * THE ONLY PLACE THE UPLOAD IS ALLOWED TO COST ANYTHING. Storing a recording
+   * is server work — the WebM is transcoded to WAV on the way in, because the
+   * scorer has no ffmpeg — and it used to be paid for at the front: the Finish
+   * button went dead, the footer said "don't leave yet", and a spinner sat
+   * beside the answer. None of that helped the candidate, who had already
+   * spoken and wanted the next question.
+   *
+   * So the wait moved here, where it is invisible. By the time a module is
+   * handed in the upload is almost always long finished, and when it is not,
+   * this happens under a spinner that was going up anyway. Submitting a
+   * `pendingUpload` answer would save a recording with no storage location,
+   * which the report can only ever show as "Not scored".
+   *
+   * TIME-BOXED, because the alternative to a lost recording must not be a lost
+   * paper. Past the grace the hand-in goes ahead regardless — an answer marked
+   * `uploadFailed` is one band missing from a report that otherwise exists.
+   */
+  const awaitUploads = useCallback(async () => {
+    const deadline = Date.now() + UPLOAD_GRACE_MS;
+    while (anyUploadPending(answersRef.current) && Date.now() < deadline) {
+      await new Promise((r) => window.setTimeout(r, 200));
+    }
+  }, []);
+
   const submit = useCallback(async () => {
     if (finished.current) return;
     finished.current = true;
     setSubmitting(true);
+    await awaitUploads();
     // The paper is gone; so are the notes on it. Left behind they would sit in
     // storage until the tab closed, and reappear on a re-sit of the same test.
     clearAnnotations(annotationScope);
     // finishMock redirects to the report; the spinner stays up until navigation.
     await finishMock(sitting.sessionId, answersRef.current, timings.current);
-  }, [annotationScope, sitting.sessionId]);
+  }, [annotationScope, awaitUploads, sitting.sessionId]);
 
   const advance = useCallback(async () => {
-    if (finished.current || advancing) return;
+    if (finished.current || advancing || preparing) return;
     // The last module ends the paper, so it hands in rather than moving on —
     // finishMock grades and redirects server-side.
     if (isLastModule) {
@@ -227,12 +273,26 @@ export function MockPlayer({ sitting }: Props) {
       return;
     }
     setAdvancing(true);
-    const res = await advanceMockModule(
-      sitting.sessionId,
-      module.index,
-      answersRef.current,
-      timings.current,
-    );
+    // Speaking is the last module in every paper today, so this is belt and
+    // braces — but a module boundary is still a point of no return, and a take
+    // still in flight over one would be saved without its recording.
+    await awaitUploads();
+    let res: Awaited<ReturnType<typeof advanceMockModule>>;
+    try {
+      res = await advanceMockModule(
+        sitting.sessionId,
+        module.index,
+        answersRef.current,
+        timings.current,
+      );
+    } catch {
+      // Leave the candidate on the paper they were on rather than on a dead
+      // screen. Their answers are untouched and the exam clock never stopped,
+      // so pressing Finish again is the whole retry — and if it keeps failing
+      // the bell moves them on regardless.
+      setAdvancing(false);
+      return;
+    }
     if (res.done) {
       // The clock ran out mid-request: the server has already graded and closed
       // the sitting, so there is nothing left to do but go and read the report.
@@ -253,8 +313,22 @@ export function MockPlayer({ sitting }: Props) {
     setActivePartId(res.current.parts[0]?.id ?? "");
     setCurrent(null);
     lastTick.current = Date.now();
+    // A WRITTEN PAPER DOES NOT RUN STRAIGHT INTO AN INTERVIEW. The module is
+    // open and its clock is running — the first minute of it is spent on
+    // <SpeakingPrep/> rather than on question 1, which is what the sixteenth
+    // minute in MOCK_MODULE_MINUTES pays for.
+    if (res.current.section === "speaking") setPreparing(true);
     setAdvancing(false);
-  }, [advancing, annotationScope, isLastModule, module.index, sitting.sessionId, submit]);
+  }, [
+    advancing,
+    annotationScope,
+    awaitUploads,
+    isLastModule,
+    module.index,
+    preparing,
+    sitting.sessionId,
+    submit,
+  ]);
 
   // Countdown. At zero the module's time is up — the server is asked for the
   // next one, which is also what re-syncs the clock.
@@ -295,6 +369,59 @@ export function MockPlayer({ sitting }: Props) {
       document.removeEventListener("visibilitychange", onHide);
     };
   }, [sitting.sessionId]);
+
+  /* --- Speaking: each take is marked while the interview carries on --- */
+
+  /**
+   * Tell the server about a finished take as soon as it is stored.
+   *
+   * THE MARKING IS SPREAD OVER THE INTERVIEW, not piled up at the end. A
+   * Speaking module is eleven recordings; asking for all eleven bands at hand-in
+   * was one burst of provider calls, and that burst is what got them refused —
+   * eight of eleven on one sitting, every one of which scored fine on a retry.
+   * Reported as it happens, the provider sees one call a minute and the report
+   * is already marked by the time the paper is handed in.
+   *
+   * IT FIRES ON THE URL, NOT ON THE TAKE. A recording is reported twice: once
+   * the moment it stops, flagged `pendingUpload` with nowhere to fetch it from,
+   * and again when the upload completes and it has a location. Only the second
+   * is worth sending — there is nothing to score without it.
+   *
+   * ONCE PER ANSWER, and nothing waits for it. The call is fire-and-forget: it
+   * costs the candidate nothing, and a failure is picked up by the batch run at
+   * hand-in and the sweeper cron behind that. A resumed sitting replays the takes
+   * it restored, which the server absorbs — the row is an upsert and a scored
+   * answer is skipped.
+   */
+  const takeSent = useRef(new Set<string>());
+  useEffect(() => {
+    if (module.section !== "speaking") return;
+    for (const [key, a] of Object.entries(answers)) {
+      const url = (a as { audioUrl?: unknown }).audioUrl;
+      if (typeof url !== "string" || !url || takeSent.current.has(key)) continue;
+      takeSent.current.add(key);
+      const at = key.lastIndexOf(":");
+      if (at === -1) continue;
+      const sectionId = key.slice(0, at);
+      const n = Number(key.slice(at + 1));
+      if (!Number.isFinite(n)) continue;
+      // SAVED FIRST, AND IT HAS TO BE. The server reads the recording's location
+      // out of the sitting's saved draft rather than taking it from this call —
+      // but the autosave runs on a five-second timer, so a take reported the
+      // instant it uploads can easily beat its own draft to the database. The
+      // server would then find no recording for that question and quietly do
+      // nothing. Saving on the way past costs one request the timer was about to
+      // make anyway.
+      void saveMockProgress(sitting.sessionId, answersRef.current, timings.current)
+        .then(() => recordMockSpeakingTake(sitting.sessionId, sectionId, n))
+        .catch(() => {
+          // Deliberately swallowed. Hand-in and the sweeper both cover this, and
+          // a candidate mid-interview must never be shown a marking error. The
+          // key is left in `takeSent` regardless: a retry loop against a failing
+          // server is the last thing a timed module needs.
+        });
+    }
+  }, [answers, module.section, sitting.sessionId]);
 
   /* --- Speaking: the examiner moves on --- */
 
@@ -431,11 +558,106 @@ export function MockPlayer({ sitting }: Props) {
   }, [activePartId, current, jumpTo, sheet.parts]);
   nextQuestion.current = nextInterviewQuestion;
 
+  /* --- Keeping the examiner's next question ready --- */
+
+  /**
+   * Every examiner clip in this module, by the number on the answer sheet.
+   *
+   * Flattened across PARTS on purpose. An interview is one continuous run of
+   * questions that happens to be stored as three parts, and the gap that needed
+   * fixing was exactly at a part boundary.
+   */
+  const promptBySheet = useMemo(() => {
+    const m = new Map<number, string>();
+    if (module.section !== "speaking") return m;
+    for (const p of module.parts) {
+      for (const group of p.questions.groups) {
+        for (const item of group.items) {
+          const src = (item as { promptAudioUrl?: string | null }).promptAudioUrl;
+          if (src) m.set(item.n, src);
+        }
+      }
+    }
+    return m;
+  }, [module]);
+
+  /** Where the interview stands, before the render below works it out again. */
+  const focusNow = module.section === "speaking" ? (current ?? partNumbers[0] ?? null) : null;
+
+  /**
+   * Fetch the next two examiner clips while the current question is being
+   * answered.
+   *
+   * THE GAP THIS CLOSES IS AT THE PART BOUNDARY, and it was the worst one in the
+   * paper. Part 2 ends with a two-minute recording going up — the largest upload
+   * of the sitting — and the page then turns straight to Part 3's first
+   * question. Cold, that clip costs an authenticated round trip to the media
+   * route, a redirect to a presigned URL and then the bytes, all competing with
+   * the upload for the same connection: three to five seconds of a candidate
+   * looking at a question nobody is asking.
+   *
+   * ACROSS PARTS, WHICH IS WHY IT LIVES HERE. The earlier version of this sat in
+   * QuestionBody, which only ever sees one part's questions — so it warmed the
+   * next clip happily in the middle of a part and did nothing at all at the end
+   * of one. Only the player knows the module's running order.
+   *
+   * ONE AHEAD IS ENOUGH. Warming question N+1 while N is still being heard and
+   * answered buys fifteen seconds at the very least — a Part 2 long turn buys
+   * two minutes — for a clip that is seconds long. Reaching further was
+   * insurance against nothing.
+   */
+  useEffect(() => {
+    if (focusNow === null) return;
+    const at = sheet.all.indexOf(focusNow);
+    if (at === -1) return;
+
+    const src = promptBySheet.get(sheet.all[at + 1]);
+    if (!src) return;
+
+    const warm = new Audio();
+    warm.preload = "auto";
+    warm.src = src;
+    warm.load();
+
+    return () => {
+      // Drop it if the interview moved on first; the element is unreachable
+      // after this and would otherwise hold the connection open.
+      // `removeAttribute` rather than `src = ""`, which resolves to the page's
+      // own URL and has the browser fetch the document as media.
+      warm.removeAttribute("src");
+      warm.load();
+    };
+  }, [focusNow, promptBySheet, sheet.all]);
+
   if (!part) {
     return (
       <div className="grid min-h-svh place-items-center bg-paper px-6 text-center text-sm text-ink-muted">
         This paper has no content for {SECTIONS[module.section].label}.
       </div>
+    );
+  }
+
+  /**
+   * The set-up minute REPLACES the paper rather than covering it.
+   *
+   * An overlay would leave the interview mounted and audible underneath: the
+   * examiner's first clip auto-plays on the focused question, and the recorder
+   * starts itself when the clip ends. A candidate reading the checklist would
+   * have had question 1 asked and answered behind it.
+   */
+  if (preparing) {
+    return (
+      <SpeakingPrep
+        firstPromptUrl={promptBySheet.get(sheet.all[0]) ?? null}
+        onDone={() => {
+          // Restart the think-time clock. It was last set when the module
+          // opened, and the minute spent reading a checklist is not time spent
+          // thinking about question 1 — left alone it is reported as such on
+          // the section review.
+          lastTick.current = Date.now();
+          setPreparing(false);
+        }}
+      />
     );
   }
 
@@ -475,6 +697,11 @@ export function MockPlayer({ sitting }: Props) {
       // On test day a Speaking question is spoken and never printed, so the
       // paper plays it and hides the text. Section practice does the opposite.
       spokenPromptOnly
+      // And it is asked ONCE. No seek bar, no pause, no replay — the same rule
+      // ListeningTape imposes on the recording, for the same reason: scrubbing
+      // back through the examiner rehearses a repetition the real one will not
+      // give, and it was the last way left to hear a Speaking prompt twice.
+      promptPlaysOnce
       // One take: the interview cannot be walked back to, so a "Re-record"
       // button would offer something the navigation refuses.
       singleTake
@@ -528,7 +755,6 @@ export function MockPlayer({ sitting }: Props) {
     </div>
   );
 
-  const savingRecording = anyUploadPending(answers);
   const timerState = remaining < 60 ? "critical" : remaining < 300 ? "warning" : "ok";
 
   return (
@@ -593,17 +819,14 @@ export function MockPlayer({ sitting }: Props) {
           : current === null || partNumbers.indexOf(current) < partNumbers.length - 1
       }
       onSubmit={() => setConfirming(true)}
-      submitting={submitting || advancing || savingRecording}
-      submitLabel={
-        savingRecording
-          ? "Saving recording…"
-          : isLastModule
-            ? "Finish test"
-            : `Finish ${sec.label}`
-      }
+      // An upload in flight does NOT hold this shut — see `awaitUploads`. The
+      // candidate is never made to wait on the network for a take they have
+      // already given; the waiting, where any is needed at all, happens behind
+      // the hand-in spinner.
+      submitting={submitting || advancing}
+      submitLabel={isLastModule ? "Finish test" : `Finish ${sec.label}`}
       footerNote={
         <FooterNote
-          savingRecording={savingRecording}
           advancing={advancing}
           submitting={submitting}
           answered={answered.size}
@@ -623,7 +846,11 @@ export function MockPlayer({ sitting }: Props) {
         detail={
           isLastModule
             ? "This submits every module and produces your band report. You can't return to the paper."
-            : `You won't be able to come back to ${sec.label} once you move on.`
+            : nextSection === "speaking"
+              ? // Said here so the minute that follows is expected rather than
+                // read as the page having frozen.
+                `You won't be able to come back to ${sec.label}. You then get one minute to check your microphone and headphones before the interview starts.`
+              : `You won't be able to come back to ${sec.label} once you move on.`
         }
         unanswered={sheet.all.length - answered.size}
         flagged={flaggedNumbers.size}
@@ -722,7 +949,6 @@ function ModuleRail({
 }
 
 function FooterNote({
-  savingRecording,
   advancing,
   submitting,
   answered,
@@ -732,7 +958,6 @@ function FooterNote({
   lapsed,
   tapeFinished,
 }: {
-  savingRecording: boolean;
   advancing: boolean;
   submitting: boolean;
   answered: number;
@@ -756,7 +981,6 @@ function FooterNote({
       </span>
     );
   }
-  if (savingRecording) return <>Storing your recording — don&apos;t leave yet.</>;
   if (lapsed.length > 0) {
     return (
       <span className="inline-flex items-center gap-1.5 text-warning">

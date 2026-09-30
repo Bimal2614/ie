@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
-import { adminEmails, isEmailConfigured } from "@/lib/env";
+import { adminEmails, isEmailConfigured, isRazorpayConfigured } from "@/lib/env";
 import { sendEmail } from "@/lib/email/mailer";
 import { isAuthorizedCron } from "@/lib/security/cron-auth";
 import { buildDailyReport, istDay } from "@/lib/monitoring/daily-report";
 import { dailyReportEmail } from "@/lib/monitoring/daily-report-email";
+import { alert } from "@/lib/monitoring/alert";
+import { reconcilePayments, type Reconciliation } from "@/lib/payments/reconcile";
 
 /**
  * The morning business report, mailed to ADMIN_EMAILS.
@@ -57,6 +59,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const day = istDay({ date: url.searchParams.get("date") });
   const report = await buildDailyReport(day);
+  const reconciliation = await reconcile(day.date, day.from, day.to);
 
   // One line per run, always. Unlike the scoring sweep there is no such thing
   // as an uneventful run: a day with no signups and no sales is exactly the day
@@ -96,9 +99,45 @@ export async function GET(request: Request) {
   }
 
   return NextResponse.json(
-    { ...report, emailed, recipients: recipients.length },
+    { ...report, reconciliation, emailed, recipients: recipients.length },
     { headers: { "Cache-Control": "no-store" } },
   );
+}
+
+/**
+ * Yesterday's captured Razorpay payments against the ledger. Pages Slack for
+ * any payment with no ledger row — a customer who paid and may not have their
+ * plan. Its own failure is a warning, never a failed report.
+ */
+async function reconcile(date: string, from: Date, to: Date): Promise<Reconciliation | { error: string } | null> {
+  if (!isRazorpayConfigured()) return null;
+  try {
+    const result = await reconcilePayments(from, to);
+    if (result.unmatched.length > 0) {
+      console.error("[cron/daily-report] payments missing from the ledger", result.unmatched);
+      await alert({
+        source: "reconcile",
+        title: `${result.unmatched.length} Razorpay payment(s) on ${date} are not in the ledger`,
+        detail: result.unmatched
+          .map(
+            (u) =>
+              `${u.id}  ${(u.amount / 100).toFixed(2)} ${u.currency}` +
+              (u.subscriptionId ? `  sub ${u.subscriptionId}` : "") +
+              (u.order_id ? `  order ${u.order_id}` : ""),
+          )
+          .join("\n"),
+        context: { captured: result.captured, matched: result.matched },
+        hint:
+          "Razorpay captured the money but no transactions row exists — every webhook for it failed or never arrived. " +
+          "Check the customer has their plan (look the payment up in the Razorpay dashboard), then record it by hand if not.",
+      });
+    }
+    return result;
+  } catch (e) {
+    console.error("[cron/daily-report] reconciliation failed", e);
+    await alert({ source: "reconcile", severity: "warning", title: "Payment reconciliation could not run", error: e });
+    return { error: e instanceof Error ? e.message : String(e) };
+  }
 }
 
 /** Same job, for schedulers that POST. */

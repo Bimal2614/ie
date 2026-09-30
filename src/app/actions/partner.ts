@@ -24,6 +24,7 @@ import { RazorpayApiError, verifyOrderSignature } from "@/lib/payments/razorpay"
 import { isOfferedPlan, toBillingCurrency } from "@/lib/plans";
 import { rateLimit } from "@/lib/security/rate-limit";
 import { enrolStudentSchema } from "@/lib/validation";
+import { alert } from "@/lib/monitoring/alert";
 
 /**
  * What a partner can do, and nothing else.
@@ -154,6 +155,7 @@ export async function startStudentCheckout(
     // to nobody.
     if (error instanceof RazorpayApiError) {
       console.error(`[partner-billing] Razorpay refused to open an order: ${error.message}`);
+      await alert({ source: "partner-billing", title: "Razorpay refused a partner order — a partner could not pay", detail: error.message });
       return { ok: false, error: CHECKOUT_UNAVAILABLE };
     }
     throw error;

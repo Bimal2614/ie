@@ -2,14 +2,21 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 import { EnrolForm } from "@/components/partner/enrol-form";
+import { InviteLink } from "@/components/partner/invite-link";
 import { RateCard } from "@/components/partner/plan-picker";
 import { quotesFor } from "@/lib/partner-pricing";
+import { env } from "@/lib/env";
+import { referralLink } from "@/lib/partner-referral";
 import { partnerContext } from "@/lib/partners";
 import { DEFAULT_CURRENCY } from "@/lib/plans";
 
 export default async function EnrolStudentPage() {
   const { partner, rate } = await partnerContext();
   const quotes = quotesFor(DEFAULT_CURRENCY, rate);
+  const invite = referralLink(env.APP_URL ?? "https://ieltsvega.com", {
+    id: partner.id,
+    name: partner.name,
+  });
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
@@ -28,6 +35,8 @@ export default async function EnrolStudentPage() {
       </div>
 
       <RateCard quotes={quotes} />
+
+      <InviteLink url={invite} />
 
       <EnrolForm quotes={quotes} canEnrol={partner.status === "active"} />
     </div>

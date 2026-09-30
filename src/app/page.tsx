@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { redirect } from "next/navigation";
 import {
   ArrowRight, ArrowUpRight,
   Headphones, BookOpen, PenLine, Mic,
 } from "lucide-react";
-import { getCurrentUser } from "@/lib/dal";
 import { EntryLoader } from "@/components/marketing/entry-loader";
 import { PremiumCursor } from "@/components/marketing/premium-cursor";
 import { CountUp } from "@/components/marketing/count-up";
@@ -195,10 +193,10 @@ const SKILLS = [
 ];
 
 
-export default async function Home() {
-  const user = await getCurrentUser();
-  if (user) redirect("/dashboard");
-
+// Signed-in visitors are sent to /dashboard by src/proxy.ts on cookie presence,
+// before the CDN. Checking the session here made the page dynamic and put a
+// database round trip in front of every anonymous visit to the top landing page.
+export default function Home() {
   return (
     <div className="landing min-h-svh bg-paper text-ink">
       <PremiumCursor />
@@ -534,8 +532,29 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ══ From the blog — internal links into articles for crawl + SEO ══ */}
-      <BlogStrip title="IELTS tips & guides" eyebrow="From the blog" />
+      {/* ══ From the blog — internal links into articles for crawl + SEO ══
+       * Slugs are named deliberately, not taken from POSTS order. This is the
+       * strongest page on the domain (position 4.5 in GSC on 14 Sep 2026), so
+       * its outbound links go to the pages with real search demand that had no
+       * internal links pointing at them: exam fee (298 impressions, position
+       * 14.2 — our closest page-1 slot), band-score calculation (511, our
+       * highest demand), free practice tests (540), academic vs GT (320, the
+       * largest query cluster), the remark guide (the best single query
+       * opportunity on the site) and the retake guide (259).
+       * Re-check these against the GSC pages breakdown on each weekly audit.
+       */}
+      <BlogStrip
+        title="IELTS tips & guides"
+        eyebrow="From the blog"
+        slugs={[
+          "ielts-exam-fee-2026",
+          "how-ielts-band-score-is-calculated",
+          "best-free-ielts-practice-tests-online",
+          "ielts-academic-vs-general-training",
+          "ielts-results-trf-validity-remark",
+          "ielts-one-skill-retake-guide",
+        ]}
+      />
 
       {/* ══ DARK CLOSE — shared CTA + footer ══ */}
       <LandingFooter />

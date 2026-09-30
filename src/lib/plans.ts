@@ -148,10 +148,10 @@ export const PLANS: Record<PlanKey, Entitlements> = {
   pro: {
     label: "Pro",
     prices: {
-      // ₹1,299 a month, down from ₹1,999.
-      INR: { priceCents: 129900, listPriceCents: 199900 },
-      // $15 a month, down from $23 — the same discount, in round dollars.
-      USD: { priceCents: 1500, listPriceCents: 2300 },
+      // ₹1,499 a month, down from ₹1,999.
+      INR: { priceCents: 149900, listPriceCents: 199900 },
+      // $20 a month, down from $23.
+      USD: { priceCents: 2000, listPriceCents: 2300 },
     },
     // One month is the term Pro has always been sold on, so accounts already
     // holding it keep the window they bought.
@@ -166,10 +166,10 @@ export const PLANS: Record<PlanKey, Entitlements> = {
   premium: {
     label: "Premium",
     prices: {
-      // ₹2,499 now, down from ₹4,000.
-      INR: { priceCents: 249900, listPriceCents: 400000 },
-      // $30 for the quarter, down from $46.
-      USD: { priceCents: 3000, listPriceCents: 4600 },
+      // ₹2,999 for the quarter, down from ₹4,000.
+      INR: { priceCents: 299900, listPriceCents: 400000 },
+      // $40 for the quarter, down from $46.
+      USD: { priceCents: 4000, listPriceCents: 4600 },
     },
     billingMonths: 3,
     monthlyPracticeAnswers: null,

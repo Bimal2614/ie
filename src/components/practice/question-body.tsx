@@ -8,6 +8,7 @@ import { QUESTION_TYPES, SECTIONS, showsInstruction, type QuestionTypeKey, type 
 import { isAnswered } from "@/lib/question-content";
 import type { Answer, CorrectAnswer, OptionsLayout, SetLayout } from "@/lib/question-content";
 import { AudioStimulus } from "./audio-stimulus";
+import { ExaminerPrompt } from "./examiner-prompt";
 import { SetLayoutRenderer, layoutOwnsAnswers } from "./renderers/layouts";
 import { QuestionInput, type RenderQuestion, type QuestionState } from "./renderers/question-input";
 import { ReportQuestionButton } from "./report-question";
@@ -52,17 +53,25 @@ import { AnnotationProvider, AnnotatedText } from "./renderers/annotations";
  * caller's to judge, so `autoPlay` arrives as a prop — see `autoPlayPrompt` in
  * QuestionBody. The player keeps its controls either way, because hearing the
  * question again is the whole point of practising it.
+ *
+ * THE MOCK IS THE EXCEPTION, and it gets a different player rather than this one
+ * with its controls taken away — ExaminerPrompt, which asks once and offers
+ * nothing to press. See `promptPlaysOnce`.
  */
 function PromptAudio({
   src,
   autoPlay,
+  once,
   onEnded,
 }: {
   src: string;
   autoPlay?: boolean;
+  /** Exam rule: asked once, no seek, no replay. */
+  once?: boolean;
   onEnded?: () => void;
 }) {
   const ref = useRef<HTMLAudioElement | null>(null);
+  if (once) return <ExaminerPrompt src={src} onEnded={onEnded} />;
   return <AudioStimulus src={src} audioRef={ref} autoPlay={autoPlay} onEnded={onEnded} />;
 }
 
@@ -175,6 +184,16 @@ export type BodyConfig = {
    * text when a question has no clip, so an unvoiced item is never a blank card.
    */
   spokenPromptOnly?: boolean;
+  /**
+   * Speaking, mock only: the examiner's question is asked ONCE.
+   *
+   * Swaps the practice player for ExaminerPrompt — no seek bar, no pause, no
+   * replay once it has finished. A mock that lets a candidate scrub back through
+   * the question rehearses asking for a repetition the real examiner will not
+   * give, and it is also the last remaining way to hear a Speaking prompt twice
+   * now that the navigation only moves forward.
+   */
+  promptPlaysOnce?: boolean;
   /**
    * Speaking: start recording by itself once the examiner's clip has played out.
    *
@@ -457,6 +476,7 @@ export function QuestionBody({
    * report screen that starts talking is a report screen you scramble to mute.
    */
   const autoPlayPrompt = !disabled && (config.focusNumber != null || allItems.length === 1);
+
 
   /** Gaps resolve by exam number across every group in the document. */
   const resolve: GapResolver = (number) => {
@@ -982,6 +1002,7 @@ function ItemRow({
                 <PromptAudio
                   src={item.promptAudioSrc}
                   autoPlay={autoPlayPrompt}
+                  once={config.promptPlaysOnce}
                   onEnded={() => setPromptEnded(true)}
                 />
               )}

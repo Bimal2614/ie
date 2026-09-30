@@ -44,6 +44,14 @@ const EnvSchema = z.object({
   //     runs without it; Writing simply stays unscored until the key is set. ---
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_MODEL: z.string().default("gpt-5.4-mini"),
+  // "1" makes every Writing scoring call fail without contacting OpenAI — for
+  // checking that failures show up in the logs. Off unless explicitly set.
+  WRITING_AI_FORCE_FAIL: z.string().default("0"),
+  // Backup Writing scorer: used only when the OpenAI call fails (outage, rate
+  // limit, spent balance). Optional — without it an OpenAI failure leaves the
+  // answer unscored for the sweeper, as before.
+  GEMINI_API_KEY: z.string().optional(),
+  GEMINI_MODEL: z.string().default("gemini-3.8-flash"),
 
   // --- Transactional email (SMTP — any provider). Optional: without it,
   //     verification/reset emails are skipped (link is logged in dev). ---
@@ -99,6 +107,15 @@ const EnvSchema = z.object({
    * That way a misconfigured recipient list never turns into a failing cron.
    */
   ADMIN_EMAILS: z.string().transform(unquote).optional(),
+  /**
+   * Slack incoming webhook for production alerts (src/lib/monitoring/alert.ts)
+   * — the same channel news-watch and the post-deploy smoke test post to.
+   * Optional: without it, failures are only logged.
+   */
+  SLACK_WEBHOOK_URL: z.string().transform(unquote).optional(),
+  // "1" sends alerts from a dev server too. Off by default, since .env.local
+  // carries the production webhook.
+  ALERTS_IN_DEV: z.string().default("0"),
 
   // --- Razorpay (recurring subscriptions). Optional: the app boots without
   //     them and every paid button falls back to saying checkout is
@@ -221,6 +238,9 @@ export const env = EnvSchema.parse({
   SPEAKING_API_KEY: process.env.SPEAKING_API_KEY,
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   OPENAI_MODEL: process.env.OPENAI_MODEL,
+  WRITING_AI_FORCE_FAIL: process.env.WRITING_AI_FORCE_FAIL,
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+  GEMINI_MODEL: process.env.GEMINI_MODEL,
   SMTP_HOST: process.env.SMTP_HOST,
   SMTP_PORT: process.env.SMTP_PORT,
   SMTP_USER: process.env.SMTP_USER,
@@ -237,6 +257,8 @@ export const env = EnvSchema.parse({
   RATE_LIMIT_VIOLATION_WINDOW_DAYS: process.env.RATE_LIMIT_VIOLATION_WINDOW_DAYS,
   CRON_SECRET: process.env.CRON_SECRET,
   ADMIN_EMAILS: process.env.ADMIN_EMAILS,
+  SLACK_WEBHOOK_URL: process.env.SLACK_WEBHOOK_URL,
+  ALERTS_IN_DEV: process.env.ALERTS_IN_DEV,
   RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
   RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET,
   RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET,
@@ -278,9 +300,14 @@ export function isSpeakingAiConfigured(): boolean {
   return Boolean(env.SPEAKING_API_URL && env.SPEAKING_API_KEY);
 }
 
-/** True when OpenAI is configured for Writing band scoring. */
+/** True when Writing can be band-scored: OpenAI, the Gemini backup, or both. */
 export function isWritingAiConfigured(): boolean {
-  return Boolean(env.OPENAI_API_KEY);
+  return Boolean(env.OPENAI_API_KEY || env.GEMINI_API_KEY);
+}
+
+/** True when the Gemini backup Writing scorer is available. */
+export function isGeminiConfigured(): boolean {
+  return Boolean(env.GEMINI_API_KEY);
 }
 
 /** True when SMTP is configured to actually send email. */

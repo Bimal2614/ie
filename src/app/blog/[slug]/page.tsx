@@ -9,6 +9,69 @@ import { SITE_URL } from "@/lib/site";
 
 type Params = { slug: string };
 
+/**
+ * The category that marks a post as written for a BUYER rather than a
+ * candidate. Set in `blog-partners.ts`; kept as one constant so the closing CTA
+ * and this page never drift apart. Adding a second B2B category means turning
+ * this into a Set, not copying the string.
+ */
+const B2B_CATEGORY = "For institutes";
+
+/** Closing CTA per audience. See the note above the CTA block below. */
+const CTA_BY_AUDIENCE = {
+  candidate: {
+    heading: "Put it into practice.",
+    body: "Get AI-scored on your Writing and Speaking, free to start.",
+    href: "/signup",
+    label: "Start practising free",
+  },
+  institute: {
+    heading: "Run your classes on IELTSVega.",
+    body: "Wholesale rates, a student roster and instant AI band scores. No joining fee, no minimum.",
+    href: "/partners",
+    label: "Become a partner",
+  },
+} as const;
+
+/**
+ * One guaranteed cross-category inbound link for every post.
+ *
+ * Computed once at module load, in POSTS order, assigning each post the eligible
+ * partner that currently has the fewest inbound bridges. Greedy least-loaded is
+ * enough: with 58 posts and 58 assignments it lands one on each, so no post is
+ * reachable only from inside its own category.
+ *
+ * Why this exists rather than "just take one from the other-category list": the
+ * related list is rotated by post index, and categories sit in contiguous blocks
+ * in POSTS, so rotation alone sent whole runs of posts to the same target and
+ * left 12 posts with no cross-category link at all — among them four of the "For
+ * institutes" posts this was supposed to rescue. Balancing by inbound count is
+ * what makes the guarantee hold instead of approximately holding.
+ *
+ * Deterministic by construction: same POSTS, same map, same link graph on every
+ * request and every build.
+ */
+const CROSS_CATEGORY_BRIDGE: ReadonlyMap<string, string> = (() => {
+  const inboundBridges = new Map<string, number>(POSTS.map((p) => [p.slug, 0]));
+  const bridge = new Map<string, string>();
+
+  for (const post of POSTS) {
+    let best: (typeof POSTS)[number] | null = null;
+    for (const candidate of POSTS) {
+      if (candidate.slug === post.slug || candidate.category === post.category) continue;
+      if (best === null || (inboundBridges.get(candidate.slug) ?? 0) < (inboundBridges.get(best.slug) ?? 0)) {
+        best = candidate;
+      }
+    }
+    if (best) {
+      bridge.set(post.slug, best.slug);
+      inboundBridges.set(best.slug, (inboundBridges.get(best.slug) ?? 0) + 1);
+    }
+  }
+
+  return bridge;
+})();
+
 export function generateStaticParams() {
   return POSTS.map((p) => ({ slug: p.slug }));
 }
@@ -24,6 +87,10 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
     keywords: post.keywords,
     type: "article",
     publishedTime: post.publishedAt,
+    // pageMeta has always accepted modifiedTime; nothing ever passed one, so
+    // og:article:modified_time was absent on every post. Falls back to the
+    // published date so the tag is never a date we did not earn.
+    modifiedTime: post.updatedAt ?? post.publishedAt,
   });
 
   /**
@@ -43,6 +110,20 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   delete (twitter as { images?: unknown }).images;
 
   return { ...meta, openGraph, twitter };
+}
+
+/**
+ * "2026-09-19" -> "September 2026".
+ *
+ * Pinned to UTC on purpose: an ISO date parses as UTC midnight, so formatting
+ * it in a server timezone behind UTC renders the *previous* month on the 1st of
+ * any month. The string is user-facing and must agree with the `dateModified`
+ * in the JSON-LD below, because Google's Article guidance is that a declared
+ * date be visible to readers — markup claiming a freshness the page does not
+ * show is exactly the mismatch that gets structured data discounted.
+ */
+function monthYear(iso: string) {
+  return new Date(iso).toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" });
 }
 
 /** BlogPosting structured data — helps Google surface the article richly.
@@ -83,12 +164,25 @@ function ArticleJsonLd({ post }: { post: (typeof POSTS)[number] }) {
       logo: { "@type": "ImageObject", url: LOGO_URL },
     },
     /**
-     * Thirteen of the 46 posts leave `publishedAt` unset, so they emit no
-     * date at all rather than a fabricated one — same rule the sitemap now
-     * follows. Giving those posts real dates is a content job, not a code one.
+     * The two dates are emitted INDEPENDENTLY, because they are independently
+     * known.
+     *
+     * Most of the evergreen posts leave `publishedAt` unset: nobody recorded
+     * when they were written and we will not fabricate it — the same rule the
+     * sitemap follows. But git does record when each was last revised, so those
+     * posts can honestly declare a `dateModified` with no `datePublished`
+     * beside it. schema.org allows either alone, and a real modification date
+     * is worth more than a matched pair of invented ones.
+     *
+     * `dateModified` used to be a copy of `datePublished`, which meant a post
+     * we had genuinely rewritten had no way to say so — a standing disadvantage
+     * on any query where every competing result shows a recent update date.
+     * `updatedAt` now carries it, falling back to the published date for posts
+     * that have never been revised.
      */
-    ...(post.publishedAt
-      ? { datePublished: post.publishedAt, dateModified: post.publishedAt }
+    ...(post.publishedAt ? { datePublished: post.publishedAt } : {}),
+    ...(post.updatedAt ?? post.publishedAt
+      ? { dateModified: post.updatedAt ?? post.publishedAt }
       : {}),
   };
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(json) }} />;
@@ -133,10 +227,50 @@ export default async function BlogArticle({ params }: { params: Promise<Params> 
   // Related articles — same category first, then fill from the rest. Internal
   // links like these help Google discover and index every post (they stop being
   // orphan pages) and keep readers on-site.
+  //
+  // Both lists are ROTATED by the current post's index, and that rotation is
+  // the whole point. Taking them in plain array order meant every post whose
+  // category ran short filled its remaining slots from the top of POSTS, so on
+  // 14 Sep 2026 the post at index 0 collected 19 inbound links while 7 posts
+  // collected none — among them `how-to-book-ielts-test`, which is the single
+  // URL sitting in GSC's "Crawled – currently not indexed" bucket. Rotating
+  // spreads the same number of links across the whole archive: measured
+  // afterwards, zero posts have no inbound link and the range is 1–6.
+  //
+  // Keep this deterministic. Randomising would give Google a different link
+  // graph on every request, which is worse than concentrating it.
+  //
+  // One slot is RESERVED for the CROSS_CATEGORY_BRIDGE partner, the rest go to
+  // the post's own category. Rotation alone did not fix the real failure: any
+  // category with 3+ posts filled all three slots from itself and became a
+  // sealed island, reachable only from /blog and the sitemap. On 17 Sep 2026 all
+  // ten "For institutes" posts — published 15 Sep, crawled the same day — sat in
+  // "Crawled – currently not indexed" receiving inbound links from nothing but
+  // each other, and `how-to-book-ielts-test` had been stuck in that bucket since
+  // 1 Sep for the same reason inside "Basics". With the bridge reserved, every
+  // one of the 58 posts has at least one inbound link from outside its cluster.
+  const idx = POSTS.findIndex((p) => p.slug === post.slug);
+  const rotate = <T,>(arr: T[], by: number): T[] =>
+    arr.length === 0 ? arr : [...arr.slice(by % arr.length), ...arr.slice(0, by % arr.length)];
+  const bridged = POSTS.find((p) => p.slug === CROSS_CATEGORY_BRIDGE.get(post.slug));
+  const sameCategory = rotate(
+    POSTS.filter((p) => p.slug !== post.slug && p.category === post.category),
+    idx,
+  );
+  const otherCategory = rotate(
+    POSTS.filter((p) => p.slug !== post.slug && p.category !== post.category),
+    idx,
+  );
   const related = [
-    ...POSTS.filter((p) => p.slug !== post.slug && p.category === post.category),
-    ...POSTS.filter((p) => p.slug !== post.slug && p.category !== post.category),
-  ].slice(0, 3);
+    ...(bridged ? [bridged] : []),
+    ...sameCategory.slice(0, 2),
+    ...otherCategory,
+    ...sameCategory.slice(2),
+  ]
+    .filter((p, i, all) => all.findIndex((x) => x.slug === p.slug) === i)
+    .slice(0, 3);
+
+  const cta = CTA_BY_AUDIENCE[post.category === B2B_CATEGORY ? "institute" : "candidate"];
 
   return (
     <MarketingShell>
@@ -168,6 +302,9 @@ export default async function BlogArticle({ params }: { params: Promise<Params> 
           ) : (
             <span className="text-ink-muted">· {post.date}</span>
           )}
+          {post.updatedAt && post.updatedAt !== post.publishedAt ? (
+            <time dateTime={post.updatedAt} className="text-ink-muted">· Updated {monthYear(post.updatedAt)}</time>
+          ) : null}
         </div>
 
         <h1 className="font-serif mt-4 text-4xl leading-tight tracking-tight sm:text-5xl">{post.title}</h1>
@@ -190,17 +327,86 @@ export default async function BlogArticle({ params }: { params: Promise<Params> 
                   ))}
                 </ul>
               )}
+              {/* In-body internal links. These are the ones that actually pass
+                  equity to the pages we want indexed, so the anchor text is the
+                  author's descriptive label rather than a bare URL. */}
+              {s.links && s.links.length > 0 && (
+                <ul className="mt-3 space-y-2">
+                  {s.links.map((l) => (
+                    <li key={l.href} className="flex gap-2.5">
+                      <span className="mt-2.5 size-1.5 shrink-0 rounded-full bg-brand/50" />
+                      {/* Absolute URLs are source citations (official pages a
+                          policy post rests on): open them in a new tab. */}
+                      {l.href.startsWith("http") ? (
+                        <a
+                          href={l.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium text-brand underline decoration-brand/30 underline-offset-4 transition-colors hover:decoration-brand"
+                        >
+                          {l.label}
+                        </a>
+                      ) : (
+                        <Link
+                          href={l.href}
+                          className="font-medium text-brand underline decoration-brand/30 underline-offset-4 transition-colors hover:decoration-brand"
+                        >
+                          {l.label}
+                        </Link>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {/* Tables are wrapped in their own horizontal scroller so a wide
+                  fee or band-conversion table never forces the article body to
+                  scroll sideways on a phone. */}
+              {s.table && (
+                <div className="mt-4 overflow-x-auto">
+                  <table className="w-full min-w-[32rem] border-collapse text-sm">
+                    {s.table.caption && (
+                      <caption className="pb-2 text-left text-xs text-ink-muted">{s.table.caption}</caption>
+                    )}
+                    <thead>
+                      <tr className="border-b border-line">
+                        {s.table.headers.map((h) => (
+                          <th key={h} scope="col" className="px-3 py-2 text-left font-semibold text-ink">
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {s.table.rows.map((row, r) => (
+                        <tr key={r} className="border-b border-line/60">
+                          {row.map((cell, c) => (
+                            <td key={c} className="px-3 py-2 align-top text-ink-soft">{cell}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </section>
           ))}
         </div>
       </article>
 
-      {/* CTA */}
+      {/*
+        CTA — and it has to match who is reading.
+
+        Every post used to close on "Start practising free" pointing at /signup,
+        which is right for a candidate and wrong for the B2B cluster: an
+        institute owner who has just read about franchise costs is not looking
+        for a free student account, and sending them to one wastes the only
+        conversion the post exists to produce. The category decides.
+      */}
       <div className="mt-12 flex flex-col items-center gap-4 rounded-2xl border border-line bg-paper-elev p-8 text-center">
-        <h2 className="font-serif text-2xl tracking-tight">Put it into practice.</h2>
-        <p className="max-w-md text-sm text-ink-soft">Get AI-scored on your Writing and Speaking, free to start.</p>
-        <Link href="/signup" className="inline-flex items-center gap-2 rounded-lg bg-green px-6 py-3 text-sm font-semibold text-green-ink transition-[filter] hover:brightness-105">
-          Start practising free <ArrowRight className="size-4" />
+        <h2 className="font-serif text-2xl tracking-tight">{cta.heading}</h2>
+        <p className="max-w-md text-sm text-ink-soft">{cta.body}</p>
+        <Link href={cta.href} className="inline-flex items-center gap-2 rounded-lg bg-green px-6 py-3 text-sm font-semibold text-green-ink transition-[filter] hover:brightness-105">
+          {cta.label} <ArrowRight className="size-4" />
         </Link>
       </div>
 

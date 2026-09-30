@@ -1,6 +1,7 @@
 import "server-only";
 import nodemailer, { type Transporter } from "nodemailer";
 import { env, isEmailConfigured, isProd } from "@/lib/env";
+import { alert } from "@/lib/monitoring/alert";
 
 /**
  * SMTP mailer (provider-agnostic — SES, Mailgun, Postmark, Gmail, Resend-SMTP…).
@@ -25,6 +26,14 @@ export async function sendEmail(opts: {
   subject: string;
   html: string;
   text: string;
+  /**
+   * Who a reply should go to, when that is not us.
+   *
+   * Only one caller needs it so far: the partner lead sent to ADMIN_EMAILS,
+   * where the useful reply is to the class that applied, not to the no-reply
+   * From: address. Left unset everywhere else, which keeps the default.
+   */
+  replyTo?: string;
 }): Promise<{ ok: boolean; skipped?: boolean; error?: string }> {
   if (!isEmailConfigured()) {
     console.warn(`[email] SMTP not configured: skipped "${opts.subject}" to ${opts.to}`);
@@ -38,6 +47,7 @@ export async function sendEmail(opts: {
     await transport().sendMail({
       from: env.EMAIL_FROM!,
       to: opts.to,
+      replyTo: opts.replyTo,
       subject: opts.subject,
       html: opts.html,
       text: opts.text,
@@ -45,6 +55,14 @@ export async function sendEmail(opts: {
     return { ok: true };
   } catch (e) {
     console.error("[email] send failed:", e);
+    // No recipient address: it is PII, and the subject says which mail it was.
+    await alert({
+      source: "email",
+      title: `Email send failed: "${opts.subject}"`,
+      error: e,
+      hint: "📧 SMTP rejected or unreachable — verification and reset emails are not arriving. Check SMTP_* credentials and the provider's sending limits.",
+      key: "email|send-failed",
+    });
     return { ok: false, error: e instanceof Error ? e.message : "send failed" };
   }
 }

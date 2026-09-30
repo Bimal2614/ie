@@ -35,6 +35,7 @@ export function ExamShell({
   badges,
   onClearAll,
   clearDisabled,
+  partNav,
   menu,
   remainingSec,
   timerState,
@@ -70,6 +71,13 @@ export function ExamShell({
    */
   onClearAll?: () => void;
   clearDisabled?: boolean;
+  /**
+   * Moving between the PARTS of one paper — a different axis from the
+   * Previous/Next below, which move between questions inside this part.
+   * It sits beside the part label rather than in the footer for exactly that
+   * reason: two identical pairs of arrows on one screen would be a trap.
+   */
+  partNav?: React.ReactNode;
   menu?: React.ReactNode;
   /**
    * Seconds left, for a timed sitting. Omitted, the shell counts up instead —
@@ -143,37 +151,42 @@ export function ExamShell({
       </header>
 
       {/* ---- instruction band ---- */}
-      {(partLabel || instruction || badges || onClearAll) && (
+      {(partLabel || instruction || badges || onClearAll || partNav) && (
         <div className="shrink-0 border-b border-line bg-paper-elev/60 px-4 py-2">
           <div className="flex flex-wrap items-center gap-2">
             {partLabel && (
               <span className="text-sm font-bold text-ink-strong">{partLabel}</span>
             )}
             {badges}
-            {onClearAll && (
-              <button
-                type="button"
-                onClick={() => {
-                  if (!armedClear) setConfirmClear(true);
-                  else {
-                    onClearAll();
-                    setConfirmClear(false);
-                  }
-                }}
-                onBlur={() => setConfirmClear(false)}
-                disabled={clearDisabled}
-                title={armedClear ? "Click again to clear" : "Clear every answer on this part"}
-                aria-label="Clear every answer on this part"
-                className={cn(
-                  "ml-auto inline-flex items-center justify-center gap-1.5 rounded-md border bg-paper px-2.5 py-1 text-xs font-semibold transition-colors disabled:opacity-40",
-                  armedClear
-                    ? "border-danger/60 text-danger"
-                    : "border-line text-ink-soft enabled:hover:border-brand/50 enabled:hover:text-ink",
+            {(partNav || onClearAll) && (
+              <div className="ml-auto flex items-center gap-2">
+                {partNav}
+                {onClearAll && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!armedClear) setConfirmClear(true);
+                      else {
+                        onClearAll();
+                        setConfirmClear(false);
+                      }
+                    }}
+                    onBlur={() => setConfirmClear(false)}
+                    disabled={clearDisabled}
+                    title={armedClear ? "Click again to clear" : "Clear every answer on this part"}
+                    aria-label="Clear every answer on this part"
+                    className={cn(
+                      "inline-flex items-center justify-center gap-1.5 rounded-md border bg-paper px-2.5 py-1 text-xs font-semibold transition-colors disabled:opacity-40",
+                      armedClear
+                        ? "border-danger/60 text-danger"
+                        : "border-line text-ink-soft enabled:hover:border-brand/50 enabled:hover:text-ink",
+                    )}
+                  >
+                    <Eraser className="size-3.5" />
+                    <span className="w-14 text-left">{armedClear ? "Sure?" : "Clear all"}</span>
+                  </button>
                 )}
-              >
-                <Eraser className="size-3.5" />
-                <span className="w-14 text-left">{armedClear ? "Sure?" : "Clear all"}</span>
-              </button>
+              </div>
             )}
           </div>
           {instruction && (

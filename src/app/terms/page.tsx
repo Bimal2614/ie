@@ -5,7 +5,7 @@ import { pageMeta } from "@/lib/seo";
 
 export const metadata = pageMeta({
   title: "Terms of Use: IELTSVega IELTS Practice Platform",
-  description: "The terms governing your use of IELTSVega: accounts and subscriptions, acceptable use, the status of AI band estimates, intellectual property and liability.",
+  description: "The terms governing your use of IELTSVega: accounts, subscriptions and renewals, acceptable use, the standing of our AI band estimates, and liability.",
   path: "/terms",
 });
 

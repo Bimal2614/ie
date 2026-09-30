@@ -33,7 +33,7 @@ export default async function MockTestsPage({
 }) {
   const user = await requireUser();
   const { module: requested } = await searchParams;
-  const { module, tests } = await getMockCatalogue(requested ?? null);
+  const { module, tests, openSitting } = await getMockCatalogue(requested ?? null);
 
   const total = totalMinutes(SECTION_ORDER);
   const isTheirs = module === user.targetModule;
@@ -116,7 +116,7 @@ export default async function MockTestsPage({
         </p>
       </div>
 
-      <MockCatalogue tests={tests} module={module} />
+      <MockCatalogue tests={tests} module={module} openSitting={openSitting} />
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { pageMeta } from "@/lib/seo";
 
 export const metadata = pageMeta({
   title: "Privacy Policy: How IELTSVega Handles Your Data",
-  description: "How IELTSVega collects, uses, stores and protects your personal data, including practice answers and voice recordings, and the rights you hold over it.",
+  description: "What IELTSVega collects, every provider we send it to, the cookies we set, how long data is kept, and how to get a copy, a correction or deletion.",
   path: "/privacy",
 });
 

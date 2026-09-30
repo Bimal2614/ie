@@ -1,6 +1,8 @@
 import "server-only";
-import { env, isWritingAiConfigured } from "@/lib/env";
+import { ApiError, GoogleGenAI } from "@google/genai";
+import { env, isGeminiConfigured } from "@/lib/env";
 import { countWords, truncateToWords, writingWordCap } from "@/lib/ielts";
+import { alert } from "@/lib/monitoring/alert";
 import task1Descriptors from "@/app/utils/writing_band_descriptor_task_1.json";
 import task2Descriptors from "@/app/utils/writing_band_descriptor_task_2.json";
 
@@ -74,8 +76,12 @@ export type WritingScore = {
   improvedExamples: { original: string; improved: string }[];
   /** Prioritised, actionable steps to gain the next half-band. */
   nextSteps: string[];
+  /** Who marked it: OpenAI normally, Gemini when OpenAI failed. */
+  provider: WritingProvider;
   raw: unknown;
 };
+
+export type WritingProvider = "openai" | "gemini";
 
 export type WritingScoreResult =
   | { ok: true; score: WritingScore; status: number }
@@ -325,19 +331,68 @@ function isTaskCompliance(v: unknown): v is TaskCompliance {
  * Scoring
  * ------------------------------------------------------------------ */
 
-export async function scoreWriting(params: {
+type WritingScoreParams = {
   text: string;
   taskType: WritingTaskType;
   module: string;
   questionPrompt: string;
   wordMin: number;
-}): Promise<WritingScoreResult> {
-  if (!isWritingAiConfigured()) return { ok: false, reason: "not_configured" };
+};
 
+/** One response, ready to send to whichever provider marks it. */
+type PreparedRequest = {
+  system: string;
+  user: string;
+  wordCount: number;
+  gradedWordCount: number;
+};
+
+/**
+ * Grade one Writing response: OpenAI first, Gemini if OpenAI fails.
+ *
+ * WHY A BACKUP HERE AND NOT FOR SPEAKING. Writing is plain text in, JSON out,
+ * against a prompt we own — any capable model can mark it from the same
+ * descriptors, so a second provider is a genuine replacement. Speaking depends
+ * on one service's audio pipeline and has no like-for-like substitute.
+ *
+ * Every failure that is ours or a provider's — not the candidate's — also goes
+ * to Slack: a warning when Gemini covered it, critical when both failed.
+ */
+export async function scoreWriting(params: WritingScoreParams): Promise<WritingScoreResult> {
   const written = params.text.trim();
   const wordCount = countWords(written);
+  // A candidate who wrote nothing, not an outage: no provider, no alert.
   if (wordCount < 3) return { ok: false, reason: "bad_response", detail: "empty" };
 
+  const request = prepare(params, written, wordCount);
+  const primary = await scoreWithOpenAI(request);
+  if (primary.ok) return primary;
+
+  const backup = isGeminiConfigured() ? await scoreWithGemini(request) : null;
+  const backupNote =
+    backup && !backup.ok
+      ? `\n\nGemini (${env.GEMINI_MODEL}): ${backup.status ?? "-"} ${backup.detail ?? backup.reason}`
+      : "";
+  await alert({
+    source: "writing-ai",
+    severity: backup?.ok ? "warning" : "critical",
+    title: backup?.ok
+      ? `OpenAI writing scoring failed (${primary.reason}) — Gemini marked it instead`
+      : `Writing scoring failed: ${primary.reason}${backup ? " — Gemini backup failed too" : ""}`,
+    status: primary.status,
+    detail: (primary.detail ?? primary.reason) + backupNote,
+    context: {
+      provider: "OpenAI",
+      model: env.OPENAI_MODEL,
+      task: params.taskType,
+      backup: backup ? (backup.ok ? "Gemini ok" : "Gemini failed") : "none configured",
+    },
+    key: `writing-ai|${primary.reason}|${primary.status ?? ""}|${backup ? backup.ok : "none"}`,
+  });
+  return backup?.ok ? backup : primary;
+}
+
+function prepare(params: WritingScoreParams, written: string, wordCount: number): PreparedRequest {
   // Only the first `cap` words are ever sent. The API bills by the token, and a
   // candidate who pastes a dissertation into a 250-word essay box would
   // otherwise cost many times what marking the task is worth. The cap is twice
@@ -347,6 +402,34 @@ export async function scoreWriting(params: {
   const cap = writingWordCap(params.taskType, params.wordMin);
   const text = truncateToWords(written, cap);
   const gradedWordCount = Math.min(wordCount, cap);
+  return {
+    system: buildSystemPrompt(params.taskType),
+    user: buildUserPrompt({
+      module: params.module,
+      questionPrompt: params.questionPrompt,
+      wordMin: params.wordMin,
+      text,
+      wordCount: gradedWordCount,
+      fullWordCount: wordCount,
+    }),
+    wordCount,
+    gradedWordCount,
+  };
+}
+
+async function scoreWithOpenAI(request: PreparedRequest): Promise<WritingScoreResult> {
+  if (!env.OPENAI_API_KEY) return { ok: false, reason: "not_configured" };
+  // Deliberate failure switch, for proving the failure path is visible — and,
+  // now, that the Gemini backup takes over. Returns before any request, so it
+  // costs nothing.
+  if (env.WRITING_AI_FORCE_FAIL === "1") {
+    return {
+      ok: false,
+      reason: "request_failed",
+      detail: "forced failure (WRITING_AI_FORCE_FAIL=1)",
+      status: 503,
+    };
+  }
 
   try {
     const model = env.OPENAI_MODEL;
@@ -354,23 +437,13 @@ export async function scoreWriting(params: {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${env.OPENAI_API_KEY!}`,
+        Authorization: `Bearer ${env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
         model,
         messages: [
-          { role: "system", content: buildSystemPrompt(params.taskType) },
-          {
-            role: "user",
-            content: buildUserPrompt({
-              module: params.module,
-              questionPrompt: params.questionPrompt,
-              wordMin: params.wordMin,
-              text,
-              wordCount: gradedWordCount,
-              fullWordCount: wordCount,
-            }),
-          },
+          { role: "system", content: request.system },
+          { role: "user", content: request.user },
         ],
         ...(supportsTemperature(model) ? { temperature: 0.2 } : {}),
         response_format: {
@@ -404,59 +477,108 @@ export async function scoreWriting(params: {
     if (!body) {
       return { ok: false, reason: "bad_response", detail: "empty completion", status: res.status };
     }
-    const parsed = JSON.parse(body);
-
-    const crit = (c: { band?: number; summary?: string; strengths?: string[]; improvements?: string[] }): WritingCriterion => ({
-      band: toHalfBand(Number(c?.band)),
-      summary: String(c?.summary ?? ""),
-      strengths: Array.isArray(c?.strengths) ? c.strengths.map(String) : [],
-      improvements: Array.isArray(c?.improvements) ? c.improvements.map(String) : [],
-    });
-
-    let compliance: TaskCompliance = isTaskCompliance(parsed.taskCompliance)
-      ? parsed.taskCompliance
-      : "on_task";
-    // The official "20 words or fewer is Band 1" rule is applied from our own
-    // count, never the model's: asked to judge length it drifts over the line
-    // and caps 21-word responses. The model is not even offered this flag, so a
-    // stray one is discarded. A more specific flag still wins, since either way
-    // the bands cap at 1.
-    if (compliance === "under_20_words") compliance = "on_task";
-    if (compliance === "on_task" && wordCount <= MIN_RATEABLE_WORDS) compliance = "under_20_words";
-    const onTask = compliance === "on_task";
-
-    // The Band 1 caps are enforced here, not trusted from the model: once it has
-    // flagged another language, an off-topic answer, a 20-word answer or a
-    // memorised one, every criterion is 1 whatever numbers came back.
-    const capped = (c: WritingCriterion): WritingCriterion => (onTask ? c : { ...c, band: 1 });
-
-    const criteria = {
-      taskResponse: capped(crit(parsed.taskResponse)),
-      coherenceCohesion: capped(crit(parsed.coherenceCohesion)),
-      lexicalResource: capped(crit(parsed.lexicalResource)),
-      grammaticalRange: capped(crit(parsed.grammaticalRange)),
-    };
-    const mean =
-      (criteria.taskResponse.band + criteria.coherenceCohesion.band + criteria.lexicalResource.band + criteria.grammaticalRange.band) / 4;
-
-    return {
-      ok: true,
-      status: res.status,
-      score: {
-        overall: toHalfBand(mean),
-        wordCount,
-        gradedWordCount,
-        onTask,
-        taskCompliance: compliance,
-        criteria,
-        overallFeedback: String(parsed.overallFeedback ?? ""),
-        corrections: Array.isArray(parsed.corrections) ? parsed.corrections.slice(0, 12) : [],
-        improvedExamples: Array.isArray(parsed.improvedExamples) ? parsed.improvedExamples.slice(0, 6) : [],
-        nextSteps: Array.isArray(parsed.nextSteps) ? parsed.nextSteps.map(String) : [],
-        raw: parsed,
-      },
-    };
+    return { ok: true, status: res.status, score: toWritingScore(JSON.parse(body), request, "openai") };
   } catch (e) {
     return { ok: false, reason: "request_failed", detail: e instanceof Error ? e.message : String(e) };
   }
+}
+
+/**
+ * The same request, marked by Gemini. Same system prompt, same user prompt,
+ * same JSON schema — so the result is parsed and capped by exactly the code
+ * that handles OpenAI's, and a candidate cannot tell which provider marked them.
+ */
+async function scoreWithGemini(request: PreparedRequest): Promise<WritingScoreResult> {
+  try {
+    const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY! });
+    const res = await ai.models.generateContent({
+      model: env.GEMINI_MODEL,
+      contents: request.user,
+      config: {
+        systemInstruction: request.system,
+        responseMimeType: "application/json",
+        responseJsonSchema: responseSchema,
+        temperature: 0.2,
+        abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      },
+    });
+    const body = res.text;
+    if (!body) {
+      const why = res.candidates?.[0]?.finishReason ?? res.promptFeedback?.blockReason ?? "empty completion";
+      return { ok: false, reason: "bad_response", detail: `gemini: ${why}`, status: 200 };
+    }
+    return { ok: true, status: 200, score: toWritingScore(JSON.parse(body), request, "gemini") };
+  } catch (e) {
+    return {
+      ok: false,
+      reason: "request_failed",
+      detail: e instanceof Error ? e.message.slice(0, 500) : String(e),
+      status: e instanceof ApiError ? e.status : undefined,
+    };
+  }
+}
+
+type RawCriterion = { band?: number; summary?: string; strengths?: string[]; improvements?: string[] };
+type RawWritingScore = {
+  taskCompliance?: unknown;
+  overallFeedback?: unknown;
+  taskResponse?: RawCriterion;
+  coherenceCohesion?: RawCriterion;
+  lexicalResource?: RawCriterion;
+  grammaticalRange?: RawCriterion;
+  corrections?: unknown;
+  improvedExamples?: unknown;
+  nextSteps?: unknown;
+};
+
+/** Model JSON → a score, with our own length rule and Band 1 caps applied. */
+function toWritingScore(parsed: RawWritingScore, request: PreparedRequest, provider: WritingProvider): WritingScore {
+  const { wordCount, gradedWordCount } = request;
+  const crit = (c: RawCriterion | undefined): WritingCriterion => ({
+    band: toHalfBand(Number(c?.band)),
+    summary: String(c?.summary ?? ""),
+    strengths: Array.isArray(c?.strengths) ? c.strengths.map(String) : [],
+    improvements: Array.isArray(c?.improvements) ? c.improvements.map(String) : [],
+  });
+
+  let compliance: TaskCompliance = isTaskCompliance(parsed.taskCompliance)
+    ? parsed.taskCompliance
+    : "on_task";
+  // The official "20 words or fewer is Band 1" rule is applied from our own
+  // count, never the model's: asked to judge length it drifts over the line
+  // and caps 21-word responses. The model is not even offered this flag, so a
+  // stray one is discarded. A more specific flag still wins, since either way
+  // the bands cap at 1.
+  if (compliance === "under_20_words") compliance = "on_task";
+  if (compliance === "on_task" && wordCount <= MIN_RATEABLE_WORDS) compliance = "under_20_words";
+  const onTask = compliance === "on_task";
+
+  // The Band 1 caps are enforced here, not trusted from the model: once it has
+  // flagged another language, an off-topic answer, a 20-word answer or a
+  // memorised one, every criterion is 1 whatever numbers came back.
+  const capped = (c: WritingCriterion): WritingCriterion => (onTask ? c : { ...c, band: 1 });
+
+  const criteria = {
+    taskResponse: capped(crit(parsed.taskResponse)),
+    coherenceCohesion: capped(crit(parsed.coherenceCohesion)),
+    lexicalResource: capped(crit(parsed.lexicalResource)),
+    grammaticalRange: capped(crit(parsed.grammaticalRange)),
+  };
+  const mean =
+    (criteria.taskResponse.band + criteria.coherenceCohesion.band + criteria.lexicalResource.band + criteria.grammaticalRange.band) / 4;
+
+  return {
+    overall: toHalfBand(mean),
+    wordCount,
+    gradedWordCount,
+    onTask,
+    taskCompliance: compliance,
+    criteria,
+    overallFeedback: String(parsed.overallFeedback ?? ""),
+    corrections: Array.isArray(parsed.corrections) ? parsed.corrections.slice(0, 12) : [],
+    improvedExamples: Array.isArray(parsed.improvedExamples) ? parsed.improvedExamples.slice(0, 6) : [],
+    nextSteps: Array.isArray(parsed.nextSteps) ? parsed.nextSteps.map(String) : [],
+    provider,
+    raw: parsed,
+  };
 }

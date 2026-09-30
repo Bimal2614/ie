@@ -6,6 +6,7 @@ import { users, auditLog } from "@/db/schema";
 import { hashPassword, verifyPassword, fakeVerify } from "@/lib/security/password";
 import { rateLimit, clearRateLimit } from "@/lib/security/rate-limit";
 import { isUniqueViolation } from "@/lib/db-errors";
+import { referringPartner } from "@/lib/partners";
 import { sendEmail } from "@/lib/email/mailer";
 import { welcomeTemplate } from "@/lib/email/templates";
 import { env } from "@/lib/env";
@@ -79,6 +80,8 @@ export type AuthSuccess = {
   ok: true;
   userId: string;
   role: "user" | "admin" | "partner";
+  /** The class whose invite link this signup came through, if any. */
+  partnerId?: string | null;
 };
 
 export type AuthFailure = {
@@ -106,6 +109,14 @@ export type AuthResult = AuthSuccess | AuthFailure;
 export async function registerAccount(
   input: SignupInput,
   origin: RequestOrigin,
+  /**
+   * The `ref` off a partner invite link, UNVALIDATED.
+   *
+   * Passed straight through from whatever carried it — a form field on the web,
+   * a deep-link parameter in the app — because the re-read below is what decides
+   * whether it means anything. Neither caller should be checking it first.
+   */
+  referral?: unknown,
 ): Promise<AuthResult> {
   const { name, email, phone, password, targetModule } = input;
 
@@ -122,11 +133,40 @@ export async function registerAccount(
 
   const passwordHash = await hashPassword(password);
 
+  /*
+   * The class whose invite link this signup came through, if any.
+   *
+   * THE ID IS RE-READ HERE, not taken on trust from the caller: the page
+   * rendered the welcome straight from the URL (see src/lib/partner-referral.ts),
+   * so until this line nothing has checked that the class exists, is still ours,
+   * or is still active. A `ref` that fails any of those is dropped in silence
+   * and the account is created as an ordinary one — a broken link must cost the
+   * candidate their institution, not their account.
+   */
+  const referrer = await referringPartner(referral);
+
   let userId: string;
   try {
     const [created] = await db
       .insert(users)
-      .values({ name, email, emailNormalized: email, phone, passwordHash, targetModule })
+      .values({
+        name,
+        email,
+        emailNormalized: email,
+        phone,
+        passwordHash,
+        targetModule,
+        partnerId: referrer?.id ?? null,
+        /*
+         * A signup IS a sign-in — the caller opens a session immediately.
+         *
+         * Left NULL, this row reads as "never signed in" everywhere the column
+         * is used as last-seen, which is a partner's roster telling a class
+         * that a student who just joined through its link has never turned up.
+         */
+        lastLoginAt: new Date(),
+        lastLoginIp: origin.ip,
+      })
       .returning({ id: users.id });
     userId = created.id;
   } catch (err) {
@@ -142,6 +182,18 @@ export async function registerAccount(
 
   await audit(userId, "signup", origin);
 
+  /*
+   * A SEPARATE EVENT FROM `partner.student.enrolled`, deliberately. Both end in
+   * a row carrying the same `partner_id`, but one account was created by the
+   * class — which chose the password and handed it over in the room — and this
+   * one was created by the candidate, who chose their own. That is the
+   * difference that matters the day anyone asks what a class may do to one of
+   * its students' accounts, and it cannot be reconstructed later.
+   */
+  if (referrer) {
+    await audit(userId, "partner.student.referred", origin, { partnerId: referrer.id });
+  }
+
   // No verification step for now: addresses are taken at face value and nothing
   // in the app gates on `emailVerified`.
   try {
@@ -151,7 +203,7 @@ export async function registerAccount(
     // A mail outage must not fail account creation.
   }
 
-  return { ok: true, userId, role: "user" };
+  return { ok: true, userId, role: "user", partnerId: referrer?.id ?? null };
 }
 
 /* ------------------------------------------------------------------ *

@@ -6,10 +6,11 @@ import { userResponses } from "@/db/schema";
 import { QUESTION_TYPES, type QuestionTypeKey } from "@/lib/ielts";
 import { keyFromUrl, presignGetUrl } from "@/lib/speech/s3";
 import { analyzeSpeaking, partFor } from "@/lib/speech/ielts-speaking";
-import { speakingFeedback, unscorableFeedback } from "./speaking-feedback";
+import { failureFeedback, speakingFeedback, unscorableFeedback } from "./speaking-feedback";
 import { scoreWriting, type WritingTaskType } from "@/lib/writing/openai";
 import { resolvePrompts } from "./prompts";
 import { mapWithConcurrency } from "./concurrency";
+import { alert } from "@/lib/monitoring/alert";
 
 /**
  * AI band scoring for one attempt's subjective answers.
@@ -103,8 +104,9 @@ export async function scoreAttemptSpeakingFor(
     // question 3 must not cost questions 4 to 7 their bands, so each is
     // contained and reported as unscored — but never swallowed silently, or a
     // whole batch can fail with nothing anywhere to say why.
-    scoreOne(row).catch((e) => {
+    scoreOne(row).catch(async (e) => {
       console.error("[scoring] speaking: threw", { responseId: row.id, error: e });
+      await alert({ source: "scoring", title: "Speaking answer scoring threw", error: e, context: { responseId: row.id } });
       return false;
     }),
   );
@@ -129,6 +131,12 @@ export async function scoreAttemptSpeakingFor(
     const audioUrl = await presignGetUrl(key, SIGNED_URL_TTL_SEC);
     if (!audioUrl) {
       console.warn("[scoring] speaking: could not presign audio", { responseId: row.id, key });
+      await alert({
+        source: "s3",
+        title: "Could not sign a speaking recording URL — speaking cannot be scored",
+        hint: "⚙️ S3 is not configured on this deployment (AWS_* / S3_BUCKET_NAME).",
+        context: { responseId: row.id },
+      });
       return false;
     }
 
@@ -156,20 +164,30 @@ export async function scoreAttemptSpeakingFor(
       // unscored answer, and without a line in the log there is nothing to tell
       // a missing key apart from a provider outage apart from a recording with
       // nothing in it.
-      console.error("[scoring] speaking: not scored", {
-        responseId: row.id,
-        reason: result.reason,
-        detail: result.detail,
-      });
+      // Interpolated rather than passed as an object: not every log sink formats
+      // the second argument, and the dev server's renders it as a bare `{}` —
+      // which is how a run of these ends up saying nothing at all.
+      console.error(
+        `[scoring] speaking: not scored response=${row.id} reason=${result.reason}` +
+          ` status=${result.status ?? "-"} detail=${result.detail ?? "-"}`,
+      );
       // No speech in the recording is a permanent fact about it, not an outage.
       // Recording that stops the report screen waiting for a band that is never
       // coming, and tells the candidate what to do instead.
-      if (result.reason === "no_speech" || result.reason === "bad_audio") {
-        await db
-          .update(userResponses)
-          .set({ aiFeedback: unscorableFeedback(result.reason, result.detail) })
-          .where(eq(userResponses.id, row.id));
-      }
+      //
+      // Everything else is written down too, as a breadcrumb rather than a
+      // verdict: `scorableResponse` keys off `unscorable`, so this keeps the row
+      // in the retry queue while making the reason survive the process that knew
+      // it. See failureFeedback().
+      await db
+        .update(userResponses)
+        .set({
+          aiFeedback:
+            result.reason === "no_speech" || result.reason === "bad_audio"
+              ? unscorableFeedback(result.reason, result.detail)
+              : failureFeedback(result.reason, result.status, result.detail),
+        })
+        .where(eq(userResponses.id, row.id));
       return false;
     }
 
@@ -218,12 +236,19 @@ export async function scoreAttemptWritingFor(
   // a two-task Writing paper shouldn't wait for Task 2 to show Task 1's band.
   // Contained per task, for the same reason as speaking above.
   const outcomes = await mapWithConcurrency(rows, SCORING_CONCURRENCY, (row) =>
-    gradeOne(row).catch(() => false),
+    gradeOne(row).catch(async (e) => {
+      console.error(`[scoring] writing: threw response=${row.id}`, e);
+      await alert({ source: "scoring", title: "Writing answer scoring threw", error: e, context: { responseId: row.id } });
+      return false;
+    }),
   );
 
   const scored = outcomes.filter((o) => o === true).length;
   // `null` means there was nothing to grade — not a failure.
   const failed = outcomes.filter((o) => o === false).length;
+  // One line per run, as for speaking: without it a failing OpenAI key leaves
+  // nothing in the log but a 200 POST.
+  console.info(`[scoring] writing run attempt=${attemptId} scored=${scored} failed=${failed}`);
   return { scored, failed };
 
   async function gradeOne(row: (typeof rows)[number]): Promise<boolean | null> {
@@ -251,7 +276,16 @@ export async function scoreAttemptWritingFor(
       // section can set its own.
       wordMin: resolved?.wordLimitMin ?? meta.wordLimitMin ?? (qt === "writing_task2" ? 250 : 150),
     });
-    if (!result.ok) return false;
+    if (!result.ok) {
+      // Interpolated for the same reason as the speaking line: some log sinks
+      // drop an object argument. `detail` carries OpenAI's own error body,
+      // which is the only thing telling a spent quota from a wrong model.
+      console.error(
+        `[scoring] writing: not scored response=${row.id} reason=${result.reason}` +
+          ` status=${result.status ?? "-"} detail=${result.detail ?? "-"}`,
+      );
+      return false;
+    }
 
     const s = result.score;
     await db
@@ -268,7 +302,7 @@ export async function scoreAttemptWritingFor(
           improvedExamples: s.improvedExamples,
           nextSteps: s.nextSteps,
           taskCompliance: s.taskCompliance,
-          provider: "openai",
+          provider: s.provider,
         },
       })
       .where(eq(userResponses.id, row.id));

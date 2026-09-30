@@ -26,9 +26,11 @@ import {
   type PageRequest,
 } from "@/lib/pagination";
 import { requirePartner, type PartnerUser } from "@/lib/dal";
+import { isReferralId } from "@/lib/partner-referral";
 import type { PartnerRate } from "@/lib/partner-pricing";
 import { revenueByPartner } from "@/lib/payments/transactions";
 import { effectivePlan, toPlanKey, type PlanKey } from "@/lib/plans";
+import { studentProgress, type StudentProgress } from "@/lib/student-progress";
 import { hashPassword } from "@/lib/security/password";
 import { destroyAllSessions } from "@/lib/session";
 
@@ -41,6 +43,11 @@ import { destroyAllSessions } from "@/lib/session";
  * away from showing one class another class's students, so the two functions a
  * partner screen actually calls — `partnerStudents` and `partnerStudentDetail` —
  * take the id and then re-check that the row they found belongs to it.
+ *
+ * `referringPartner` is the one deliberate exception, and it is marked as such
+ * where it is defined: it takes an id off a public URL. It is allowed to
+ * because it reads nothing belonging to anybody — a trading name and whether
+ * the class is active — and answers the only question a signup can ask.
  *
  * The panel is a handful of screens over at most a few hundred students, so
  * everything here is a live query against the indexes in src/db/schema.ts.
@@ -137,6 +144,8 @@ export type PartnerStudent = {
   planExpiresAt: Date | null;
   joinedAt: Date;
   lastLoginAt: Date | null;
+  /** Locked out (`users.deactivated_at`) — the admin roster offers Enable/Disable on it. */
+  deactivatedAt: Date | null;
 
   /** Practice activity, so a roster row shows progress without a click. */
   attempts: number;
@@ -147,6 +156,12 @@ export type PartnerStudent = {
 
   /** The most recent payment this class started for them, paid or not. */
   payment: PartnerStudentPayment | null;
+  /**
+   * The most recent SETTLED payment, so the roster can offer its receipt —
+   * separate from `payment` above on purpose. The latest attempt is often an
+   * abandoned or failed one, and there is no receipt for money we did not take.
+   */
+  receiptPaymentId: string | null;
 };
 
 const studentColumns = {
@@ -160,6 +175,7 @@ const studentColumns = {
   planExpiresAt: users.planExpiresAt,
   createdAt: users.createdAt,
   lastLoginAt: users.lastLoginAt,
+  deactivatedAt: users.deactivatedAt,
 };
 
 /**
@@ -198,6 +214,7 @@ async function activityFor(ids: string[]) {
     // is cheaper than a window function and reads as what it is.
     db
       .select({
+        id: partnerPayments.id,
         studentUserId: partnerPayments.studentUserId,
         status: partnerPayments.status,
         plan: partnerPayments.plan,
@@ -211,21 +228,31 @@ async function activityFor(ids: string[]) {
   ]);
 
   const latestPayment = new Map<string, PartnerStudentPayment>();
+  // The newest SETTLED one, which is a different row from the newest one: a
+  // class that opened a checkout and closed it has a `created` row on top, and
+  // that row has no receipt. Same single pass, so it costs nothing.
+  const latestPaidId = new Map<string, string>();
   for (const p of payments) {
-    if (!p.studentUserId || latestPayment.has(p.studentUserId)) continue;
-    latestPayment.set(p.studentUserId, {
-      status: p.status,
-      plan: toPlanKey(p.plan),
-      amountCents: p.amountCents,
-      currency: p.currency,
-      createdAt: p.createdAt,
-    });
+    if (!p.studentUserId) continue;
+    if (!latestPayment.has(p.studentUserId)) {
+      latestPayment.set(p.studentUserId, {
+        status: p.status,
+        plan: toPlanKey(p.plan),
+        amountCents: p.amountCents,
+        currency: p.currency,
+        createdAt: p.createdAt,
+      });
+    }
+    if (p.status === "paid" && !latestPaidId.has(p.studentUserId)) {
+      latestPaidId.set(p.studentUserId, p.id);
+    }
   }
 
   return {
     practice: new Map(practice.map((r) => [r.userId, r])),
     mocks: new Map(mocks.map((r) => [r.userId, r])),
     latestPayment,
+    latestPaidId,
   };
 }
 
@@ -353,7 +380,7 @@ export async function partnerStudents(
   const total = totals[0]?.total ?? 0;
   if (rows.length === 0) return toPage<PartnerStudent>([], total, req);
 
-  const { practice, mocks, latestPayment } = await activityFor(rows.map((r) => r.id));
+  const { practice, mocks, latestPayment, latestPaidId } = await activityFor(rows.map((r) => r.id));
 
   const mapped = rows.map((u) => {
     const p = practice.get(u.id);
@@ -369,12 +396,14 @@ export async function partnerStudents(
       planExpiresAt: u.planExpiresAt,
       joinedAt: u.createdAt,
       lastLoginAt: u.lastLoginAt,
+      deactivatedAt: u.deactivatedAt,
       attempts: p?.attempts ?? 0,
       avgBand: p?.avgBand ?? null,
       mocks: m?.taken ?? 0,
       bestMockBand: m?.best ?? null,
       lastActiveAt: p?.lastAt ?? null,
       payment: latestPayment.get(u.id) ?? null,
+      receiptPaymentId: latestPaidId.get(u.id) ?? null,
     };
   });
 
@@ -456,25 +485,10 @@ export async function partnerOverview(
  * One student
  * ------------------------------------------------------------------ */
 
-export type SectionProgress = {
-  section: "listening" | "reading" | "writing" | "speaking";
-  attempts: number;
-  answers: number;
-  graded: number;
-  correct: number;
-  avgBand: number | null;
-  lastAt: Date | null;
-};
-
-export type StudentAttempt = {
-  attemptId: string;
-  section: string;
-  questionType: string;
-  answers: number;
-  correct: number;
-  avgBand: number | null;
-  at: Date;
-};
+/* The practice record itself lives in src/lib/student-progress.ts, which the
+   admin console reads too — re-exported here so a partner-panel caller still
+   has one import. */
+export type { SectionProgress, StudentAttempt, StudentMock } from "@/lib/student-progress";
 
 export type StudentPaymentRow = {
   id: string;
@@ -488,20 +502,8 @@ export type StudentPaymentRow = {
   createdAt: Date;
 };
 
-export type PartnerStudentDetail = {
+export type PartnerStudentDetail = StudentProgress & {
   student: PartnerStudent;
-  sections: SectionProgress[];
-  attempts: StudentAttempt[];
-  mocks: Array<{
-    id: string;
-    module: string;
-    overallBand: string | null;
-    listeningBand: string | null;
-    readingBand: string | null;
-    writingBand: string | null;
-    speakingBand: string | null;
-    at: Date;
-  }>;
   payments: StudentPaymentRow[];
 };
 
@@ -525,53 +527,9 @@ export async function partnerStudentDetail(
     .limit(1);
   if (!row) return null;
 
-  const [activity, sections, attempts, mockRows, payments] = await Promise.all([
+  const [activity, progress, payments] = await Promise.all([
     activityFor([row.id]),
-    db
-      .select({
-        section: userResponses.section,
-        attempts: sql<number>`count(distinct ${userResponses.attemptId})::int`,
-        answers: sql<number>`count(*)::int`,
-        graded: sql<number>`count(*) filter (where ${userResponses.isCorrect} is not null or ${userResponses.band} is not null)::int`,
-        correct: sql<number>`count(*) filter (where ${userResponses.isCorrect})::int`,
-        avgBand: sql<number | null>`avg(${userResponses.band})::float`,
-        lastAt: sql<Date | null>`max(${userResponses.createdAt})`,
-      })
-      .from(userResponses)
-      .where(eq(userResponses.userId, studentId))
-      .groupBy(userResponses.section),
-    // One row per SUBMIT, not per gap — a four-gap table is one thing the
-    // student did, and listing its rows fills the feed with four of it.
-    db
-      .select({
-        attemptId: userResponses.attemptId,
-        section: userResponses.section,
-        questionType: userResponses.questionType,
-        answers: sql<number>`count(*)::int`,
-        correct: sql<number>`count(*) filter (where ${userResponses.isCorrect})::int`,
-        avgBand: sql<number | null>`avg(${userResponses.band})::float`,
-        at: sql<Date>`max(${userResponses.createdAt})`,
-      })
-      .from(userResponses)
-      .where(eq(userResponses.userId, studentId))
-      .groupBy(userResponses.attemptId, userResponses.section, userResponses.questionType)
-      .orderBy(sql`max(${userResponses.createdAt}) desc`)
-      .limit(20),
-    db
-      .select({
-        id: mockTestResults.id,
-        module: mockTestResults.module,
-        overallBand: mockTestResults.overallBand,
-        listeningBand: mockTestResults.listeningBand,
-        readingBand: mockTestResults.readingBand,
-        writingBand: mockTestResults.writingBand,
-        speakingBand: mockTestResults.speakingBand,
-        at: mockTestResults.createdAt,
-      })
-      .from(mockTestResults)
-      .where(eq(mockTestResults.userId, studentId))
-      .orderBy(desc(mockTestResults.createdAt))
-      .limit(10),
+    studentProgress(studentId),
     db
       .select({
         id: partnerPayments.id,
@@ -610,16 +568,16 @@ export async function partnerStudentDetail(
       planExpiresAt: row.planExpiresAt,
       joinedAt: row.createdAt,
       lastLoginAt: row.lastLoginAt,
+      deactivatedAt: row.deactivatedAt,
       attempts: p?.attempts ?? 0,
       avgBand: p?.avgBand ?? null,
       mocks: m?.taken ?? 0,
       bestMockBand: m?.best ?? null,
       lastActiveAt: p?.lastAt ?? null,
       payment: activity.latestPayment.get(row.id) ?? null,
+      receiptPaymentId: activity.latestPaidId.get(row.id) ?? null,
     },
-    sections,
-    attempts,
-    mocks: mockRows,
+    ...progress,
     payments: payments.map((r) => ({ ...r, plan: toPlanKey(r.plan) })),
   };
 }
@@ -627,6 +585,33 @@ export async function partnerStudentDetail(
 /* ------------------------------------------------------------------ *
  * Writes — enrolling, and the credentials that come with it
  * ------------------------------------------------------------------ */
+
+/**
+ * The class behind a `?ref=` on the signup page — or null.
+ *
+ * THE ONE READ HERE THAT IS NOT SESSION-SCOPED (see the file header), because
+ * the id comes off a link a stranger may have opened. That is safe for exactly
+ * two reasons and they are worth keeping true: it returns only what the link
+ * already claimed — a trading name — so it leaks nothing that guessing a uuid
+ * did not already require, and it is never used to READ anything. Its answer
+ * decides one thing: whether `users.partner_id` is set on the row about to be
+ * created.
+ *
+ * SUSPENDED CLASSES GET NOBODY. A class we have stopped doing business with
+ * must not keep collecting students through a link that is already printed on
+ * a handout — the account is still created, just not as anyone's student.
+ */
+export async function referringPartner(
+  value: unknown,
+): Promise<{ id: string; name: string } | null> {
+  if (!isReferralId(value)) return null;
+  const [row] = await db
+    .select({ id: partners.id, name: partners.name })
+    .from(partners)
+    .where(and(eq(partners.id, value), eq(partners.status, "active")))
+    .limit(1);
+  return row ?? null;
+}
 
 export type EnrolInput = {
   partnerId: string;
@@ -895,7 +880,7 @@ export async function partnerForAdmin(
   const [partner] = await db.select().from(partners).where(eq(partners.id, partnerId)).limit(1);
   if (!partner) return null;
 
-  const [students, overview, logins, payments] = await Promise.all([
+  const [students, overview, logins, payments, revenue] = await Promise.all([
     partnerStudents(partnerId, req, now),
     partnerOverview(partnerId, now),
     partnerLogins(partnerId),
@@ -918,6 +903,14 @@ export async function partnerForAdmin(
       .where(eq(partnerPayments.partnerId, partnerId))
       .orderBy(desc(partnerPayments.createdAt))
       .limit(20),
+    /*
+     * The SAME read the admin list uses, and the reason this screen no longer
+     * adds up the payments below it: that list is capped at twenty rows, so
+     * summing it reported a class's lifetime income as whatever its last twenty
+     * orders happened to come to — a number that shrank as the class grew, and
+     * disagreed with /admin/partners on the very same class.
+     */
+    revenueByPartner([partnerId]),
   ]);
 
   return {
@@ -925,6 +918,8 @@ export async function partnerForAdmin(
     logins,
     students,
     overview,
+    /** Lifetime, from the ledger. Per currency — never flattened to one number. */
+    revenue: revenue.get(partnerId) ?? {},
     // The twenty most recent. The full history lives on /admin/payments, which
     // pages properly; this is the "what happened lately" panel.
     payments: payments.map((r) => ({ ...r, plan: toPlanKey(r.plan) })),

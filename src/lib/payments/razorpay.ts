@@ -329,6 +329,36 @@ export function fetchOrder(id: string): Promise<RazorpayOrder> {
 }
 
 /* ------------------------------------------------------------------ *
+ * Payments — read-only, for the daily reconciliation
+ * ------------------------------------------------------------------ */
+
+export type RazorpayPayment = {
+  id: string;
+  amount: number;
+  currency: string;
+  status: "created" | "authorized" | "captured" | "refunded" | "failed";
+  order_id: string | null;
+  /** Set on subscription charges; the invoice names the subscription. */
+  invoice_id: string | null;
+  created_at: number;
+};
+
+/** Every payment created in [from, to), paging through Razorpay's 100-a-page cap. */
+export async function listPayments(from: Date, to: Date): Promise<RazorpayPayment[]> {
+  const out: RazorpayPayment[] = [];
+  const range = `from=${Math.floor(from.getTime() / 1000)}&to=${Math.floor(to.getTime() / 1000) - 1}`;
+  for (let skip = 0; ; skip += 100) {
+    const page = await call<{ items: RazorpayPayment[] }>(`/payments?${range}&count=100&skip=${skip}`);
+    out.push(...page.items);
+    if (page.items.length < 100) return out;
+  }
+}
+
+export function fetchInvoice(id: string): Promise<{ id: string; subscription_id: string | null }> {
+  return call(`/invoices/${encodeURIComponent(id)}`);
+}
+
+/* ------------------------------------------------------------------ *
  * Signatures
  *
  * Two different secrets sign two different things, and mixing them up is the

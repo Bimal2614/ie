@@ -2,7 +2,15 @@
 
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, RotateCcw, Target } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  RotateCcw,
+  Target,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { anyUploadPending, isAnswered, type Answer } from "@/lib/question-content";
@@ -28,6 +36,31 @@ import { clearAnnotations } from "./renderers/annotations";
 import { AttemptFeedback } from "./attempt-feedback";
 
 /**
+ * One of the parts either side of this one — mirrors sectionNeighbours().
+ *
+ * Declared here rather than imported because the read layer is `server-only`;
+ * the browser does the same with the summary types it draws.
+ */
+export type PartNeighbour = {
+  id: string;
+  sectionType: SectionKey;
+  partNumber: number | null;
+};
+
+export type SectionNeighboursView = {
+  prev: PartNeighbour | null;
+  next: PartNeighbour | null;
+  /** 1-based place in the test, for "3 / 12". */
+  position: number;
+  total: number;
+};
+
+function partName(p: PartNeighbour): string {
+  const label = SECTIONS[p.sectionType].label;
+  return p.partNumber ? `${label} · Part ${p.partNumber}` : label;
+}
+
+/**
  * Player for one `practice_sections` row, in the exam's own layout.
  *
  * Answers are keyed by EXAM NUMBER rather than a question uuid — items live in
@@ -46,13 +79,21 @@ export function SectionPlayer({
   section,
   paperTitle,
   exitHref,
+  neighbours,
 }: {
   section: ClientSectionView;
   /** "Cambridge 19 · Test 2 · Reading" for the header. */
   paperTitle?: string;
   /** Where the header's way out leads — the exam covers the app's own nav. */
   exitHref?: string;
+  /**
+   * The rest of this book and test, so a candidate can work straight through
+   * the paper — Listening 4 into Reading 1 — instead of returning to the
+   * library between every part. Omitted, the control simply does not appear.
+   */
+  neighbours?: SectionNeighboursView | null;
 }) {
+  const router = useRouter();
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const [pending, setPending] = useState(false);
   const [result, setResult] = useState<SectionPracticeResult | null>(null);
@@ -62,6 +103,8 @@ export function SectionPlayer({
   /** Questions marked to come back to — the real paper's flag column. */
   const [flagged, setFlagged] = useState<Set<string>>(new Set());
   const [confirming, setConfirming] = useState(false);
+  /** A part the candidate asked to move to, held until they confirm the loss. */
+  const [leaving, setLeaving] = useState<PartNeighbour | null>(null);
   /**
    * This attempt's working notes.
    *
@@ -215,6 +258,40 @@ export function SectionPlayer({
   // A recording still uploading would be submitted with no audio to score.
   const savingRecording = anyUploadPending(answers);
 
+  /**
+   * Whether moving to another part would cost the candidate something.
+   *
+   * Answers live in this component until a submit, so leaving throws them away,
+   * and a recording still uploading would be abandoned mid-flight. Once the part
+   * is graded there is nothing left to lose and the move is silent.
+   */
+  const unsaved = !result && (Object.values(answers).some(isAnswered) || savingRecording);
+
+  /**
+   * Returns false — and arms the dialog instead — when the move needs asking
+   * about first. The link's own navigation is what gets cancelled, so a
+   * ctrl-click still opens the other part in a new tab with this one intact.
+   */
+  const guardLeave = (part: PartNeighbour) => {
+    if (!unsaved) return true;
+    setLeaving(part);
+    return false;
+  };
+
+  const partNav =
+    neighbours && neighbours.total > 1 ? (
+      <nav aria-label="Parts of this test" className="flex items-center gap-1">
+        <PartLink part={neighbours.prev} dir="prev" guard={guardLeave} />
+        <span
+          className="px-0.5 text-[11px] font-semibold tabular-nums text-ink-muted"
+          title={`Part ${neighbours.position} of ${neighbours.total} in this test`}
+        >
+          {neighbours.position}/{neighbours.total}
+        </span>
+        <PartLink part={neighbours.next} dir="next" guard={guardLeave} />
+      </nav>
+    ) : null;
+
   // Writing and Speaking are scored by band, not by right/wrong, so a marks
   // card has nothing to report for them — the AI report is the result.
   const aiScored = isAiScored(section.sectionType);
@@ -321,6 +398,7 @@ export function SectionPlayer({
           </span>
         </>
       }
+      partNav={partNav}
       onClearAll={result ? undefined : () => setAnswers({})}
       // Empty boxes left behind by a cleared gap are not answers, so the
       // button greys out in step with the counter on the answer strip.
@@ -380,8 +458,85 @@ export function SectionPlayer({
         }}
         onCancel={() => setConfirming(false)}
       />
+      {leaving && (
+        <ConfirmSubmit
+          open
+          title="Leave this part?"
+          detail={`Nothing here has been submitted, so these answers are lost — ${partName(leaving)} opens with a clean sheet.`}
+          unanswered={sheet.numbers.length - answered.size}
+          flagged={flaggedNumbers.size}
+          confirmLabel="Leave without submitting"
+          onConfirm={() => {
+            const href = `/section-practice/${leaving.id}`;
+            setLeaving(null);
+            router.push(href);
+          }}
+          onCancel={() => setLeaving(null)}
+        />
+      )}
       <PlanBlockDialog block={blocked} onClose={() => setBlocked(null)} />
     </ExamShell>
+  );
+}
+
+/**
+ * One step through the paper — the part before or after this one.
+ *
+ * A real <Link/> rather than a button so the next part is prefetched while the
+ * candidate is still working on this one, and so a middle-click opens it in a
+ * tab the way every other link on the site does. At the ends of the paper the
+ * control stays in place, greyed, rather than disappearing: a Next button that
+ * vanishes on the last part shifts everything beside it.
+ */
+function PartLink({
+  part,
+  dir,
+  guard,
+}: {
+  part: PartNeighbour | null;
+  dir: "prev" | "next";
+  /** Returns false to cancel the navigation — see guardLeave(). */
+  guard: (part: PartNeighbour) => boolean;
+}) {
+  const Icon = dir === "prev" ? ChevronLeft : ChevronRight;
+  const short = dir === "prev" ? "Prev" : "Next";
+  const shell =
+    "inline-flex items-center gap-1 rounded-md border bg-paper px-2 py-1 text-xs font-semibold transition-colors";
+
+  if (!part) {
+    return (
+      <span
+        aria-hidden="true"
+        className={cn(shell, "border-line/60 text-ink-muted opacity-40")}
+      >
+        {dir === "prev" && <Icon className="size-3.5" />}
+        <span className="max-w-[9rem] truncate">{short} part</span>
+        {dir === "next" && <Icon className="size-3.5" />}
+      </span>
+    );
+  }
+
+  const name = partName(part);
+  return (
+    <Link
+      href={`/section-practice/${part.id}`}
+      onClick={(e) => {
+        // A modifier click belongs to the browser: it opens a tab and leaves
+        // this attempt exactly where it is, so there is nothing to ask about.
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        if (!guard(part)) e.preventDefault();
+      }}
+      title={`${dir === "prev" ? "Previous" : "Next"} part — ${name}`}
+      className={cn(
+        shell,
+        "border-line text-ink-soft hover:border-brand/50 hover:text-ink",
+      )}
+    >
+      {dir === "prev" && <Icon className="size-3.5" />}
+      <span className="max-w-[9rem] truncate md:hidden">{short} part</span>
+      <span className="hidden max-w-[11rem] truncate md:inline">{name}</span>
+      {dir === "next" && <Icon className="size-3.5" />}
+    </Link>
   );
 }
 

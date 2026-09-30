@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, type ReactNode } from "react";
 import Image from "next/image";
-import { Mic, Square, Loader2, Check } from "lucide-react";
+import { Mic, Square, Check } from "lucide-react";
 import { storeSpeakingRecording } from "@/lib/speech/store-recording";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -755,6 +755,24 @@ function Speaking({
   const hasPrep = prep > 0 && !!cue;
 
   /**
+   * THE EXAMINER IS STILL TALKING, so there is nothing to press.
+   *
+   * The mock opens the recorder itself when the clip ends, which made the button
+   * beside it dead weight at best — and at worst an invitation: "Prepare (1:00)"
+   * sitting under a cue card that was still being read out is a button a
+   * candidate presses, cutting the examiner off mid-question and starting their
+   * preparation minute early. There is no such button on test day. It comes back
+   * the moment the question has been asked in full, as the fallback for an
+   * auto-start that could not happen.
+   *
+   * CONDITIONAL ON THERE BEING A CLIP. A speaking question with no recording —
+   * content still being voiced, a failed upload — never fires `promptEnded`, and
+   * hiding its button unconditionally would leave the candidate no way at all to
+   * answer it.
+   */
+  const awaitingPrompt = Boolean(autoRecord) && Boolean(question.promptAudioSrc) && !promptEnded;
+
+  /**
    * THE MOCK HANDS YOU NO BUTTON. The examiner asks, the question ends, and you
    * are expected to be speaking — so the recorder opens itself. Part 2 goes to
    * its preparation minute instead, which is what the cue card means on test
@@ -823,7 +841,8 @@ function Speaking({
             <Check className="size-4 text-success" /> Answer recorded
           </span>
         ) : (
-          !preparing && (
+          !preparing &&
+          !awaitingPrompt && (
             <Button
               type="button"
               variant={recorded ? "outline" : "default"}
@@ -844,13 +863,17 @@ function Speaking({
               : "Recording starts when the examiner finishes."}
           </span>
         )}
-        {uploading && (
-          <span className="inline-flex items-center gap-1.5 text-xs text-ink-muted">
-            <Loader2 className="size-3.5 animate-spin" /> Saving recording…
-          </span>
-        )}
-        {url && !recording && (
-           
+        {/* NO UPLOAD SPINNER. Storing a take is the app's problem, not the
+            candidate's: it happens while they read the next question, and a
+            progress indicator beside their answer only asks them to wait for
+            something they were never blocked on. Both practice players still say
+            "Saving recording…" ON THE SUBMIT BUTTON, which is the one place the
+            upload genuinely does hold something up; the mock does not block at
+            all (see MockPlayer). A failure is still reported, below. */}
+        {url && !recording && !singleTake && (
+          // Review of your own take — practice only. The mock is one take under
+          // a clock, and a player here would be an invitation to sit and listen
+          // back to an answer that cannot be changed.
           <audio controls src={url} className="h-9" />
         )}
       </div>

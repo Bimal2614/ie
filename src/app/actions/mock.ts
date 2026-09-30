@@ -1,10 +1,12 @@
 "use server";
 
-import { and, eq, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import {
   mockTests,
+  mockTestSections,
   mockTestSessions,
   mockTestAnswers,
   mockTestResults,
@@ -12,6 +14,7 @@ import {
 import { requireUser } from "@/lib/dal";
 import type { AuthenticatedUser } from "@/lib/session";
 import type { PlanBlock } from "@/lib/plans";
+import { isUuid } from "@/lib/uuid";
 import {
   QUESTION_TYPES,
   isObjective,
@@ -41,9 +44,9 @@ import {
   timelineEnd,
   type MockTimeline,
 } from "@/lib/mock-timing";
-import { scoreMockSpeakingFor, scoreMockWritingFor } from "@/lib/scoring/score-mock";
-import { scheduleMockScoring } from "@/lib/scoring/background";
-import { guardGeneral, tryConsumeAi } from "@/lib/security/rate-guard";
+import { scheduleMockAnswerScoring, scheduleMockScoring } from "@/lib/scoring/background";
+import { mockScoringArriving } from "@/lib/scoring/pending";
+import { guardGeneral } from "@/lib/security/rate-guard";
 import { checkAiScoring, checkMockAccess } from "@/lib/security/plan-guard";
 import {
   mockResultsFor,
@@ -51,6 +54,7 @@ import {
   type MockSectionReview,
   type MockResultSummary,
 } from "@/lib/mock-review";
+import { keyFromUrl } from "@/lib/speech/s3";
 
 /**
  * Sitting a mock test.
@@ -89,10 +93,19 @@ export type MockTestCard = MockTestSummary & {
  * The module is resolved SERVER-SIDE from the profile unless the caller asks for
  * the other one deliberately — the same rule the section browser uses, so a
  * General candidate is never shown an Academic paper by default.
+ *
+ * `openSitting` is looked up SEPARATELY from the per-paper history below, and
+ * not as a column of it, because the rule it serves is not per-paper: one open
+ * sitting blocks every other paper (see `startMock`), including ones in the
+ * other stream that this catalogue is not even showing. Folding it into a query
+ * already filtered to `tests` would miss exactly those, and the candidate would
+ * be offered a Start that the server then refuses.
  */
-export async function getMockCatalogue(
-  moduleOverride?: string | null,
-): Promise<{ module: "academic" | "general"; tests: MockTestCard[] }> {
+export async function getMockCatalogue(moduleOverride?: string | null): Promise<{
+  module: "academic" | "general";
+  tests: MockTestCard[];
+  openSitting: OpenSitting | null;
+}> {
   const user = await requireUser();
   await guardGeneral(user.id);
 
@@ -101,8 +114,11 @@ export async function getMockCatalogue(
   // identifier is reserved, and shadowing it is a build error.
   const stream: "academic" | "general" = wanted === "general" ? "general" : "academic";
 
-  const tests = await listMockTests(stream);
-  if (tests.length === 0) return { module: stream, tests: [] };
+  const [tests, openSitting] = await Promise.all([
+    listMockTests(stream),
+    openSittingFor(user.id),
+  ]);
+  if (tests.length === 0) return { module: stream, tests: [], openSitting };
 
   // This candidate's history against these papers, REDUCED IN POSTGRES to one
   // row per paper. The four things a card shows — the open sitting, the
@@ -148,6 +164,7 @@ export async function getMockCatalogue(
 
   return {
     module: stream,
+    openSitting,
     tests: tests.map((t) => {
       const mine = byTest.get(t.id);
       return {
@@ -167,12 +184,74 @@ export async function getMockCatalogue(
  * Starting and resuming
  * ------------------------------------------------------------------ */
 
+/** The sitting a candidate is in the middle of, whichever paper it is on. */
+export type OpenSitting = {
+  sessionId: string;
+  mockTestId: string;
+  /** The paper's own name — "Cambridge 19 · Test 2" — for the block message. */
+  title: string;
+};
+
+/**
+ * The one sitting this candidate has open, or null.
+ *
+ * NOT MERELY `status = 'in_progress'`. A sitting is only closed when someone
+ * opens it — `getMockSitting` grades a lapsed paper on the way past — so a
+ * candidate who started a mock and never came back leaves a row that says
+ * "in progress" for as long as nobody looks at it. Treating that as an open
+ * sitting would lock them out of every other paper forever on the strength of a
+ * clock that ran out weeks ago, which is the trap the one-at-a-time rule would
+ * otherwise set for exactly the people least likely to work out why.
+ *
+ * So the deadline decides, not the status: a sitting is open while it still has
+ * time on it. One that has run out is over whether or not the row has caught up,
+ * and opening it grades it. Runs on mock_sessions_expiry_idx (status,
+ * expires_at).
+ */
+async function openSittingFor(userId: string): Promise<OpenSitting | null> {
+  const [row] = await db
+    .select({
+      sessionId: mockTestSessions.id,
+      mockTestId: mockTestSessions.mockTestId,
+      title: mockTests.title,
+    })
+    .from(mockTestSessions)
+    .innerJoin(mockTests, eq(mockTests.id, mockTestSessions.mockTestId))
+    .where(
+      and(
+        eq(mockTestSessions.userId, userId),
+        eq(mockTestSessions.status, "in_progress"),
+        gt(mockTestSessions.expiresAt, new Date()),
+      ),
+    )
+    // Newest first, so the sitting a candidate is actually in wins over an older
+    // one that somehow survived — they go to the paper they just started.
+    .orderBy(desc(mockTestSessions.startedAt))
+    .limit(1);
+
+  return row ?? null;
+}
+
 /**
  * Open a paper: resume the sitting already in progress, or start a new one.
  *
- * RESUME RATHER THAN RESTART is the point. Starting a second sitting of a paper
- * you are 20 minutes into would hand back the time the exam has already spent —
- * which is precisely the thing the timeline exists to prevent.
+ * ONE SITTING AT A TIME, ACROSS THE WHOLE ACCOUNT. A mock clock is wall-clock
+ * time that does not stop for anything — so two open sittings are not two
+ * candidates' worth of practice, they are one paper being destroyed in the
+ * background while the other is sat. Starting Test 2 twenty minutes into Test 1
+ * used to be a click, and the report it produced for Test 1 was of a paper
+ * nobody ever answered.
+ *
+ * RESUME RATHER THAN RESTART is the other half of the same rule, and it is why
+ * this redirects to the open sitting rather than refusing: starting a second
+ * sitting of a paper you are 20 minutes into would hand back the time the exam
+ * has already spent, which is precisely what the timeline exists to prevent.
+ * A candidate who does not want to go back to it abandons it (`abandonMock`) —
+ * that is a decision with a consequence, not a stray click.
+ *
+ * A COMPLETED PAPER CAN BE SAT AGAIN. Once the report exists the sitting is
+ * over, the band is recorded, and nothing is lost by taking the paper a second
+ * time. Only an OPEN sitting blocks.
  */
 /**
  * Either the sitting to open, or why it could not be opened.
@@ -182,7 +261,20 @@ export async function getMockCatalogue(
  * actually opens a paper, which is why that part returns a value.
  */
 export type StartMockResult =
-  | { ok: true; sessionId: string; resumed: boolean }
+  | {
+      ok: true;
+      sessionId: string;
+      /** True when an existing sitting was handed back rather than one opened. */
+      resumed: boolean;
+      /**
+       * The paper this sitting is OF, which on a resume may not be the one that
+       * was asked for — one sitting is allowed at a time across the whole
+       * account, so an open sitting of another paper wins. The caller needs this
+       * to tell the candidate where they have actually been sent.
+       */
+      mockTestId: string;
+      title: string | null;
+    }
   | { ok: false; reason: "not_found" | "no_modules" }
   | { ok: false; reason: "blocked"; block: PlanBlock };
 
@@ -213,18 +305,25 @@ export async function startMockFor(
     .limit(1);
   if (!test) return { ok: false, reason: "not_found" };
 
-  const [open] = await db
-    .select({ id: mockTestSessions.id })
-    .from(mockTestSessions)
-    .where(
-      and(
-        eq(mockTestSessions.userId, user.id),
-        eq(mockTestSessions.mockTestId, test.id),
-        eq(mockTestSessions.status, "in_progress"),
-      ),
-    )
-    .limit(1);
-  if (open) return { ok: true, sessionId: open.id, resumed: true };
+  // Deliberately NOT filtered to this paper — see the note above. Whichever
+  // sitting is open is the one this candidate is in, and it is where they go.
+  // This is the real gate; the catalogue's disabled buttons are only its
+  // manners.
+  //
+  // It is therefore possible to ask for paper A and be handed a sitting of
+  // paper B. That is the rule working, not a bug — but a caller has to be able
+  // to SAY so, which is why the result carries the sitting's own paper and
+  // title rather than just "resumed".
+  const open = await openSittingFor(user.id);
+  if (open) {
+    return {
+      ok: true,
+      sessionId: open.sessionId,
+      resumed: true,
+      mockTestId: open.mockTestId,
+      title: open.title,
+    };
+  }
 
   const order = await mockModuleOrder(test.id);
   if (order.length === 0) return { ok: false, reason: "no_modules" };
@@ -249,7 +348,13 @@ export async function startMockFor(
     })
     .returning({ id: mockTestSessions.id });
 
-  return { ok: true, sessionId: session.id, resumed: false };
+  return {
+    ok: true,
+    sessionId: session.id,
+    resumed: false,
+    mockTestId: test.id,
+    title: null,
+  };
 }
 
 export async function startMock(formData: FormData): Promise<void> {
@@ -295,9 +400,29 @@ export async function abandonMockFor(userId: string, sessionId: string): Promise
   return rows.length > 0;
 }
 
+/**
+ * Give up on an unfinished sitting.
+ *
+ * THE WAY OUT OF THE ONE-AT-A-TIME RULE. A sitting holds every other paper shut
+ * while it runs (see `startMockFor`), so a mock opened by accident would
+ * otherwise cost the candidate three hours of not being able to sit anything.
+ * This closes it deliberately: the paper is spent, no report is produced, and the
+ * catalogue opens up again.
+ *
+ * NOT A RESTART, and the difference matters. The sitting is marked `abandoned`
+ * rather than deleted, so the time it burned is a fact that stays on the record;
+ * starting that paper again afterwards is a genuinely fresh sitting with a fresh
+ * timeline, not the old one's clock handed back.
+ */
 export async function abandonMock(formData: FormData): Promise<void> {
   const user = await requireUser();
   await abandonMockFor(user.id, String(formData.get("sessionId") ?? ""));
+
+  // The button sits ON /mock-tests, so this redirect lands on the page the
+  // candidate is already looking at — and without a revalidate the router
+  // served its cached copy, still showing the open sitting and every Start
+  // locked until a manual reload.
+  revalidatePath("/mock-tests");
   redirect("/mock-tests");
 }
 
@@ -391,6 +516,10 @@ export async function getMockSitting(sessionId: string): Promise<MockSittingStat
   const loaded = await loadSitting(sessionId, user.id);
   if (!loaded) return { status: "missing" };
   const { session, timeline } = loaded;
+  // An abandoned sitting has no report: `abandonMock` closes it without grading.
+  // Calling it "finished" sent the player's old tab, a reload or the back button
+  // to /results/<id>, which has no result row to show and 404'd.
+  if (session.status === "abandoned") return { status: "missing" };
   if (session.status !== "in_progress") return { status: "finished" };
 
   const outline = await outlineMockTest(session.mockTestId);
@@ -459,6 +588,117 @@ export async function saveMockProgress(
         eq(mockTestSessions.status, "in_progress"),
       ),
     );
+}
+
+/**
+ * A speaking take has landed — write its answer row and mark it in the
+ * background.
+ *
+ * WHY MID-SITTING AT ALL. Speaking answers used to exist only as jsonb inside
+ * `draft_answers` until hand-in, when eleven of them became eleven rows and were
+ * marked in one six-way-concurrent burst. That burst is what tripped the scoring
+ * provider — on one observed sitting eight of eleven answers came back refused,
+ * and every one scored perfectly on a later retry. An interview hands us one
+ * recording a minute; there is no reason to save them all up and then ask for
+ * everything at once.
+ *
+ * So the row is written as the take arrives and scored on its own. By hand-in
+ * the module is usually already marked, and the report opens with bands on it.
+ *
+ * NOTHING HERE IS TAKEN ON THE CLIENT'S WORD EXCEPT WHICH QUESTION IT IS.
+ * `section`, `questionType`, `marks` and the sheet number are read off the paper
+ * server-side; the recording location is checked to be a key in THIS candidate's
+ * own prefix before anything is stored; and the band, as everywhere, is computed
+ * server-side and never accepted from a browser. The worst a forged call can do
+ * is ask us to score the candidate's own recording against their own sitting,
+ * which is what it is for.
+ *
+ * IDEMPOTENT. The unique index on (session_id, section_id, question_number) makes
+ * a repeat an update, and the scorer skips a row that already has a band — so a
+ * resumed sitting replaying its takes costs nothing.
+ */
+export async function recordMockSpeakingTake(
+  sessionId: string,
+  sectionId: string,
+  sheetNumber: number,
+): Promise<void> {
+  const user = await requireUser();
+  if (!isUuid(sessionId) || !isUuid(sectionId)) return;
+
+  const [session] = await db
+    .select({ id: mockTestSessions.id, mockTestId: mockTestSessions.mockTestId })
+    .from(mockTestSessions)
+    .where(
+      and(
+        eq(mockTestSessions.id, sessionId),
+        eq(mockTestSessions.userId, user.id),
+        eq(mockTestSessions.status, "in_progress"),
+      ),
+    )
+    .limit(1);
+  if (!session) return;
+
+  // A lapsed plan must not be scored on. Starting the sitting was gated, but
+  // this runs up to three hours later.
+  if (checkAiScoring(user)) return;
+
+  const draft = await db
+    .select({ draftAnswers: mockTestSessions.draftAnswers })
+    .from(mockTestSessions)
+    .where(eq(mockTestSessions.id, sessionId))
+    .limit(1);
+  const answers = (draft[0]?.draftAnswers ?? {}) as AnswerMap;
+  const ans = answers[answerKey(sectionId, sheetNumber)];
+  const audioUrl = typeof ans?.audioUrl === "string" ? ans.audioUrl : null;
+  if (!audioUrl) return;
+
+  // THE RECORDING MUST BE THIS CANDIDATE'S. Keys are minted as
+  // `<prefix><userId>/<uuid>.<ext>` (see uploadSpeakingAudio), so the owner is
+  // in the key and can be checked without a round trip. Without this, a crafted
+  // call could have us transcribe and score somebody else's recording.
+  const key = keyFromUrl(audioUrl);
+  if (!key || !key.split("/").includes(user.id)) return;
+
+  // The paper decides what this question is — not the caller. ONE MODULE, not
+  // the whole paper: this runs once per take, and `openMockPaper` would load all
+  // twelve parts eleven times over the course of an interview.
+  const parts = await openMockModule(session.mockTestId, "speaking");
+  const part = parts.find((pt) => pt.sectionId === sectionId);
+  if (!part) return;
+
+  let found: { qt: QuestionTypeKey; n: number; marks: number } | null = null;
+  for (const group of part.questions?.groups ?? []) {
+    for (const item of group.items) {
+      if (item.n + part.numberOffset !== sheetNumber) continue;
+      found = { qt: group.questionType as QuestionTypeKey, n: item.n, marks: item.marks ?? 1 };
+    }
+  }
+  if (!found) return;
+
+  const [row] = await db
+    .insert(mockTestAnswers)
+    .values({
+      sessionId,
+      sectionId,
+      questionNumber: found.n,
+      sheetNumber,
+      section: "speaking",
+      questionType: found.qt,
+      marks: found.marks,
+      response: ans,
+      audioUrl,
+    })
+    .onConflictDoUpdate({
+      target: [mockTestAnswers.sessionId, mockTestAnswers.sectionId, mockTestAnswers.questionNumber],
+      // The answer and its recording only. A band, a transcript or feedback
+      // already on the row belongs to a scoring run that has finished, and this
+      // is not the place to throw it away.
+      set: { response: ans, audioUrl },
+    })
+    .returning({ id: mockTestAnswers.id });
+  if (!row) return;
+
+  scheduleMockAnswerScoring(user.id, row.id);
 }
 
 export type AdvanceResult =
@@ -666,7 +906,35 @@ async function submitSitting(
 
   if (rows.length > 0) {
     // A full paper is 80+ answers — one insert, not 80 round trips.
-    await db.insert(mockTestAnswers).values(rows).onConflictDoNothing();
+    //
+    // UPSERT, BECAUSE SOME ROWS ARE ALREADY HERE. A speaking take writes its own
+    // row as it is given, so it can be marked while the interview is still going
+    // (see `recordMockSpeakingTake`). `onConflictDoNothing` would then silently
+    // drop the only thing hand-in knows that the live path did not — how long
+    // the candidate spent on the question.
+    //
+    // WHAT IS DELIBERATELY NOT IN THE `set`: band, transcript and ai_feedback.
+    // Those are a finished scoring run's output. Hand-in has nothing better to
+    // say about them, and overwriting them here would throw away marking we have
+    // already paid for. `audio_url` is coalesced for the same reason — a draft
+    // that somehow lost the location must not erase a recording we hold.
+    await db
+      .insert(mockTestAnswers)
+      .values(rows)
+      .onConflictDoUpdate({
+        target: [
+          mockTestAnswers.sessionId,
+          mockTestAnswers.sectionId,
+          mockTestAnswers.questionNumber,
+        ],
+        set: {
+          response: sql`excluded.response`,
+          audioUrl: sql`coalesce(excluded.audio_url, ${mockTestAnswers.audioUrl})`,
+          isCorrect: sql`excluded.is_correct`,
+          rawScore: sql`excluded.raw_score`,
+          timeSpentSec: sql`excluded.time_spent_sec`,
+        },
+      });
   }
 
   // A full mock draws a complete 40-mark Listening and Reading paper, so the
@@ -705,30 +973,21 @@ async function submitSitting(
  * ------------------------------------------------------------------ */
 
 /**
- * Retry Writing + Speaking scoring for a finished sitting.
+ * NO CLIENT-CALLABLE SCORER LIVES HERE ANY MORE, and that is deliberate.
  *
- * THE AUTHORITATIVE RUN IS `scheduleMockScoring` AT HAND-IN, and the sweeper
- * cron behind it — this is the ask-again path for when neither could finish,
- * kept because the report screen is where a candidate notices a missing band.
+ * There used to be `scoreMockSpeaking` and `scoreMockWriting` behind a "Try
+ * scoring again" button on the report. They existed from before the sweeper
+ * cron did, when a candidate noticing a missing band genuinely was the only
+ * recovery. Scoring now has two server-side sources — `scheduleMockScoring` via
+ * `after()` at hand-in, and /api/cron/scoring every five minutes for three hours
+ * after it — so the button asked a candidate to start work that was already
+ * queued, and every exported function in a "use server" module is a callable
+ * endpoint whether or not anything in the UI calls it.
  *
- * The work itself lives in src/lib/scoring/score-mock.ts. It cannot live here:
- * everything exported from a "use server" module is a callable endpoint, so a
- * userId-taking scorer exported from this file would let any client spend
- * someone else's AI quota. These wrappers establish the user themselves.
- *
- * Idempotent — only rows with no band are touched, so a retry or a second visit
- * cannot double-charge the API.
+ * The work itself is unchanged and still lives in src/lib/scoring/score-mock.ts,
+ * where the cron reaches it with a userId it established itself.
+ * `mockScoringStatus` below is all the report needs: it watches, and says so.
  */
-export async function scoreMockSpeaking(sessionId: string): Promise<{ scored: number }> {
-  const user = await requireUser();
-  // Defence in depth: starting the sitting was already gated, but a plan can
-  // lapse between hand-in and the report being opened.
-  if (checkAiScoring(user)) return { scored: 0 };
-
-  if (!(await tryConsumeAi(user.id)).allowed) return { scored: 0 };
-
-  return scoreMockSpeakingFor(user.id, sessionId);
-}
 
 /**
  * How many of a sitting's subjective answers are still waiting for a band.
@@ -748,40 +1007,17 @@ export async function scoreMockSpeaking(sessionId: string): Promise<{ scored: nu
 export async function mockScoringStatus(sessionId: string): Promise<{ pending: number }> {
   const user = await requireUser();
 
-  const [row] = await db
-    .select({ pending: sql<number>`count(*)::int` })
-    .from(mockTestAnswers)
-    .innerJoin(mockTestSessions, eq(mockTestSessions.id, mockTestAnswers.sessionId))
-    .where(
-      and(
-        eq(mockTestAnswers.sessionId, sessionId),
-        eq(mockTestSessions.userId, user.id),
-        isNull(mockTestAnswers.band),
-        or(
-          and(
-            eq(mockTestAnswers.section, "writing"),
-            sql`coalesce(btrim(${mockTestAnswers.response}->>'text'), '') <> ''`,
-          ),
-          and(
-            eq(mockTestAnswers.section, "speaking"),
-            isNotNull(mockTestAnswers.audioUrl),
-            isNull(mockTestAnswers.aiFeedback),
-          ),
-        ),
-      ),
-    );
+  // Ownership first and separately: `mockScoringArriving` answers about a
+  // sitting, not about a candidate, and it must not be handed a session id
+  // nobody has checked.
+  const [owned] = await db
+    .select({ id: mockTestSessions.id })
+    .from(mockTestSessions)
+    .where(and(eq(mockTestSessions.id, sessionId), eq(mockTestSessions.userId, user.id)))
+    .limit(1);
+  if (!owned) return { pending: 0 };
 
-  return { pending: row?.pending ?? 0 };
-}
-
-/** Retry Writing scoring for a finished sitting. Mirrors scoreMockSpeaking. */
-export async function scoreMockWriting(sessionId: string): Promise<{ scored: number }> {
-  const user = await requireUser();
-  if (checkAiScoring(user)) return { scored: 0 };
-
-  if (!(await tryConsumeAi(user.id)).allowed) return { scored: 0 };
-
-  return scoreMockWritingFor(user.id, sessionId);
+  return { pending: await mockScoringArriving(sessionId) };
 }
 
 /* ------------------------------------------------------------------ *
@@ -819,7 +1055,23 @@ export type MockResultData = {
   module: "academic" | "general";
   completedAt: Date | null;
   overallBand: string | null;
-  bands: { section: SectionKey; band: string | null; raw: number | null; total: number | null }[];
+  bands: {
+    section: SectionKey;
+    band: string | null;
+    raw: number | null;
+    total: number | null;
+    /**
+     * Writing and Speaking only: how much of the module was actually answered.
+     *
+     * A band from these two is a mean over everything the paper asked, with an
+     * unanswered question counting as zero — so coverage is most of the
+     * explanation for a low one, and without it a candidate has no way to tell a
+     * weak performance from a half-finished module (or from a recorder of ours
+     * that failed). Null for Listening and Reading, which report marks instead.
+     */
+    answered: number | null;
+    asked: number | null;
+  }[];
 };
 
 export async function getMockResult(sessionId: string): Promise<MockResultData | null> {
@@ -841,6 +1093,45 @@ export async function getMockResult(sessionId: string): Promise<MockResultData |
   const breakdown = (row.r.sectionBreakdown ?? {}) as Record<string, Tally>;
   const totalOf = (s: SectionKey) => breakdown[s]?.total ?? null;
 
+  // What the paper asked in each AI-scored module, and how much of it came back
+  // with a band. Two grouped counts, not a per-question load.
+  const [asked, answered] = await Promise.all([
+    db
+      .select({
+        section: mockTestSections.section,
+        n: sql<number>`coalesce(sum(${mockTestSections.totalQuestions}), 0)::int`,
+      })
+      .from(mockTestSections)
+      .innerJoin(mockTestSessions, eq(mockTestSessions.mockTestId, mockTestSections.mockTestId))
+      .where(
+        and(
+          eq(mockTestSessions.id, sessionId),
+          inArray(mockTestSections.section, ["writing", "speaking"]),
+        ),
+      )
+      .groupBy(mockTestSections.section),
+    db
+      .select({
+        section: mockTestAnswers.section,
+        n: sql<number>`count(*) filter (where ${mockTestAnswers.band} is not null)::int`,
+      })
+      .from(mockTestAnswers)
+      .where(
+        and(
+          eq(mockTestAnswers.sessionId, sessionId),
+          inArray(mockTestAnswers.section, ["writing", "speaking"]),
+        ),
+      )
+      .groupBy(mockTestAnswers.section),
+  ]);
+
+  const askedBy = new Map(asked.map((a) => [a.section, Number(a.n)]));
+  const answeredBy = new Map(answered.map((a) => [a.section, Number(a.n)]));
+  const coverage = (sec: "writing" | "speaking") => ({
+    answered: answeredBy.get(sec) ?? 0,
+    asked: askedBy.get(sec) ?? null,
+  });
+
   return {
     sessionId: row.r.sessionId,
     mockTestId: row.r.mockTestId,
@@ -849,10 +1140,24 @@ export async function getMockResult(sessionId: string): Promise<MockResultData |
     completedAt: row.completedAt,
     overallBand: row.r.overallBand,
     bands: [
-      { section: "listening", band: row.r.listeningBand, raw: row.r.listeningRaw, total: totalOf("listening") },
-      { section: "reading", band: row.r.readingBand, raw: row.r.readingRaw, total: totalOf("reading") },
-      { section: "writing", band: row.r.writingBand, raw: null, total: null },
-      { section: "speaking", band: row.r.speakingBand, raw: null, total: null },
+      {
+        section: "listening",
+        band: row.r.listeningBand,
+        raw: row.r.listeningRaw,
+        total: totalOf("listening"),
+        answered: null,
+        asked: null,
+      },
+      {
+        section: "reading",
+        band: row.r.readingBand,
+        raw: row.r.readingRaw,
+        total: totalOf("reading"),
+        answered: null,
+        asked: null,
+      },
+      { section: "writing", band: row.r.writingBand, raw: null, total: null, ...coverage("writing") },
+      { section: "speaking", band: row.r.speakingBand, raw: null, total: null, ...coverage("speaking") },
     ],
   };
 }

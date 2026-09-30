@@ -1,20 +1,23 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { signupSchema, loginSchema, type AuthFormState } from "@/lib/validation";
 import { homeFor, safeNext } from "@/lib/auth-routes";
 import { createSession, destroySession, getRequestContext } from "@/lib/session";
 import { getCurrentUser } from "@/lib/dal";
 import { audit, authenticate, registerAccount } from "@/lib/auth/core";
+import { SIGNED_UP_COOKIE } from "@/lib/analytics";
 
 /**
  * The web's entry points into authentication.
  *
  * The POLICY — throttling, the lockout ladder, the anti-enumeration timing, the
- * audit trail — lives in `src/lib/auth/core.ts`, shared with the JSON API that
- * the mobile app calls. What is left here is the part that is genuinely
- * browser-shaped: reading a FormData, setting a session COOKIE, and redirecting
- * to the page they were heading for.
+ * partner-referral re-read, the audit trail — lives in `src/lib/auth/core.ts`,
+ * shared with the JSON API that the mobile app calls. What is left here is the
+ * part that is genuinely browser-shaped: reading a FormData, setting a session
+ * COOKIE, dropping the analytics cookie a script has to read, and redirecting to
+ * the page they were heading for.
  */
 
 /* ------------------------------------------------------------------ *
@@ -36,7 +39,9 @@ export async function signup(
   }
 
   const origin = await getRequestContext();
-  const result = await registerAccount(parsed.data, origin);
+  // `ref` goes through UNVALIDATED on purpose — `registerAccount` re-reads it
+  // against `partners` before it is allowed to mean anything.
+  const result = await registerAccount(parsed.data, origin, formData.get("ref"));
 
   if (!result.ok) {
     // The one failure that belongs on a field rather than above the form.
@@ -47,6 +52,22 @@ export async function signup(
   }
 
   await createSession(result.userId); // rotates in a fresh session token
+
+  /**
+   * Read once by SignupBeacon on the page this redirects to — the only way the
+   * browser can learn an account was created. Readable by script on purpose.
+   *
+   * Stays HERE rather than in the shared core: it exists so a page can fire a
+   * conversion pixel, and the mobile app has no page and no pixel. Its own
+   * analytics are the store's.
+   */
+  (await cookies()).set(SIGNED_UP_COOKIE, "email", {
+    path: "/",
+    maxAge: 600,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+  });
+
   const destination = safeNext(formData.get("next"));
 
   // MUST be outside any try/catch — `redirect()` works by throwing NEXT_REDIRECT.

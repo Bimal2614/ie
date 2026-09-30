@@ -4,6 +4,7 @@ import { sendEmail } from "@/lib/email/mailer";
 import { isAuthorizedCron } from "@/lib/security/cron-auth";
 import { smokeTestEmail } from "@/lib/monitoring/smoketest-email";
 import { runSmokeTest } from "@/lib/monitoring/smoketest";
+import { alert } from "@/lib/monitoring/alert";
 
 /**
  * The AI smoke test: does band scoring still work?
@@ -31,6 +32,8 @@ import { runSmokeTest } from "@/lib/monitoring/smoketest";
  * Query parameters, for running it by hand:
  *   ?email=failures     mail only when something failed
  *   ?email=never        mail nothing; read the JSON response instead
+ *   ?expect=<sha>       run only if this deployment was built from that commit;
+ *                       409 otherwise (see .github/workflows/post-deploy-smoketest.yml)
  */
 
 export const dynamic = "force-dynamic";
@@ -58,7 +61,22 @@ export async function GET(request: Request) {
   }
 
   const url = new URL(request.url);
+
+  // ?expect=<sha>: the post-deploy workflow asking "are you the build I just
+  // pushed?". Answered before any paid check runs, so a caller that arrives
+  // while the domain still points at the previous deployment pays nothing and
+  // simply asks again.
+  const commit = process.env.VERCEL_GIT_COMMIT_SHA ?? null;
+  const expected = url.searchParams.get("expect");
+  if (expected && expected !== commit) {
+    return NextResponse.json(
+      { stale: true, commit, expected },
+      { status: 409, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+
   const report = await runSmokeTest();
+  const mail = smokeTestEmail(report);
 
   // One line per run, always — unlike the scoring sweep, which is silent when
   // idle. There is no such thing as an uneventful run here: the whole point is
@@ -77,7 +95,19 @@ export async function GET(request: Request) {
     })),
   };
   if (report.ok) console.info("[cron/smoketest] passed", summary);
-  else console.error("[cron/smoketest] FAILED", summary);
+  else {
+    console.error("[cron/smoketest] FAILED", summary);
+    // Slack as well as mail: the mail is the full report, this is the page.
+    const failures = report.checks.filter((c) => c.failure);
+    await alert({
+      source: "smoketest",
+      title: `AI smoke test FAILED — ${report.failed} of ${report.checks.length} checks`,
+      detail: failures
+        .map((c) => `${c.id}  [${c.failure!.kind}]  HTTP ${c.status ?? "-"}  ${c.failure!.detail}`)
+        .join("\n"),
+      hint: "Real answers re-scored through the live clients did not come back with a band. Full report is in the admin email.",
+    });
+  }
 
   const mode = emailMode(url);
   const shouldEmail = mode === "always" || (mode === "failures" && !report.ok);
@@ -95,7 +125,6 @@ export async function GET(request: Request) {
       console.error("[cron/smoketest] SMTP not configured — report not sent");
       emailed = { sent: false, reason: "SMTP is not configured" };
     } else {
-      const mail = smokeTestEmail(report);
       // One message to all of them. They are a fixed operational list, not
       // customers, so a shared To: header is what you want — a reply reaches
       // everyone who was alerted.
@@ -108,9 +137,16 @@ export async function GET(request: Request) {
   // 200 even when checks failed. The status of THIS route is "did the probe
   // run", and a scheduler that retries a non-2xx would re-run every paid check
   // on the very day the providers are already struggling. The verdict is in the
-  // body, and in the mail.
+  // body, and in the mail. `mail` carries the report exactly as it was mailed,
+  // so the post-deploy workflow can put the same report in Slack.
   return NextResponse.json(
-    { ...report, emailed, recipients: recipients.length },
+    {
+      ...report,
+      commit,
+      emailed,
+      recipients: recipients.length,
+      mail: { subject: mail.subject, text: mail.text },
+    },
     { headers: { "Cache-Control": "no-store" } },
   );
 }

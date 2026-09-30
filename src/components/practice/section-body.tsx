@@ -72,6 +72,7 @@ export function SectionBody({
   groupHeaders = true,
   instructions = "full",
   spokenPromptOnly = false,
+  promptPlaysOnce = false,
   autoRecordAfterPrompt = false,
   singleTake = false,
   answerScope,
@@ -145,6 +146,12 @@ export function SectionBody({
    * because they are two different decisions that happen to agree today.
    */
   spokenPromptOnly?: boolean;
+  /**
+   * Speaking, mock only: the examiner asks once — no seek, no pause, no replay.
+   * Section practice keeps the ordinary player, which is where a clip gets
+   * listened to twice on purpose.
+   */
+  promptPlaysOnce?: boolean;
   /**
    * Speaking: start recording by itself when the examiner's question ends. The
    * mock passes this — on test day there is no button — and section practice
@@ -278,6 +285,7 @@ export function SectionBody({
         matrixImage: figureOwner >= 0 ? section.imageUrl : null,
         stimulusImage: figureOwner < 0,
         spokenPromptOnly,
+        promptPlaysOnce,
         autoRecordAfterPrompt,
         singleTake,
       }}

@@ -17,6 +17,189 @@ import type { BlogPost } from "./blog-types";
  * number. Rules quoted here reflect the 2026 test year.
  */
 export const TOPIC_POSTS_2026: BlogPost[] = [
+  /**
+   * Timely policy post (24 Sep 2026) — DHS final rule ending "duration of
+   * status" for F/J/I (Federal Register 2026-14439, 17 July 2026), due in force
+   * 15 September 2026, BLOCKED by a nationwide preliminary injunction in the
+   * District of Massachusetts on 14 September 2026. Nothing in the rule is in
+   * force. Written so it stays true whether the injunction holds, is appealed
+   * or is lifted; update on every court step.
+   */
+  {
+    slug: "us-f1-duration-of-status-rule-blocked-2026",
+    seoTitle: "F-1 Visa 4-Year Limit Blocked: How Long Can You Stay?",
+    title: "How long can you stay on an F-1 visa now the 4-year rule is blocked?",
+    excerpt:
+      "A court has blocked the rule that would have capped F-1 stays at four years. What is in force today, what changes if it returns, and what to do now.",
+    category: "Requirements",
+    date: "September 2026",
+    publishedAt: "2026-09-24",
+    readMins: 6,
+    keywords: [
+      "f1 visa new rules 2026",
+      "duration of status rule blocked",
+      "how long can you stay in the us on an f1 visa",
+      "f1 4 year limit",
+      "f1 duration of status injunction",
+      "f1 extension of stay i-539",
+      "f1 grace period 30 days",
+      "f1 transfer rules 2026",
+      "ielts score for us student visa",
+    ],
+    sections: [
+      { paragraphs: ["Short answer: for now, as long as your program lasts and you keep your status, exactly as before. On 14 September 2026, one day before it was due to start, a federal judge in Massachusetts blocked the Department of Homeland Security rule that would have capped F-1 admission at four years. Duration of status, the system that ties your stay to your studies rather than to a fixed date, is still the rule.", "The block is a preliminary injunction, not the end of the case. The rule itself still exists, the government can appeal, and the court has not yet decided the case in full. So the useful question is not only what applies today, but what would change for you if the rule came back. This post covers both, and it will be updated as the case moves."] },
+      { heading: "What the court did", paragraphs: ["Judge F. Dennis Saylor IV of the US District Court for the District of Massachusetts granted a nationwide preliminary injunction on 14 September 2026. It stops DHS and Immigration and Customs Enforcement from implementing or enforcing the rule while the lawsuit continues. The judge found that the challengers, a coalition of higher-education groups, were likely to succeed in arguing that the rule broke the Administrative Procedure Act, the law that governs how federal agencies make regulations.", "Because the order is nationwide, it protects every F-1 and J-1 student, not only those at the universities that sued."] },
+      { heading: "Is the 4-year rule in force?", paragraphs: ["No. As of 24 September 2026 no part of it is in force. Students are still admitted for duration of status, shown as \"D/S\" on the I-94, and you can stay as long as you are enrolled, making normal progress and following the terms of your status, plus the existing 60-day grace period after you finish.", "One thing to watch: the DHS Study in the States summary of the rule still describes it without mentioning the injunction. That page describes the rule as written, not what is in force. Your school's international office is the best day-to-day source."] },
+      { heading: "What the rule would change if it comes back", paragraphs: ["If the injunction is lifted on appeal or the government wins the case, these are the provisions that would apply. None of them apply today."], table: {
+        caption: "Provisions of the DHS final rule published 17 July 2026 (Federal Register 2026-14439), all blocked by the 14 September 2026 injunction. Check studyinthestates.dhs.gov and your school's international office before acting on any of them.",
+        headers: ["Issue", "Today (duration of status)", "Under the blocked rule"],
+        rows: [
+          ["How long you are admitted", "For as long as you are enrolled and maintain status", "Until the program end date on your I-20, capped at four years"],
+          ["Grace period after your program", "60 days", "30 days"],
+          ["Needing more time", "Your school extends the I-20", "Updated I-20 plus Form I-539 filed with USCIS, with a fee and biometrics, or leave and re-enter"],
+          ["Changing major or level (graduate students)", "Allowed with your school's approval", "Not allowed, except in limited circumstances"],
+          ["Transferring university (graduate students)", "Allowed", "Not allowed, except in limited circumstances"],
+          ["Transferring or changing major (undergraduates)", "Allowed", "Not in the first academic year"],
+          ["English language programs", "No fixed overall limit", "24 months in total"],
+        ],
+      } },
+      { heading: "If you are already in the US", paragraphs: ["Do nothing new. You do not need to file Form I-539 or request a fixed-date I-94. Keep your enrolment full-time, keep your I-20 current, and speak to your designated school official before changing program, school or level, as you always should.", "Even under the blocked rule, students already here on duration of status would have been allowed to stay until their current program end date, up to four years, plus 60 days, without filing anything. Those who had filed for OPT or STEM OPT on time would not have needed a separate extension. Existing students were never the hardest-hit group."] },
+      { heading: "If you start in spring or fall 2027", paragraphs: ["This is the group with the most at stake. If the injunction holds, you will be admitted for duration of status like everyone before you. If it is overturned before you enter, you would be admitted to the end date on your I-20, capped at four years, and a graduate student would lose the ability to transfer or switch programs freely.", "In practice that matters most for PhD students, whose programs often run past four years, and for anyone who might want to change course after arriving. If you already have an I-20 and a visa appointment, nothing about the appointment changes: the visa itself is the same F-1, and the rule governs how long you are admitted at the border, not whether you get the visa."] },
+      { heading: "What happens next", paragraphs: ["The government is widely expected to appeal to the First Circuit Court of Appeals, but as of 24 September 2026 no appeal has been reported. A status conference in the district court has been reported for 2 October 2026. Any of these steps can change the answer above, so check the date at the top of this post."] },
+      { heading: "What this does NOT change: your English requirement", paragraphs: ["The court case is about how long you can stay, not how you qualify. Nothing in the rule or the injunction touches English testing. The US has no single visa-level IELTS score. Your university sets its own minimum, usually 6.5 to 7.0 for graduate programs and around 6.0 to 6.5 for undergraduate, and your I-20 records whether you have met it. The consular officer can still ask you questions in English at the interview.", "One provision does have an English-learning angle. If the rule returns, English language programs would be capped at 24 months in total. If you plan to do an intensive English course before your degree, raising your IELTS band before you travel shortens the time you need in that program, and it may let you skip it altogether."], links: [
+        { label: "IELTS vs TOEFL: which one US universities prefer", href: "/blog/ielts-vs-toefl" },
+        { label: "IELTS exam fee in the USA", href: "/blog/ielts-exam-fee-usa" },
+        { label: "IELTS band score calculator", href: "/ielts-band-score-calculator" },
+      ] },
+      { heading: "What to do now", bullets: ["If you are in the US on F-1: carry on as normal and do not file anything because of this rule.", "If you start in 2027: keep your plans, but check with your university's international office before you travel, because the answer can change between your offer and your arrival.", "If you are a PhD applicant with a program longer than four years, ask your school now how it would handle an extension of stay if the rule came back.", "Do not pay anyone to file an I-539 \"to be safe\". There is nothing to file while the injunction stands.", "Get your English score settled early. It is the one part of the application that no court case will change, and a stronger band gives you more universities to choose from."] },
+      { heading: "Sources", paragraphs: ["Checked on 24 September 2026. Court cases move quickly, so check the date at the top of this post."], links: [
+        { label: "Federal Register: DHS final rule ending duration of status (17 July 2026)", href: "https://www.federalregister.gov/documents/2026/07/17/2026-14439/establishing-a-fixed-time-period-of-admission-and-an-extension-of-stay-procedure-for-nonimmigrant" },
+        { label: "Study in the States (DHS): quick facts on the final rule", href: "https://studyinthestates.dhs.gov/final-rule-establishing-a-fixed-time-period-of-admission-and-an-extension-of-stay-procedure-quick" },
+        { label: "NAFSA: the legal challenge and the 14 September injunction", href: "https://www.nafsa.org/legal-defense-DS" },
+        { label: "AIP FYI: court temporarily blocks the duration of status rule", href: "https://www.aip.org/fyi/court-temporarily-blocks-rule-ending-duration-of-status-for-international-students" },
+      ] },
+    ],
+    faqs: [
+      { q: "How long can you stay in the US on an F-1 visa?", a: "For as long as you are enrolled in your program and maintain your status, plus a 60-day grace period after you finish. This is called duration of status. A DHS rule that would have capped admission at four years was blocked by a federal court on 14 September 2026, so duration of status still applies." },
+      { q: "Is the F-1 4-year limit in effect?", a: "No. The rule was due to take effect on 15 September 2026 but was blocked nationwide by a preliminary injunction the day before. It stays blocked while the lawsuit continues, unless an appeals court lifts the injunction." },
+      { q: "Do I need to file Form I-539 for an extension of stay?", a: "No, not while the injunction stands. Form I-539 extensions were part of the blocked rule. Your school keeps extending your I-20 as it did before." },
+      { q: "Is the F-1 grace period 60 or 30 days?", a: "It is 60 days. The blocked rule would have cut it to 30 days for new admissions, but that provision is not in force." },
+      { q: "Can I transfer universities on an F-1 visa in 2026?", a: "Yes, under the normal transfer process with your current and new schools. The blocked rule would have stopped most graduate students from transferring, but it is not in force." },
+      { q: "Has the IELTS score for a US student visa changed?", a: "No. There is no visa-level IELTS minimum for the F-1. Each university sets its own score, and neither the rule nor the court ruling changed any English test requirement." },
+    ],
+  },
+  /**
+   * Timely policy post (18 Sep 2026) — the dependants announcement of
+   * 17 September 2026. High, sudden intent ("can I bring my wife on an
+   * Australian student visa"), and nothing on the site answered it.
+   *
+   * Everything here is an ANNOUNCEMENT, not yet a regulation: no start date
+   * has been published. Written so it stays true either way, and hedged to
+   * the official source, because this one will move.
+   *
+   * Revised 24 Sep 2026 (content-research/2026-09-24-australia-student-visa-
+   * dependants.md): added the Temporary Graduate (485) half of the change,
+   * which the speech states in so many words; stopped claiming research
+   * master's is exempt, since only PhDs were named; added subsequent entrants,
+   * South Asia, spouse work rights and a country comparison. The page-one
+   * results for "can i bring my wife on australia student visa" were all
+   * pre-announcement pages still saying yes.
+   */
+  {
+    slug: "australia-student-visa-dependants-ban-2026",
+    seoTitle: "Australia Student Visa New Rules 2026: Spouse & Dependents",
+    title: "Australia student visa 2026: can you still bring your spouse?",
+    excerpt:
+      "New rules stop most students and graduates in Australia bringing a partner or children. Who is exempt, when it starts, and why IELTS is unaffected.",
+    category: "Requirements",
+    date: "September 2026",
+    publishedAt: "2026-09-18",
+    updatedAt: "2026-09-24",
+    readMins: 9,
+    keywords: [
+      "australia student visa spouse",
+      "australia student visa dependants",
+      "australia student dependent visa new rules",
+      "can i bring my wife on australia student visa",
+      "australia student visa family ban 2026",
+      "australia student visa new rules 2026",
+      "australia student visa 500 dependent",
+      "485 visa dependants 2026",
+      "ielts score for australia student visa",
+      "study in australia 2026",
+    ],
+    sections: [
+      { paragraphs: ["Short answer: for most people, soon, no. On 17 September 2026, Home Affairs and Immigration Minister Tony Burke announced at the National Press Club in Canberra that family members will no longer be attached to most student visas or to graduate visas. In visa terms, your partner and dependent children are secondary applicants, and most new Student (subclass 500) and Temporary Graduate (subclass 485) applicants will lose the right to include them. A narrow set of exemptions survives.", "One thing to be clear about before you panic or cancel anything: this is an announcement, not yet a rule. As of 24 September 2026, no commencement date has been published. Because the change is expected to be made by regulation rather than by an act of parliament, it can take effect quickly and without a vote, so treat it as coming rather than as hypothetical. Always confirm the current position on the Department of Home Affairs website before you lodge."] },
+      { heading: "What was actually announced", paragraphs: ["The dependants change is one part of a wider migration package aimed at cutting net overseas migration from roughly 292,000 a year to 245,000 in 2026-27 and 225,000 in 2027-28. The measures that affect students and graduates:"], bullets: ["Most student visas will no longer permit secondary applicants, so a partner or child cannot be included in the application.", "The same restriction applies to the Temporary Graduate (subclass 485) visa, so staying on after your degree will not be a route to bringing family over either.", "Changing your education provider or your course will require a new student visa application, rather than a variation of the one you hold.", "You will generally only be able to continue studying in Australia by moving up a qualification level, for example bachelor's to master's. Sideways moves between institutions and drops to a lower qualification are being blocked as \"visa hopping\".", "Visitor visas used for short English-language or vocational courses of three months or less will carry a \"no further stay\" condition.", "Second- and third-year Working Holiday visas move to a ballot with regional work requirements."] },
+      { heading: "Who can still bring family", paragraphs: ["The exemptions announced are narrow, and they turn on the type of student you are and where you are from, not on the strength of your relationship."], table: {
+        caption: "Exemptions as described in the 17 September 2026 announcement and its coverage. Detail will be settled when the regulation is made — confirm on immi.homeaffairs.gov.au before lodging.",
+        headers: ["Student", "Can bring partner / children?", "Note"],
+        rows: [
+          ["PhD and doctoral candidates", "Yes", "The only course named in the speech; Burke pointed to doctoral students being at a different stage of life"],
+          ["Master's by research", "Not confirmed", "Not named in the announcement. Student bodies are lobbying for all research degrees to be covered"],
+          ["Students from Pacific nations", "Yes", "Named as an exemption; the country list follows the regulation"],
+          ["Students from ASEAN nations", "Yes", "Named as an exemption"],
+          ["Overseas government-sponsored students", "Reported yes", "Reported in coverage of the package; not in the speech itself"],
+          ["Everyone else: undergraduate, coursework master's, VET, ELICOS", "No", "The great majority of student visa applicants"],
+          ["Temporary Graduate (485) holders", "No, with the same exemptions", "Graduate visas are included in the change"],
+        ],
+      } },
+      { heading: "When does it start?", paragraphs: ["No date has been given, and as of 24 September 2026 none has been published. The government has said the measures do not all commence at once, and that each takes effect as the relevant visa conditions, regulations or administrative arrangements are put in place. Dates circulating on social media, whether November, January or later, are guesses rather than announcements. What is known is the direction of travel, and that it applies to future grants rather than taking families away from people already here."] },
+      { heading: "If your family is already in Australia", paragraphs: ["Nobody is being separated onshore. The minister said families already attached to a visa in Australia keep that arrangement until they leave the country or become eligible for a permanent visa. If your partner is already there on your student visa, this announcement does not remove them."] },
+      { heading: "Can you still add your partner later?", paragraphs: ["Today, a student who has already been granted a visa can usually have a partner or child join later as a subsequent entrant, applying as a secondary applicant after the main visa is granted. That is the route many families were planning to use, and it is the part of the change people are least sure about.", "Several migration advisers report that the new rules will also stop family members applying later in this way, including for students who already hold a visa and for students in the exempt groups. That detail was not in the minister's speech and has not been confirmed in a published regulation, so treat it as reported rather than settled. If you hold a student or graduate visa now and were planning to bring family later, get advice from a registered migration agent and watch the Home Affairs site, before the commencement date is announced rather than after."] },
+      { heading: "If you are from India, Nepal, Bangladesh, Bhutan or Sri Lanka", paragraphs: ["This change falls hardest on South Asia. More than 70% of the student dependant visas granted offshore last financial year, about 10,448 visas, went to applicants from Nepal, Bangladesh, Bhutan, India and Sri Lanka. None of these countries is covered by the Pacific or ASEAN exemptions, so for most students from the region the PhD exemption is the only one available.", "Bhutan stands out. Many Bhutanese students travel with a spouse, and Bhutan sits outside both exempt groups. If you are from any of these countries and your plan depended on bringing family, compare your options before you pay a deposit or lodge."] },
+      { heading: "Can your partner work in Australia?", paragraphs: ["For families who already have a partner attached to a student visa, work rights under the current rules depend on the main student's course. If the student is enrolled in a master's degree or a doctorate, the family member can work unlimited hours. For other courses, the family member is limited to 48 hours a fortnight. In both cases the partner cannot start work until the student's course has begun. None of this changes for families already onshore, but new applicants outside the exemptions will not have a partner on the visa to begin with."] },
+      { heading: "The scale of it", paragraphs: ["Australia granted 337,427 student visas in the last financial year. Of those, 45,991 went to secondary applicants — partners and children rather than students. That is the population this measure targets, and it is why the government describes student visa numbers themselves as unaffected: the students still come, the families do not. Applying has also become more expensive: the standard student visa application charge rose to AUD 2,500 on 1 July 2026."] },
+      { heading: "How Australia now compares", paragraphs: ["If bringing your partner is the deciding factor, here is where the main destinations stand. Australia is following the UK, which restricted student dependants in 2024."], links: [{ label: "US F-1 visa: how long you can stay now the 4-year rule is blocked", href: "/blog/us-f1-duration-of-status-rule-blocked-2026" }], table: {
+        caption: "Rules in force as of September 2026, except Australia, where the change is announced but not yet in force. Each country revises these regularly — check the official immigration site before you decide.",
+        headers: ["Country", "Can most students bring a partner?", "Who still can", "Can the partner work?"],
+        rows: [
+          ["Australia", "No, once the change commences", "PhD students, Pacific and ASEAN nationals", "Yes, for families already onshore"],
+          ["United Kingdom", "No, since January 2024", "Postgraduate research students and government-sponsored students", "Yes, if eligible to come"],
+          ["Canada", "Only on some courses", "Partners of students on a master's of 16 months or longer, a doctorate, or selected professional programmes can get an open work permit", "Yes, with that permit"],
+          ["New Zealand", "Only on some courses", "Partners of master's and doctoral students qualify for an open work visa; level 7 and 8 courses only if on the eligible lists", "Yes, with that visa"],
+          ["United States", "Yes", "F-2 dependants of F-1 students", "No"],
+        ],
+      } },
+      { heading: "What this does NOT change: your English requirement", paragraphs: ["No English test or IELTS score requirement was touched by the 17 September announcement. The English rules that apply to you are still the ones that came into force on 7 August 2025, and they are worth knowing precisely, because two of them catch people out."], table: {
+        caption: "Current IELTS positions for the main Australian visa routes. Thresholds change on a schedule nobody controls — verify on the Department of Home Affairs site before you book a test.",
+        headers: ["Route", "IELTS position", "Status"],
+        rows: [
+          ["Student visa (subclass 500)", "Set by your education provider and the visa English requirement", "Unchanged in September 2026"],
+          ["Temporary Graduate (subclass 485)", "6.5 overall with no band below 5.5", "Raised from 6.0 on 7 August 2025"],
+          ["Competent English", "6.0 in each of the four skills", "Unchanged"],
+          ["Proficient English", "7.0 in each of the four skills", "Unchanged"],
+          ["Superior English", "8.0 in each of the four skills", "Unchanged"],
+        ],
+      } },
+      { heading: "Two English rules people still get wrong", bullets: ["At-home and remote-proctored tests are not accepted for any Australian visa, from any provider. You must sit the test in person at a secure test centre, and booking IELTS Online by mistake is an expensive way to lose a month.", "IELTS One Skill Retake is accepted for the Temporary Graduate visa, so if you land 6.5 overall with a single 5.0 band, you can retake that one skill rather than the whole test.", "Results from a test sat on or before 6 August 2025 remain usable as evidence until 6 August 2028."], links: [
+        { label: "IELTS One Skill Retake: how it works and when it is worth it", href: "/blog/ielts-one-skill-retake-guide" },
+        { label: "IELTS vs PTE vs Duolingo: which test to sit", href: "/blog/ielts-vs-pte-vs-duolingo" },
+        { label: "IELTS band score calculator", href: "/ielts-band-score-calculator" },
+      ] },
+      { heading: "What to do now", bullets: ["If you were planning to bring a partner, check whether any exemption applies to you before you change your plan. A PhD offer instead of a coursework master's is a materially different visa outcome now.", "If you are close to lodging, lodge on the rules as they stand and watch immi.homeaffairs.gov.au for the commencement date rather than following news coverage.", "If you already hold a visa and were planning to bring family as subsequent entrants, speak to a registered migration agent now rather than waiting for the regulation.", "If Australia was your choice because of family, compare Canada, New Zealand and the UK on their current rules using the table above, not on the version you read last year.", "Whatever you decide, the English requirement is the one part of this you fully control, and a higher band widens every option at once. Get the score first."] },
+      { heading: "Get the band that keeps your options open", paragraphs: ["A 6.5 with nothing below 5.5 is now the floor for the Temporary Graduate route, and a 7.0 across the board opens skilled pathways in every destination country, not just Australia. On IELTSVega you can sit full timed mock tests, practise Writing and Speaking with instant AI band feedback against the official criteria, and see exactly which skill is holding your overall band down — which is the difference between retaking one skill and retaking the whole test."] },
+      { heading: "Sources", paragraphs: ["Checked on 24 September 2026. The dependants change is announced, not yet in force, so confirm on the Department of Home Affairs website before you lodge."], links: [
+        { label: "Transcript: Tony Burke, National Press Club address, 17 September 2026", href: "https://www.tonyburke.com.au/speechestranscripts/transcript-national-press-club-address-17-september-2026" },
+        { label: "Minister for Home Affairs: migration reform announcement", href: "https://minister.homeaffairs.gov.au/TonyBurke/Pages/migration-reform-end-rorts-bring-skills-australia-needs-strong-economy.aspx" },
+        { label: "Study Australia: student visa application charge increase", href: "https://www.studyaustralia.gov.au/en/tools-and-resources/news/student-visa-application-charge-increase" },
+        { label: "IRCC: changes to open work permits for family members (Canada)", href: "https://www.canada.ca/en/immigration-refugees-citizenship/news/notices/changes-open-work-permits-family-members-temporary-residents.html" },
+      ] },
+    ],
+    faqs: [
+      { q: "Can I bring my wife on an Australian student visa in 2026?", a: "For most students, not for much longer. On 17 September 2026 the Australian government announced that most student visas, and graduate visas, will no longer allow family members to be attached. PhD students and students from Pacific and ASEAN nations are exempt. No commencement date has been published yet, so check the Department of Home Affairs website for the position on the day you lodge." },
+      { q: "Is the student dependants ban already law?", a: "Not yet. It was announced on 17 September 2026 and, as of 24 September 2026, has not commenced. It is expected to be implemented by regulation rather than legislation, which means it does not need a parliamentary vote and can take effect faster than a change that does. Treat it as imminent rather than speculative, and confirm before lodging." },
+      { q: "Does the dependants ban apply to the 485 Temporary Graduate visa?", a: "Yes. The minister said family members will no longer be attached to international student visas or to graduate visas. The same exemptions, for PhD graduates and Pacific and ASEAN nationals, are expected to apply. Families already onshore on a 485 visa are not being separated." },
+      { q: "Can I still add my wife as a subsequent entrant?", a: "Under the current rules, yes, if you meet the requirements. Advisers report that the new rules will also stop family joining later, including for current visa holders, but that has not been confirmed in a published regulation. If this is your plan, take advice from a registered migration agent before the commencement date is announced." },
+      { q: "Is a master's by research exempt from the dependants ban?", a: "Not confirmed. The announcement named PhD students as exempt but did not mention research master's degrees, and student organisations are lobbying for all research degrees to be included. Wait for the regulation before relying on an exemption for a research master's." },
+      { q: "What happens to my family who are already in Australia?", a: "They are not affected. The minister said families already attached to a visa in Australia will not be separated onshore, and that existing arrangements continue until they leave Australia or become eligible for a permanent visa." },
+      { q: "Can a spouse of a student visa holder work in Australia?", a: "Yes, under the current rules. If the student is doing a master's or a doctorate, the spouse can work unlimited hours; otherwise the spouse is limited to 48 hours a fortnight. The spouse cannot start work until the student's course has started." },
+      { q: "Can I change my student visa to a partner visa in Australia?", a: "Only if your partner is an Australian citizen, permanent resident or eligible New Zealand citizen, because a partner visa is sponsored by them. The dependants change does not create a new partner visa route, and a partner visa is a separate, much longer application with its own requirements." },
+      { q: "What is the age limit for a dependent child on an Australian student visa?", a: "Under the current rules, a child can be included only if they are under 18 when the decision on the visa is made. For new applicants outside the exemptions, children will not be able to be included at all once the change commences." },
+      { q: "Has the IELTS score for an Australian student visa changed?", a: "No. The 17 September 2026 announcement contained no change to English testing. The current English rules date from 7 August 2025: the Temporary Graduate visa needs 6.5 overall with no band below 5.5, Competent English remains 6.0 in each skill, and remote-proctored or at-home tests are not accepted for any Australian visa regardless of provider." },
+      { q: "Can I still change my course or university in Australia?", a: "It is becoming harder. Under the announced changes you will need a new student visa application to change provider or course, and you will generally only be able to continue by progressing to a higher qualification. Lateral transfers between institutions and moves down to a lower qualification are being blocked as visa hopping, with exceptions only in extenuating circumstances." },
+    ],
+  },
   {
     slug: "ielts-test-centres-near-me",
     seoTitle: "IELTS Centres Near Me: How to Find & Choose One",
@@ -103,6 +286,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
     category: "Booking",
     date: "August 2026",
     publishedAt: "2026-08-06",
+    updatedAt: "2026-09-14",
     readMins: 8,
     keywords: [
       "ielts exam fee",
@@ -118,18 +302,120 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
     ],
     sections: [
       { paragraphs: ["IELTS is not cheap, and the headline fee is only part of what people actually end up paying. Below is what the test costs in 2026, what drives the differences between countries, and the secondary fees that catch candidates out.", "One caveat before any number: fees are set locally, change without much notice, and move with exchange rates. Treat everything here as a planning figure and confirm the current price on your test centre's booking page before you commit."] },
-      { heading: "Roughly what it costs in 2026", bullets: ["Globally, IELTS Academic and General Training typically fall between about USD 230 and USD 490 equivalent, depending on the country.", "India: the fee rose to around INR 19,000 from 1 April 2026, up from INR 18,000.", "United Kingdom: broadly in the USD 210 to 230 range at current GBP rates.", "Canada: broadly around USD 230 equivalent.", "Australia: among the more expensive markets, roughly AUD 415 to 430.", "IELTS for UKVI generally carries a premium of around 10 to 15% over the standard test, because the centre reports your test details to the UK Home Office."] },
+      {
+        heading: "Roughly what it costs in 2026",
+        table: {
+          caption: "Planning figures for IELTS Academic and General Training. Figures last reviewed 14 September 2026.",
+          headers: ["Where", "Standard test fee", "Notes"],
+          rows: [
+            ["Global range", "≈ USD 230 – 490 equivalent", "Set locally by the British Council and IDP"],
+            ["India", "≈ INR 19,000", "Rose from INR 18,000 on 1 April 2026"],
+            ["United Kingdom", "≈ USD 210 – 230 equivalent", "Varies with the GBP rate"],
+            ["Canada", "≈ USD 230 equivalent", "—"],
+            ["Australia", "≈ AUD 415 – 430", "Among the more expensive markets"],
+            ["IELTS for UKVI", "+10 – 15% on the standard fee", "The centre reports your test details to the UK Home Office"],
+          ],
+        },
+        paragraphs: ["The same test costs different amounts in different places, and the UKVI premium applies on top of whatever the local standard fee is. If you are comparing quotes between centres in the same country and they differ by more than a few percent, one of them is quoting the UKVI or Life Skills fee rather than the standard one."],
+      },
       { heading: "Why the same test costs different amounts", paragraphs: ["The fee is set per market by the British Council and IDP, and it absorbs local costs: venue hire, examiner pay, invigilation, and the Speaking examiner's time. That last one is the expensive part of IELTS and the reason it costs more than fully automated tests. It also reflects what the local market will bear. None of this changes the test you sit or the score you get."] },
       { heading: "The fees nobody mentions", bullets: ["Rescheduling: typically an administrative fee if you move your date more than about five weeks out.", "Cancellation: usually a partial refund before the deadline, and little or nothing after it. Documented medical cases are handled separately.", "Enquiry on Results (a remark): a fee that is refunded in full if any band changes. You normally have six weeks from your test date to apply.", "One Skill Retake: a separate fee, though generally lower than a full test. That is the point of it.", "Extra Test Report Forms sent to institutions beyond the free allowance.", "A full re-sit: the entire fee again, which is why the cheapest thing you can buy in IELTS is preparation."] },
       { heading: "How to spend it once", paragraphs: ["The real cost of IELTS is not the fee, it is the number of times you pay it. Two sittings plus a remark costs more than most people's entire preparation budget. Three things reduce the odds of a second payment: know your exact requirement including any per-skill minimum, practise in the format you will actually sit, and only book once your timed mock scores are consistently at or above target.", "If you fall short in exactly one skill, check One Skill Retake before booking a full test. It is computer-delivered only, must be taken within 60 days of your original test and in the same country, and is available across most of the 110+ IELTS countries, though not in the United States. Confirm your receiving organisation accepts a One Skill Retake result before relying on it."] },
       { heading: "Is IELTS worth it against cheaper tests?", paragraphs: ["Duolingo English Test and PTE Academic are usually cheaper. Acceptance is what decides it. IELTS is accepted by essentially every university and immigration system that asks for English, while the cheaper tests are accepted broadly but not universally, and some visa routes still specify IELTS. Check your specific university, employer or visa route first: a cheaper test your institution does not accept costs you 100% of its fee."] },
       { heading: "Get your money's worth on the first attempt", paragraphs: ["The most expensive IELTS is the one you sit twice. On IELTSVega you can sit full timed mock tests, get instant AI band scores on Writing and Speaking against all four criteria, and work through 15,000+ Academic and General Training questions, so the fee buys a result rather than a diagnostic."] },
+      {
+        heading: "Fees by country",
+        paragraphs: ["This page is the global picture. For a single market in detail, including local fee changes and what is and is not accepted there:"],
+        links: [
+          { label: "IELTS exam fee in the USA 2026 — and the increase on 1 October", href: "/blog/ielts-exam-fee-usa" },
+          { label: "Australia student visa new rules for spouses and dependents (September 2026)", href: "/blog/australia-student-visa-dependants-ban-2026" },
+        ],
+      },
     ],
     faqs: [
       { q: "How much does the IELTS exam cost in 2026?", a: "Globally the fee typically falls between about USD 230 and USD 490 equivalent, set locally by the British Council and IDP. In India it rose to roughly INR 19,000 from 1 April 2026. Always confirm the current price on your test centre's booking page, as fees change without much notice." },
       { q: "Why does IELTS for UKVI cost more?", a: "IELTS for UKVI is the same test under additional UK Home Office administrative and reporting requirements, and it is only offered at approved centres. That typically adds around 10 to 15% to the standard fee in most markets." },
       { q: "Is the IELTS fee refundable if I cancel?", a: "Usually you receive a partial refund if you cancel more than about five weeks before your test date, and little or nothing after that. Documented medical reasons are normally handled separately. Check your centre's specific terms, which are shown during booking." },
       { q: "Is One Skill Retake cheaper than sitting IELTS again?", a: "Yes. It carries its own fee, but it is generally lower than a full test, which is the reason it exists. It applies only to computer-delivered tests, must be taken within 60 days and in the same country as your original test, and is not available in the United States." },
+      { q: "Did the IELTS fee increase in 2026?", a: "Yes, in several markets. In India the fee rose to around INR 19,000 from 1 April 2026, up from INR 18,000. Fees are set per market rather than globally, so an increase in one country does not mean every country changed. Check your own centre's booking page for the figure that applies to you." },
+      { q: "Is an IELTS score valid for 5 years?", a: "No. An IELTS Test Report Form is normally valid for two years from your test date. Some institutions and immigration routes accept older results in specific circumstances, but two years is the standard validity and you should plan around it. If your result is close to expiring and you still need it, budget for a re-sit rather than assuming an extension." },
+      { q: "Why is IELTS so expensive?", a: "Most of the cost is the Speaking test. IELTS is marked by trained human examiners, and the Speaking section is a live one-to-one interview that has to be scheduled, staffed and assessed individually. Add venue hire, invigilation and secure test materials, and you get a fee well above fully automated tests. It is also priced to what each local market will bear, which is why the same test costs very different amounts in different countries." },
+    ],
+  },
+  /* ---------------------------------------------------------------- *
+   * Country fee pages.
+   *
+   * TARGETING: geo-modified fee intent. `ielts-exam-fee-2026` stays the
+   * global hub and owns the country-comparison table; each country page
+   * owns one market in depth and links back to the hub.
+   *
+   * Why country pages and NOT city pages: on 14 Sep 2026 the SERP for
+   * "ielts exam fee in delhi" returned only nation-level pages from IDP,
+   * PW and KC Overseas, plus ielts.org's own per-centre listings. Not one
+   * content site ranked with a city page, because the fee is national.
+   * The single site that addressed the city did it with a city TABLE
+   * inside a national page. Copy that, and do not generate city pages —
+   * our templated /ielts-band/[band] pages all sit at position 38-66,
+   * which is what templated pages do on a domain with no authority.
+   *
+   * The USA is the first of these because it is our second-largest market
+   * by impressions (411 in the 28 days to 12 Sep 2026) against a single
+   * click at position 38.0 — the biggest untapped demand we can see.
+   * ---------------------------------------------------------------- */
+  {
+    slug: "ielts-exam-fee-usa",
+    seoTitle: "IELTS Fee in the USA 2026: Cost and October Rise",
+    title: "IELTS exam fee in the USA 2026, and the increase landing on 1 October",
+    excerpt:
+      "What IELTS costs in the United States in 2026, the fee rise taking effect on 1 October, and whether booking before it is worth doing.",
+    category: "Booking",
+    date: "September 2026",
+    publishedAt: "2026-09-14",
+    readMins: 5,
+    keywords: [
+      "ielts exam fee usa",
+      "ielts test fee united states",
+      "how much does ielts cost in usa",
+      "ielts fee increase october 2026",
+      "ielts price usa 2026",
+      "ielts academic fee usa",
+      "ielts general training fee usa",
+      "ielts test centre usa cost",
+    ],
+    sections: [
+      { paragraphs: ["IELTS in the United States costs USD 285 for tests taken before 1 October 2026 and USD 325 from that date onward — an increase of USD 40, or about 14%. If you are planning to sit the test this autumn, the booking date is what matters, and there are only a few weeks left at the lower price."], links: [{ label: "The F-1 four-year rule and what the court ruling means", href: "/blog/us-f1-duration-of-status-rule-blocked-2026" }] },
+      {
+        heading: "IELTS fees in the USA",
+        table: {
+          caption: "Standard test-centre fees. Taken from ielts.org test centre listings for New York City Metro, San Francisco, Washington DC and Salt Lake City, checked 14 September 2026.",
+          headers: ["Test", "Before 1 Oct 2026", "From 1 Oct 2026", "Change"],
+          rows: [
+            ["IELTS Academic", "USD 285", "USD 325", "+USD 40"],
+            ["IELTS General Training", "USD 285", "USD 325", "+USD 40"],
+            ["IELTS Online (at home)", "USD 244.40", "USD 244.40", "Unchanged at time of writing"],
+          ],
+        },
+        paragraphs: ["Individual centres set their own fees and a few differ, so confirm the figure on your centre's booking page before paying. The four centres checked above, spread across the country, all quoted the same price — the fee is national rather than city-by-city, so there is no cheaper city to travel to."],
+      },
+      { heading: "Is it worth booking before 1 October?", paragraphs: ["Only if you would have been ready anyway. USD 40 is real money, but a rushed test is a far more expensive mistake: a re-sit costs the full fee again, so booking early to save 14% and then scoring half a band short turns a USD 40 saving into a USD 325 loss.", "The honest rule is the same as it always is. Book when your timed mock scores are consistently at or above the band you need, and treat the deadline as a tiebreaker if you are already close, not as a reason to sit early."] },
+      { heading: "What the fee covers, and what it does not", bullets: ["All four sections — Listening, Reading, Writing and a face-to-face Speaking interview with a human examiner.", "One Test Report Form for you, plus a number of copies sent directly to receiving institutions (the free allowance varies by centre).", "It does not cover an Enquiry on Results, which is charged separately and refunded in full if any band changes.", "It does not cover rescheduling, which normally carries an administrative fee if you move your date more than about five weeks out.", "It does not cover One Skill Retake, which has its own lower fee — and note that One Skill Retake is not available in the United States."] },
+      { heading: "IELTS Online versus a test centre", paragraphs: ["IELTS Online costs USD 244.40 and is sat at home under remote proctoring, which makes it the cheaper option and it is not affected by the October increase. The catch is acceptance: IELTS Online is not accepted for UK visa purposes, is not accepted by every university, and cannot be used where a UKVI-approved test is required. Confirm with the organisation receiving your score before you book it, because a cheaper test that is not accepted is the most expensive option of all."] },
+      {
+        heading: "Where to go next",
+        paragraphs: ["Fees vary sharply by country. For the global picture and other markets:"],
+        links: [
+          { label: "IELTS exam fee in 2026: global costs and the fees nobody mentions", href: "/blog/ielts-exam-fee-2026" },
+          { label: "How the IELTS band score is calculated, and how to raise it", href: "/blog/how-ielts-band-score-is-calculated" },
+          { label: "IELTS practice tests with answers, free to start", href: "/blog/best-free-ielts-practice-tests-online" },
+        ],
+      },
+    ],
+    faqs: [
+      { q: "How much does IELTS cost in the USA in 2026?", a: "USD 285 for tests taken before 1 October 2026, rising to USD 325 from that date. The fee is the same for IELTS Academic and IELTS General Training. IELTS Online, sat at home, costs USD 244.40. Individual centres can differ slightly, so confirm on your centre's booking page." },
+      { q: "Is the IELTS fee going up in the USA?", a: "Yes. US test centres are moving from USD 285 to USD 325 for tests taken on or after 1 October 2026, an increase of about 14%. The change is tied to your test date, so booking before the deadline for a later test date does not lock in the old price at every centre — check your centre's terms." },
+      { q: "Is IELTS cheaper in some US cities than others?", a: "No. Fees are set nationally rather than by city, and test centres in New York, San Francisco, Washington DC and Salt Lake City all quote the same figure. There is no cheaper city worth travelling to, so choose your centre on date availability and convenience instead." },
+      { q: "Is IELTS Online accepted in the USA?", a: "It depends entirely on who is receiving your score. IELTS Online is cheaper at USD 244.40, but it is not accepted for UK visa and immigration purposes and not every university accepts it. Confirm acceptance in writing with your institution before booking, because an unaccepted result means paying for the test twice." },
+      { q: "Can I retake just one section of IELTS in the USA?", a: "No. One Skill Retake is available in most IELTS countries but not in the United States. If you fall short in a single skill, a full re-sit at the current fee is the only route, which is a strong argument for not booking until your practice scores are consistently at target." },
     ],
   },
   {
@@ -137,7 +423,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
     seoTitle: "Computer-Delivered IELTS: On-Screen Guide (2026)",
     title: "Computer-delivered IELTS: a screen-by-screen guide for 2026",
     excerpt:
-      "Paper IELTS is gone in most markets. Here is exactly what the computer-delivered test looks like on screen, the tools you get, and the habits you need to change.",
+      "Paper IELTS is gone in most markets. Exactly what the computer-delivered test looks like on screen, the tools you get, and the habits you need to change.",
     category: "Test format",
     date: "August 2026",
     publishedAt: "2026-08-07",
@@ -163,7 +449,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       { heading: "Writing: the word count is free information", bullets: ["You type both tasks. There is a live word count, so the old skill of estimating 250 words by eye is obsolete. Use the count and stop guessing.", "Cut, copy and paste work, so restructuring a paragraph is cheap. Take advantage: write your Task 2 body paragraphs in whatever order they come, then reorder.", "There is no spell-checker and no grammar checker. Proofreading is entirely on you, and it is worth the last three minutes.", "Typing speed matters. If you type under about 30 words per minute, that is a real risk to your Writing band, and it is the single most improvable thing on this list."] },
       { heading: "Results arrive faster, which changes your planning", paragraphs: ["Computer-delivered results usually arrive within 3 to 5 days, against up to 13 days for paper. If you are working to an application deadline, that shortens the buffer you need. It also means a One Skill Retake, which must happen within 60 days of your original test, is genuinely usable rather than theoretical."] },
       { heading: "The 'Writing on Paper' option", paragraphs: ["In selected markets you can choose to handwrite the Writing component while Listening and Reading run on computer. It is an option at some centres, not the default, and availability varies. If handwriting is genuinely faster for you than typing, check whether your centre offers it before you book, but be aware that you are also giving up the live word count and free editing."] },
-      { heading: "Practise on the screen you will sit", paragraphs: ["Familiarity with the interface is worth real marks, and it is free. IELTSVega runs entirely in your browser with a typed Writing editor and word count, on-screen Listening and Reading with highlighting, and full timed mock tests that mirror the computer-delivered experience, plus instant AI band scoring on Writing and Speaking so you know where you actually stand."] },
+      { heading: "Practise on the screen you will sit", paragraphs: ["Familiarity with the interface is worth real marks, and it is free. IELTSVega runs entirely in your browser with a typed Writing editor and word count, on-screen Listening and Reading with highlighting, and full timed mock tests that mirror the computer-delivered experience, plus instant AI band scoring on Writing and Speaking so you know where you actually stand."], links: [{ label: "Computer or paper: which to choose", href: "/blog/ielts-online-vs-paper-based" }] },
     ],
     faqs: [
       { q: "Is IELTS fully computer-based now?", a: "In most markets, yes. Paper-based delivery was retired from mid-2026, with the final paper date in most locations on 27 June 2026. A \"Writing on Paper\" option exists in selected markets, where you handwrite the Writing component while the rest runs on computer." },
@@ -181,7 +467,8 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
     category: "Test format",
     date: "August 2026",
     publishedAt: "2026-08-08",
-    readMins: 8,
+    updatedAt: "2026-09-19",
+    readMins: 9,
     keywords: [
       "ielts one skill retake",
       "ielts osr",
@@ -201,6 +488,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       { heading: "The catch: not everyone accepts it", paragraphs: ["This is the part that matters most and gets the least attention. One Skill Retake produces a valid Test Report Form, but the organisation receiving it decides whether it will accept a score assembled from two sittings. Most universities do. Some immigration authorities and professional registration bodies require all four skills from a single test date.", "Check with your specific university, employer, visa route or registration body before you pay for a retake. If they require a single sitting, a One Skill Retake result is worth nothing to them and you have spent the fee for nothing."] },
       { heading: "When it is the right call", bullets: ["One skill is below requirement and the other three are comfortably above. Classic case, clear yes.", "Two skills are short. It cannot help you, because you can only retake one. Book a full test.", "Your weak skill is Speaking or Writing. These are the most improvable in a few weeks of focused work with feedback, so a retake has the best odds.", "Your weak skill is Listening or Reading and you missed by one or two raw marks. Often fixable with targeted question-type practice and spelling discipline.", "You are close to the 60-day deadline and have not improved yet. Do not burn the retake to meet a deadline. An unimproved retake is a wasted fee and it uses up your one attempt."] },
       { heading: "How to actually use the 60 days", paragraphs: ["Sixty days is enough to move one skill by half to a full band if you spend it on that skill alone. Do not revise everything. Diagnose the specific loss: is it Task Response or Grammar in Writing? Is it Matching Headings or True/False/Not Given in Reading? Then drill that, under time, with feedback on every attempt.", "The biggest waste of a retake window is general practice. You already know your other three skills are fine. Spend all of it on the one number that has to move."] },
+      { heading: "Can you just retake the whole test instead?", paragraphs: ["Yes, and for many candidates it is the better option. There is no limit on how many times you can sit IELTS, and no mandatory waiting period between attempts: you can rebook as soon as there is a seat, subject only to your centre's calendar. You pay the full test fee each time, and your new Test Report Form replaces the old one rather than being combined with it.", "A full re-sit is the right call when two or more skills are short, when the gap is more than half a band, when your 60-day One Skill Retake window has already closed, or when the organisation receiving your score will not accept a combined report. It is also the only route if your original test was paper-based.", "A One Skill Retake is the right call when exactly one skill is short, you know why, and you can name what you would do differently. If you cannot name it, the retake will reproduce the same band and you will have paid for the privilege."], links: [{ label: "Plan the preparation before you rebook", href: "/blog/ielts-4-week-study-plan" }, { label: "When a remark is worth trying first", href: "/blog/ielts-results-trf-validity-remark" }] },
       { heading: "Fix the one skill that is costing you", paragraphs: ["A retake window is short and narrow, which is exactly the situation targeted practice is for. On IELTSVega you can drill one skill by question type, sit timed single sections rather than whole tests, and get instant AI band scoring on Writing and Speaking against all four official criteria, so you know before you rebook whether the number has actually moved."] },
     ],
     faqs: [
@@ -208,6 +496,9 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       { q: "How long do I have to book a One Skill Retake?", a: "You must take it within 60 days of your original test date, in the same country where you sat that test, and your original test must have been computer-delivered. You can use it once per full test." },
       { q: "Do universities accept IELTS One Skill Retake?", a: "Most universities do, but acceptance is decided by the receiving organisation, and some immigration authorities and professional bodies require all four skills from one sitting. Confirm with your specific institution or visa route before you pay for the retake." },
       { q: "Is there a minimum score needed to qualify for One Skill Retake?", a: "No. There is no minimum band requirement. Any candidate who sat a computer-delivered test can book a retake of one skill within the 60-day window, regardless of the original scores." },
+      { q: "Can I retake IELTS as many times as I want?", a: "Yes. There is no limit on the number of attempts and no mandatory waiting period between them, so you can rebook as soon as your test centre has a seat. You pay the full fee each time, and each new Test Report Form replaces the previous one rather than being merged with it. The practical limit is preparation: sitting the test again without changing anything about how you prepare generally reproduces the same band." },
+      { q: "How much does IELTS One Skill Retake cost?", a: "Centres set their own price and it varies by country, but it is normally lower than a full test fee while still being a substantial proportion of it. Check your own centre's booking page for the exact amount, and weigh it against a full re-sit: if more than one skill is short, paying for a One Skill Retake first and a full test afterwards costs more than going straight to the re-sit." },
+      { q: "How many times can you take a One Skill Retake?", a: "One Skill Retake is tied to a specific original test and its 60-day window, and you cannot chain retakes off a retake — a further attempt means sitting a full test again, which then opens its own new window. Confirm the current rule with your test centre when you book, since the policy has been extended to new markets since launch and centre-level detail varies." },
     ],
   },
   {
@@ -253,7 +544,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
     seoTitle: "IELTS for UKVI vs IELTS Academic: Which Do You Need?",
     title: "IELTS for UKVI vs IELTS Academic: which one does your visa need?",
     excerpt:
-      "IELTS for UKVI, IELTS Academic, General Training and Life Skills are four different bookings. Booking the wrong one invalidates your application. Here is how to choose.",
+      "IELTS for UKVI, Academic, General Training and Life Skills are four different bookings. Booking the wrong one invalidates your application. How to choose.",
     category: "Requirements",
     date: "August 2026",
     publishedAt: "2026-08-11",
@@ -277,7 +568,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       { heading: "Do you actually need UKVI?", paragraphs: ["Two questions decide it. First: are you applying to the UK Home Office for a visa, as opposed to applying to a university? Second: has your university told you it can assess your English itself?", "Many UK universities are permitted to assess English proficiency for degree-level students and will accept standard IELTS Academic. Many still require UKVI. The university's own admissions page is the authority here, not a general article, and it is worth asking admissions directly in writing. For Skilled Worker, family and settlement routes you are dealing with the Home Office directly, and UKVI or Life Skills is required."] },
       { heading: "The scores the UK asks for", bullets: ["Degree-level Student visa: CEFR B2, which on IELTS for UKVI means at least 5.5 in each of the four skills. That is a per-skill minimum, not an overall average.", "From 8 January 2026, first-time Skilled Worker, Scale-up and High Potential Individual applicants must meet B2 rather than the previous B1, again meaning 5.5 in every skill.", "Below degree level, the requirement is usually B1, meaning 4.0 in each skill on IELTS for UKVI.", "Universities set their own, higher, requirements on top of the visa minimum, commonly 6.5 to 7.0 overall with 6.0 or 6.5 in Writing.", "Always check the current Home Office guidance and your institution's page. Thresholds change, and 2026 already moved one of them."] },
       { heading: "The per-skill trap", paragraphs: ["An overall 6.5 with 5.0 in Writing does not meet a B2 requirement, because B2 is defined per skill. Candidates fail visa applications on this constantly, having comfortably exceeded the overall figure. Read your requirement carefully and find the lowest number you are allowed to score in any single skill, then treat that as your real target."] },
-      { heading: "Practise for the per-skill minimum", paragraphs: ["If your requirement is per-skill, your weakest skill is the only one that matters. On IELTSVega you can see your band by skill after every practice set and mock test, get instant AI scoring on Writing and Speaking against all four criteria, and drill the one skill sitting below your threshold, which is exactly where visa applications are won or lost."] },
+      { heading: "Practise for the per-skill minimum", paragraphs: ["If your requirement is per-skill, your weakest skill is the only one that matters. On IELTSVega you can see your band by skill after every practice set and mock test, get instant AI scoring on Writing and Speaking against all four criteria, and drill the one skill sitting below your threshold, which is exactly where visa applications are won or lost."], links: [{ label: "Build a UKVI study plan", href: "/blog/ielts-4-week-study-plan" }, { label: "Academic vs General Training", href: "/blog/ielts-academic-vs-general-training" }] },
     ],
     faqs: [
       { q: "What is the difference between IELTS for UKVI and IELTS Academic?", a: "The test content, questions and marking are identical. IELTS for UKVI is delivered at UK Home Office approved centres under extra identity and security requirements, and your details are reported to the Home Office. It costs slightly more and produces a Test Report Form a visa caseworker can verify." },
@@ -348,7 +639,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
     ],
     sections: [
       { paragraphs: ["Three tests, three very different experiences, and one question that decides it before any of the others: which does your institution accept? Everything else is a tie-breaker. Here is the honest comparison, including where each test genuinely wins."] },
-      { heading: "Acceptance: the only question that matters first", bullets: ["IELTS: the broadest acceptance of the three. Accepted by essentially every university and by the immigration systems of the UK, Canada, Australia and New Zealand. Some visa routes name it specifically.", "PTE Academic: very widely accepted for study, and accepted for several major visa routes, though not universally across all of them.", "Duolingo English Test: accepted by more than 5,000 universities and programmes, with strong coverage in the US, Canada and Australia, but noticeably thinner for visa and immigration purposes and at some highly selective institutions.", "The rule: check your specific university programme page and your specific visa route. Not the country. Not a comparison article. The programme page."] },
+      { heading: "Acceptance: the only question that matters first", bullets: ["IELTS: the broadest acceptance of the three. Accepted by essentially every university and by the immigration systems of the UK, Canada, Australia and New Zealand. Some visa routes name it specifically.", "PTE Academic: very widely accepted for study, and accepted for several major visa routes, though not universally across all of them.", "Duolingo English Test: accepted by more than 5,000 universities and programmes, with strong coverage in the US, Canada and Australia, but noticeably thinner for visa and immigration purposes and at some highly selective institutions.", "The rule: check your specific university programme page and your specific visa route. Not the country. Not a comparison article. The programme page."], links: [{ label: "Australia student visa 2026: can you still bring your spouse?", href: "/blog/australia-student-visa-dependants-ban-2026" }] },
       { heading: "How the three feel to sit", paragraphs: ["IELTS runs about 2 hours 45 minutes and its Speaking test is a live conversation with a human examiner, which is either its best feature or its most stressful, depending on who you are. It uses a wide range of question types, including short written answers, so you cannot guess your way through.", "PTE Academic is fully computer-based and AI-scored, about two hours, with heavily integrated tasks: you speak into a microphone, and one task often scores several skills at once. It rewards a specific, learnable technique more than any of the three.", "The Duolingo English Test is the shortest, around an hour, taken at home under remote proctoring, with an adaptive question set that adjusts to your answers. It is the cheapest and the fastest to book and receive."] },
       { heading: "Cost and results speed", bullets: ["IELTS: typically USD 230 to 490 equivalent depending on the country; results in 3 to 5 days for computer-delivered tests.", "PTE Academic: generally somewhat cheaper than IELTS in most markets; results usually within about two days.", "Duolingo English Test: substantially cheaper than both; results usually within about two days.", "Fees and turnaround change. Check the current figures on each provider's site before deciding on price."] },
       { heading: "Which is actually easier?", paragraphs: ["None of them is easier in the abstract, but they reward different people. IELTS suits candidates who are comfortable talking to a person, have good general reading stamina, and write reasonable essays. PTE suits candidates who are comfortable with a microphone, dislike being watched, and are willing to learn a fairly mechanical task technique. Duolingo suits candidates who want a short, cheap, adaptive test and are not applying anywhere that demands a traditional test.", "The one honest generalisation: PTE's AI scoring is more predictable and less forgiving of technique errors, IELTS Writing and Speaking are more forgiving of technique but harder to game, and Duolingo's brevity means a single bad ten minutes weighs more heavily."] },
@@ -372,6 +663,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
     category: "Scoring",
     date: "August 2026",
     publishedAt: "2026-08-14",
+    updatedAt: "2026-09-05",
     readMins: 8,
     keywords: [
       "ielts results",

@@ -3,7 +3,14 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import { DevtoolsGuard } from "@/components/security/devtools-guard";
-import { Analytics } from "@/components/analytics/analytics";
+import {
+  Analytics,
+  GoogleTagManager,
+  GoogleTagManagerNoScript,
+  MetaPixel,
+  MetaPixelNoScript,
+} from "@/components/analytics/analytics";
+import { SignupBeacon } from "@/components/analytics/signup-beacon";
 import { SITE_URL } from "@/lib/site";
 import { BRAND, DEFAULT_DESCRIPTION, DEFAULT_TITLE, KEYWORDS } from "@/lib/seo";
 import { LONG_TAIL, metaKeywordSlice } from "@/lib/keywords";
@@ -16,11 +23,13 @@ const inter = Inter({
   display: "swap",
 });
 
-// Our nonce-based CSP (see src/proxy.ts) injects a fresh script nonce per
-// request. That only works if pages render per-request, so opt the entire app
-// into dynamic rendering — otherwise statically-prerendered pages ship scripts
-// without a nonce and the browser's CSP blocks hydration.
-export const dynamic = "force-dynamic";
+// NOT force-dynamic, deliberately. This used to opt every route into per-request
+// rendering so each page could carry the proxy's CSP nonce — which meant no page
+// was ever served from the CDN, and every byte crossed from iad1 to India, where
+// ~2–3% of uncached responses were measured freezing mid-body (29 Sep 2026).
+// Public pages are now prerendered and get a nonce-free CSP; the signed-in app
+// routes are dynamic on their own (they read the session cookie) and keep the
+// strict nonce CSP. The split, and the list of strict routes, is in src/proxy.ts.
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -112,11 +121,17 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} h-full antialiased`}
     >
+      <head>
+        <GoogleTagManager />
+        <MetaPixel />
+      </head>
       {/* Browser extensions (password managers, etc.) inject attributes onto
           <body> before React hydrates, causing a benign attribute mismatch.
           suppressHydrationWarning silences it for this element only — not the
           tree — which is the documented fix for extension-injected attributes. */}
       <body className="min-h-full" suppressHydrationWarning>
+        <GoogleTagManagerNoScript />
+        <MetaPixelNoScript />
         {/* Open DevTools and the whole tree below unmounts, then the tab leaves
             for about:blank. Development builds, crawlers and holders of the
             bypass token are exempt — see src/lib/devtools-watch.ts. */}
@@ -127,6 +142,7 @@ export default function RootLayout({
         {/* Outside DevtoolsGuard on purpose: the guard unmounts its subtree
             when DevTools opens, and analytics must not be torn down with it. */}
         <Analytics />
+        <SignupBeacon />
       </body>
     </html>
   );

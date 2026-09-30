@@ -5,6 +5,7 @@ import { useActionState, useState } from "react";
 import { Eye, EyeOff, Loader2, ArrowRight } from "lucide-react";
 import { signup } from "@/app/actions/auth";
 import { clearAuthCache } from "@/lib/auth-cache";
+import { REF_ID, type Referral } from "@/lib/partner-referral";
 import { type AuthFormState } from "@/lib/validation";
 import { cn } from "@/lib/utils";
 import { AuthField, authButton, authError } from "./auth-ui";
@@ -15,7 +16,7 @@ const MODULES = [
   { value: "general", label: "General Training", hint: "Migration / work" },
 ] as const;
 
-export function SignupForm({ next }: { next?: string }) {
+export function SignupForm({ next, referral }: { next?: string; referral?: Referral | null }) {
   const [state, action, pending] = useActionState<AuthFormState, FormData>(
     signup,
     null,
@@ -29,6 +30,13 @@ export function SignupForm({ next }: { next?: string }) {
     <form action={action} onSubmit={() => clearAuthCache()} className="space-y-3" noValidate>
       {/* See LoginForm: a hint for where to land, revalidated by `safeNext`. */}
       {next && <input type="hidden" name="next" value={next} />}
+      {/*
+        The class whose link this signup came through. THE ID ONLY — the name
+        the banner above is showing came off the URL and is nobody's fact, so it
+        is never posted anywhere it could be stored. The action re-reads this id
+        against `partners` before it means anything.
+      */}
+      {referral && <input type="hidden" name={REF_ID} value={referral.id} />}
       {state?.error && (
         <p role="alert" className={authError}>
           {state.error}

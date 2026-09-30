@@ -1,6 +1,7 @@
 import "server-only";
 
 import { env, isSpeakingAiConfigured } from "@/lib/env";
+import { alert } from "@/lib/monitoring/alert";
 import type { QuestionTypeKey } from "@/lib/ielts";
 
 /**
@@ -258,7 +259,24 @@ const MAX_CUE_CARD_POINTS = 8;
  * (15–40s of work, plus however long the request waits to be picked up), so sign
  * it with room to spare.
  */
-export async function analyzeSpeaking(params: {
+export async function analyzeSpeaking(params: SpeakingParams): Promise<SpeakingScoreResult> {
+  const result = await requestSpeakingScore(params);
+  // No speech and an unreadable recording are about the candidate's audio, not
+  // the service. Everything else — a bad key, a 5xx, a spent balance behind the
+  // service, a request we built wrong — is ours to fix, so it pages.
+  if (!result.ok && result.reason !== "no_speech" && result.reason !== "bad_audio") {
+    await alert({
+      source: "speaking-ai",
+      title: `Speaking scoring failed: ${result.reason}`,
+      status: result.status,
+      detail: result.detail ?? result.reason,
+      context: { provider: "IELTS Speaking Evaluation", part: params.part },
+    });
+  }
+  return result;
+}
+
+type SpeakingParams = {
   /** Presigned GET URL for the recording. See `presignGetUrl` in speech/s3. */
   audioUrl: string;
   part: SpeakingPart;
@@ -270,7 +288,9 @@ export async function analyzeSpeaking(params: {
   question?: string;
   /** Part 2 "You should say" bullets. */
   cueCardPoints?: string[];
-}): Promise<SpeakingScoreResult> {
+};
+
+async function requestSpeakingScore(params: SpeakingParams): Promise<SpeakingScoreResult> {
   if (!isSpeakingAiConfigured()) return { ok: false, reason: "not_configured" };
 
   // Trimmed to the service's documented limits rather than sent as-is: an

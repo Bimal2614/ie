@@ -3,11 +3,16 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import { PartnerControls } from "@/components/admin/partner-controls";
+import { PartnerStudentRow } from "@/components/admin/partner-student-row";
 import { cardClass, StatTile } from "@/components/dashboard/ui";
+import { InviteLink } from "@/components/partner/invite-link";
 import { ListControls, Pager } from "@/components/ui/list-controls";
+import { isUuid } from "@/lib/uuid";
 import { couponOptions } from "@/lib/admin";
 import { requireAdmin } from "@/lib/dal";
 import { parsePageRequest } from "@/lib/pagination";
+import { env } from "@/lib/env";
+import { referralLink } from "@/lib/partner-referral";
 import { partnerForAdmin, STUDENT_LIST_DEFAULTS } from "@/lib/partners";
 import { formatPrice, PLANS } from "@/lib/plans";
 import { cn } from "@/lib/utils";
@@ -24,18 +29,19 @@ export default async function AdminPartnerPage({
 }) {
   await requireAdmin();
   const { id } = await params;
+  if (!isUuid(id)) notFound(); // see src/lib/uuid.ts
   const req = parsePageRequest(await searchParams, STUDENT_LIST_DEFAULTS);
   const [data, allCoupons] = await Promise.all([partnerForAdmin(id, req), couponOptions()]);
   if (!data) notFound();
 
-  const { partner, logins, students, overview, payments } = data;
+  const { partner, logins, students, overview, revenue, payments } = data;
   const basePath = `/admin/partners/${partner.id}`;
-  const collected = payments
-    .filter((p) => p.status === "paid")
-    .reduce<Record<string, number>>((acc, p) => {
-      acc[p.currency] = (acc[p.currency] ?? 0) + p.amountCents;
-      return acc;
-    }, {});
+  /* Straight from the ledger, like /admin/partners — NOT summed from the
+     payments panel below, which only holds the twenty most recent orders. */
+  const collected =
+    Object.entries(revenue)
+      .map(([c, cents]) => formatPrice(cents, c))
+      .join(" + ") || "—";
 
   return (
     <div className="space-y-6">
@@ -66,15 +72,30 @@ export default async function AdminPartnerPage({
         <StatTile label="Awaiting payment" value={overview.awaitingPayment} sub="Enrolled, not paid for" icon={null} />
         <StatTile
           label="Collected"
+          /* Straight through to the rows behind it. The ledger is site-wide by
+             default, and the gap between this figure and that screen's total is
+             the first thing anyone comparing the two asks about. */
           value={
-            Object.entries(collected)
-              .map(([c, cents]) => formatPrice(cents, c))
-              .join(" + ") || "—"
+            <Link
+              href={`/admin/transactions?q=${encodeURIComponent(partner.name)}`}
+              className="hover:underline"
+            >
+              {collected}
+            </Link>
           }
-          sub="Recent payments"
+          sub="All money received"
           icon={null}
         />
       </div>
+
+      {/* The same link the class sees in its own panel — here so it can be
+          sent over at onboarding, before anyone has signed in to fetch it. */}
+      <InviteLink
+        url={referralLink(env.APP_URL ?? "https://ieltsvega.com", {
+          id: partner.id,
+          name: partner.name,
+        })}
+      />
 
       <section className={cn(cardClass, "p-5")}>
         <PartnerControls
@@ -116,20 +137,21 @@ export default async function AdminPartnerPage({
         ) : (
           <ul className="divide-y divide-line">
             {students.rows.map((s) => (
-              <li key={s.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 p-4 text-sm">
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-medium text-ink">{s.name}</span>
-                  <span className="block truncate text-xs text-ink-muted">{s.email}</span>
-                </span>
-                <span className="text-xs text-ink-muted">
-                  {s.plan === "free"
-                    ? "Free"
-                    : `${PLANS[s.plan].label}${s.planExpiresAt ? ` to ${date(s.planExpiresAt)}` : ""}`}
-                </span>
-                <span className="w-24 text-right text-xs tabular-nums text-ink-muted">
-                  {s.attempts} attempts
-                </span>
-              </li>
+              <PartnerStudentRow
+                key={s.id}
+                student={{
+                  id: s.id,
+                  name: s.name,
+                  email: s.email,
+                  planLabel:
+                    s.plan === "free"
+                      ? "Free"
+                      : `${PLANS[s.plan].label}${s.planExpiresAt ? ` to ${date(s.planExpiresAt)}` : ""}`,
+                  plan: s.plan,
+                  disabled: Boolean(s.deactivatedAt),
+                  attempts: s.attempts,
+                }}
+              />
             ))}
           </ul>
         )}

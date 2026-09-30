@@ -75,6 +75,7 @@ const COLS: { title: string; links: { label: string; href: string }[] }[] = [
       { label: "Pricing", href: "/pricing" },
       { label: "About", href: "/about" },
       { label: "Contact", href: "/contact" },
+      { label: "Become a partner", href: "/partners" },
       { label: "Terms of use", href: "/terms" },
       { label: "Privacy policy", href: "/privacy" },
       { label: "Refund policy", href: "/refunds" },

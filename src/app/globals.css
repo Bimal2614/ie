@@ -138,6 +138,10 @@
   --bg-elev: 222 32% 10%;
   --bg-sunken: 222 32% 8%;
   --ink: 210 20% 96%;
+  /* Light mode's --ink-strong is darker than --ink; dark mode's has to be
+     lighter, and without this override it stays at the light value — near-black
+     text on a near-black page, everywhere `text-ink-strong` is used. */
+  --ink-strong: 210 20% 99%;
   --ink-soft: 215 16% 75%;
   --ink-muted: 215 16% 60%;
   --line: 217 19% 22%;

@@ -1,0 +1,98 @@
+# After every production deploy of main, run the same AI smoke test the 03:30
+# UTC Vercel cron runs (/api/cron/smoketest), mail the report to ADMIN_EMAILS as
+# that run does, and post the same full report to the Slack channel news-watch
+# uses.
+#
+# TESTING THE NEW CODE, NOT THE OLD. A push to main is only the start: Vercel
+# builds for a couple of minutes. This fires on the deployment status Vercel
+# posts when that Production build is ready, and then asks the site with
+# ?expect=<sha> — the route answers 409, before any paid check, until the
+# domain is serving the build from this exact commit. Only then does it run.
+#
+# COST. Each run is the full fixture catalogue — about eleven paid scoring calls
+# — so every push to main costs what one morning's run costs.
+#
+# Repository secrets:  CRON_SECRET        same value as on Vercel production
+#                      SLACK_WEBHOOK_URL  same webhook as news-watch (.env.local)
+
+name: Post-deploy smoke test
+
+on:
+  deployment_status:
+
+concurrency:
+  group: post-deploy-smoketest
+  cancel-in-progress: true
+
+jobs:
+  smoketest:
+    if: >-
+      github.event.deployment_status.state == 'success' &&
+      github.event.deployment.environment == 'Production'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # www, because the bare domain 308s there and curl rightly drops the
+      # Authorization header when a redirect changes host.
+      ENDPOINT: https://www.ieltsvega.com/api/cron/smoketest
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      SHA: ${{ github.event.deployment.sha }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.event.deployment.sha }}
+    steps:
+      - name: Run smoke test against this commit's deployment
+        id: smoke
+        run: |
+          set -u
+          if [ -z "$CRON_SECRET" ]; then echo "::error::CRON_SECRET secret is not set"; exit 1; fi
+          # Up to ~10 minutes for the domain to switch to this build. A 409 is
+          # free: the route checks the commit before running anything. A 404 is
+          # retried too — the previous build may still hold an older CRON_SECRET
+          # (a rotated secret only takes effect with the next deploy).
+          for attempt in $(seq 1 30); do
+            code=$(curl -sS -o report.json -w '%{http_code}' --max-time 330 \
+              -H "Authorization: Bearer $CRON_SECRET" \
+              "$ENDPOINT?expect=$SHA" || echo 000)
+            [ "$code" != "409" ] && [ "$code" != "404" ] && break
+            echo "attempt $attempt: HTTP $code, site not yet serving $SHA with this secret"
+            sleep 20
+          done
+          echo "http=$code" >> "$GITHUB_OUTPUT"
+          echo "HTTP $code"
+          jq '{ok, passed, failed, tookMs, commit, emailed}' report.json 2>/dev/null || true
+
+      - name: Post the report to Slack
+        if: always()
+        env:
+          HTTP: ${{ steps.smoke.outputs.http }}
+        run: |
+          set -u
+          short=${SHA:0:7}
+          if [ "${HTTP:-000}" = "200" ] && jq -e '.mail.text' report.json >/dev/null 2>&1; then
+            # The subject line and the plain-text body of the admin email,
+            # verbatim; the code block keeps its columns aligned.
+            text=$(jq -r --arg short "$short" --arg commit "$COMMIT_URL" --arg run "$RUN_URL" '
+              "*\(.mail.subject)*\nAfter deploy of <\($commit)|\($short)>"
+              + " · email " + (if .emailed.sent then "sent to \(.recipients) admin(s)" else "NOT sent (\(.emailed.reason))" end)
+              + "\n```\n\(.mail.text)\n```\n<\($run)|Workflow run>"' report.json)
+          elif [ "${HTTP:-000}" = "409" ]; then
+            text=":warning: *Smoke test skipped* for <$COMMIT_URL|$short> — www.ieltsvega.com was still serving $(jq -r .commit report.json 2>/dev/null) after 10 minutes, so the new build was never tested.
+          <$RUN_URL|Workflow run>"
+          else
+            text=":rotating_light: *Smoke test could not run* after deploy <$COMMIT_URL|$short> — HTTP ${HTTP:-000} from $ENDPOINT (404 means CRON_SECRET does not match production).
+          <$RUN_URL|Workflow run>"
+          fi
+
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "::warning::SLACK_WEBHOOK_URL secret is not set; message not sent"
+            echo "$text"
+            exit 0
+          fi
+          jq -n --arg text "$text" '{text: $text, mrkdwn: true}' \
+            | curl -sS --fail-with-body -X POST -H 'Content-Type: application/json' \
+                --data @- "$SLACK_WEBHOOK_URL"
+
+      - name: Fail the job when the smoke test failed
+        run: |
+          [ "${{ steps.smoke.outputs.http }}" = "200" ] && jq -e '.ok == true' report.json >/dev/null

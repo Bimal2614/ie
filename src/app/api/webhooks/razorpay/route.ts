@@ -12,6 +12,7 @@ import {
 } from "@/lib/payments/billing";
 import { markPastDue, requestCancellation, subscriptionByProviderId } from "@/lib/subscriptions";
 import { markStudentOrderFailed, settleStudentOrder } from "@/lib/payments/partner-billing";
+import { alert } from "@/lib/monitoring/alert";
 
 /**
  * Razorpay's webhook — where a RECURRING subscription actually recurs.
@@ -132,6 +133,12 @@ export async function POST(request: Request) {
 
   if (!verifyWebhookSignature(raw, signature)) {
     console.error("[razorpay-webhook] rejected a delivery with a bad signature");
+    await alert({
+      source: "razorpay-webhook",
+      title: "Razorpay webhook rejected: bad signature",
+      severity: "warning",
+      hint: "🔑 RAZORPAY_WEBHOOK_SECRET does not match the dashboard's webhook secret — or someone is probing the endpoint.",
+    });
     return new NextResponse(null, { status: 404 });
   }
 
@@ -163,6 +170,13 @@ export async function POST(request: Request) {
     // Release the claim so Razorpay's retry can have another go at it.
     await db.delete(webhookEvents).where(eq(webhookEvents.id, claimId));
     console.error(`[razorpay-webhook] ${type} failed:`, error);
+    await alert({
+      source: "razorpay-webhook",
+      title: `Razorpay webhook ${type} failed — a payment may not have been applied`,
+      error,
+      context: { event: type, eventId },
+      hint: "Razorpay will retry. If this repeats, the customer paid but their plan is not active — check the subscription by hand.",
+    });
     // 500 asks Razorpay to redeliver. Anything 2xx here would drop the event.
     return NextResponse.json({ ok: false }, { status: 500 });
   }

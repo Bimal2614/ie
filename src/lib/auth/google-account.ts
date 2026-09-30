@@ -2,8 +2,9 @@ import "server-only";
 
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { users, sessions } from "@/db/schema";
+import { users, sessions, auditLog } from "@/db/schema";
 import { normalizePhone } from "@/lib/phone";
+import { referringPartner } from "@/lib/partners";
 
 /**
  * Find-or-create the account behind a verified Google identity.
@@ -18,7 +19,8 @@ import { normalizePhone } from "@/lib/phone";
  *
  * Both arrive here with the same proven facts, and from this point on there is
  * one set of linking rules. That matters because the rules are subtle — see the
- * planted-password case below — and a second copy would be the one that forgets.
+ * planted-password case and the referral rule below — and a second copy would be
+ * the one that forgets.
  *
  * The CALLER must have verified the identity. This function trusts its input.
  */
@@ -34,12 +36,37 @@ export type VerifiedGoogleIdentity = {
   phone?: string | null;
 };
 
+export type GoogleLinkOptions = {
+  /**
+   * The `ref` off a partner invite link, UNVALIDATED — re-read below before it
+   * is allowed to mean anything. The website parks it in a cookie; the app would
+   * carry it on a deep link.
+   */
+  referral?: unknown;
+  /** Client IP, for `last_login_ip`. */
+  ip?: string | null;
+};
+
 export type GoogleLinkResult =
-  | { ok: true; userId: string }
+  | {
+      ok: true;
+      userId: string;
+      /**
+       * Whether this call CREATED the account rather than finding one.
+       *
+       * The caller needs it because a signup and a returning sign-in are
+       * different events to everything outside this function — the website fires
+       * a conversion pixel on one and not the other.
+       */
+      created: boolean;
+      /** The class it was attached to, when it was created through an invite. */
+      partnerId: string | null;
+    }
   | { ok: false; reason: "deactivated" };
 
 export async function linkOrCreateGoogleAccount(
   identity: VerifiedGoogleIdentity,
+  options: GoogleLinkOptions = {},
 ): Promise<GoogleLinkResult> {
   const phone = normalizePhone(identity.phone ?? null);
   const emailNorm = identity.email.trim().toLowerCase();
@@ -96,9 +123,29 @@ export async function linkOrCreateGoogleAccount(
     }
   }
 
+  let created = false;
+  let partnerId: string | null = null;
+
   // 3) Else create a fresh OAuth account (no password).
   if (!user) {
-    const [created] = await db
+    /*
+     * Only a NEW account is attached to the class, and that is the whole rule.
+     *
+     * Branches 1 and 2 above found an account that already existed, and an
+     * invite link is not a way to take one over: following one would hand a
+     * class the practice history and results of anybody who happened to open
+     * the link and sign in with an account they already had. A candidate the
+     * class already teaches gets enrolled from the panel instead, which is a
+     * deliberate act by someone with a login.
+     *
+     * The id is re-read against `partners` here — see `referringPartner`. Until
+     * this line it is a string off a public URL that has been checked for
+     * nothing but its shape.
+     */
+    const referrer = await referringPartner(options.referral);
+    partnerId = referrer?.id ?? null;
+
+    const [createdRow] = await db
       .insert(users)
       .values({
         email: identity.email,
@@ -108,9 +155,25 @@ export async function linkOrCreateGoogleAccount(
         name: identity.name,
         phone,
         avatarUrl: identity.picture ?? null,
+        partnerId,
       })
       .returning({ id: users.id, deactivatedAt: users.deactivatedAt, phone: users.phone });
-    user = created;
+    user = createdRow;
+    created = true;
+
+    if (referrer) {
+      // Same event the email signup writes, for the same reason: this account
+      // was created by the candidate, not by the class. See src/lib/auth/core.ts.
+      try {
+        await db.insert(auditLog).values({
+          userId: createdRow.id,
+          event: "partner.student.referred",
+          metadata: { partnerId: referrer.id, via: "google" },
+        });
+      } catch {
+        // The audit trail must never be what fails a sign-in.
+      }
+    }
   }
 
   if (user.deactivatedAt) return { ok: false, reason: "deactivated" };
@@ -121,5 +184,19 @@ export async function linkOrCreateGoogleAccount(
     await db.update(users).set({ phone, updatedAt: new Date() }).where(eq(users.id, user.id));
   }
 
-  return { ok: true, userId: user.id };
+  /*
+   * Last seen, on the way through.
+   *
+   * This path never touched the column, so a Google account read as "never
+   * signed in" for its whole life — harmless while nobody was looking, and
+   * wrong the moment a partner's roster started counting it for students who
+   * joined through an invite link. The password path has always done this in
+   * its own success branch; see `authenticate` in src/lib/auth/core.ts.
+   */
+  await db
+    .update(users)
+    .set({ lastLoginAt: new Date(), lastLoginIp: options.ip ?? null })
+    .where(eq(users.id, user.id));
+
+  return { ok: true, userId: user.id, created, partnerId };
 }
