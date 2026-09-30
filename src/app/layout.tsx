@@ -23,11 +23,13 @@ const inter = Inter({
   display: "swap",
 });
 
-// Our nonce-based CSP (see src/proxy.ts) injects a fresh script nonce per
-// request. That only works if pages render per-request, so opt the entire app
-// into dynamic rendering — otherwise statically-prerendered pages ship scripts
-// without a nonce and the browser's CSP blocks hydration.
-export const dynamic = "force-dynamic";
+// NOT force-dynamic, deliberately. This used to opt every route into per-request
+// rendering so each page could carry the proxy's CSP nonce — which meant no page
+// was ever served from the CDN, and every byte crossed from iad1 to India, where
+// ~2–3% of uncached responses were measured freezing mid-body (29 Sep 2026).
+// Public pages are now prerendered and get a nonce-free CSP; the signed-in app
+// routes are dynamic on their own (they read the session cookie) and keep the
+// strict nonce CSP. The split, and the list of strict routes, is in src/proxy.ts.
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

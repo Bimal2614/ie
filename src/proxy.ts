@@ -1,4 +1,6 @@
+import { createHash } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
+import { INLINE_ANALYTICS_SCRIPTS } from "@/lib/analytics-snippets";
 import { SIGNED_OUT_PARAM } from "@/lib/auth-routes";
 
 /**
@@ -37,6 +39,47 @@ const PROTECTED_PREFIXES = [
 ];
 // Auth pages a logged-in user shouldn't see.
 const AUTH_ROUTES = ["/login", "/signup"];
+
+/**
+ * Routes that get the STRICT, nonce-based CSP. Everything else gets the public
+ * one, which allows inline scripts and carries no nonce.
+ *
+ * WHY TWO POLICIES. A nonce is per request, so a page that carries one can never
+ * be served from the CDN. With one policy for everything the whole site was
+ * rendered in iad1 on every visit, and ~2–3% of those uncached responses were
+ * measured freezing mid-body on the way to India (29 Sep 2026) — the reported
+ * "sometimes takes 9–10 seconds". Public pages are now prerendered and cached at
+ * the edge; the trade is that an injected inline script would run on them.
+ *
+ * EVERY ROUTE HERE MUST RENDER DYNAMICALLY. Next stamps the nonce onto its own
+ * scripts only while rendering a request; a prerendered page served under this
+ * policy has un-nonced scripts, so it never hydrates — a dead page with no error
+ * on screen. These are all dynamic because they read the session cookie or
+ * search params; check `next build`'s route table (ƒ, not ○) before adding one.
+ */
+const STRICT_CSP_PREFIXES = [
+  ...PROTECTED_PREFIXES,
+  "/mock-test",
+  "/mock-tests",
+  "/history",
+  "/results",
+  "/section-practice",
+  "/login",
+  "/signup",
+  "/reset-password",
+];
+
+const matchesPrefix = (pathname: string, prefixes: readonly string[]) =>
+  prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+
+/**
+ * The analytics bootstraps the root layout renders inline, trusted on strict
+ * routes by hash — the layout cannot read the nonce without making every route
+ * dynamic. Computed once per instance from the same strings the page renders.
+ */
+const ANALYTICS_HASHES = INLINE_ANALYTICS_SCRIPTS.map(
+  (code) => `'sha256-${createHash("sha256").update(code, "utf8").digest("base64")}'`,
+).join(" ");
 
 // S3-hosted media (listening audio, Task 1 images) and signed URLs live on
 // *.amazonaws.com. Allowed for media/img/fetch so playback isn't CSP-blocked.
@@ -82,12 +125,26 @@ const ANALYTICS_CONNECT =
 const ANALYTICS_IMG =
   "https://*.google-analytics.com https://*.googletagmanager.com https://*.clarity.ms https://www.facebook.com";
 
-function buildCsp(nonce: string): string {
+/**
+ * `nonce` present → the strict policy for app routes. Absent → the public one.
+ *
+ * The public `script-src` is `'unsafe-inline' https:` rather than a host list:
+ * without strict-dynamic, every script GTM's container inserts must match by
+ * host, and a tag added there later from a new vendor would be blocked silently.
+ * It must carry NO nonce and NO hash — either one makes browsers ignore
+ * 'unsafe-inline', and then Next's own inline scripts on a prerendered page are
+ * refused.
+ */
+function buildCsp(nonce: string | null): string {
+  const scriptSrc = nonce
+    ? // 'strict-dynamic' lets the nonce'd Next bootstrap and the hashed
+      // analytics loaders pull in the rest.
+      `script-src 'self' 'nonce-${nonce}' ${ANALYTICS_HASHES} 'strict-dynamic' ${RAZORPAY} ${ANALYTICS_SCRIPT}`
+    : `script-src 'self' 'unsafe-inline' https:`;
   return [
     `default-src 'self'`,
-    // 'strict-dynamic' lets the nonce'd Next bootstrap script load the rest;
     // 'unsafe-eval' is dev-only (React uses eval for better stack traces).
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${RAZORPAY} ${ANALYTICS_SCRIPT}${isDev ? " 'unsafe-eval'" : ""}`,
+    `${scriptSrc}${isDev ? " 'unsafe-eval'" : ""}`,
     // Styles use 'unsafe-inline' WITHOUT a nonce. Per the CSP spec, a nonce (or
     // hash) in style-src makes the browser IGNORE 'unsafe-inline' — which would
     // block every React inline style={{…}} (colours, gradients, widths, fonts)
@@ -147,20 +204,23 @@ function applySecurityHeaders(res: NextResponse, csp: string): void {
 }
 
 export function proxy(request: NextRequest): NextResponse {
-  const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
+  const { pathname } = request.nextUrl;
+  const strict = matchesPrefix(pathname, STRICT_CSP_PREFIXES);
+  const nonce = strict ? Buffer.from(crypto.randomUUID()).toString("base64") : null;
   const csp = buildCsp(nonce);
 
   // Make the nonce + CSP visible to the renderer so Next can stamp its scripts.
+  // Only on strict routes: a public page is served from the CDN and never sees
+  // this request.
   const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-nonce", nonce);
-  requestHeaders.set("Content-Security-Policy", csp);
+  if (nonce) {
+    requestHeaders.set("x-nonce", nonce);
+    requestHeaders.set("Content-Security-Policy", csp);
+  }
 
-  const { pathname } = request.nextUrl;
   const hasSession = Boolean(request.cookies.get(SESSION_COOKIE)?.value);
 
-  const isProtected = PROTECTED_PREFIXES.some(
-    (p) => pathname === p || pathname.startsWith(`${p}/`),
-  );
+  const isProtected = matchesPrefix(pathname, PROTECTED_PREFIXES);
   const isAuthRoute = AUTH_ROUTES.includes(pathname);
 
   // Not logged in → bounce to login, preserving intended destination.
@@ -178,8 +238,13 @@ export function proxy(request: NextRequest): NextResponse {
   // /logout → /login loop and the router would give up on a blank page. With
   // the marker honoured, a failed clear costs one extra hop and still lands on
   // a usable login form.
+  //
+  // The home page is in the same position: it is a prerendered landing page, so
+  // the "signed in → your dashboard" hop it used to make with a database lookup
+  // happens here instead. A stale cookie costs one extra hop — /dashboard's own
+  // session check sends it through /logout, which clears it.
   const justSignedOut = request.nextUrl.searchParams.has(SIGNED_OUT_PARAM);
-  if (isAuthRoute && hasSession && !justSignedOut) {
+  if ((isAuthRoute || pathname === "/") && hasSession && !justSignedOut) {
     const res = NextResponse.redirect(new URL("/dashboard", request.url));
     applySecurityHeaders(res, csp);
     return res;

@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { redirect } from "next/navigation";
 import {
   ArrowRight, ArrowUpRight,
   Headphones, BookOpen, PenLine, Mic,
 } from "lucide-react";
-import { getCurrentUser } from "@/lib/dal";
 import { EntryLoader } from "@/components/marketing/entry-loader";
 import { PremiumCursor } from "@/components/marketing/premium-cursor";
 import { CountUp } from "@/components/marketing/count-up";
@@ -195,10 +193,10 @@ const SKILLS = [
 ];
 
 
-export default async function Home() {
-  const user = await getCurrentUser();
-  if (user) redirect("/dashboard");
-
+// Signed-in visitors are sent to /dashboard by src/proxy.ts on cookie presence,
+// before the CDN. Checking the session here made the page dynamic and put a
+// database round trip in front of every anonymous visit to the top landing page.
+export default function Home() {
   return (
     <div className="landing min-h-svh bg-paper text-ink">
       <PremiumCursor />
