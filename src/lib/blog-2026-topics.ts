@@ -23,7 +23,9 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
    * 15 September 2026, BLOCKED by a nationwide preliminary injunction in the
    * District of Massachusetts on 14 September 2026. Nothing in the rule is in
    * force. Written so it stays true whether the injunction holds, is appealed
-   * or is lifted; update on every court step.
+   * or is lifted; update on every court step. Updated 2 Oct 2026: notice of
+   * appeal to the First Circuit filed 30 Sep 2026 (D. Mass. ECF 53, 1st Cir.
+   * No. 26-2112); no stay sought as of 2 Oct; injunction still in force.
    */
   {
     slug: "us-f1-duration-of-status-rule-blocked-2026",
@@ -34,6 +36,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
     category: "Requirements",
     date: "September 2026",
     publishedAt: "2026-09-24",
+    updatedAt: "2026-10-02",
     readMins: 6,
     keywords: [
       "f1 visa new rules 2026",
@@ -41,15 +44,17 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       "how long can you stay in the us on an f1 visa",
       "f1 4 year limit",
       "f1 duration of status injunction",
+      "duration of status appeal",
+      "duration of status rule first circuit",
       "f1 extension of stay i-539",
       "f1 grace period 30 days",
       "f1 transfer rules 2026",
       "ielts score for us student visa",
     ],
     sections: [
-      { paragraphs: ["Short answer: for now, as long as your program lasts and you keep your status, exactly as before. On 14 September 2026, one day before it was due to start, a federal judge in Massachusetts blocked the Department of Homeland Security rule that would have capped F-1 admission at four years. Duration of status, the system that ties your stay to your studies rather than to a fixed date, is still the rule.", "The block is a preliminary injunction, not the end of the case. The rule itself still exists, the government can appeal, and the court has not yet decided the case in full. So the useful question is not only what applies today, but what would change for you if the rule came back. This post covers both, and it will be updated as the case moves."] },
+      { paragraphs: ["Short answer: for now, as long as your program lasts and you keep your status, exactly as before. On 14 September 2026, one day before it was due to start, a federal judge in Massachusetts blocked the Department of Homeland Security rule that would have capped F-1 admission at four years. Duration of status, the system that ties your stay to your studies rather than to a fixed date, is still the rule.", "The block is a preliminary injunction, not the end of the case. The rule itself still exists, the government has appealed, and the court has not yet decided the case in full. So the useful question is not only what applies today, but what would change for you if the rule came back. This post covers both, and it will be updated as the case moves."] },
       { heading: "What the court did", paragraphs: ["Judge F. Dennis Saylor IV of the US District Court for the District of Massachusetts granted a nationwide preliminary injunction on 14 September 2026. It stops DHS and Immigration and Customs Enforcement from implementing or enforcing the rule while the lawsuit continues. The judge found that the challengers, a coalition of higher-education groups, were likely to succeed in arguing that the rule broke the Administrative Procedure Act, the law that governs how federal agencies make regulations.", "Because the order is nationwide, it protects every F-1 and J-1 student, not only those at the universities that sued."] },
-      { heading: "Is the 4-year rule in force?", paragraphs: ["No. As of 24 September 2026 no part of it is in force. Students are still admitted for duration of status, shown as \"D/S\" on the I-94, and you can stay as long as you are enrolled, making normal progress and following the terms of your status, plus the existing 60-day grace period after you finish.", "One thing to watch: the DHS Study in the States summary of the rule still describes it without mentioning the injunction. That page describes the rule as written, not what is in force. Your school's international office is the best day-to-day source."] },
+      { heading: "Is the 4-year rule in force?", paragraphs: ["No. As of 2 October 2026 no part of it is in force. Students are still admitted for duration of status, shown as \"D/S\" on the I-94, and you can stay as long as you are enrolled, making normal progress and following the terms of your status, plus the existing 60-day grace period after you finish.", "One thing to watch: the DHS Study in the States summary of the rule still describes it without mentioning the injunction. That page describes the rule as written, not what is in force. Your school's international office is the best day-to-day source."] },
       { heading: "What the rule would change if it comes back", paragraphs: ["If the injunction is lifted on appeal or the government wins the case, these are the provisions that would apply. None of them apply today."], table: {
         caption: "Provisions of the DHS final rule published 17 July 2026 (Federal Register 2026-14439), all blocked by the 14 September 2026 injunction. Check studyinthestates.dhs.gov and your school's international office before acting on any of them.",
         headers: ["Issue", "Today (duration of status)", "Under the blocked rule"],
@@ -65,23 +70,25 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       } },
       { heading: "If you are already in the US", paragraphs: ["Do nothing new. You do not need to file Form I-539 or request a fixed-date I-94. Keep your enrolment full-time, keep your I-20 current, and speak to your designated school official before changing program, school or level, as you always should.", "Even under the blocked rule, students already here on duration of status would have been allowed to stay until their current program end date, up to four years, plus 60 days, without filing anything. Those who had filed for OPT or STEM OPT on time would not have needed a separate extension. Existing students were never the hardest-hit group."] },
       { heading: "If you start in spring or fall 2027", paragraphs: ["This is the group with the most at stake. If the injunction holds, you will be admitted for duration of status like everyone before you. If it is overturned before you enter, you would be admitted to the end date on your I-20, capped at four years, and a graduate student would lose the ability to transfer or switch programs freely.", "In practice that matters most for PhD students, whose programs often run past four years, and for anyone who might want to change course after arriving. If you already have an I-20 and a visa appointment, nothing about the appointment changes: the visa itself is the same F-1, and the rule governs how long you are admitted at the border, not whether you get the visa."] },
-      { heading: "What happens next", paragraphs: ["The government is widely expected to appeal to the First Circuit Court of Appeals, but as of 24 September 2026 no appeal has been reported. A status conference in the district court has been reported for 2 October 2026. Any of these steps can change the answer above, so check the date at the top of this post."] },
+      { heading: "What happens next", paragraphs: ["On 30 September 2026 the government filed a notice of appeal against the injunction with the US Court of Appeals for the First Circuit (case number 26-2112). Filing an appeal does not bring the rule back. The injunction stays in force while the appeal is heard, unless the government asks for a stay and a court grants one. As of 2 October 2026 the government had not asked for a stay.", "The case also continues in the district court in Massachusetts, which scheduled a status conference for 2 October 2026. Any of these steps can change the answer above, so check the date at the top of this post."] },
       { heading: "What this does NOT change: your English requirement", paragraphs: ["The court case is about how long you can stay, not how you qualify. Nothing in the rule or the injunction touches English testing. The US has no single visa-level IELTS score. Your university sets its own minimum, usually 6.5 to 7.0 for graduate programs and around 6.0 to 6.5 for undergraduate, and your I-20 records whether you have met it. The consular officer can still ask you questions in English at the interview.", "One provision does have an English-learning angle. If the rule returns, English language programs would be capped at 24 months in total. If you plan to do an intensive English course before your degree, raising your IELTS band before you travel shortens the time you need in that program, and it may let you skip it altogether."], links: [
         { label: "IELTS vs TOEFL: which one US universities prefer", href: "/blog/ielts-vs-toefl" },
         { label: "IELTS exam fee in the USA", href: "/blog/ielts-exam-fee-usa" },
         { label: "IELTS band score calculator", href: "/ielts-band-score-calculator" },
       ] },
       { heading: "What to do now", bullets: ["If you are in the US on F-1: carry on as normal and do not file anything because of this rule.", "If you start in 2027: keep your plans, but check with your university's international office before you travel, because the answer can change between your offer and your arrival.", "If you are a PhD applicant with a program longer than four years, ask your school now how it would handle an extension of stay if the rule came back.", "Do not pay anyone to file an I-539 \"to be safe\". There is nothing to file while the injunction stands.", "Get your English score settled early. It is the one part of the application that no court case will change, and a stronger band gives you more universities to choose from."] },
-      { heading: "Sources", paragraphs: ["Checked on 24 September 2026. Court cases move quickly, so check the date at the top of this post."], links: [
+      { heading: "Sources", paragraphs: ["Checked on 2 October 2026. Court cases move quickly, so check the date at the top of this post."], links: [
         { label: "Federal Register: DHS final rule ending duration of status (17 July 2026)", href: "https://www.federalregister.gov/documents/2026/07/17/2026-14439/establishing-a-fixed-time-period-of-admission-and-an-extension-of-stay-procedure-for-nonimmigrant" },
         { label: "Study in the States (DHS): quick facts on the final rule", href: "https://studyinthestates.dhs.gov/final-rule-establishing-a-fixed-time-period-of-admission-and-an-extension-of-stay-procedure-quick" },
         { label: "NAFSA: the legal challenge and the 14 September injunction", href: "https://www.nafsa.org/legal-defense-DS" },
+        { label: "CourtListener: district court docket, Presidents' Alliance v. DHS (No. 1:26-cv-13799)", href: "https://www.courtlistener.com/docket/74661796/presidents-alliance-on-higher-education-and-immigration-v-united-states/" },
         { label: "AIP FYI: court temporarily blocks the duration of status rule", href: "https://www.aip.org/fyi/court-temporarily-blocks-rule-ending-duration-of-status-for-international-students" },
       ] },
     ],
     faqs: [
       { q: "How long can you stay in the US on an F-1 visa?", a: "For as long as you are enrolled in your program and maintain your status, plus a 60-day grace period after you finish. This is called duration of status. A DHS rule that would have capped admission at four years was blocked by a federal court on 14 September 2026, so duration of status still applies." },
-      { q: "Is the F-1 4-year limit in effect?", a: "No. The rule was due to take effect on 15 September 2026 but was blocked nationwide by a preliminary injunction the day before. It stays blocked while the lawsuit continues, unless an appeals court lifts the injunction." },
+      { q: "Is the F-1 4-year limit in effect?", a: "No. The rule was due to take effect on 15 September 2026 but was blocked nationwide by a preliminary injunction the day before. It stays blocked while the lawsuit continues. The government has appealed, but the injunction stays in place while the appeal is heard unless a court orders otherwise." },
+      { q: "Has the government appealed the duration of status ruling?", a: "Yes. The government filed a notice of appeal with the First Circuit Court of Appeals on 30 September 2026. The appeal does not lift the injunction by itself, so duration of status still applies unless a court grants a stay or overturns the ruling." },
       { q: "Do I need to file Form I-539 for an extension of stay?", a: "No, not while the injunction stands. Form I-539 extensions were part of the blocked rule. Your school keeps extending your I-20 as it did before." },
       { q: "Is the F-1 grace period 60 or 30 days?", a: "It is 60 days. The blocked rule would have cut it to 30 days for new admissions, but that provision is not in force." },
       { q: "Can I transfer universities on an F-1 visa in 2026?", a: "Yes, under the normal transfer process with your current and new schools. The blocked rule would have stopped most graduate students from transferring, but it is not in force." },
