@@ -369,8 +369,10 @@ export function AnnotationProvider({
   useEffect(() => {
     if (!menu) return;
     const close = (e: Event) => {
-      const target = e.target as HTMLElement | null;
-      if (target?.closest("[data-annot-menu]")) return;
+      // A resize's target is the Window, and a scroll's can be the Document —
+      // neither has closest(), and neither is ever inside the menu.
+      const target = e.target;
+      if (target instanceof Element && target.closest("[data-annot-menu]")) return;
       setMenu(null);
       setNoteDraft(null);
     };

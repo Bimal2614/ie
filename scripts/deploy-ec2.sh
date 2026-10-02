@@ -24,6 +24,10 @@ if [ ! -f .env ]; then
   echo "ERROR: $(pwd)/.env is missing. Create it before deploying." >&2
   exit 1
 fi
+if [ ! -r .env ]; then
+  echo "ERROR: $(whoami) cannot read $(pwd)/.env. Fix with: sudo chown $(whoami):$(whoami) .env" >&2
+  exit 1
+fi
 
 echo "==> Pulling main"
 git fetch --prune origin main

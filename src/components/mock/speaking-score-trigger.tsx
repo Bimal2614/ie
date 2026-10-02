@@ -62,6 +62,13 @@ export function SpeakingScoreTrigger({ sessionId }: { sessionId: string }) {
     const run = async (step: number) => {
       if (!alive) return;
 
+      // Safari kills fetches from a background tab ("Load failed"), and nobody
+      // is reading the report anyway. Hold this step until the tab is back.
+      if (document.hidden) {
+        timer = setTimeout(() => void run(step), 5000);
+        return;
+      }
+
       let pending: number | null = null;
       try {
         pending = (await mockScoringStatus(sessionId)).pending;
