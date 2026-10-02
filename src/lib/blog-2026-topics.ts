@@ -293,7 +293,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
     category: "Booking",
     date: "August 2026",
     publishedAt: "2026-08-06",
-    updatedAt: "2026-09-14",
+    updatedAt: "2026-10-02",
     readMins: 8,
     keywords: [
       "ielts exam fee",
@@ -312,11 +312,12 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       {
         heading: "Roughly what it costs in 2026",
         table: {
-          caption: "Planning figures for IELTS Academic and General Training. Figures last reviewed 14 September 2026.",
+          caption: "Planning figures for IELTS Academic and General Training. USA figure checked on ielts.org 2 October 2026; others last reviewed 14 September 2026.",
           headers: ["Where", "Standard test fee", "Notes"],
           rows: [
             ["Global range", "≈ USD 230 – 490 equivalent", "Set locally by the British Council and IDP"],
             ["India", "≈ INR 19,000", "Rose from INR 18,000 on 1 April 2026"],
+            ["United States", "USD 325 at most centres", "Rose from USD 285 on 1 October 2026"],
             ["United Kingdom", "≈ USD 210 – 230 equivalent", "Varies with the GBP rate"],
             ["Canada", "≈ USD 230 equivalent", "—"],
             ["Australia", "≈ AUD 415 – 430", "Among the more expensive markets"],
@@ -334,7 +335,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
         heading: "Fees by country",
         paragraphs: ["This page is the global picture. For a single market in detail, including local fee changes and what is and is not accepted there:"],
         links: [
-          { label: "IELTS exam fee in the USA 2026 — and the increase on 1 October", href: "/blog/ielts-exam-fee-usa" },
+          { label: "IELTS exam fee in the USA: USD 325 since 1 October 2026", href: "/blog/ielts-exam-fee-usa" },
           { label: "Australia student visa new rules for spouses and dependents (September 2026)", href: "/blog/australia-student-visa-dependants-ban-2026" },
         ],
       },
@@ -344,7 +345,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       { q: "Why does IELTS for UKVI cost more?", a: "IELTS for UKVI is the same test under additional UK Home Office administrative and reporting requirements, and it is only offered at approved centres. That typically adds around 10 to 15% to the standard fee in most markets." },
       { q: "Is the IELTS fee refundable if I cancel?", a: "Usually you receive a partial refund if you cancel more than about five weeks before your test date, and little or nothing after that. Documented medical reasons are normally handled separately. Check your centre's specific terms, which are shown during booking." },
       { q: "Is One Skill Retake cheaper than sitting IELTS again?", a: "Yes. It carries its own fee, but it is generally lower than a full test, which is the reason it exists. It applies only to computer-delivered tests, must be taken within 60 days and in the same country as your original test, and is not available in the United States." },
-      { q: "Did the IELTS fee increase in 2026?", a: "Yes, in several markets. In India the fee rose to around INR 19,000 from 1 April 2026, up from INR 18,000. Fees are set per market rather than globally, so an increase in one country does not mean every country changed. Check your own centre's booking page for the figure that applies to you." },
+      { q: "Did the IELTS fee increase in 2026?", a: "Yes, in several markets. In India the fee rose to around INR 19,000 from 1 April 2026, up from INR 18,000. In the United States it rose from USD 285 to USD 325 at most centres on 1 October 2026. Fees are set per market rather than globally, so an increase in one country does not mean every country changed. Check your own centre's booking page for the figure that applies to you." },
       { q: "Is an IELTS score valid for 5 years?", a: "No. An IELTS Test Report Form is normally valid for two years from your test date. Some institutions and immigration routes accept older results in specific circumstances, but two years is the standard validity and you should plan around it. If your result is close to expiring and you still need it, budget for a re-sit rather than assuming an extension." },
       { q: "Why is IELTS so expensive?", a: "Most of the cost is the Speaking test. IELTS is marked by trained human examiners, and the Speaking section is a live one-to-one interview that has to be scheduled, staffed and assessed individually. Add venue hire, invigilation and secure test materials, and you get a fee well above fully automated tests. It is also priced to what each local market will bear, which is why the same test costs very different amounts in different countries." },
     ],
@@ -371,13 +372,14 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
    * ---------------------------------------------------------------- */
   {
     slug: "ielts-exam-fee-usa",
-    seoTitle: "IELTS Fee in the USA 2026: Cost and October Rise",
-    title: "IELTS exam fee in the USA 2026, and the increase landing on 1 October",
+    seoTitle: "IELTS Exam Fee in the USA: USD 325 Since 1 October 2026",
+    title: "IELTS exam fee in the USA 2026: USD 325 since 1 October",
     excerpt:
-      "What IELTS costs in the United States in 2026, the fee rise taking effect on 1 October, and whether booking before it is worth doing.",
+      "IELTS now costs USD 325 at most US centres, up USD 40 on 1 October 2026. IELTS Online is USD 244.40. What the fee covers, extra charges and other countries.",
     category: "Booking",
     date: "September 2026",
     publishedAt: "2026-09-14",
+    updatedAt: "2026-10-02",
     readMins: 5,
     keywords: [
       "ielts exam fee usa",
@@ -390,26 +392,37 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       "ielts test centre usa cost",
     ],
     sections: [
-      { paragraphs: ["IELTS in the United States costs USD 285 for tests taken before 1 October 2026 and USD 325 from that date onward — an increase of USD 40, or about 14%. If you are planning to sit the test this autumn, the booking date is what matters, and there are only a few weeks left at the lower price."], links: [{ label: "The F-1 four-year rule and what the court ruling means", href: "/blog/us-f1-duration-of-status-rule-blocked-2026" }] },
+      { paragraphs: ["IELTS in the United States now costs USD 325 at most test centres, for both Academic and General Training. The fee rose by USD 40, about 14%, for tests taken on or after 1 October 2026. Before that date it was USD 285. IELTS Online, sat at home, is still USD 244.40."], links: [{ label: "The F-1 four-year rule and what the court ruling means", href: "/blog/us-f1-duration-of-status-rule-blocked-2026" }] },
       {
         heading: "IELTS fees in the USA",
         table: {
-          caption: "Standard test-centre fees. Taken from ielts.org test centre listings for New York City Metro, San Francisco, Washington DC and Salt Lake City, checked 14 September 2026.",
-          headers: ["Test", "Before 1 Oct 2026", "From 1 Oct 2026", "Change"],
+          caption: "Standard test-centre fees from ielts.org test centre listings (New York City Metro, San Francisco, Washington DC, Fort Worth, Salt Lake City). First checked 14 September 2026, rechecked 2 October 2026.",
+          headers: ["Test", "Now (from 1 Oct 2026)", "Before 1 Oct 2026", "Change"],
           rows: [
-            ["IELTS Academic", "USD 285", "USD 325", "+USD 40"],
-            ["IELTS General Training", "USD 285", "USD 325", "+USD 40"],
-            ["IELTS Online (at home)", "USD 244.40", "USD 244.40", "Unchanged at time of writing"],
+            ["IELTS Academic", "USD 325", "USD 285", "+USD 40"],
+            ["IELTS General Training", "USD 325", "USD 285", "+USD 40"],
+            ["IELTS Online (at home)", "USD 244.40", "USD 244.40", "Unchanged"],
           ],
         },
-        paragraphs: ["Individual centres set their own fees and a few differ, so confirm the figure on your centre's booking page before paying. The four centres checked above, spread across the country, all quoted the same price — the fee is national rather than city-by-city, so there is no cheaper city to travel to."],
+        paragraphs: ["USD 325 is the price most centres list, but it is not quite national. Some centres add a non-refundable admin fee on top, and one ELS centre lists USD 325 plus USD 15, so USD 340 in total. British Council quotes a US range of about USD 280 to 340 depending on location. Check the total on your centre's booking page before you pay."],
       },
-      { heading: "Is it worth booking before 1 October?", paragraphs: ["Only if you would have been ready anyway. USD 40 is real money, but a rushed test is a far more expensive mistake: a re-sit costs the full fee again, so booking early to save 14% and then scoring half a band short turns a USD 40 saving into a USD 325 loss.", "The honest rule is the same as it always is. Book when your timed mock scores are consistently at or above the band you need, and treat the deadline as a tiebreaker if you are already close, not as a reason to sit early."] },
+      { heading: "What changed on 1 October 2026", paragraphs: ["The standard fee at US test centres went from USD 285 to USD 325. The increase applies by test date, not by booking date, so a test taken on or after 1 October is charged at the new price at most centres even if you are only booking now.", "If you missed the old price, do not rush to make up for it. A re-sit costs the full fee again, so the cheapest test is the one you only sit once. Book when your timed mock scores are consistently at or above the band you need."], links: [{ label: "An IELTS 4-week study plan, if your test is a month away", href: "/blog/ielts-4-week-study-plan" }] },
       { heading: "What the fee covers, and what it does not", bullets: ["All four sections — Listening, Reading, Writing and a face-to-face Speaking interview with a human examiner.", "One Test Report Form for you, plus a number of copies sent directly to receiving institutions (the free allowance varies by centre).", "It does not cover an Enquiry on Results, which is charged separately and refunded in full if any band changes.", "It does not cover rescheduling, which normally carries an administrative fee if you move your date more than about five weeks out.", "It does not cover One Skill Retake, which has its own lower fee — and note that One Skill Retake is not available in the United States."] },
-      { heading: "IELTS Online versus a test centre", paragraphs: ["IELTS Online costs USD 244.40 and is sat at home under remote proctoring, which makes it the cheaper option and it is not affected by the October increase. The catch is acceptance: IELTS Online is not accepted for UK visa purposes, is not accepted by every university, and cannot be used where a UKVI-approved test is required. Confirm with the organisation receiving your score before you book it, because a cheaper test that is not accepted is the most expensive option of all."] },
+      { heading: "IELTS Online versus a test centre", paragraphs: ["IELTS Online costs USD 244.40 and is sat at home under remote proctoring, which makes it the cheaper option and it was not affected by the October increase. The catch is acceptance: IELTS Online is not accepted for UK visa purposes, is not accepted by every university, and cannot be used where a UKVI-approved test is required. Confirm with the organisation receiving your score before you book it, because a cheaper test that is not accepted is the most expensive option of all."] },
       {
-        heading: "Where to go next",
-        paragraphs: ["Fees vary sharply by country. For the global picture and other markets:"],
+        heading: "IELTS fees outside the USA",
+        table: {
+          caption: "Planning figures. Fees are set locally and change; confirm on your centre's booking page.",
+          headers: ["Where", "Standard test fee"],
+          rows: [
+            ["United States", "USD 325 at most centres"],
+            ["India", "≈ INR 19,000"],
+            ["Canada", "≈ USD 230 equivalent"],
+            ["United Kingdom", "≈ USD 210 – 230 equivalent"],
+            ["Australia", "≈ AUD 415 – 430"],
+          ],
+        },
+        paragraphs: ["Fees vary sharply by country. For the full picture, the extra fees and why IELTS for UKVI costs more:"],
         links: [
           { label: "IELTS exam fee in 2026: global costs and the fees nobody mentions", href: "/blog/ielts-exam-fee-2026" },
           { label: "How the IELTS band score is calculated, and how to raise it", href: "/blog/how-ielts-band-score-is-calculated" },
@@ -418,9 +431,10 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       },
     ],
     faqs: [
-      { q: "How much does IELTS cost in the USA in 2026?", a: "USD 285 for tests taken before 1 October 2026, rising to USD 325 from that date. The fee is the same for IELTS Academic and IELTS General Training. IELTS Online, sat at home, costs USD 244.40. Individual centres can differ slightly, so confirm on your centre's booking page." },
-      { q: "Is the IELTS fee going up in the USA?", a: "Yes. US test centres are moving from USD 285 to USD 325 for tests taken on or after 1 October 2026, an increase of about 14%. The change is tied to your test date, so booking before the deadline for a later test date does not lock in the old price at every centre — check your centre's terms." },
-      { q: "Is IELTS cheaper in some US cities than others?", a: "No. Fees are set nationally rather than by city, and test centres in New York, San Francisco, Washington DC and Salt Lake City all quote the same figure. There is no cheaper city worth travelling to, so choose your centre on date availability and convenience instead." },
+      { q: "How much does IELTS cost in the USA in 2026?", a: "USD 325 at most test centres for tests taken on or after 1 October 2026, up from USD 285. The fee is the same for IELTS Academic and IELTS General Training. IELTS Online, sat at home, costs USD 244.40. Some centres add an admin fee, so confirm the total on your centre's booking page." },
+      { q: "Did the IELTS fee go up in the USA?", a: "Yes. The standard fee at US test centres rose from USD 285 to USD 325 for tests taken on or after 1 October 2026, an increase of about 14%. The change is tied to the test date, so a test sat now is charged at the new price at most centres." },
+      { q: "Is IELTS cheaper in some US cities than others?", a: "Barely. Most centres list the same USD 325, including those in New York, San Francisco and Washington DC. A few add a non-refundable admin fee, and British Council quotes a range of about USD 280 to 340 depending on location. The difference is rarely worth travelling for, so choose your centre on date availability and convenience." },
+      { q: "Why is IELTS so expensive?", a: "Mostly because of the Speaking test. It is a live one-to-one interview with a trained human examiner, which has to be scheduled, staffed and marked individually. Add venue hire, invigilation and secure test materials, and the fee ends up well above fully automated tests." },
       { q: "Is IELTS Online accepted in the USA?", a: "It depends entirely on who is receiving your score. IELTS Online is cheaper at USD 244.40, but it is not accepted for UK visa and immigration purposes and not every university accepts it. Confirm acceptance in writing with your institution before booking, because an unaccepted result means paying for the test twice." },
       { q: "Can I retake just one section of IELTS in the USA?", a: "No. One Skill Retake is available in most IELTS countries but not in the United States. If you fall short in a single skill, a full re-sit at the current fee is the only route, which is a strong argument for not booking until your practice scores are consistently at target." },
     ],
@@ -663,14 +677,14 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
   },
   {
     slug: "ielts-results-trf-validity-remark",
-    seoTitle: "IELTS Results: Timing, TRF Validity & Remarks",
+    seoTitle: "How Long Does an IELTS Remark Take? Results & TRF",
     title: "IELTS results: when they arrive, how long they last, and when to ask for a remark",
     excerpt:
-      "When your IELTS results are released, how to check them, how long the Test Report Form stays valid, and whether an Enquiry on Results is worth the fee.",
+      "An IELTS remark takes 2 to 21 days. When results are released, how long your Test Report Form stays valid, and whether an Enquiry on Results is worth the fee.",
     category: "Scoring",
     date: "August 2026",
     publishedAt: "2026-08-14",
-    updatedAt: "2026-09-05",
+    updatedAt: "2026-10-02",
     readMins: 8,
     keywords: [
       "ielts results",
@@ -689,7 +703,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       { heading: "When results arrive", bullets: ["Computer-delivered tests: usually 3 to 5 days after your test date.", "Paper-based tests, where they still exist: around 13 days.", "You are notified by email and can preview your scores online through your test centre's results portal.", "The online preview is not the official document. Institutions want the Test Report Form or an electronic result sent directly by the centre.", "Some centres release results at a fixed hour on the day. Refreshing the page for six hours does not accelerate anything."] },
       { heading: "Reading your Test Report Form", paragraphs: ["The TRF shows a band for each of the four skills and an overall band. The overall band is the average of the four, rounded to the nearest half band: an average ending in .25 rounds up to the next half band and .75 rounds up to the next whole band, so a 6.75 average becomes 7.0.", "Check the per-skill numbers against your requirement before you celebrate the overall figure. A great many visa and registration requirements are per-skill minimums, and an overall 7.0 with a 6.0 in one skill fails a 6.5-each requirement."] },
       { heading: "How long IELTS results are valid", paragraphs: ["The Test Report Form is normally treated as valid for two years from the test date. That is a convention of the receiving organisations rather than the score expiring on a switch, and it is the standard almost everywhere.", "Some institutions accept older results with evidence of continued English use, and some immigration routes are stricter than two years. Plan against your specific requirement, and if you are applying near the boundary, get written confirmation before assuming."] },
-      { heading: "Should you apply for a remark?", paragraphs: ["An Enquiry on Results is a re-mark by a senior examiner. You normally have six weeks from your test date to apply, it carries a fee, and that fee is refunded in full if any band changes. Results typically take a few weeks.", "It is worth considering when: a skill came back well below every practice score you have ever produced, or when you are half a band from your requirement in Writing or Speaking. Those two are examiner-marked and therefore the only ones where judgement is genuinely involved. Listening and Reading are marked against a key, so a change is far less likely, though clerical checks do occasionally find something.", "Be realistic. Bands do change on remark, but most do not. If you are two bands short, a remark is not the route, preparation is."] },
+      { heading: "Should you apply for a remark?", paragraphs: ["An Enquiry on Results is a re-mark by a senior examiner. You normally have six weeks from your test date to apply, it carries a fee, and that fee is refunded in full if any band changes. The result comes back in 2 to 21 days.", "It is worth considering when: a skill came back well below every practice score you have ever produced, or when you are half a band from your requirement in Writing or Speaking. Those two are examiner-marked and therefore the only ones where judgement is genuinely involved. Listening and Reading are marked against a key, so a change is far less likely, though clerical checks do occasionally find something.", "Be realistic. Bands do change on remark, but most do not. If you are two bands short, a remark is not the route, preparation is."] },
       { heading: "How long an IELTS remark takes", paragraphs: ["The published window is 2 to 21 days from the day you submit the Enquiry on Results, and the major centres, British Council and IDP among them, all quote the same range. Most results land in the second week. Some centres report turning a single-skill enquiry around in a few hours when an examiner is free, so the two-hour stories you will find on forums are real, just not typical.", "The range is wide because the work is not automated. A senior examiner re-marks the paper from scratch, and how fast that happens depends on how many enquiries the centre is holding and whether the skills you queried need different examiners. Querying all four skills is slower than querying one.", "Plan against 21 days, not against the best case. If you have a visa or admissions deadline, count backwards from it before you apply, because there is no expedited option once the enquiry is in the queue."] },
       { heading: "Can a remark lower your score?", paragraphs: ["This is the most commonly asked question about the process and the most confidently answered wrongly. Sources contradict each other flatly: some preparation sites state that a band can never go down, others state that it can. Both cite official guidance.", "What is not in dispute is the mechanism. The paper is re-marked by a senior examiner who does not see the original mark, and the result of that re-mark is final: it replaces your original band rather than being compared against it. That is why the question has any force at all.", "The honest answer is to check the wording your own centre publishes, because that is the contract you are agreeing to, and it is the only version that governs your result. Do not rely on a forum post, or on this page, for a decision with a fee and a deadline attached. In practice the overwhelmingly common outcomes are no change at all, or an increase in one examiner-marked skill."] },
       { heading: "Remark, One Skill Retake, or full re-sit?", bullets: ["Half a band short in Writing or Speaking, and your practice scores were consistently higher: consider a remark first, since it costs nothing if it succeeds.", "One skill short, and you know why: One Skill Retake, within 60 days, same country, computer-delivered original test. Confirm your institution accepts a combined report.", "Two or more skills short: a full re-sit, after real preparation. Nothing else will do.", "Do not run a remark and book a retake for the same week. If the remark succeeds you have wasted a fee; if it fails you have lost preparation time to waiting."] },

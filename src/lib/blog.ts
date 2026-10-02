@@ -11,6 +11,27 @@ import type { BlogPost } from "./blog-types";
 import { TOPIC_POSTS_2026 } from "./blog-2026-topics";
 import { PRACTICE_POSTS } from "./blog-practice";
 import { PARTNER_POSTS } from "./blog-partners";
+import { BAND_TABLES } from "./ielts";
+
+/**
+ * One row per raw score, 40 down to 10, for the band score chart's lookup
+ * table. Built from BAND_TABLES so the post can never drift from the
+ * calculator.
+ */
+function rawScoreRows(): string[][] {
+  const band = (table: readonly (readonly [number, number])[], correct: number) =>
+    String(table.find(([min]) => correct >= min)?.[1] ?? 0);
+  const rows: string[][] = [];
+  for (let correct = 40; correct >= 10; correct--) {
+    rows.push([
+      `${correct} / 40`,
+      band(BAND_TABLES.listening, correct),
+      band(BAND_TABLES.academicReading, correct),
+      band(BAND_TABLES.generalReading, correct),
+    ]);
+  }
+  return rows;
+}
 
 /** Re-exported so `import type { BlogPost } from "@/lib/blog"` keeps working. */
 export type { BlogPost, BlogSection } from "./blog-types";
@@ -598,6 +619,7 @@ export const POSTS: BlogPost[] = [
   {
     slug: "ielts-speaking-band-descriptors",
     title: "IELTS Speaking band descriptors explained: Band 6 vs 7 vs 8",
+    seoTitle: "IELTS Speaking Band Descriptors: What Band 6, 7, 8 Mean",
     excerpt:
       "What examiners actually look for in IELTS Speaking: the four criteria decoded, and the concrete differences between Band 6, 7 and 8 with fixes for each.",
     category: "Speaking",
@@ -649,13 +671,14 @@ export const POSTS: BlogPost[] = [
   {
     slug: "ielts-band-score-chart",
     title: "IELTS band score chart: raw score to band for Listening and Reading",
-    seoTitle: "IELTS Band Score Chart: Raw Score to Band Out of 40",
+    seoTitle: "IELTS Band Score Chart: 32 Out of 40 = Band 7.5 & More",
     excerpt:
-      "What 32 out of 40 means in Listening, Academic Reading and General Training Reading, with the full conversion charts for all three papers and the rounding rule.",
+      "32/40 is Band 7.5 in Listening, 7 in Academic Reading and 6.5 in GT Reading. Look up any score from 10 to 40 for all three IELTS papers in one table.",
     category: "Scoring",
     date: "September 2026",
     publishedAt: "2026-09-05",
-    readMins: 7,
+    updatedAt: "2026-10-02",
+    readMins: 8,
     keywords: [
       "ielts band score chart",
       "ielts raw score to band score",
@@ -675,6 +698,21 @@ export const POSTS: BlogPost[] = [
         paragraphs: [
           "Listening and Reading are both marked out of 40, and both are converted to a band with a fixed table. What almost every chart online leaves out is that the three papers use three different tables. The same raw score is not the same band.",
           "Take 32 out of 40. In Listening that is Band 7.5. In Academic Reading it is Band 7. In General Training Reading it is Band 6.5. One raw score, three different results, and it is the single most common reason people miscalculate what they need.",
+        ],
+      },
+      {
+        heading: "Every score out of 40, converted to a band",
+        paragraphs: [
+          "Find your number of correct answers in the left column and read across to your paper. Listening uses the same column whether you sit Academic or General Training.",
+        ],
+        table: {
+          caption: "Raw score out of 40 to IELTS band, by paper. Built from the same tables as our band score calculator.",
+          headers: ["Correct answers", "Listening", "Academic Reading", "General Training Reading"],
+          rows: rawScoreRows(),
+        },
+        links: [
+          { label: "IELTS band score calculator: enter your raw scores and get your overall band", href: "/ielts-band-score-calculator" },
+          { label: "IELTS Listening strategies that add marks out of 40", href: "/blog/ielts-listening-strategies" },
         ],
       },
       {
@@ -740,6 +778,7 @@ export const POSTS: BlogPost[] = [
           "It looks unfair the first time you see it: Band 7 costs you 30 marks in Academic Reading and 34 in General Training. The reason is that a band is meant to describe a level of English, not a level of difficulty in one paper. General Training texts are notices, adverts and workplace documents, which are easier to read, so a higher proportion of correct answers is needed before the same band is justified.",
           "The practical consequence matters more than the principle. In General Training Reading you have almost no margin at the top: Band 8 starts at 37 and Band 9 requires all 40. Three careless spelling errors in a General Training paper can cost a full band where the same three errors in Academic Reading would cost half of one.",
         ],
+        links: [{ label: "What IELTS Band 9 means, and what it takes in each skill", href: "/ielts-band/9" }],
       },
       {
         heading: "What each band actually costs you",
@@ -776,6 +815,10 @@ export const POSTS: BlogPost[] = [
     faqs: [
       { q: "What band is 32 out of 40 in IELTS?", a: "It depends which paper. 32 out of 40 is Band 7.5 in Listening, Band 7 in Academic Reading and Band 6.5 in General Training Reading. The three papers use separate conversion tables, so the same raw score gives three different bands." },
       { q: "What is 27 out of 40 in IELTS Listening?", a: "27 out of 40 in Listening is Band 6.5. You need 30 for Band 7, so three more correct answers would move you up a half band." },
+      { q: "What is 30 out of 40 in IELTS Listening?", a: "30 out of 40 in Listening is Band 7. It is the lowest score that earns a 7, so dropping even one mark gives Band 6.5. Two more correct answers, 32, would make it Band 7.5." },
+      { q: "What band is 35 out of 40 in IELTS Listening?", a: "35 out of 40 in Listening is Band 8, and so is 36. You need 37 for Band 8.5 and 39 for Band 9." },
+      { q: "What is 34 out of 40 in IELTS Reading?", a: "In Academic Reading, 34 out of 40 is Band 7.5. In General Training Reading it is Band 7. General Training needs more correct answers for the same band because its texts are easier." },
+      { q: "What is 27 out of 40 in IELTS Reading?", a: "In Academic Reading, 27 out of 40 is Band 6.5. In General Training Reading it is Band 5.5, a full band lower, because General Training needs 32 correct for a 6.5." },
       { q: "Is 6.25 rounded to 6.5 in IELTS?", a: "Yes. An overall average ending in .25 rounds up to the next half band, and .75 rounds up to the next whole band. So a 6.25 average is reported as 6.5 and a 6.75 average is reported as 7.0." },
       { q: "Why is General Training Reading scored harder than Academic Reading?", a: "Because a band describes a level of English rather than a score in one paper. General Training texts are everyday materials and easier to read, so a higher proportion of correct answers is required for the same band. Band 7 needs 30 out of 40 in Academic Reading but 34 out of 40 in General Training." },
       { q: "Do Listening and Reading use the same band score chart?", a: "No. Listening has one table that covers both Academic and General Training candidates. Reading has two separate tables, one for Academic and a stricter one for General Training." },
