@@ -137,3 +137,13 @@ news/
 
 .vercel
 .env*
+
+# Local-only working folders (2026-10-03): Firebase project, video/audio
+# production (motion-studio, promo-video, AudioGeneration), local agent
+# definitions and MCP config. None of it ships with the site.
+firebase/
+motion-studio/
+promo-video/
+AudioGeneration/
+.claude/agents/
+.mcp.json
