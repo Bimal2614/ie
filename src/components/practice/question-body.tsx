@@ -401,7 +401,9 @@ function useAudioClip(ref: React.RefObject<HTMLAudioElement | null>) {
         const at = Math.max(0, from - lead);
         clip.current = { from: at, to: Math.min(el.duration, to + tail) };
         el.currentTime = at;
-        void el.play();
+        // Rejects with AbortError when a second clip is tapped before this one
+        // starts — the newer request wins, which is what the candidate asked for.
+        el.play().catch(() => {});
       };
       // `preload="metadata"` usually has the duration already; if the browser
       // has not fetched it yet, wait for it rather than seeking into NaN.

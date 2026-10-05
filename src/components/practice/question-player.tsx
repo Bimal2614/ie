@@ -47,6 +47,8 @@ export function QuestionPlayer({
   const [result, setResult] = useState<PracticeResult | null>(null);
   /** Set when the plan refused the submit. The answers stay on screen. */
   const [blocked, setBlocked] = useState<PlanBlock | null>(null);
+  /** The submit request itself failed — the answers are untouched, so it is one retry. */
+  const [submitFailed, setSubmitFailed] = useState(false);
   const [current, setCurrent] = useState<number | null>(null);
 
   const handleAnswer = useCallback((qid: string, value: Answer) => {
@@ -110,6 +112,7 @@ export function QuestionPlayer({
   const onSubmit = async () => {
     setPending(true);
     setBlocked(null);
+    setSubmitFailed(false);
     try {
       const res = await submitPractice(set.id, answers);
       // A plan limit is not a failure: nothing is graded, nothing is cleared,
@@ -122,6 +125,10 @@ export function QuestionPlayer({
       setCurrent(null);
       // Nothing to kick off: submitPractice schedules AI scoring server-side
       // after the response, so it no longer needs this tab to stay open.
+    } catch {
+      // Network or server failure. Unhandled, it vanished into the console and
+      // the button simply came back, as if the click had not registered.
+      setSubmitFailed(true);
     } finally {
       setPending(false);
     }
@@ -269,7 +276,9 @@ export function QuestionPlayer({
         ) : null
       }
       footerNote={
-        result
+        submitFailed && !result
+          ? "Couldn't submit: check your connection and try again. Your answers are kept."
+          : result
           ? result.total > 0
             ? `${result.correct} / ${result.total} correct`
             : `${result.subjective} response${result.subjective === 1 ? "" : "s"} sent for scoring`

@@ -62,7 +62,9 @@ export function CountUp({
   return (
     <span ref={ref} className={className}>
       {prefix}
-      {value.toLocaleString(undefined, {
+      {/* Pinned to "en": the server renders this too, and a browser whose default
+          locale writes "0,0" for "0.0" would fail hydration on the first frame. */}
+      {value.toLocaleString("en", {
         minimumFractionDigits: decimals,
         maximumFractionDigits: decimals,
       })}

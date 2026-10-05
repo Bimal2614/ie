@@ -99,6 +99,8 @@ export function SectionPlayer({
   const [result, setResult] = useState<SectionPracticeResult | null>(null);
   /** Set when the plan refused the submit. The answers stay on screen. */
   const [blocked, setBlocked] = useState<PlanBlock | null>(null);
+  /** The submit request itself failed — the answers are untouched, so it is one retry. */
+  const [submitFailed, setSubmitFailed] = useState(false);
   const [current, setCurrent] = useState<number | null>(null);
   /** Questions marked to come back to — the real paper's flag column. */
   const [flagged, setFlagged] = useState<Set<string>>(new Set());
@@ -202,6 +204,7 @@ export function SectionPlayer({
   const onSubmit = async () => {
     setPending(true);
     setBlocked(null);
+    setSubmitFailed(false);
     try {
       const res = await submitSectionPractice(section.id, answers);
       // Nothing graded and nothing cleared — see PlanBlockNotice.
@@ -214,6 +217,10 @@ export function SectionPlayer({
       // The attempt is over: the marks on the passage go with it, so a return
       // visit starts from a clean page rather than last time's findings.
       clearAnnotations(annotationScope);
+    } catch {
+      // Network or server failure. Unhandled, it vanished into the console and
+      // the button simply came back, as if the click had not registered.
+      setSubmitFailed(true);
     } finally {
       setPending(false);
     }
@@ -434,7 +441,9 @@ export function SectionPlayer({
         ) : null
       }
       footerNote={
-        result
+        submitFailed && !result
+          ? "Couldn't submit: check your connection and try again. Your answers are kept."
+          : result
           ? result.total > 0
             ? `${result.correct} / ${result.total} correct`
             : `${result.subjective} response${result.subjective === 1 ? "" : "s"} sent for scoring`
