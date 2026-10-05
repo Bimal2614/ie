@@ -4,6 +4,7 @@ import {
   parsePhoneNumberFromString,
   type CountryCode,
 } from "libphonenumber-js/mobile";
+import { COUNTRY_NAMES } from "./country-names";
 
 /**
  * Phone parsing/validation, backed by libphonenumber-js — Google's
@@ -28,14 +29,9 @@ export type { CountryCode };
 /** Falls back here when a number can't be parsed for its country. */
 export const DEFAULT_COUNTRY: CountryCode = "IN";
 
-const regionNames =
-  typeof Intl.DisplayNames === "function"
-    ? new Intl.DisplayNames(["en"], { type: "region" })
-    : null;
-
 export type CountryOption = {
   code: CountryCode;
-  /** "India" — resolved from the ISO code, so there's no name list to maintain. */
+  /** "India" — from a frozen table, so server and browser render the same list. */
   name: string;
   /** Calling code without the "+", e.g. "91". */
   dial: string;
@@ -45,10 +41,12 @@ export type CountryOption = {
 export const COUNTRY_OPTIONS: CountryOption[] = getCountries()
   .map((code) => ({
     code,
-    name: regionNames?.of(code) ?? code,
+    name: COUNTRY_NAMES[code] ?? code,
     dial: getCountryCallingCode(code),
   }))
-  .sort((a, b) => a.name.localeCompare(b.name));
+  // An explicit "en": a bare localeCompare sorts by the runtime's default
+  // locale, which differs between the server and each visitor's browser.
+  .sort((a, b) => a.name.localeCompare(b.name, "en"));
 
 /**
  * Parse a stored value back into a phone number.

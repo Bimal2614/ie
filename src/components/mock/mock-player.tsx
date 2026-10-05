@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { unstable_rethrow } from "next/navigation";
 import { AlertTriangle, Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { hasSideStimulus, SECTIONS, type SectionKey } from "@/lib/ielts";
@@ -261,7 +262,18 @@ export function MockPlayer({ sitting }: Props) {
     // storage until the tab closed, and reappear on a re-sit of the same test.
     clearAnnotations(annotationScope);
     // finishMock redirects to the report; the spinner stays up until navigation.
-    await finishMock(sitting.sessionId, answersRef.current, timings.current);
+    try {
+      await finishMock(sitting.sessionId, answersRef.current, timings.current);
+    } catch (e) {
+      // A successful hand-in also lands here: the router rejects the action
+      // with its redirect while it navigates to the report. Let that through.
+      unstable_rethrow(e);
+      // The request never landed. Same recovery as advance(): put the paper
+      // back so pressing Finish again is the retry, rather than a spinner that
+      // never ends. The answers are untouched and autosave keeps running.
+      finished.current = false;
+      setSubmitting(false);
+    }
   }, [annotationScope, awaitUploads, sitting.sessionId]);
 
   const advance = useCallback(async () => {
@@ -357,7 +369,10 @@ export function MockPlayer({ sitting }: Props) {
   useEffect(() => {
     const save = () => {
       if (finished.current) return;
-      void saveMockProgress(sitting.sessionId, answersRef.current, timings.current);
+      // A failed save is retried by the next tick with the same full draft, so
+      // there is nothing to do here — but unhandled, one dropped request in a
+      // three-hour sitting surfaced as a crash report (IELTS-VEGA-E).
+      saveMockProgress(sitting.sessionId, answersRef.current, timings.current).catch(() => {});
     };
     const iv = window.setInterval(save, AUTOSAVE_MS);
     const onHide = () => {
