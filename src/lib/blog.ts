@@ -524,9 +524,13 @@ export const POSTS: BlogPost[] = [
       "IELTS exam booking step by step: which official site to use, why India is IDP-only, the documents and fee, and booking IELTS for UKVI or at home.",
     category: "Basics",
     date: "July 2026",
-    updatedAt: "2026-09-24",
-    readMins: 9,
+    updatedAt: "2026-10-06",
+    readMins: 11,
     /**
+     * 2026-10-06: paper-based removed (retired 27 June 2026; IDP India lists it
+     * discontinued), fee table, IDP screen-by-screen, British Council steps,
+     * transfer/cancellation from ieltsidpindia.com/information/transfer-cancellation.
+     *
      * TARGETING: the booking cluster (`*book`, 255 impr @ 23.3, 28d to 21 Sep),
      * led by "british council ielts booking" and "ielts test/exam booking".
      * India is its #2 country, the only non-branded cluster with real Indian
@@ -546,7 +550,7 @@ export const POSTS: BlogPost[] = [
       "ielts online test booking",
     ],
     sections: [
-      { paragraphs: ["Booking IELTS takes about fifteen minutes once you know which test you need. The exam is run by two organisations, the British Council and IDP, and you book through one of their official booking sites or at a test centre. Which one depends on your country, and in India the answer is only ever IDP. Here is the whole IELTS booking process, step by step."] },
+      { paragraphs: ["Booking IELTS takes about fifteen minutes once you know which test you need. The exam is run by two organisations, the British Council and IDP, and you book (or register, apply, or reserve a seat: it is all the same process) through one of their official booking sites or at a test centre. Which one depends on your country, and in India the answer is only ever IDP. Here is the whole IELTS booking process, step by step, including what it costs and what happens if you need to change your date."] },
       {
         heading: "Where to book IELTS: the official booking sites",
         paragraphs: ["Only book through an official channel. Agents can reserve a seat for you, but the booking itself is always made with the British Council or IDP, and the confirmation email comes from them."],
@@ -567,8 +571,44 @@ export const POSTS: BlogPost[] = [
         ],
       },
       { heading: "Step 1: Confirm which test you need", paragraphs: ["Check your university, employer or visa requirement for two things: the IELTS version (Academic or General Training) and the minimum band score, including any per-skill minimums. Booking the wrong version is the most common, and most costly, mistake, so confirm this first. If the score is for a UK visa, you need IELTS for UKVI, which is a separate product on the booking page."] },
-      { heading: "Step 2: Choose your format and date", bullets: ["Decide between computer-delivered (faster results, more dates) and paper-based.", "Pick a test date that leaves you enough preparation time: and, if results feed an application deadline, enough buffer afterwards.", "Note whether Speaking is on the same day or scheduled separately."] },
-      { heading: "Step 3: Register and pay", paragraphs: ["Create an account on the official booking site for your country, select your test type, date and location, and complete payment. The fee varies by country: in India it is about INR 19,000 from 1 April 2026, and cards, net banking and UPI are all accepted. Your name, date of birth and passport number must match your passport exactly, because the same document is checked on test day."] },
+      { heading: "Step 2: Choose your format and date", bullets: ["Book IELTS on computer at a test centre. Full paper-based IELTS was retired in most markets after 27 June 2026, and IDP India lists IELTS on Paper as discontinued.", "If you would rather handwrite your essays, look for 'IELTS on Computer (Writing on Paper)': Listening and Reading on screen, Writing on paper. It is offered at selected centres only.", "In India, computer-delivered sessions run three times a day, seven days a week, so a date that suits you is usually available. Pick one that leaves enough preparation time and, if results feed an application deadline, enough buffer afterwards.", "Note whether Speaking is on the same day or scheduled separately."], links: [{ label: "IELTS Writing on Paper: who should take the hybrid option", href: "/blog/ielts-writing-on-paper-option" }] },
+      {
+        heading: "Step 3: Register and pay",
+        paragraphs: [
+          "Create an account on the official booking site for your country, select your test type, date and location, and complete payment. Your name, date of birth and passport number must match your passport exactly, because the same document is checked on test day.",
+          "In India, IDP takes payment online by debit or credit card, net banking or PayTM wallet. If you register at an IDP branch instead, you can also pay by demand draft or an ICICI or HDFC deposit slip. The fee depends on which test you book:",
+        ],
+        table: {
+          headers: ["Test booked with IDP India", "Fee"],
+          rows: [
+            ["IELTS on Computer (Academic or General Training)", "INR 19,000"],
+            ["IELTS on Computer for UKVI", "INR 19,250"],
+            ["IELTS Life Skills (A1 or B1)", "INR 18,000"],
+            ["One Skill Retake", "INR 12,650"],
+          ],
+        },
+      },
+      {
+        heading: "How to book on the IDP India website, screen by screen",
+        paragraphs: ["If you are registering for IELTS online in India, this is the order the IDP booking flow takes you through. Slow down at step 3: it is the one choice you cannot fix later without a transfer."],
+        bullets: [
+          "1. Open the IDP IELTS India site and choose 'Register for Test'.",
+          "2. Pick the test: IELTS on Computer, IELTS on Computer for UKVI, or Life Skills.",
+          "3. Pick the module: Academic or General Training (or A1/B1 for Life Skills). Check this against your requirement letter, not memory.",
+          "4. Pick your test city and centre.",
+          "5. Pick the date and time slot from the dates shown.",
+          "6. Fill in your personal details exactly as they appear in your passport, and upload a clear colour scan of the passport.",
+          "7. Pay the fee. An acknowledgement goes to your registered email and phone number straight away.",
+        ],
+      },
+      {
+        heading: "Booking IELTS with the British Council (outside India)",
+        paragraphs: [
+          "In the UK and the many countries where the British Council runs IELTS, you book on its Take IELTS site. The steps mirror IDP's: choose the test (IELTS Academic, General Training, UKVI or Life Skills), choose the format and a test location, pick a date, create an account, enter your details as they appear on your passport, upload your ID and pay.",
+          "If both organisations run centres in your city, the test and the certificate are identical, so choose on the things that actually differ: which centre has a date sooner, which is easier to reach on the day, and whether it offers the format you want.",
+        ],
+        links: [{ label: "IELTS test centres near you: how to choose one", href: "/blog/ielts-test-centres-near-me" }],
+      },
       {
         heading: "Documents you need to book IELTS",
         bullets: [
@@ -589,10 +629,29 @@ export const POSTS: BlogPost[] = [
       },
       {
         heading: "After you book: confirmation and your Speaking slot",
-        paragraphs: ["You receive a confirmation email with your test date, venue and arrival time. Speaking is often on a different day from Listening, Reading and Writing. For IELTS on paper in India you can pick your Speaking slot during booking; if you do not, one is allocated about two days before the written test. Check that email carefully, because the Speaking time is the detail people miss."],
+        paragraphs: ["You get an acknowledgement as soon as you pay, and in India IDP sends the final confirmation, with your test date, time and venue, five to seven days before the test. If it has not arrived by then, check your spam folder before you panic. Speaking is often on a different day from Listening, Reading and Writing, so read that email for the Speaking time specifically: it is the detail people miss."],
+      },
+      {
+        heading: "How to change or cancel your IELTS booking",
+        paragraphs: [
+          "You can transfer (reschedule) or cancel a booking, but what it costs depends on how close the test is. In India both are done online from the Candidate Login on the IDP IELTS India site, or with a form at the centre. These are IDP India's rules for IELTS on Computer, including the Writing on Paper option and One Skill Retake:",
+        ],
+        table: {
+          headers: ["When you ask", "Transfer to a new date", "Cancel"],
+          rows: [
+            ["15 or more days before the test", "Free", "Allowed; up to 25% of the fee is kept as an administration fee"],
+            ["5 to 14 days before", "Allowed; administration fee of up to 25% of the fee", "Allowed, but the fee is not refunded"],
+            ["4 days or fewer before", "Not allowed; treated as a cancellation", "Allowed, but the fee is not refunded"],
+          ],
+        },
+        bullets: [
+          "IELTS for UKVI and Life Skills follow stricter rules: one transfer per booking, only more than 14 days before the test, to a date within three months, with an administration fee of up to 25%. Inside 14 days a transfer counts as a cancellation.",
+          "Outside India the British Council and IDP set their own deadlines and fees per country. Read the transfer policy on your own booking confirmation before you rely on any of the numbers above.",
+          "New dates depend on availability, so a free transfer is only useful if there is a seat you want.",
+        ],
       },
       { heading: "Step 4: Prepare for test day", bullets: ["Bring the same identity document you registered with, no exceptions.", "Arrive early; latecomers are usually refused entry.", "Know your test centre's rules on what you can bring into the room.", "For computer-delivered tests, arrive familiar with the on-screen interface."] },
-      { heading: "Step 5: Get results and plan a retake if needed", paragraphs: ["Results (the Test Report Form) arrive within a few days for computer-delivered tests, or up to about two weeks for paper. If you fall short in one skill, you can now retake a single section with 'One Skill Retake' in many locations, rather than sitting the whole test again, check availability in your country."] },
+      { heading: "Step 5: Get results and plan a retake if needed", paragraphs: ["Results (the Test Report Form) arrive within a few days for computer-delivered tests. If you fall short in one skill, you can now retake a single section with 'One Skill Retake' in many locations, rather than sitting the whole test again, check availability in your country."] },
       {
         heading: "Before you pay: the decisions that change your booking",
         links: [
@@ -606,13 +665,15 @@ export const POSTS: BlogPost[] = [
       { heading: "Be ready before you book", paragraphs: ["The best time to book is when your practice scores are consistently at or above your target band. On IELTSVega you can benchmark yourself with full mock tests on real timing and get AI band scoring on Writing and Speaking, so you book your test date with confidence, not hope."] },
     ],
     faqs: [
-      { q: "How do I book the IELTS exam in India?", a: "Book through IDP, either on the IDP IELTS India website or at an IDP branch. Choose Academic, General Training or UKVI, pick computer or paper, select a city and date, upload your passport and pay the fee of about INR 19,000. The British Council no longer sells IELTS tests in India." },
+      { q: "How do I book the IELTS exam in India?", a: "Book through IDP, either on the IDP IELTS India website or at an IDP branch. Choose IELTS on Computer, UKVI or Life Skills, pick Academic or General Training, select a city, date and time slot, upload your passport and pay the fee of INR 19,000 (INR 19,250 for UKVI). The British Council no longer sells IELTS tests in India." },
+      { q: "Can I still book IELTS on paper?", a: "Not as a full paper test in most countries. Paper-based IELTS was retired after 27 June 2026, and IDP India lists it as discontinued. The closest option is IELTS on Computer with Writing on Paper, where Listening and Reading are on screen and you handwrite the Writing test. It is available at selected centres, so check the booking page for your city." },
       { q: "Can I book IELTS with the British Council in India?", a: "No. Since 25 July 2021 all IELTS tests in India are delivered by IDP, which bought the British Council's Indian IELTS business. The British Council still offers preparation courses in India, but test bookings go through IDP. The test and the result are exactly the same." },
       { q: "What documents are required for IELTS registration?", a: "A valid passport, plus a scan of its photo page to upload while booking. In India a passport is required. The same passport must be shown on test day, and the name and number on your booking must match it exactly." },
-      { q: "How late can I book the IELTS test?", a: "It depends on seat availability at your centre. Computer-delivered sessions run often and can sometimes be booked within days of the test. IELTS Online must be booked at least 48 hours ahead. Paper-based dates are fewer and fill earlier, so leave more time for those." },
+      { q: "How late can I book the IELTS test?", a: "It depends on seat availability at your centre. Computer-delivered sessions run often (in India three times a day, every day) and can sometimes be booked within days of the test. IELTS Online must be booked at least 48 hours ahead. Leave more time if you need a particular centre or a Writing on Paper session, which run less often." },
       { q: "How far in advance should I book IELTS?", a: "Four to six weeks is a sensible window in most cities. It gives you time to prepare to a target rather than to a date, and popular slots in large centres do fill. Book earlier if you need a specific date for an application deadline, and later only if you already know your mock scores are consistently at target." },
       { q: "What ID do I need for the IELTS test?", a: "Normally a valid passport, and the document you register with must be the same one you bring on the day, with matching details. Some centres accept a national identity card for local candidates. Your ID is checked at registration and again before Speaking, and a mismatch will stop you sitting the test." },
-      { q: "Can I change or cancel my IELTS test date?", a: "Usually yes. Moving your date more than about five weeks before the test normally carries an administrative fee, and cancelling in that window typically returns a partial refund. Inside five weeks you will generally lose most or all of the fee. Documented medical cases are handled separately." },
+      { q: "Can I change or cancel my IELTS test date?", a: "Yes. With IDP India, moving IELTS on Computer to a new date is free 15 or more days before the test and costs up to 25% of the fee between 5 and 14 days before; inside 4 days it counts as a cancellation. Cancelling 15 or more days before refunds the fee minus up to 25%, and inside 14 days there is no refund. UKVI and Life Skills have stricter rules, and other countries set their own." },
+      { q: "How much does it cost to reschedule IELTS?", a: "In India, nothing if you transfer 15 or more days before the test, and an administration fee of up to 25% of the test fee if you transfer 5 to 14 days before. Within 4 days a transfer is not allowed and is treated as a cancellation, so you lose the fee." },
       { q: "Should I book IELTS Academic or General Training?", a: "It depends entirely on what the organisation receiving your score requires, not on which you would find easier. Academic is the usual requirement for university study and professional registration, General Training for most work and migration routes. Confirm the requirement in writing before you pay, because the two are not interchangeable." },
     ],
   },
