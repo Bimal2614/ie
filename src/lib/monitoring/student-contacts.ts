@@ -14,16 +14,20 @@ import type { IstDay } from "./daily-report";
  * What is left is `role = 'user' AND partner_id IS NULL`: the people who found
  * us and signed up on their own.
  *
- * TWO VIEWS IN ONE MAIL. The body lists yesterday's new direct students (the
- * ones worth a call today); the attached CSV is every direct student to date,
- * so the inbox always holds a complete, current list without anyone having to
- * stitch mornings together.
+ * The body lists yesterday's new direct students (the ones worth a call
+ * today), with the running total of direct students in the subject. No
+ * attachment: the full list is not mailed out.
  *
  * READ-ONLY, like the business report next door: the mail is the record.
  */
 
-/** Who gets it. The team inbox, not ADMIN_EMAILS — this is a sales list. */
-export const STUDENT_CONTACTS_TO = "hello@ieltsvega.com";
+/** Who gets it. Named people, not ADMIN_EMAILS — this is a sales list. */
+export const STUDENT_CONTACTS_TO = [
+  "hello@ieltsvega.com",
+  "gautam.orphic@gmail.com",
+  "rakeshsuhagiya1994@gmail.com",
+  "hiren_kuvadiya@yahoo.com",
+].join(", ");
 
 const IST_OFFSET_MS = (5 * 60 + 30) * 60 * 1000;
 
@@ -68,24 +72,6 @@ function istStamp(at: Date): string {
   return new Date(at.getTime() + IST_OFFSET_MS).toISOString().slice(0, 16).replace("T", " ");
 }
 
-/**
- * One CSV field. Quoted always, quotes doubled, and a leading = + - @ defused
- * with an apostrophe — names are candidate-typed and this opens in Excel.
- */
-function csvField(v: string): string {
-  const safe = /^[=+\-@\t\r]/.test(v) ? `'${v}` : v;
-  return `"${safe.replace(/"/g, '""')}"`;
-}
-
-export function studentContactsCsv(all: StudentContact[]): string {
-  const lines = [["Name", "Email", "Phone", "Signed up (IST)"].map(csvField).join(",")];
-  for (const s of all) {
-    lines.push([s.name, s.email, s.phone ?? "", istStamp(s.createdAt)].map(csvField).join(","));
-  }
-  // BOM so Excel reads non-ASCII names as UTF-8.
-  return "﻿" + lines.join("\r\n") + "\r\n";
-}
-
 export function studentContactsEmail(r: StudentContacts): { subject: string; html: string; text: string } {
   const n = r.newStudents.length;
   const subject = `Student contacts ${r.date}: ${n} new, ${r.all.length} total`;
@@ -111,7 +97,7 @@ export function studentContactsEmail(r: StudentContacts): { subject: string; htm
     <p style="color:#64748b;font-size:13px;margin:0 0 16px">Direct sign-ups only; students enrolled by partner classes are excluded.</p>
     <h3 style="font-size:15px;margin:0 0 8px">${n} new yesterday</h3>
     ${table}
-    <p style="color:#64748b;font-size:13px;margin-top:16px">The attached CSV lists all ${r.all.length} direct students.</p>
+    <p style="color:#64748b;font-size:13px;margin-top:16px">${r.all.length} direct students in total.</p>
   </div>`;
 
   const text = [
@@ -123,7 +109,7 @@ export function studentContactsEmail(r: StudentContacts): { subject: string; htm
       ? ["(none)"]
       : r.newStudents.map((s) => `- ${s.name} | ${s.phone ?? "no phone"} | ${s.email} | ${istStamp(s.createdAt)}`)),
     "",
-    `The attached CSV lists all ${r.all.length} direct students.`,
+    `${r.all.length} direct students in total.`,
   ].join("\n");
 
   return { subject, html, text };

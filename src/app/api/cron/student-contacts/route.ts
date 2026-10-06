@@ -6,14 +6,13 @@ import { istDay } from "@/lib/monitoring/daily-report";
 import {
   STUDENT_CONTACTS_TO,
   buildStudentContacts,
-  studentContactsCsv,
   studentContactsEmail,
 } from "@/lib/monitoring/student-contacts";
 
 /**
  * The daily student contact list — name, phone and email of every student who
  * signed up directly (partner-class students excluded) — mailed to
- * hello@ieltsvega.com. See `student-contacts.ts` for who counts.
+ * STUDENT_CONTACTS_TO. See `student-contacts.ts` for who counts.
  *
  * `45 0 * * *` in vercel.json: 06:15 IST, just after the business report, on
  * the IST day that has just finished.
@@ -46,13 +45,6 @@ export async function GET(request: Request) {
       const res = await sendEmail({
         to: STUDENT_CONTACTS_TO,
         ...studentContactsEmail(report),
-        attachments: [
-          {
-            filename: `ieltsvega-students-${day.date}.csv`,
-            content: studentContactsCsv(report.all),
-            contentType: "text/csv; charset=utf-8",
-          },
-        ],
       });
       emailed = res.ok ? { sent: true } : { sent: false, reason: res.error ?? "send failed" };
     }
