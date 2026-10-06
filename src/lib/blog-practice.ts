@@ -1238,6 +1238,296 @@ export const PRACTICE_POSTS: BlogPost[] = [
     ],
   },
   {
+    slug: "ielts-vocabulary",
+    seoTitle: "IELTS Vocabulary: Topic Words, Collocations & Band 7 Tips",
+    title: "IELTS vocabulary: topic words, collocations and what Band 7 needs",
+    excerpt:
+      "IELTS vocabulary by topic, with collocations, Band 6-to-7 upgrades and the word choices that lower your score. What Lexical Resource rewards, explained.",
+    category: "Writing",
+    date: "October 2026",
+    publishedAt: "2026-10-06",
+    readMins: 12,
+    keywords: [
+      "ielts vocabulary",
+      "ielts vocabulary list",
+      "topic wise vocabulary for ielts",
+      "ielts vocabulary for writing task 2",
+      "ielts vocabulary for speaking",
+      "lexical resource ielts",
+      "ielts vocabulary band 7",
+      "ielts collocations",
+      "ielts vocabulary words with meaning",
+      "ielts writing task 1 vocabulary",
+    ],
+    sections: [
+      {
+        paragraphs: [
+          "IELTS vocabulary is marked under Lexical Resource, one of four equally weighted criteria in Writing Task 1, Writing Task 2 and Speaking, so it is a quarter of each of those scores. What the examiner rewards is not rare words. It is range and precision: the right word for the idea, in the combination a fluent speaker would use (\"heavy traffic\", not \"strong traffic\"), spelled and formed correctly. That is why topic collocations raise a band faster than any list of impressive single words.",
+          "Below: what Lexical Resource actually marks at each band, the 'big words' that lower scores, topic-wise vocabulary with meanings and examples, Band 6 to Band 7 upgrades, the vocabulary Task 1 and Speaking need, the errors that cost marks, and an exercise.",
+        ],
+      },
+      {
+        heading: "What Lexical Resource marks, band by band",
+        paragraphs: [
+          "The public band descriptors describe vocabulary in four recurring terms: range (how many different words you can draw on), precision (whether each word means exactly what you intend), less common items used with awareness of style and collocation, and accuracy in spelling and word formation. Here is how they move from Band 5 to Band 9, in plain words.",
+        ],
+        table: {
+          caption: "Lexical Resource in the Writing and Speaking descriptors, summarised",
+          headers: ["Band", "What the descriptors describe", "What it looks like on the page"],
+          rows: [
+            ["9", "Full flexibility and precise use; errors are rare slips", "You never notice the vocabulary, only the meaning"],
+            ["8", "A wide range used fluently and flexibly; uncommon words used skilfully, with occasional slips in word choice or collocation", "Precise, natural, with the odd almost-right pairing"],
+            ["7", "Enough range for some flexibility and precision; less common words used with some awareness of style and collocation; occasional errors", "Topic collocations used correctly most of the time"],
+            ["6", "An adequate range for the task; attempts at less common words, with some inaccuracy; some spelling and word-form errors that do not block meaning", "Clear, but plain and repetitive, with ambitious words that miss"],
+            ["5", "A limited range, only just adequate; noticeable errors that may make the reader work", "The same few words throughout, several wrong forms"],
+          ],
+        },
+        bullets: [
+          "The jump from 6 to 7 is about control, not size. A Band 6 script attempts less common vocabulary and gets some of it wrong; a Band 7 script uses it with awareness of collocation and style.",
+          "Repetition counts against you. If the question says \"technology\", and your essay says \"technology\" fourteen times, that is a range problem.",
+        ],
+        links: [
+          { label: "IELTS Speaking band descriptors: Band 6 vs 7 vs 8", href: "/blog/ielts-speaking-band-descriptors" },
+        ],
+      },
+      {
+        heading: "Why 'big words' often lower your score",
+        paragraphs: [
+          "Candidates stuck at 6 or 6.5 often try to fix vocabulary by learning rare words, and the result reads like a thesaurus with the meaning filtered out. A long word used slightly wrongly is an error; a plain word used exactly is not. The descriptors reward less common vocabulary only when it is accurate and natural in context.",
+        ],
+        table: {
+          caption: "Ambitious, but wrong",
+          headers: ["What candidates write", "Why it fails", "What to write instead"],
+          rows: [
+            ["The government should ameliorate pollution.", "Ameliorate means make something better; you do not improve pollution", "The government should reduce pollution."],
+            ["In this contemporary era of modernisation…", "A memorised opener that says nothing; examiners see it constantly", "Start with the topic: \"Car ownership has doubled in many cities…\""],
+            ["Every coin has two sides.", "A memorised proverb used as filler", "State both views directly in your own words"],
+            ["We must utilise public transport.", "Utilise adds length, not meaning", "We should use public transport more."],
+            ["Children are inculcated with values at school.", "Wrong register and wrong structure (you inculcate values in someone)", "Schools teach children values."],
+          ],
+        },
+        bullets: [
+          "Memorised phrases are a specific risk. Examiners are trained to spot language that has been learned as a block and dropped in, and it does not count towards your range.",
+        ],
+      },
+      {
+        heading: "IELTS vocabulary by topic, with meanings and examples",
+        paragraphs: [
+          "IELTS questions return to a small set of themes again and again: the environment, education, technology, health, work and city life come up in Writing Task 2 and Speaking Part 3 constantly. Learn each item as a collocation (the words it naturally goes with), with an example sentence, not as a single word with a translation. Starting with the environment:",
+        ],
+        table: {
+          caption: "Environment",
+          headers: ["Collocation", "Meaning", "Example"],
+          rows: [
+            ["reduce carbon emissions", "cut the amount of carbon dioxide released", "Taxing aviation fuel would help reduce carbon emissions."],
+            ["renewable energy sources", "power from wind, sun or water, which do not run out", "Renewable energy sources now supply a growing share of electricity."],
+            ["a sustainable alternative", "an option that does not cause long-term harm", "Rail is a sustainable alternative to short-haul flights."],
+            ["pose a threat to", "be a danger to", "Plastic waste poses a serious threat to marine life."],
+            ["raise public awareness", "make more people know about an issue", "Campaigns can raise public awareness of recycling."],
+          ],
+        },
+      },
+      {
+        heading: "Topic vocabulary: education",
+        table: {
+          caption: "Education",
+          headers: ["Collocation", "Meaning", "Example"],
+          rows: [
+            ["compulsory education", "schooling required by law", "Compulsory education ends at 16 in many countries."],
+            ["acquire practical skills", "learn skills that are useful in real tasks", "Apprenticeships let young people acquire practical skills."],
+            ["tuition fees", "money paid to a university or college for teaching", "Rising tuition fees deter some students from applying."],
+            ["a well-rounded education", "a broad education, not only academic subjects", "Sport and music are part of a well-rounded education."],
+            ["rote learning", "memorising without understanding", "Rote learning prepares students for exams but not for problems."],
+          ],
+        },
+      },
+      {
+        heading: "Topic vocabulary: technology",
+        table: {
+          caption: "Technology",
+          headers: ["Collocation", "Meaning", "Example"],
+          rows: [
+            ["rapid technological advances", "fast progress in technology", "Rapid technological advances have changed how people shop."],
+            ["become increasingly reliant on", "depend more and more on", "Teenagers have become increasingly reliant on their phones."],
+            ["the digital divide", "the gap between people with and without internet access", "Online schooling widened the digital divide."],
+            ["automate routine tasks", "make machines do repetitive work", "Software can automate routine tasks such as data entry."],
+            ["screen time", "time spent looking at phones, tablets or computers", "Parents often try to limit their children's screen time."],
+          ],
+        },
+      },
+      {
+        heading: "Topic vocabulary: health",
+        table: {
+          caption: "Health",
+          headers: ["Collocation", "Meaning", "Example"],
+          rows: [
+            ["a sedentary lifestyle", "a way of life with little physical activity", "Office work encourages a sedentary lifestyle."],
+            ["contribute to obesity", "be one of the causes of obesity", "Sugary drinks contribute to obesity in children."],
+            ["preventive healthcare", "care that stops illness before it starts", "Vaccination is the cheapest form of preventive healthcare."],
+            ["a balanced diet", "food with the right mix of nutrients", "A balanced diet matters more than any single superfood."],
+            ["place a strain on", "put pressure on a system or resource", "An ageing population places a strain on hospitals."],
+          ],
+        },
+      },
+      {
+        heading: "Topic vocabulary: work",
+        table: {
+          caption: "Work",
+          headers: ["Collocation", "Meaning", "Example"],
+          rows: [
+            ["job security", "confidence that you will keep your job", "Many graduates value job security over salary."],
+            ["work-life balance", "a healthy split between work and personal time", "Remote work can improve work-life balance."],
+            ["career prospects", "chances of progressing in a career", "Language skills improve career prospects abroad."],
+            ["flexible working arrangements", "choice over hours or place of work", "Flexible working arrangements help parents return to work."],
+            ["the gig economy", "short-term, task-based work, often through apps", "Delivery riders are the face of the gig economy."],
+          ],
+        },
+      },
+      {
+        heading: "Topic vocabulary: cities and transport",
+        table: {
+          caption: "Cities and transport",
+          headers: ["Collocation", "Meaning", "Example"],
+          rows: [
+            ["traffic congestion", "too many vehicles on the roads", "Congestion charges have reduced traffic congestion in some cities."],
+            ["urban sprawl", "the spread of a city into the land around it", "Urban sprawl swallows farmland and lengthens commutes."],
+            ["public transport infrastructure", "the rail, bus and metro systems and their facilities", "Investment in public transport infrastructure takes decades to pay off."],
+            ["affordable housing", "homes people on ordinary incomes can pay for", "A lack of affordable housing drives young people out of city centres."],
+            ["commute long distances", "travel far between home and work each day", "Workers who commute long distances report lower wellbeing."],
+          ],
+        },
+        bullets: [
+          "Learn the whole phrase. \"Pose a threat\" is useful; \"pose\" on its own is not, because the next word is where most errors happen.",
+          "Check every new item in a learner's dictionary that shows collocations before you use it in a practice essay.",
+        ],
+      },
+      {
+        heading: "Band 6 to Band 7: vocabulary upgrades",
+        paragraphs: [
+          "Most Band 7 vocabulary is ordinary words in exact combinations. Each upgrade below replaces a vague word with a precise verb, noun or collocation, without anything exotic.",
+        ],
+        table: {
+          caption: "Same idea, more precise",
+          headers: ["Band 6 version", "Band 7 version", "What changed"],
+          rows: [
+            ["Many people think it is a big problem.", "Many people regard it as a serious concern.", "A precise verb and a natural adjective-noun pair"],
+            ["The government should do something about pollution.", "The government should take measures to curb pollution.", "\"Do something\" becomes a specific action"],
+            ["Children use phones a lot.", "Children spend a large proportion of their free time on phones.", "A vague amount becomes a measurable one"],
+            ["This is good for the economy.", "This would boost the local economy.", "A precise verb, and a specific economy"],
+            ["Old people need more help.", "Elderly people often need more support with daily tasks.", "A respectful word, and the help is named"],
+            ["There are a lot of reasons.", "There are several reasons, the most important of which is cost.", "The sentence now does work instead of announcing it"],
+          ],
+        },
+        links: [
+          { label: "IELTS paraphrasing: techniques and examples", href: "/blog/ielts-paraphrasing" },
+          { label: "Writing mistakes that hold people at 6.5", href: "/blog/writing-mistakes-stuck-at-6-5" },
+        ],
+      },
+      {
+        heading: "Vocabulary for IELTS Writing Task 1",
+        paragraphs: [
+          "Academic Task 1 needs a narrow, exact vocabulary for numbers and change. Range here means varying how you describe trends and proportions, not reaching for unusual words.",
+        ],
+        table: {
+          caption: "Task 1 language",
+          headers: ["To describe", "Verbs and nouns", "Example"],
+          rows: [
+            ["An increase", "rise, increase, grow, climb; a rise, a surge", "Sales rose steadily, climbing to 40,000 by 2020."],
+            ["A decrease", "fall, decline, drop, dip; a fall, a decline", "There was a sharp decline in coal use after 2010."],
+            ["No change", "remain stable, level off, plateau", "Prices levelled off at around $5."],
+            ["Up and down", "fluctuate; a fluctuation", "Visitor numbers fluctuated between 2 and 3 million."],
+            ["The highest point", "peak at, reach a peak of", "Unemployment peaked at 9% in 2011."],
+            ["Shares of a total", "account for, make up, constitute; a proportion of", "Rent accounts for a third of household spending."],
+          ],
+        },
+        bullets: [
+          "Adverbs carry the degree: slightly, gradually, steadily, significantly, dramatically. Pick the one the data supports; \"dramatically\" for a two-point change is an accuracy error.",
+          "\"Percentage\" is the number (35%); \"proportion\" is the share of a whole. \"The proportion of students who…\" reads more naturally than \"the percentage of students\" in most sentences.",
+        ],
+        links: [
+          { label: "IELTS Writing Task 1 guide: how to reach Band 9", href: "/blog/ielts-writing-task-1-guide-band-9" },
+        ],
+      },
+      {
+        heading: "Vocabulary for IELTS Speaking, and when idioms help",
+        paragraphs: [
+          "Speaking is marked on the same Lexical Resource criterion, but the register is different. Phrasal verbs and everyday idiomatic language that would be too informal in a Task 2 essay are natural in conversation, and the Band 7 Speaking descriptor mentions idiomatic vocabulary explicitly.",
+          "That does not mean proverbs. One idiomatic expression that fits what you are saying (\"I kept putting it off\", \"it took a while to get used to\") does more for your score than \"it was raining cats and dogs\" squeezed into a Part 2 answer about a birthday.",
+        ],
+        bullets: [
+          "Part 1 (familiar topics): everyday precision. Not \"I like music\" but \"I mostly listen to podcasts on my commute\".",
+          "Part 2 (the long turn): descriptive vocabulary for people, places and feelings: crowded, run-down, welcoming, relieved, overwhelmed.",
+          "Part 3 (discussion): the topic collocations above, plus language for opinion and speculation: \"it is likely to\", \"a knock-on effect\", \"in the long run\".",
+          "If you cannot find a word, paraphrase it. Describing \"the thing you use to open tins\" keeps you fluent; stopping dead costs you in two criteria.",
+        ],
+        links: [
+          { label: "IELTS linking words for Speaking and Writing", href: "/blog/ielts-linking-words" },
+        ],
+      },
+      {
+        heading: "Word choice, word form and spelling errors that cost marks",
+        paragraphs: [
+          "In Writing, every one of these counts against Lexical Resource. In Listening and Reading the stakes are higher: a misspelled answer is marked wrong.",
+        ],
+        table: {
+          caption: "Common errors",
+          headers: ["Error", "Correct", "Type"],
+          rows: [
+            ["do a mistake", "make a mistake", "Collocation"],
+            ["commit progress / make a crime", "make progress / commit a crime", "Collocation"],
+            ["strong rain, strong traffic", "heavy rain, heavy traffic", "Collocation"],
+            ["economical growth", "economic growth", "Word form (economical means not wasteful)"],
+            ["the environment is effected", "the environment is affected", "Word choice (effect is usually a noun)"],
+            ["informations, advices, researches", "information, advice, research", "Uncountable nouns"],
+            ["goverment, enviroment, accomodation, neccessary", "government, environment, accommodation, necessary", "Spelling"],
+          ],
+        },
+        bullets: [
+          "British or American spelling are both accepted. Choose one and keep to it through the whole answer.",
+        ],
+      },
+      {
+        heading: "How to learn IELTS vocabulary that sticks",
+        bullets: [
+          "Learn by topic, in collocations. One notebook page per topic, each item with its partner words and your own example sentence.",
+          "Read where the vocabulary lives. Quality news and explainer articles on the six topics above use exactly this language in context.",
+          "Recall, do not re-read. Cover the meaning column and produce the phrase; then the reverse.",
+          "Use new items within a day or two, in a practice essay or a spoken answer. A word you have only recognised is not yet one you can use under time pressure.",
+          "Get feedback on precision. The errors that cap Band 7 are almost-right word choices, which are exactly the ones you cannot see in your own writing.",
+        ],
+      },
+      {
+        heading: "Exercise: upgrade this paragraph",
+        paragraphs: [
+          "Rewrite this Band 5–6 paragraph with more precise vocabulary before you read the answer.",
+          "\"Nowadays a lot of people use cars and this is a big problem. Cars make a lot of pollution and the environment is effected. The government should do something, for example make public transport more good.\"",
+          "One possible Band 7 version: \"Car ownership has risen sharply in recent decades, and this poses a serious threat to air quality. Vehicle emissions are a major source of urban pollution, and the environment is badly affected. Governments should take measures to curb car use, for example by investing in reliable, affordable public transport.\"",
+        ],
+        bullets: [
+          "\"A lot of people use cars\" became a measurable trend: \"car ownership has risen sharply\".",
+          "\"A big problem\" became a collocation that says what the problem is: \"poses a serious threat to air quality\".",
+          "\"Effected\" was corrected to \"affected\", a word-choice error the examiner would mark.",
+          "\"Do something\" and \"more good\" became a specific action and correct comparatives: \"take measures to curb\", \"reliable, affordable\".",
+        ],
+      },
+      {
+        heading: "Check your Lexical Resource band",
+        paragraphs: [
+          "Vocabulary is the criterion candidates are least able to judge for themselves. On IELTSVega you can write a Task 1 or Task 2 response, or record a Speaking answer, and get an instant band for each criterion, including Lexical Resource, with feedback on the word choices that held it back. Rewrite with the collocations above and score it again.",
+        ],
+      },
+    ],
+    faqs: [
+      { q: "What is Lexical Resource in IELTS?", a: "Lexical Resource is the vocabulary criterion in IELTS Writing and Speaking. It is one of four equally weighted criteria, so it is a quarter of your Writing Task 1, Writing Task 2 and Speaking scores. It assesses the range of your vocabulary, how precisely and naturally you use it, including collocation, and the accuracy of your spelling and word formation." },
+      { q: "How many words do I need to know for IELTS?", a: "There is no official number, and the test does not count words. What is assessed is whether you have the range and precision to discuss the topic in front of you. Knowing a few hundred collocations across the common topics, and using them accurately, does more than memorising a long list of single words." },
+      { q: "What vocabulary do I need for IELTS Band 7?", a: "Band 7 asks for enough range to be flexible and precise, and for less common words used with awareness of style and collocation, with only occasional errors. In practice that means topic collocations used correctly, little repetition of the question's words, and very few spelling or word-form mistakes. It does not require rare or academic-sounding words." },
+      { q: "Can I use idioms in IELTS Writing?", a: "Mostly no in Academic Writing and Task 2, where idioms usually sound too informal or memorised. In Speaking, natural idiomatic language fits well and is mentioned in the Band 7 descriptor, as long as it suits what you are saying. In an informal General Training letter, a light idiomatic phrase is also fine." },
+      { q: "Does spelling affect my IELTS score?", a: "Yes. In Writing, spelling errors are assessed under Lexical Resource, and frequent errors pull the band down. In Listening and Reading, an answer with a spelling mistake is marked wrong, even if you understood the recording or passage." },
+      { q: "Is American spelling accepted in IELTS?", a: "Yes. British and American spellings are both accepted. Choose one and use it consistently through each answer, so that \"color\" and \"colour\" do not both appear in the same essay." },
+      { q: "Should I memorise IELTS vocabulary lists?", a: "Learn vocabulary, but not as lists of isolated words or memorised sentences. Learn collocations by topic with an example of each, and practise using them in your own sentences. Memorised phrases and stock openers are easy for examiners to spot and do not count towards your range." },
+    ],
+  },
+  {
     slug: "ielts-paraphrasing",
     seoTitle: "IELTS Paraphrasing: Techniques, Examples & Exercises",
     title: "IELTS paraphrasing: techniques, examples, and when not to paraphrase",
