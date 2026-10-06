@@ -319,7 +319,7 @@ export const PRACTICE_POSTS: BlogPost[] = [
       { paragraphs: ["IELTS Academic and General Training share Listening and Speaking exactly. What separates them is Reading and Writing, and that is where Academic candidates lose most of their marks. If you are sitting Academic, your practice should be weighted accordingly rather than spread evenly across four skills.", "Here is what to drill, in what order, and why."] },
       { heading: "Where Academic candidates actually lose marks", bullets: ["Academic Reading, section 3. The final passage is the densest, and it arrives when you are 40 minutes in and tired. Losses cluster here.", "True/False/Not Given and Yes/No/Not Given. The single most-failed question type in IELTS, and it is a logic problem, not a reading problem.", "Matching Headings. Costly because it is slow, and running over on it wrecks pacing for everything after.", "Task 1 overviews. An Academic Task 1 without a clear overview sentence is capped at Band 6 for Task Achievement, regardless of how accurate the rest is.", "Task 1 data selection. Describing every number instead of the significant ones. It burns time and does not raise the band.", "Timing overall. Academic Reading gives 60 minutes for three long passages and 40 questions, with no extra transfer time."] },
       { heading: "Reading: the three-passage pacing rule", paragraphs: ["Give yourself roughly 17 minutes for passage 1, 20 for passage 2 and 23 for passage 3, rather than 20 each. The passages get harder, so the flat split guarantees you run out of time on the hardest one.", "Practise with a clock visible and enforce those splits mechanically, even when it means leaving a question. An unanswered question in passage 1 costs one mark. Overrunning by ten minutes costs you five in passage 3."] },
-      { heading: "The True/False/Not Given method", paragraphs: ["This type breaks people because they treat it as reading comprehension when it is closer to formal logic. Three rules solve most of it.", "True means the passage states it, in any wording. False means the passage states the opposite. Not Given means the passage does not tell you, which includes everything that is merely plausible, or true in the world but absent from the text.", "The one habit that fixes it: never use your own knowledge. The passage is the entire universe. If you find yourself thinking \"well, that's obviously right,\" you are about to mark a Not Given as True. Drill thirty of these in a row and the pattern becomes visible in a way it never does at four per test."] },
+      { heading: "The True/False/Not Given method", paragraphs: ["This type breaks people because they treat it as reading comprehension when it is closer to formal logic. Three rules solve most of it.", "True means the passage states it, in any wording. False means the passage states the opposite. Not Given means the passage does not tell you, which includes everything that is merely plausible, or true in the world but absent from the text.", "The one habit that fixes it: never use your own knowledge. The passage is the entire universe. If you find yourself thinking \"well, that's obviously right,\" you are about to mark a Not Given as True. Drill thirty of these in a row and the pattern becomes visible in a way it never does at four per test."], links: [{ label: "How to answer True False Not Given, with a practice passage", href: "/blog/ielts-true-false-not-given" }] },
       { heading: "Academic Task 1: the shape of a Band 7 answer", bullets: ["Sentence 1: paraphrase the question. Do not copy it.", "Sentence 2, the overview: the main trends or the most striking features, with no specific numbers. This sentence is the difference between Band 6 and Band 7, and it is the one most people omit.", "Two body paragraphs: grouped logically, with selected data as support. Group by trend or category, not by walking left to right along the axis.", "Select, do not list. Two or three well-chosen comparisons beat twelve numbers.", "Around 170 to 190 words. The minimum is 150, and going far over eats Task 2 time, which carries twice the weight."] },
       { heading: "Practise every Task 1 type, not just line graphs", paragraphs: ["Academic Task 1 covers line graphs, bar charts, pie charts, tables, process diagrams, maps, and multi-chart questions combining two of them. Most candidates practise line graphs and bar charts because those come up most, then panic when a process or a map appears.", "Processes and maps need entirely different language: passives and sequencing for processes, direction and change-over-time language for maps. A single practice session on each removes the panic, and they are the cheapest insurance in the whole test."] },
       { heading: "A four-week Academic weighting", paragraphs: ["If you are sitting Academic and have four weeks, weight your time roughly: 30% Reading, 30% Writing, 20% Listening, 20% Speaking, adjusted for whichever skill your baseline mock says is weakest.", "Within Reading, spend most of it on your two worst question types rather than on more full passages. Within Writing, spend two thirds on Task 2, which is worth twice as much, and the remaining third on Task 1 overviews and the types you have never practised."] },
@@ -426,7 +426,7 @@ export const PRACTICE_POSTS: BlogPost[] = [
       "reading ielts",
       "ielts reading practice",
       "ielts reading tips",
-      "true false not given practice",
+      "ielts reading question types",
       "ielts reading band score",
       "ielts practice online",
       "ielts practice test",
@@ -435,7 +435,7 @@ export const PRACTICE_POSTS: BlogPost[] = [
     sections: [
       { paragraphs: ["Doing another full Reading test gets you 40 more questions of which maybe six are the type you actually lose marks on. That is a very slow way to fix anything. The candidates who move their Reading band quickest do the opposite: they find their two worst question types and do thirty of those in a row.", "Here is how to practise Reading so the improvement is visible in a fortnight."] },
       { heading: "First, find your two worst types", paragraphs: ["Sit one full test and tag every wrong answer with its question type: True/False/Not Given, Yes/No/Not Given, Matching Headings, Matching Information, Multiple Choice, Sentence Completion, Summary Completion, Matching Features, Short Answer.", "Almost everyone finds their losses concentrate in two or three types. That is your entire syllabus for the next two weeks. Everything else is maintenance."] },
-      { heading: "True/False/Not Given: the type that decides Reading bands", paragraphs: ["It is a logic test wearing a reading test's clothes. True means the passage states it. False means the passage states the opposite. Not Given means the passage does not tell you, which includes things that are obviously true in real life but simply absent from the text.", "The failure mode is always the same: using your own knowledge. If you catch yourself thinking \"well, that must be right,\" you are about to mark a Not Given as True.", "Practise in blocks of thirty. At four per test you will never see the pattern; at thirty in a row the distinction between \"contradicted\" and \"not mentioned\" becomes physical."] },
+      { heading: "True/False/Not Given: the type that decides Reading bands", paragraphs: ["It is a logic test wearing a reading test's clothes. True means the passage states it. False means the passage states the opposite. Not Given means the passage does not tell you, which includes things that are obviously true in real life but simply absent from the text.", "The failure mode is always the same: using your own knowledge. If you catch yourself thinking \"well, that must be right,\" you are about to mark a Not Given as True.", "Practise in blocks of thirty. At four per test you will never see the pattern; at thirty in a row the distinction between \"contradicted\" and \"not mentioned\" becomes physical."], links: [{ label: "True False Not Given: the full method, with practice and answers", href: "/blog/ielts-true-false-not-given" }] },
       { heading: "Matching Headings: the pacing killer", paragraphs: ["This type is not especially hard, it is expensive. Candidates read every paragraph fully, twice, and lose ten minutes they needed elsewhere.", "The method: read the headings first and note the distinguishing word in each. Then read only the first and last sentence of each paragraph, plus a quick scan of the middle. Assign the obvious ones immediately and leave the ambiguous pair until the end, when elimination has done half the work. Never leave two undecided headings until you have used up the eliminations available."] },
       { heading: "The pacing rule that recovers the most marks", paragraphs: ["Sixty minutes, three passages, 40 questions, and no extra transfer time on the computer-delivered test. Passages get harder, so split unevenly: roughly 17, 20 and 23 minutes.", "The hard discipline is abandoning a question. A question you cannot find in 90 seconds is costing you two questions elsewhere. Mark it, guess something, move on, come back if time allows. Candidates who refuse to abandon questions consistently score below their reading ability."] },
       { heading: "Scanning versus reading", paragraphs: ["You do not have time to read three long passages properly. You have time to read them once, quickly, for structure, and then hunt for specific answers.", "The workflow that fits 60 minutes: skim the passage in two minutes for what each paragraph is about, then go to the questions. For each question, identify the keywords, predict what kind of answer you need, and scan for a paraphrase of those keywords. The answer is almost never in the same words as the question, which is the entire skill being tested.", "Most IELTS question sets follow the order of the passage, so once you find question 5's answer, question 6's is below it, not above."] },
@@ -1525,6 +1525,190 @@ export const PRACTICE_POSTS: BlogPost[] = [
       { q: "Does spelling affect my IELTS score?", a: "Yes. In Writing, spelling errors are assessed under Lexical Resource, and frequent errors pull the band down. In Listening and Reading, an answer with a spelling mistake is marked wrong, even if you understood the recording or passage." },
       { q: "Is American spelling accepted in IELTS?", a: "Yes. British and American spellings are both accepted. Choose one and use it consistently through each answer, so that \"color\" and \"colour\" do not both appear in the same essay." },
       { q: "Should I memorise IELTS vocabulary lists?", a: "Learn vocabulary, but not as lists of isolated words or memorised sentences. Learn collocations by topic with an example of each, and practise using them in your own sentences. Memorised phrases and stock openers are easy for examiners to spot and do not count towards your range." },
+    ],
+  },
+  {
+    slug: "ielts-true-false-not-given",
+    seoTitle: "True False Not Given IELTS: Tips, Examples & Practice",
+    title: "True, False, Not Given in IELTS Reading: the test that settles every answer",
+    excerpt:
+      "How to answer True False Not Given in IELTS Reading: the one test that separates FALSE from NOT GIVEN, the qualifier traps, Yes/No/Not Given, and practice.",
+    category: "Reading",
+    date: "October 2026",
+    publishedAt: "2026-10-06",
+    readMins: 10,
+    keywords: [
+      "true false not given ielts",
+      "true false not given tips",
+      "how to answer true false not given",
+      "false vs not given",
+      "yes no not given",
+      "true false not given practice",
+      "true false not given examples",
+      "difference between true false not given and yes no not given",
+      "ielts reading true false not given",
+      "tfng ielts",
+    ],
+    sections: [
+      {
+        paragraphs: [
+          "In IELTS Reading, True / False / Not Given questions give you a statement and ask whether the passage agrees with it (TRUE), contradicts it (FALSE), or says nothing that settles it either way (NOT GIVEN). The whole question type turns on one distinction: FALSE needs a sentence in the passage that makes the statement impossible; NOT GIVEN means no such sentence exists. If you can point to the line that rules the statement out, it is FALSE. If all you can say is \"it doesn't say that\", it is NOT GIVEN.",
+          "Below: the three answers defined precisely, the FALSE versus NOT GIVEN test, the words that set the traps, how Yes / No / Not Given differs, a step-by-step method, and a practice passage with every answer explained.",
+        ],
+      },
+      {
+        heading: "What TRUE, FALSE and NOT GIVEN actually mean",
+        table: {
+          caption: "The three answers",
+          headers: ["Answer", "It means", "What you must be able to do"],
+          rows: [
+            ["TRUE", "The passage states the same information, usually in different words", "Point to the sentence that says it"],
+            ["FALSE", "The passage states something that cannot be true at the same time as the statement", "Point to the sentence that contradicts it"],
+            ["NOT GIVEN", "The passage does not tell you whether the statement is true or false", "Find the topic, and show the specific claim is never confirmed or denied"],
+          ],
+        },
+        bullets: [
+          "The passage is the whole universe. Whether the statement is true in real life is irrelevant; only what the passage says counts.",
+          "TRUE is almost never a word-for-word match. Expect paraphrase: \"spread quickly\" in the text, \"grew rapidly\" in the statement.",
+          "NOT GIVEN does not mean the topic is missing. Usually the topic is there and the specific detail the statement adds is not.",
+        ],
+        links: [
+          { label: "IELTS paraphrasing: how to recognise it in Reading", href: "/blog/ielts-paraphrasing" },
+        ],
+      },
+      {
+        heading: "FALSE vs NOT GIVEN: the one test",
+        paragraphs: [
+          "This is where most marks are lost, and the fix is a single question. After you find the relevant part of the passage, ask: is there a sentence here that makes the statement impossible?",
+          "Example passage sentence: \"Most rooftop farms are small, run by volunteers or by restaurants.\"",
+        ],
+        table: {
+          caption: "Applying the test",
+          headers: ["Statement", "Answer", "Why"],
+          rows: [
+            ["Most rooftop farms are large commercial businesses.", "FALSE", "\"Most are small\" cannot be true at the same time as \"most are large\""],
+            ["Most rooftop farms are run by volunteers.", "NOT GIVEN", "Volunteers and restaurants are both named; the passage never says which group runs most of them"],
+            ["Some rooftop farms are run by restaurants.", "TRUE", "Restaurants are named as one kind of operator"],
+          ],
+        },
+        bullets: [
+          "Do not choose FALSE because a statement feels unlikely, or NOT GIVEN because you could not find the sentence quickly. Both are guesses dressed as answers.",
+          "Do not \"fill in\" with your own knowledge. If you think \"well, that must be right\", you are about to mark a NOT GIVEN as TRUE.",
+        ],
+      },
+      {
+        heading: "The words that set the traps",
+        paragraphs: [
+          "Statements are usually built so that one small word decides the answer. Underline these before you look at the passage.",
+        ],
+        table: {
+          caption: "Trap words to underline",
+          headers: ["Type", "Examples", "How it catches people"],
+          rows: [
+            ["Quantity", "all, most, some, few, only, none", "The passage says some; the statement says all"],
+            ["Frequency", "always, usually, often, never, rarely", "The passage says often; the statement says always"],
+            ["Comparison", "more than, the largest, the first, the only", "The passage describes one thing; the statement compares it with another the passage never measures"],
+            ["Cause", "because, due to, led to, as a result", "Both events are in the passage, but it never says one caused the other"],
+            ["Certainty", "will, definitely, proved, is believed, may", "The passage reports a claim (\"supporters argue\"); the statement presents it as a proven fact"],
+            ["Numbers and dates", "in 1990, three times, within five years", "One digit or one year changes the answer"],
+          ],
+        },
+      },
+      {
+        heading: "True False Not Given vs Yes No Not Given",
+        paragraphs: [
+          "Yes / No / Not Given works exactly the same way, with one difference: it asks about the writer's views or claims rather than factual information. You will see it with passages that argue a position. YES means the statement agrees with the writer's view; NO means it contradicts it; NOT GIVEN means the writer's view on that point cannot be worked out from the passage.",
+        ],
+        table: {
+          caption: "The two formats side by side",
+          headers: ["", "True / False / Not Given", "Yes / No / Not Given"],
+          rows: [
+            ["Tests", "Facts and information in the passage", "The writer's opinions, claims or views"],
+            ["Agrees", "TRUE", "YES"],
+            ["Contradicts", "FALSE", "NO"],
+            ["Cannot tell", "NOT GIVEN", "NOT GIVEN"],
+            ["Write the right set", "Writing YES in a TFNG question is marked wrong", "Writing TRUE in a YNNG question is marked wrong"],
+          ],
+        },
+        bullets: [
+          "In Yes / No / Not Given, look for the writer's stance: words like \"argue\", \"clearly\", \"unfortunately\", \"it is a mistake to\". A view reported from someone else (\"critics say\") is not necessarily the writer's own.",
+        ],
+      },
+      {
+        heading: "How to answer True False Not Given, step by step",
+        bullets: [
+          "1. Read the statement and underline the content words plus any trap words: the quantity, frequency, comparison, cause or certainty word that the answer will hinge on.",
+          "2. Find the place in the passage. The answers come in the same order as the information in the passage, so the answer to question 3 sits after the answer to question 2. Names, numbers and dates are the fastest things to scan for.",
+          "3. Read the relevant sentence, and the one either side, slowly. This is the only careful reading the question needs.",
+          "4. Compare it with the statement, word by word on the trap words. Paraphrase is expected; a changed quantity or certainty is not paraphrase.",
+          "5. Apply the test. Contradicted by a sentence: FALSE. Stated: TRUE. Topic present but the specific claim neither stated nor contradicted: NOT GIVEN.",
+          "6. Do not leave a blank. No marks are deducted for wrong answers, so if you are running out of time, give your best answer and move on.",
+        ],
+        paragraphs: [
+          "Timing matters because both Reading tests give you 60 minutes for 40 questions, with no extra time to transfer answers. A True False Not Given set that eats ten minutes takes them from the passages that follow.",
+        ],
+      },
+      {
+        heading: "Practice: True False Not Given with answers",
+        paragraphs: [
+          "Read the passage, decide TRUE, FALSE or NOT GIVEN for each statement, then check the explanations.",
+          "Rooftop farming. Growing food on the roofs of city buildings dates back more than a century, but it has spread quickly over the past two decades. Most rooftop farms are small, run by volunteers or by restaurants that want fresh herbs within a few metres of the kitchen. A smaller number are commercial operations that sell vegetables to shops.",
+          "Supporters argue that rooftop farms cool the buildings beneath them in summer, because soil and plants absorb heat that a bare roof would pass into the rooms below. Measurements on several buildings have supported this, although the effect depends heavily on the depth of the soil. Critics point out that a roof must be strong enough to carry wet soil, and that older buildings often need expensive structural work before any planting can begin.",
+          "The economics remain difficult. Commercial rooftop farms usually grow leafy greens and herbs, which sell at high prices and grow quickly, rather than staple crops such as wheat or potatoes. Even so, several well-known projects have closed within five years of opening, typically because rent and labour cost more than the harvest earned. Those that survive often earn extra income from tours, workshops and private events.",
+          "Some city governments now offer grants to building owners who install green roofs, though the conditions vary widely and few of the schemes are aimed specifically at food production.",
+        ],
+        bullets: [
+          "1. Rooftop farming first appeared in the last twenty years.",
+          "2. Most rooftop farms are run as commercial businesses.",
+          "3. Rooftop farms can lower the temperature of the rooms beneath them in summer.",
+          "4. The cooling effect is the same whatever depth of soil is used.",
+          "5. Strengthening an older roof usually costs more than a farm earns in its first year.",
+          "6. Commercial rooftop farms tend to grow crops that sell for high prices.",
+          "7. Rooftop farms that run tours are more likely to survive than those that do not.",
+          "8. Most city grant schemes for green roofs are designed for growing food.",
+        ],
+      },
+      {
+        heading: "Answers and explanations",
+        table: {
+          caption: "Practice answers",
+          headers: ["#", "Answer", "Why"],
+          rows: [
+            ["1", "FALSE", "\"Dates back more than a century\" contradicts \"first appeared in the last twenty years\". The last two decades are when it spread, not when it began"],
+            ["2", "FALSE", "\"Most rooftop farms are small, run by volunteers or by restaurants\"; commercial operations are \"a smaller number\""],
+            ["3", "TRUE", "Supporters argue it, and \"measurements on several buildings have supported this\". The passage confirms the claim, so it is no longer only an opinion"],
+            ["4", "FALSE", "\"The effect depends heavily on the depth of the soil\" makes \"the same whatever depth\" impossible"],
+            ["5", "NOT GIVEN", "The passage says the work is expensive, but never compares its cost with a farm's earnings"],
+            ["6", "TRUE", "They grow leafy greens and herbs, \"which sell at high prices\". \"Tend to\" matches \"usually\""],
+            ["7", "NOT GIVEN", "The passage describes what survivors often do. It never compares the survival of farms with and without tours. This is the cause trap"],
+            ["8", "FALSE", "\"Few of the schemes are aimed specifically at food production\" contradicts \"most\""],
+          ],
+        },
+        bullets: [
+          "Seven or eight right: your method works; build speed with timed sets.",
+          "Mistakes on 5 and 7: you are filling gaps with reasonable assumptions. Go back to the test: is there a sentence that settles it?",
+          "Mistakes on 1, 2 or 8: you are matching topics rather than checking the trap words. Underline the quantity and time words first.",
+        ],
+      },
+      {
+        heading: "Drill it until the pattern is automatic",
+        paragraphs: [
+          "At four or five per test you will never see enough True False Not Given questions to make the distinction automatic. On IELTSVega you can practise Academic and General Training Reading by question type, so you can do a whole block of True / False / Not Given with an explanation for every answer, then sit a full timed passage to check that your pacing held.",
+        ],
+        links: [
+          { label: "IELTS Reading practice online, by question type", href: "/blog/ielts-reading-practice-online" },
+          { label: "IELTS Reading tips that raise your score", href: "/blog/ielts-reading-tips-improve-score" },
+        ],
+      },
+    ],
+    faqs: [
+      { q: "What is the difference between FALSE and NOT GIVEN in IELTS?", a: "FALSE means the passage contains information that contradicts the statement, so you can point to the sentence that makes it impossible. NOT GIVEN means the passage does not confirm or contradict the statement. If you can only say \"the passage doesn't mention that\", the answer is NOT GIVEN, not FALSE." },
+      { q: "What is the difference between True False Not Given and Yes No Not Given?", a: "They work the same way, but True / False / Not Given tests factual information in the passage, while Yes / No / Not Given tests the writer's views or claims. Use the answer set the question gives: writing TRUE in a Yes / No / Not Given question, or YES in a True / False / Not Given one, is marked wrong." },
+      { q: "Do True False Not Given questions follow the order of the passage?", a: "Yes. The information for each statement appears in the passage in the same order as the questions, so the answer to the second statement comes after the answer to the first. Use that to narrow down where to look." },
+      { q: "Can I write T, F or NG instead of TRUE, FALSE, NOT GIVEN?", a: "Guidance on this is inconsistent, so do not take the risk: write the full words if you are writing answers by hand. In computer-delivered Reading you choose the answer on screen, so the question does not arise." },
+      { q: "Should I use my own knowledge for True False Not Given?", a: "No. Answer only from what the passage says. A statement can be true in the real world and still be NOT GIVEN in the passage, and using outside knowledge is the most common reason candidates mark a NOT GIVEN answer as TRUE." },
+      { q: "Is there a penalty for wrong answers in IELTS Reading?", a: "No. Marks are not deducted for wrong answers, so never leave a True False Not Given question blank. If you are short of time, give your best answer and move on." },
+      { q: "How can I get better at True False Not Given quickly?", a: "Practise the question type in blocks rather than only inside full tests, and check every wrong answer against the FALSE versus NOT GIVEN test: is there a sentence that makes the statement impossible? Most errors are the same two habits, using outside knowledge and ignoring a quantity or certainty word, and both disappear with focused practice." },
     ],
   },
   {
