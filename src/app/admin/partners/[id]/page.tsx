@@ -13,6 +13,7 @@ import { requireAdmin } from "@/lib/dal";
 import { parsePageRequest } from "@/lib/pagination";
 import { env } from "@/lib/env";
 import { referralLink } from "@/lib/partner-referral";
+import { describeRate } from "@/lib/partner-pricing";
 import { partnerForAdmin, STUDENT_LIST_DEFAULTS } from "@/lib/partners";
 import { formatPrice, PLANS } from "@/lib/plans";
 import { cn } from "@/lib/utils";
@@ -107,7 +108,7 @@ export default async function AdminPartnerPage({
           coupons={allCoupons.map((c) => ({
             id: c.id,
             code: c.code,
-            percent: c.percent,
+            label: describeRate(c),
             status: c.status,
           }))}
         />

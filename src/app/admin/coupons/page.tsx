@@ -4,6 +4,7 @@ import { CouponToggle, CreateCouponForm } from "@/components/admin/coupon-contro
 import { cardClass } from "@/components/dashboard/ui";
 import { ListControls, Pager } from "@/components/ui/list-controls";
 import { COUPON_DEFAULTS, listCoupons } from "@/lib/admin";
+import { describeRate } from "@/lib/partner-pricing";
 import { requireAdmin } from "@/lib/dal";
 import { parsePageRequest } from "@/lib/pagination";
 import { cn } from "@/lib/utils";
@@ -73,7 +74,7 @@ export default async function AdminCouponsPage({
                   <span className="flex flex-wrap items-center gap-2">
                     <span className="font-semibold text-ink">{c.code}</span>
                     <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-brand">
-                      {c.percent}% off
+                      {describeRate(c)}
                     </span>
                     {!c.live && (
                       <span className="rounded-full bg-paper-sunken px-2 py-0.5 text-[11px] font-semibold text-ink-soft">

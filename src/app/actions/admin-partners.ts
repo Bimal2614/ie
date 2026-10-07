@@ -154,12 +154,15 @@ export async function createCouponAction(input: unknown): Promise<AdminPartnerRe
 
   const parsed = couponSchema.safeParse(input);
   if (!parsed.success) return { ok: false, fieldErrors: parsed.error.flatten().fieldErrors };
-  const { code, percent, endsAt, note } = parsed.data;
+  const { code, amountInr, amountUsd, endsAt, note } = parsed.data;
+  const amountInrCents = amountInr * 100;
+  const amountUsdCents = amountUsd === null ? null : amountUsd * 100;
 
   try {
     await db.insert(coupons).values({
       code,
-      percent,
+      amountInrCents,
+      amountUsdCents,
       endsAt: endsAt ? new Date(`${endsAt}T23:59:59Z`) : null,
       note,
     });
@@ -173,7 +176,7 @@ export async function createCouponAction(input: unknown): Promise<AdminPartnerRe
   await db.insert(auditLog).values({
     userId: admin.id,
     event: "coupon.created",
-    metadata: { code, percent },
+    metadata: { code, amountInrCents, amountUsdCents },
   });
 
   revalidatePath("/admin/coupons");

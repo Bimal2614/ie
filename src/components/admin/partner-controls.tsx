@@ -40,7 +40,7 @@ export function PartnerControls({
   logins: Array<{ id: string; name: string; email: string }>;
   /** The rate this class is on now, or null for list price. */
   couponId: string | null;
-  coupons: Array<{ id: string; code: string; percent: number; status: string }>;
+  coupons: Array<{ id: string; code: string; label: string; status: string }>;
 }) {
   const [pending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<Feedback>(null);
@@ -168,7 +168,7 @@ export function PartnerControls({
             <option value="">List price — no discount</option>
             {coupons.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.code} · {c.percent}% {c.status === "inactive" ? "(inactive)" : ""}
+                {c.code} · {c.label} {c.status === "inactive" ? "(inactive)" : ""}
               </option>
             ))}
           </select>

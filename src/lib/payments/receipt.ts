@@ -128,9 +128,9 @@ export async function partnerReceipt(
   if (listCents > row.amountCents) {
     lines.push({ label: term, amountCents: listCents });
     lines.push({
-      label: row.discountPercent
-        ? `Institute rate (${row.discountPercent}% off)`
-        : "Institute rate",
+      // Seats sold under the old percentage rates keep saying so; every newer
+      // one is a fixed amount, which the line's own figure already states.
+      label: row.discountPercent ? `Institute rate (${row.discountPercent}% off)` : "Institute rate",
       amountCents: row.amountCents - listCents,
     });
   } else {

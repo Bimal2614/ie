@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { isValidStoredPhone } from "@/lib/phone";
+import { OFFERED_PLANS, priceFor, type BillingCurrency } from "@/lib/plans";
 
 /**
  * Server-side input validation. Every Server Action re-validates with these —
@@ -204,6 +205,11 @@ export type EnrolStudentInput = z.input<typeof enrolStudentSchema>;
  * it is generated here and shown to the partner — so this validates what an
  * admin creates, not what a visitor submits.
  */
+/** The cheapest plan on sale, in whole rupees / dollars — the ceiling on a coupon. */
+const CHEAPEST = Object.fromEntries(
+  (["INR", "USD"] as const).map((c) => [c, Math.min(...OFFERED_PLANS.map((p) => priceFor(p, c))) / 100]),
+) as Record<BillingCurrency, number>;
+
 export const couponSchema = z.object({
   code: z
     .string()
@@ -213,12 +219,28 @@ export const couponSchema = z.object({
     .max(24)
     .regex(/^[A-Z0-9-]+$/, "Letters, numbers and hyphens only"),
   /**
-   * Capped at 90, not 99. A free account is an admin grant, which the students
-   * screen already does properly, and Razorpay refuses an order of zero — so a
-   * 100% coupon would fail at the checkout rather than here, which is far too
-   * late to explain it.
+   * Whole rupees / dollars off, as typed. Converted to minor units by the action.
+   *
+   * Must stay below the cheapest plan in that currency. A free account is an
+   * admin grant, which the students screen already does properly, and Razorpay
+   * refuses an order of zero — so an amount that wipes out a plan would fail at
+   * the checkout rather than here, which is far too late to explain it.
    */
-  percent: z.coerce.number().int().min(1, "At least 1%").max(90, "90% is the maximum"),
+  amountInr: z.coerce
+    .number()
+    .int("Whole rupees only")
+    .min(1, "At least ₹1")
+    .max(CHEAPEST.INR - 1, `Must be less than ₹${CHEAPEST.INR}, the cheapest plan`),
+  /** Blank means classes paying in dollars get no discount. */
+  amountUsd: z.preprocess(
+    (v) => (v === "" || v == null ? null : Number(v)),
+    z
+      .number("Enter a number")
+      .int("Whole dollars only")
+      .min(1, "At least $1")
+      .max(CHEAPEST.USD - 1, `Must be less than $${CHEAPEST.USD}, the cheapest plan`)
+      .nullable(),
+  ),
   /** yyyy-mm-dd from a date input; empty means "until we turn it off". */
   endsAt: z
     .string()

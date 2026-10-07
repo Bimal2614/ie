@@ -82,14 +82,16 @@ export const coupons = pgTable(
     /** Uppercase, e.g. "ILDS25". Unique so it is never ambiguous in writing. */
     code: text().notNull(),
     /**
-     * Whole percent off the list price, 1-90.
+     * A fixed amount off the list price, in minor units — ₹400 is 40000.
      *
-     * A PERCENTAGE RATHER THAN AN AMOUNT, because we sell in two currencies and
-     * a fixed ₹300 off says nothing about a dollar price. Capped below 100
-     * deliberately: a free account is an admin grant, which /admin/students
+     * ONE AMOUNT PER CURRENCY, because ₹400 off says nothing about a dollar
+     * price. Rupees are required; dollars are optional, and NULL means a class
+     * paying in USD pays list. Both are whole rupees/dollars and always less than
+     * the cheapest plan: a free account is an admin grant, which /admin/students
      * already does properly, and Razorpay refuses an order of zero.
      */
-    percent: integer().notNull(),
+    amountInrCents: integer().notNull(),
+    amountUsdCents: integer(),
     status: couponStatus().notNull().default("active"),
     /** Auto-off. NULL runs until somebody deactivates it by hand. */
     endsAt: timestamp({ withTimezone: true }),
@@ -629,7 +631,10 @@ export const partnerPayments = pgTable(
      * FROZEN AT THE SALE. Re-rating a class next quarter, or deactivating the
      * coupon entirely, must not rewrite what this invoice says — so the deal is
      * copied onto the payment rather than looked up through the partner later.
-     * NULL on both means the class paid list price.
+     * NULL on both means the class paid list price. The discount itself is
+     * `listPriceCents - amountCents`; `discountPercent` is only set on seats
+     * sold before rates became fixed amounts, and is kept so their receipts
+     * still say what they said.
      */
     listPriceCents: integer(),
     discountPercent: integer(),

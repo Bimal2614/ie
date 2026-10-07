@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 /**
  * Creating a rate, and turning one on or off.
  *
- * There is no "edit the percentage" here on purpose. Changing the rate of a
+ * There is no "edit the amount" here on purpose. Changing the rate of a
  * coupon several classes are already on is not one decision, it is one per
  * class — so a new rate is a new coupon, and the old one gets deactivated. What
  * was already sold is unaffected either way; `partner_payments` froze it.
@@ -35,7 +35,8 @@ export function CreateCouponForm() {
     startTransition(async () => {
       const result = await createCouponAction({
         code: data.get("code"),
-        percent: data.get("percent"),
+        amountInr: data.get("amountInr"),
+        amountUsd: data.get("amountUsd"),
         endsAt: data.get("endsAt") ?? undefined,
         note: data.get("note") ?? undefined,
       });
@@ -71,7 +72,7 @@ export function CreateCouponForm() {
         </p>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-5">
         <div>
           <label htmlFor="code" className="text-sm font-medium text-ink">
             Code
@@ -80,20 +81,35 @@ export function CreateCouponForm() {
           {errors.code?.[0] && <p className="mt-1 text-xs text-danger">{errors.code[0]}</p>}
         </div>
         <div>
-          <label htmlFor="percent" className="text-sm font-medium text-ink">
-            Percent off
+          <label htmlFor="amountInr" className="text-sm font-medium text-ink">
+            ₹ off per student
           </label>
           <input
-            id="percent"
-            name="percent"
+            id="amountInr"
+            name="amountInr"
             type="number"
             min={1}
-            max={90}
+            step={1}
             required
-            defaultValue={20}
+            placeholder="400"
             className={cn(field, "mt-1.5")}
           />
-          {errors.percent?.[0] && <p className="mt-1 text-xs text-danger">{errors.percent[0]}</p>}
+          {errors.amountInr?.[0] && <p className="mt-1 text-xs text-danger">{errors.amountInr[0]}</p>}
+        </div>
+        <div>
+          <label htmlFor="amountUsd" className="text-sm font-medium text-ink">
+            $ off <span className="text-ink-muted">(optional)</span>
+          </label>
+          <input
+            id="amountUsd"
+            name="amountUsd"
+            type="number"
+            min={1}
+            step={1}
+            placeholder="5"
+            className={cn(field, "mt-1.5")}
+          />
+          {errors.amountUsd?.[0] && <p className="mt-1 text-xs text-danger">{errors.amountUsd[0]}</p>}
         </div>
         <div>
           <label htmlFor="endsAt" className="text-sm font-medium text-ink">

@@ -46,9 +46,10 @@ export type StudentCheckoutSession = {
   planLabel: string;
   description: string;
   studentName: string;
-  /** List price, for the "was ₹1,299" the confirmation shows. */
+  /** List price, for the "was ₹1,499" the confirmation shows. */
   listAmount: number;
-  discountPercent: number;
+  /** Minor units off list; 0 at list price. */
+  discountAmount: number;
   /** The PAYER — the class, not the student. It is their card. */
   prefill: { name: string; email: string; contact: string };
 };
@@ -101,7 +102,7 @@ export async function openStudentOrder(input: {
       currency: input.currency,
       createdByUserId: input.payer.id,
       // Razorpay notes are strings; these are for a human reading the dashboard.
-      ...(quote.percent > 0 ? { discountPercent: String(quote.percent), coupon: quote.code ?? "" } : {}),
+      ...(quote.discountCents > 0 ? { discountCents: String(quote.discountCents), coupon: quote.code ?? "" } : {}),
     },
   });
 
@@ -111,11 +112,10 @@ export async function openStudentOrder(input: {
     createdByUserId: input.payer.id,
     plan: input.plan,
     amountCents,
-    // What it would have cost, and the rate applied — copied here rather than
-    // looked up through the partner later, so re-rating the class next quarter
-    // cannot rewrite this invoice.
+    // What it would have cost — copied here rather than looked up through the
+    // partner later, so re-rating the class next quarter cannot rewrite this
+    // invoice. The discount is this minus `amountCents`.
     listPriceCents: quote.listCents,
-    discountPercent: quote.percent > 0 ? quote.percent : null,
     currency: input.currency,
     status: "created",
     razorpayOrderId: order.id,
@@ -130,7 +130,7 @@ export async function openStudentOrder(input: {
     description: `${entitlements.label} for ${input.student.name} — ${entitlements.billingMonths} month(s)`,
     studentName: input.student.name,
     listAmount: quote.listCents,
-    discountPercent: quote.percent,
+    discountAmount: quote.discountCents,
     prefill: {
       name: input.payer.name,
       email: input.payer.email,

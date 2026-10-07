@@ -83,7 +83,7 @@ export default async function AdminPartnersPage({
                     )}
                     {p.rate && (
                       <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-brand">
-                        {p.rate.percent}% · {p.rate.code}
+                        {formatPrice(p.rate.amountCents.INR ?? 0, "INR")} off · {p.rate.code}
                       </span>
                     )}
                     {p.website && (

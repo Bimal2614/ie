@@ -73,7 +73,7 @@ export type PartnerContext = { user: PartnerUser; partner: Partner; rate: Partne
 export function rateOf(coupon: Coupon | null | undefined, now: Date = new Date()): PartnerRate {
   if (!coupon || coupon.status !== "active") return null;
   if (coupon.endsAt && coupon.endsAt <= now) return null;
-  return { code: coupon.code, percent: coupon.percent };
+  return { code: coupon.code, amountCents: { INR: coupon.amountInrCents, USD: coupon.amountUsdCents } };
 }
 
 /**

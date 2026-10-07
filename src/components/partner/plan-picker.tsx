@@ -19,13 +19,13 @@ const CONTROL =
 
 /**
  * A native <option> cannot carry a strikethrough, so the discounted price is
- * spelled out instead: "Pro · ₹974 (was ₹1,299)". The struck-through version
+ * spelled out instead: "Pro · ₹1,099 (was ₹1,499)". The struck-through version
  * lives on the rate card below, where it can be styled.
  */
 function label(q: Quote): string {
   const paid = formatPrice(q.payableCents, q.currency);
   const months = `${q.months} month${q.months === 1 ? "" : "s"}`;
-  if (q.percent === 0) return `${PLANS[q.plan].label} · ${paid} · ${months}`;
+  if (q.discountCents === 0) return `${PLANS[q.plan].label} · ${paid} · ${months}`;
   return `${PLANS[q.plan].label} · ${paid} (was ${formatPrice(q.listCents, q.currency)}) · ${months}`;
 }
 
@@ -64,18 +64,18 @@ export function PlanPicker({
 /**
  * "Your partner rate" — shown only to a class that has one.
  *
- * Absent entirely at list price, rather than rendered as "0% off": a panel that
+ * Absent entirely at list price, rather than rendered as "₹0 off": a panel that
  * mentions a discount to everyone invites the question of how to get one from
  * every partner who does not have one.
  */
 export function RateCard({ quotes }: { quotes: Quote[] }) {
-  const rate = quotes.find((q) => q.percent > 0);
+  const rate = quotes.find((q) => q.discountCents > 0);
   if (!rate) return null;
 
   return (
     <section className="rounded-2xl border border-brand/20 bg-brand-soft/40 p-4">
       <p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-brand">
-        <Ticket className="size-4" /> Your partner rate · {rate.percent}% off
+        <Ticket className="size-4" /> Your partner rate · {formatPrice(rate.discountCents, rate.currency)} off
         {rate.code && <span className="rounded-full bg-paper-elev px-2 py-0.5 text-xs">{rate.code}</span>}
       </p>
       <div className="mt-3 flex flex-wrap gap-x-8 gap-y-2">
