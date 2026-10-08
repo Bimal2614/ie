@@ -18,6 +18,109 @@ import type { BlogPost } from "./blog-types";
  */
 export const TOPIC_POSTS_2026: BlogPost[] = [
   /**
+   * Timely policy post (8 Oct 2026) — DHS/ICE notice of proposed rulemaking
+   * "Optional Practical Training Fees" (FR Doc 2026-20660, Docket
+   * ICEB-2026-0100, RIN 1653-AB01), published in the Federal Register 8 Oct
+   * 2026. PROPOSED ONLY: comments close 9 Nov 2026, no final rule, no
+   * effective date. A final rule would take effect 60 days after publication
+   * and apply to DSO recommendations dated on or after that date. Update on
+   * the final rule, any change to the amounts, or litigation.
+   */
+  {
+    slug: "us-opt-fee-70000-proposed-rule-2026",
+    seoTitle: "$70,000 OPT Fee: Who Pays, and Does It Apply to You?",
+    title: "Will you have to pay $70,000 for OPT? The proposed US rule explained",
+    excerpt:
+      "DHS has proposed a $70,000 fee for OPT and $30,000 for STEM OPT. It is not law yet. Who would pay, who is exempt, and what 2027 starters should do now.",
+    category: "Requirements",
+    date: "October 2026",
+    publishedAt: "2026-10-08",
+    readMins: 7,
+    keywords: [
+      "opt fee 2026",
+      "$70,000 opt fee",
+      "who pays the opt fee",
+      "opt fee proposed rule",
+      "stem opt fee $30,000",
+      "is the opt fee final",
+      "opt fee already on opt",
+      "opt fee master's 2027",
+      "pre-completion opt fee",
+      "f1 opt new rules 2026",
+      "ielts score for us student visa",
+    ],
+    sections: [
+      { paragraphs: [
+        "Short answer: not yet, and maybe never. On 8 October 2026 the US Department of Homeland Security proposed that universities pay $70,000 the first time they recommend an F-1 student for Optional Practical Training (OPT), and $30,000 for each later period, including the STEM OPT extension. It is a proposal open for public comment, not a rule. Nobody pays anything today.",
+        "The school, not the student, would be the one billed. DHS says openly, though, that schools may pass the cost on to students or employers, so in practice it could land on you. This post covers what the proposal says, who it would and would not catch, when it could realistically start, and what to do if you are planning a US degree.",
+      ] },
+      { heading: "What DHS proposed", paragraphs: [
+        "The proposal is a notice of proposed rulemaking from Immigration and Customs Enforcement, part of DHS, published in the Federal Register on 8 October 2026 (document 2026-20660, docket ICEB-2026-0100). It would add an OPT fee to the federal regulations that govern F-1 students.",
+        "DHS gives two reasons: fighting OPT fraud, citing investigations into employers that did not exist or had no staff on site, and protecting US workers. It set the first fee at a level it describes as comparable to the H-1B fee, so that OPT is not used as a cheaper route around it. DHS also states that without these fees it may shut the OPT program down entirely. That is a statement of position in the proposal, not a separate plan with a date.",
+      ] },
+      { heading: "How much, and for which kind of OPT", paragraphs: [
+        "The fee is charged when your school's designated school official (DSO) recommends you for OPT, not when you change employer. It applies per student, not per job.",
+      ], table: {
+        caption: "Fees in the DHS proposed rule of 8 October 2026 (Federal Register 2026-20660). Proposed only. None of these fees is charged today. Check federalregister.gov and your school's international office before acting.",
+        headers: ["Situation", "Fee the school would pay", "Notes"],
+        rows: [
+          ["First OPT recommendation of any kind", "$70,000", "One-time, per student. Pre-completion counts as your first OPT"],
+          ["STEM OPT 24-month extension", "$30,000", "Charged as a subsequent OPT"],
+          ["Post-completion OPT after pre-completion OPT", "$30,000", "So pre plus post would total $100,000, against $70,000 for post-completion only"],
+          ["OPT at a second degree level (e.g. master's after a US bachelor's)", "$30,000 as proposed", "DHS is also considering charging $70,000 again at each new level, and has asked for comments on it"],
+          ["Curricular Practical Training (CPT)", "No fee", "Not covered by this proposal. DHS says it is watching CPT"],
+          ["Already on approved OPT, or recommended before the effective date", "No fee", "But a new OPT request made after the effective date would be charged"],
+        ],
+      } },
+      { heading: "Who would pay", paragraphs: [
+        "Your university pays DHS, before the DSO can enter the OPT recommendation in SEVIS. If the school has not paid, the DSO cannot recommend you and USCIS may not approve your work permit (the EAD). Your own I-765 application and its USCIS fee stay as they are.",
+        "The proposal places no limit on where the school finds the money. DHS says schools may charge it to the F-1 student, spread it across all students, or ask employers to cover it. It also expects schools to become more selective and to recommend fewer students. So the realistic outcomes range from a university absorbing the fee for strong STEM candidates, to a university passing the full amount on, to a university not recommending a student at all.",
+        "A refund is possible only if you never receive the OPT work permit. SEVP decides case by case, the decision cannot be appealed, and once the EAD is issued the fee is not refunded under any circumstances.",
+      ] },
+      { heading: "Is it law? When could it start?", paragraphs: [
+        "No. As of 8 October 2026 this is a proposal. The process from here: public comments close on 9 November 2026, then DHS must consider the comments and publish a final rule, which may differ from the proposal or never appear. A final rule would take effect 60 days after it is published, and the fee would apply to OPT recommendations dated on or after that day.",
+        "No date has been given for a final rule. Counting only the minimum steps, comment period plus 60 days, the earliest the fee could bite is early 2027, and only if DHS finalises quickly. Large, contested rules usually take longer, and universities, which would pay the fee directly, are well placed to challenge a final rule in court. A court challenge is not guaranteed to happen or to succeed, so plan as though it might apply.",
+      ] },
+      { heading: "If you are already on OPT or about to apply", paragraphs: [
+        "If you already hold an OPT work permit, or your DSO's recommendation is dated before a final rule takes effect, the fee would not apply to that OPT period. Under the proposal, your school would not have to pay for OPT that is already approved or already recommended.",
+        "The catch is the next step. If you are on post-completion OPT now and later apply for the STEM OPT extension after the rule takes effect, that extension is a new recommendation, and as proposed your school would owe $30,000 for it. If that applies to you, ask your international office how it would handle it. Nothing has to be decided while the rule is only proposed.",
+      ] },
+      { heading: "If you start a US degree in 2027", paragraphs: [
+        "This is the group with most at stake. A master's that starts in fall 2027 usually ends in 2029, so if a final rule is adopted, it would almost certainly be in force by the time your OPT is recommended. Before you accept an offer, ask the university in writing whether it would pay the fee, pass it on, or limit OPT recommendations.",
+        "Two details in the proposal matter for planning. First, taking pre-completion OPT during your degree would make your post-completion OPT a \"subsequent\" period, adding $30,000 on top of $70,000. Second, if you plan a US bachelor's and then a US master's, DHS is weighing whether to charge the full $70,000 again at the second level. The final rule will settle both. Until then, treat OPT as a cost to budget for, not a free right after graduation.",
+      ] },
+      { heading: "What happens next", paragraphs: [
+        "Anyone can comment on the proposal at regulations.gov by searching for docket ICEB-2026-0100. Comments close on 9 November 2026, as shown on the Federal Register page for document 2026-20660. DHS must consider the comments before it publishes a final rule. Comments that include data, such as what OPT meant for your career or your university's numbers, carry more weight than opinions.",
+        "We will update this post when a final rule is published, if the amounts change, or if a court acts. Check the date at the top before relying on it.",
+      ] },
+      { heading: "What this does NOT change: your English requirement", paragraphs: [
+        "The proposal is about work after study, not about getting in. It does not change the F-1 visa, university admission or English testing. The US has no single visa-level IELTS score. Your university sets its own minimum, usually 6.5 to 7.0 for graduate programs and around 6.0 to 6.5 for undergraduate, and your I-20 records whether you met it.",
+        "Where it may change your plans is the choice of country. If US post-study work becomes expensive, some applicants will compare other countries' post-study work routes, each with its own English requirement. The UK Graduate Route, for example, is due to fall from two years to 18 months for applications made from 1 January 2027. Sitting one test that is accepted in all of them, and scoring high enough for the strictest, keeps your options open while the US rule is decided.",
+      ], links: [
+        { label: "IELTS vs TOEFL: which one US universities prefer", href: "/blog/ielts-vs-toefl" },
+        { label: "IELTS vs PTE vs Duolingo: which test is accepted where", href: "/blog/ielts-vs-pte-vs-duolingo" },
+        { label: "How long you can stay on an F-1 visa now the 4-year rule is blocked", href: "/blog/us-f1-duration-of-status-rule-blocked-2026" },
+        { label: "IELTS band score calculator", href: "/ielts-band-score-calculator" },
+      ] },
+      { heading: "What to do now", bullets: [
+        "Already on OPT: carry on. Nothing is charged while the rule is a proposal, and approved OPT would not be charged if it is adopted.",
+        "Planning STEM OPT after a final rule could be in force: ask your international office now whether it would pay the $30,000 or pass it on.",
+        "Starting a US degree in 2027: ask each university in writing how it would handle the fee before you accept an offer, and include it in your budget.",
+        "Think twice before taking pre-completion OPT if a final rule might apply to you, because as proposed it turns your post-completion OPT into a second, charged period.",
+        "Do not pay anyone who says they collect an \"OPT fee\". Under the proposal only your university pays DHS, and no fee exists yet.",
+        "Settle your English score early. It is the one part of the plan no rule change will touch, and a higher band widens your choice of countries if the US becomes too costly.",
+      ] },
+    ],
+    faqs: [
+      { q: "Do international students have to pay the $70,000 OPT fee?", a: "Not directly, and not yet. Under the 8 October 2026 proposal the university pays DHS, but DHS says schools may pass the cost on to students or employers. No fee is charged today because the rule has not been finalised." },
+      { q: "Is the OPT fee already law?", a: "No. It is a proposed rule published on 8 October 2026, with public comments open until 9 November 2026. DHS must publish a final rule before anything changes, and that would take effect 60 days after publication. No date has been given." },
+      { q: "Does the fee apply to STEM OPT?", a: "Yes, as proposed. The STEM OPT 24-month extension counts as a subsequent OPT period, so the school would pay $30,000 for it, on top of the $70,000 paid for the student's first OPT." },
+      { q: "If I did OPT after my bachelor's, would my master's OPT cost $70,000 again?", a: "As proposed, a later OPT recommendation costs $30,000. But DHS is also considering charging the full $70,000 again at each new degree level and has asked for public comment, so the final rule could go either way." },
+      { q: "Does pre-completion OPT count as my first OPT?", a: "Yes. Under the proposal the first OPT recommendation of any kind triggers the $70,000 fee, so pre-completion followed by post-completion OPT would cost the school $100,000 in total, against $70,000 for post-completion only." },
+      { q: "Has the IELTS score for US universities changed because of this?", a: "No. The proposal is only about work after study. Universities still set their own English minimums, usually IELTS 6.5 to 7.0 for graduate programs, and the F-1 visa itself is unchanged." },
+    ],
+  },
+  /**
    * Timely policy post (24 Sep 2026) — DHS final rule ending "duration of
    * status" for F/J/I (Federal Register 2026-14439, 17 July 2026), due in force
    * 15 September 2026, BLOCKED by a nationwide preliminary injunction in the
@@ -69,7 +172,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
         ],
       } },
       { heading: "If you are already in the US", paragraphs: ["Do nothing new. You do not need to file Form I-539 or request a fixed-date I-94. Keep your enrolment full-time, keep your I-20 current, and speak to your designated school official before changing program, school or level, as you always should.", "Even under the blocked rule, students already here on duration of status would have been allowed to stay until their current program end date, up to four years, plus 60 days, without filing anything. Those who had filed for OPT or STEM OPT on time would not have needed a separate extension. Existing students were never the hardest-hit group."] },
-      { heading: "If you start in spring or fall 2027", paragraphs: ["This is the group with the most at stake. If the injunction holds, you will be admitted for duration of status like everyone before you. If it is overturned before you enter, you would be admitted to the end date on your I-20, capped at four years, and a graduate student would lose the ability to transfer or switch programs freely.", "In practice that matters most for PhD students, whose programs often run past four years, and for anyone who might want to change course after arriving. If you already have an I-20 and a visa appointment, nothing about the appointment changes: the visa itself is the same F-1, and the rule governs how long you are admitted at the border, not whether you get the visa."] },
+      { heading: "If you start in spring or fall 2027", paragraphs: ["This is the group with the most at stake. If the injunction holds, you will be admitted for duration of status like everyone before you. If it is overturned before you enter, you would be admitted to the end date on your I-20, capped at four years, and a graduate student would lose the ability to transfer or switch programs freely.", "In practice that matters most for PhD students, whose programs often run past four years, and for anyone who might want to change course after arriving. If you already have an I-20 and a visa appointment, nothing about the appointment changes: the visa itself is the same F-1, and the rule governs how long you are admitted at the border, not whether you get the visa."], links: [{ label: "The proposed $70,000 OPT fee and what it means for 2027 starters", href: "/blog/us-opt-fee-70000-proposed-rule-2026" }] },
       { heading: "What happens next", paragraphs: ["On 30 September 2026 the government filed a notice of appeal against the injunction with the US Court of Appeals for the First Circuit (case number 26-2112). Filing an appeal does not bring the rule back. The injunction stays in force while the appeal is heard, unless the government asks for a stay and a court grants one. As of 2 October 2026 the government had not asked for a stay.", "The case also continues in the district court in Massachusetts, which scheduled a status conference for 2 October 2026. Any of these steps can change the answer above, so check the date at the top of this post."] },
       { heading: "What this does NOT change: your English requirement", paragraphs: ["The court case is about how long you can stay, not how you qualify. Nothing in the rule or the injunction touches English testing. The US has no single visa-level IELTS score. Your university sets its own minimum, usually 6.5 to 7.0 for graduate programs and around 6.0 to 6.5 for undergraduate, and your I-20 records whether you have met it. The consular officer can still ask you questions in English at the interview.", "One provision does have an English-learning angle. If the rule returns, English language programs would be capped at 24 months in total. If you plan to do an intensive English course before your degree, raising your IELTS band before you travel shortens the time you need in that program, and it may let you skip it altogether."], links: [
         { label: "IELTS vs TOEFL: which one US universities prefer", href: "/blog/ielts-vs-toefl" },
