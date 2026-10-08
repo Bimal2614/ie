@@ -312,6 +312,41 @@ export const authTokens = pgTable(
   ],
 );
 
+/* ------------------------------------------------------------------ *
+ * Partner invites — "join my class", sent by email from the partner panel.
+ *
+ * Keyed by ADDRESS, not by user: the same link serves someone who already has
+ * an account (sign in, then confirm) and someone who does not (sign up with
+ * that address). Which one it is gets decided when the link is opened, not
+ * when it was sent, so an invitee who signed up in between still lands right.
+ *
+ * Same token model as `auth_tokens`: only the SHA-256 is stored, single use,
+ * expiring. Not a tracker — the panel never lists these; the nightly sweep
+ * deletes them a month after they expire.
+ * ------------------------------------------------------------------ */
+export const partnerInvites = pgTable(
+  "partner_invites",
+  {
+    id: uuid().defaultRandom().primaryKey(),
+    partnerId: uuid()
+      .notNull()
+      .references(() => partners.id, { onDelete: "cascade" }),
+    /** The partner login that sent it, for the audit trail. */
+    invitedByUserId: uuid().references(() => users.id, { onDelete: "set null" }),
+    /** The only address that may redeem it. Lower-cased, trimmed. */
+    emailNormalized: text().notNull(),
+    tokenHash: text().notNull(), // sha256(rawToken) hex
+    expiresAt: timestamp({ withTimezone: true }).notNull(),
+    acceptedAt: timestamp({ withTimezone: true }),
+    acceptedByUserId: uuid().references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("partner_invites_token_hash_uq").on(t.tokenHash),
+    index("partner_invites_partner_email_idx").on(t.partnerId, t.emailNormalized),
+  ],
+);
+
 /* ================================================================== *
  * BILLING
  *

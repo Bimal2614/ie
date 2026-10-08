@@ -256,3 +256,8 @@ export const couponSchema = z.object({
     .transform((v) => (v ? v : null)),
 });
 export type CouponInput = z.input<typeof couponSchema>;
+
+/** A class inviting a student by email. The address is all the class gives. */
+export const inviteStudentSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Enter a valid email").max(254),
+});

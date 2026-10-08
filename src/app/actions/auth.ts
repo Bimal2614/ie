@@ -17,6 +17,12 @@ import {
 import { getCurrentUser } from "@/lib/dal";
 import { isUniqueViolation } from "@/lib/db-errors";
 import { referringPartner } from "@/lib/partners";
+import {
+  clearedInviteCookie,
+  INVITE_COOKIE,
+  openInvite,
+  redeemInvite,
+} from "@/lib/partner-invites";
 import { sendEmail } from "@/lib/email/mailer";
 import { welcomeTemplate } from "@/lib/email/templates";
 import { env } from "@/lib/env";
@@ -88,6 +94,18 @@ export async function signup(
    */
   const referrer = await referringPartner(formData.get("ref"));
 
+  /*
+   * An emailed invitation (src/lib/partner-invites.ts), from its httpOnly
+   * cookie. It counts only when the account is being created with the very
+   * address it was sent to, and then it replaces any `ref`: the row is created
+   * with no class and `redeemInvite` sets one below, so the claim and the
+   * attachment happen in the same transaction or not at all.
+   */
+  const jar = await cookies();
+  const inviteToken = jar.get(INVITE_COOKIE)?.value;
+  const invite = await openInvite(inviteToken);
+  const viaInvite = invite?.email === email;
+
   let userId: string;
   try {
     const [created] = await db
@@ -99,7 +117,7 @@ export async function signup(
         phone,
         passwordHash,
         targetModule,
-        partnerId: referrer?.id ?? null,
+        partnerId: viaInvite ? null : (referrer?.id ?? null),
         /*
          * A signup IS a sign-in — `createSession` runs three lines below.
          *
@@ -139,7 +157,13 @@ export async function signup(
    * difference that matters the day anyone asks what a class may do to one of
    * its students' accounts, and it cannot be reconstructed later.
    */
-  if (referrer) {
+  if (viaInvite) {
+    // Its own audit event (`partner.student.invited`) is written by redeemInvite.
+    // A race lost here (the invite expired or was used a moment ago) still
+    // leaves a perfectly good account, just not in the class.
+    await redeemInvite(inviteToken, { id: userId, email });
+    jar.set(INVITE_COOKIE, "", clearedInviteCookie);
+  } else if (referrer) {
     await audit(userId, "partner.student.referred", ip, userAgent, { partnerId: referrer.id });
   }
   const destination = safeNext(formData.get("next"));

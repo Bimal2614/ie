@@ -3,6 +3,7 @@ import { BadgeIndianRupee, GraduationCap, LogIn, UserPlus, Users } from "lucide-
 
 import { Roster, type RosterStudent } from "@/components/partner/roster";
 import { StatTile } from "@/components/dashboard/ui";
+import { InviteByEmail } from "@/components/partner/invite-by-email";
 import { InviteLink } from "@/components/partner/invite-link";
 import { RateCard } from "@/components/partner/plan-picker";
 import { env } from "@/lib/env";
@@ -95,6 +96,8 @@ export default async function PartnerHome({
       </div>
 
       <RateCard quotes={quotes} />
+
+      <InviteByEmail canInvite={partner.status === "active"} />
 
       <InviteLink url={invite} />
 

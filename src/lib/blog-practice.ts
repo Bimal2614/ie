@@ -1698,6 +1698,7 @@ export const PRACTICE_POSTS: BlogPost[] = [
         links: [
           { label: "IELTS Reading practice online, by question type", href: "/blog/ielts-reading-practice-online" },
           { label: "IELTS Reading tips that raise your score", href: "/blog/ielts-reading-tips-improve-score" },
+          { label: "IELTS matching headings: tips and practice", href: "/blog/ielts-matching-headings" },
         ],
       },
     ],
@@ -1709,6 +1710,183 @@ export const PRACTICE_POSTS: BlogPost[] = [
       { q: "Should I use my own knowledge for True False Not Given?", a: "No. Answer only from what the passage says. A statement can be true in the real world and still be NOT GIVEN in the passage, and using outside knowledge is the most common reason candidates mark a NOT GIVEN answer as TRUE." },
       { q: "Is there a penalty for wrong answers in IELTS Reading?", a: "No. Marks are not deducted for wrong answers, so never leave a True False Not Given question blank. If you are short of time, give your best answer and move on." },
       { q: "How can I get better at True False Not Given quickly?", a: "Practise the question type in blocks rather than only inside full tests, and check every wrong answer against the FALSE versus NOT GIVEN test: is there a sentence that makes the statement impossible? Most errors are the same two habits, using outside knowledge and ignoring a quantity or certainty word, and both disappear with focused practice." },
+    ],
+  },
+  {
+    /*
+     * "More headings than paragraphs" and "tests the main idea" are from IDP
+     * India's matching headings guide (ieltsidpindia.com/blog/ielts-reading-
+     * matching-headings, 16 Apr 2024). The practice passage and headings are
+     * original. Advice to answer the passage's other questions first matches
+     * the matching-headings section of ielts-reading-tips-improve-score; keep
+     * the two consistent.
+     */
+    slug: "ielts-matching-headings",
+    seoTitle: "IELTS Matching Headings: Tips, Method & Practice",
+    title: "IELTS Reading matching headings: find the main idea, not the matching word",
+    excerpt:
+      "How to answer IELTS matching headings: the main-idea test, a six-step method, the five distractor types, and a practice passage with every answer explained.",
+    category: "Reading",
+    date: "October 2026",
+    publishedAt: "2026-10-08",
+    readMins: 10,
+    keywords: [
+      "ielts matching headings",
+      "matching headings ielts reading",
+      "ielts matching headings tips",
+      "how to do matching headings in ielts",
+      "ielts matching headings strategy",
+      "matching headings practice with answers",
+      "ielts reading matching headings tips and tricks",
+      "ielts general training matching headings",
+      "matching headings distractors",
+      "list of headings ielts",
+    ],
+    sections: [
+      {
+        paragraphs: [
+          "In IELTS Reading matching headings questions, you get a list of headings and a passage divided into lettered paragraphs. You choose the heading that best sums up each paragraph. The heading has to match the paragraph's main idea, the point the whole paragraph makes, not a word or detail that appears in it. There are always more headings than paragraphs, so some headings are never used, and those spare headings are built to look right.",
+          "Below: what the task looks like, the main-idea test, a six-step method, the five kinds of distractor heading, headings-first versus paragraphs-first, and a practice passage with the reasoning for every answer.",
+        ],
+      },
+      {
+        heading: "What matching headings questions look like",
+        table: {
+          caption: "The parts of the task",
+          headers: ["You get", "What it looks like", "What it means for you"],
+          rows: [
+            ["A list of headings", "Numbered with Roman numerals: i, ii, iii, iv…", "You write the numeral, not the heading's words"],
+            ["Lettered paragraphs", "Paragraphs A, B, C… (sometimes only some of them are asked)", "Answer only the paragraphs in the questions"],
+            ["More headings than paragraphs", "Some headings are left over", "Some headings are distractors by design"],
+            ["The questions", "e.g. 'Paragraph B: ___'", "Answers follow paragraph order, but the headings do not"],
+          ],
+        },
+        bullets: [
+          "It appears in both Academic and General Training Reading. General Training uses everyday and workplace texts, but the task works the same way.",
+          "Sometimes one paragraph is done for you as an example. Cross that heading off straight away so it cannot distract you.",
+        ],
+      },
+      {
+        heading: "The main-idea test",
+        paragraphs: [
+          "Every matching headings mistake comes from the same habit: matching a word instead of an idea. The fix is one question you ask of every heading. Could this heading sum up the whole paragraph, or only one sentence of it?",
+          "A paragraph about a city's new tram line might mention its cost, its route, the protests during construction, and the fact that journey times halved. 'Faster journeys for commuters' covers the point the paragraph builds to. 'Opposition from residents' covers one sentence. Both headings use words from the paragraph. Only one is its main idea.",
+        ],
+        bullets: [
+          "The main idea is often in the first or second sentence, but not always. Some paragraphs open with background and make their real point in the last sentence, after a 'however' or 'but'.",
+          "A heading can match the main idea while sharing no words with the paragraph. Expect paraphrase: 'costs nothing' in the heading, 'free of charge' in the text.",
+        ],
+        links: [
+          { label: "IELTS paraphrasing: how to recognise it in Reading", href: "/blog/ielts-paraphrasing" },
+        ],
+      },
+      {
+        heading: "How to do matching headings, step by step",
+        bullets: [
+          "1. Read every heading first and underline the one or two words that carry its meaning. In 'A forecast that was only half correct', those words are 'forecast' and 'half correct'.",
+          "2. Look for headings that are close in meaning and mark the pairs. The exam will use one of them; the other is there to trap you.",
+          "3. Read one paragraph. Read its first two sentences and its last sentence carefully, then skim the middle for a turn ('however', 'yet', 'in fact').",
+          "4. Before you look at the list, write your own three-to-five-word heading in the margin. This is the step most people skip, and it is the one that stops a single word from steering you.",
+          "5. Compare your heading with the list and pick the closest. If two still fit, note both and move on. A later paragraph will usually claim one of them.",
+          "6. Cross each heading off once it is used, and return to the paragraphs you were unsure about at the end, when fewer headings remain.",
+        ],
+        paragraphs: [
+          "Both Reading tests give you 60 minutes for 40 questions, with no extra time to transfer answers, so about 20 minutes per passage. Matching headings is slow because it needs every paragraph read. If you find it slow, answer the passage's other questions first. They make you read the paragraphs closely, and by the time you return to the headings you already know what most paragraphs are about.",
+        ],
+      },
+      {
+        heading: "The five distractor headings",
+        paragraphs: [
+          "The spare headings are not random. Most belong to one of five types, and once you can name the type you stop falling for it.",
+        ],
+        table: {
+          caption: "Distractor types and how to spot them",
+          headers: ["Distractor", "What it does", "How to spot it"],
+          rows: [
+            ["Word match", "Repeats a striking word from the paragraph", "The shared word appears once, in passing"],
+            ["Detail", "Describes one example or fact in the paragraph", "It matches one sentence; the rest of the paragraph is about something else"],
+            ["Too broad", "Could describe the whole passage", "It fits every paragraph a little and none exactly"],
+            ["Half the paragraph", "Matches the background, not the point", "The paragraph turns with 'however' and the heading only covers the part before the turn"],
+            ["Reversed", "States the opposite of what the paragraph concludes", "Check direction words: rise or fall, success or failure, cause or effect"],
+          ],
+        },
+      },
+      {
+        heading: "Headings first or paragraphs first?",
+        paragraphs: [
+          "Both orders work, and the official guidance describes both. The difference is how many headings there are and how fast you read.",
+        ],
+        table: {
+          caption: "Choosing an order",
+          headers: ["Approach", "How it works", "Best when"],
+          rows: [
+            ["Headings first", "Read and underline all headings, then read paragraphs and match", "The list is short (six to eight headings) and the headings are clearly different"],
+            ["Paragraphs first", "Read a paragraph, write your own heading, then check the list", "The list is long, the headings are similar, or word matches keep catching you"],
+          ],
+        },
+        bullets: [
+          "Whichever you use, keep step 4: your own heading before you choose. It works in both orders.",
+        ],
+      },
+      {
+        heading: "Practice: matching headings with answers",
+        paragraphs: [
+          "Choose the correct heading for each paragraph, A to E, from the list. There are more headings than paragraphs. Then check the explanations.",
+          "List of headings: i. Why counting loans no longer tells the whole story · ii. A forecast that was only half correct · iii. The growing popularity of e-books · iv. More than a place to borrow books · v. How volunteers are keeping libraries open · vi. The belief that knowledge should cost nothing · vii. Money problems and what they lead to · viii. The design of early library buildings",
+          "A. Libraries existed for centuries before they were public. Most early collections belonged to monasteries, universities or wealthy families, and the grand buildings that housed them were rarely open to ordinary people. The public library as we know it grew out of a nineteenth-century conviction that reading should not depend on income. Funded by local taxes and by philanthropists, the new libraries lent books free of charge to anyone who lived nearby.",
+          "B. When the internet arrived in most homes, many commentators expected the public library to disappear within a generation. Some of their predictions came true. Book loans fell steadily in many countries, and the arrival of e-books and online encyclopaedias removed several of the reasons people had for visiting. Yet the buildings did not empty. In many cities the number of visitors held steady or even rose, even as fewer of them borrowed anything.",
+          "C. The reason is that the modern library does far more than lend. It offers free computers and internet access to people who have neither at home, and staff who help them apply for jobs or complete government forms. It runs language classes, homework clubs and reading groups. For students who share a crowded flat, it is often the only quiet place to study, and for many older people it is one of the few warm public spaces where no one expects them to buy anything.",
+          "D. These services cost money at a time when library budgets have been cut in many places. Opening hours have been reduced, branches have closed, and trained staff have been replaced in some towns by volunteers who keep the doors open but cannot offer the same help. New books are bought less often, so collections age. Each cut makes the library less useful, which in turn makes the next cut easier to justify.",
+          "E. Part of the problem is how success is measured. For decades the standard figure was the number of books lent each year, and by that measure libraries are in steady decline. But loans say nothing about the job seeker who used a computer for an afternoon or the student who revised there every evening. Some councils have started recording room bookings, course places and computer sessions instead, and on those figures the picture looks very different.",
+        ],
+        table: {
+          caption: "Answers and reasoning",
+          headers: ["Paragraph", "Answer", "Why, and the trap"],
+          rows: [
+            ["A", "vi", "The paragraph builds to the conviction that reading should not depend on income, and free lending. Trap: viii, because of 'grand buildings', which is one passing detail."],
+            ["B", "ii", "Commentators predicted the library would disappear; loans fell (the half that came true) but visitors held steady (the half that did not). Trap: iii, because e-books are mentioned once as one reason for falling loans."],
+            ["C", "iv", "Every sentence lists a service other than lending: computers, job help, classes, study space. The first sentence states it outright."],
+            ["D", "vii", "Budget cuts and their effects: shorter hours, closures, older collections, and a cycle of further cuts. Trap: v, because volunteers appear in one sentence, and the paragraph presents them as a weakness, not a solution."],
+            ["E", "i", "The paragraph says loan figures miss the new uses and describes better measures. 'Counting loans' is paraphrased as 'the number of books lent'."],
+          ],
+        },
+        bullets: [
+          "Unused headings: iii (word match on 'e-books'), v (detail, and its direction is reversed: the passage does not say volunteers are keeping libraries going well), and viii (word match on 'buildings').",
+          "If you chose iii for B or viii for A, you matched a word. Go back to step 4 and write your own heading first next time.",
+        ],
+      },
+      {
+        heading: "Common matching headings mistakes",
+        bullets: [
+          "Choosing the heading that shares the most words with the paragraph. Shared words are the commonest trap.",
+          "Reading only the first sentence. It works often enough to become a habit, and fails on every paragraph that turns halfway through.",
+          "Spending four minutes on one hard paragraph. Note your two candidates and move on; elimination will usually settle it.",
+          "Writing the heading's words instead of its numeral, or writing 'iv' where you meant 'vi'. Check every numeral when you transfer answers.",
+          "Leaving a blank. No marks are deducted for wrong answers, so always give your best answer.",
+        ],
+        links: [
+          { label: "True False Not Given: the test that settles every answer", href: "/blog/ielts-true-false-not-given" },
+          { label: "IELTS Reading tips: how to improve your score", href: "/blog/ielts-reading-tips-improve-score" },
+        ],
+      },
+      {
+        heading: "Practise matching headings with instant answers",
+        paragraphs: [
+          "Matching headings improves fastest when you do a block of them in one sitting and read the reasoning on every one you miss. On IELTSVega you can practise Matching Headings and every other Reading question type, for Academic and General Training, with answers and explanations straight away. Then sit a full timed passage to check that your pace holds.",
+        ],
+        links: [
+          { label: "IELTS Reading practice online: question types and full tests", href: "/blog/ielts-reading-practice-online" },
+        ],
+      },
+    ],
+    faqs: [
+      { q: "How do you answer matching headings in IELTS Reading?", a: "Read the headings and underline their key words. Then read each paragraph and write your own short heading for it before you look at the list. Pick the listed heading closest to yours, cross it off, and come back to any paragraph you were unsure about at the end." },
+      { q: "Are there always more headings than paragraphs?", a: "Yes. There are always more headings than paragraphs, so some headings are never used. The spare ones are usually written to look like plausible answers, often by repeating a word from one of the paragraphs." },
+      { q: "Do matching headings answers come in order?", a: "The questions go in paragraph order, A then B then C, but the headings are not listed in the order of the paragraphs. The heading for paragraph A can be anywhere in the list." },
+      { q: "Should I read the headings or the paragraphs first?", a: "Either works. Read the headings first when the list is short and the headings are clearly different. Read the paragraphs first when the list is long or the headings are similar. In both cases, write your own heading for the paragraph before choosing." },
+      { q: "Why is matching headings so difficult?", a: "Because it tests the main idea of a whole paragraph, while most other Reading questions test one detail. It needs every paragraph read, and the spare headings are designed to match words rather than ideas, so quick word-matching gives wrong answers." },
+      { q: "How long should matching headings take?", a: "Both IELTS Reading tests give you 60 minutes for 40 questions, about 20 minutes per passage. If matching headings is eating most of a passage's time, answer the passage's other questions first, then return to the headings once you know the paragraphs." },
+      { q: "Is matching headings in General Training Reading too?", a: "Yes. It appears in both Academic and General Training. General Training uses everyday and workplace texts rather than academic articles, but the method is the same." },
     ],
   },
   {

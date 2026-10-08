@@ -16,7 +16,16 @@ const MODULES = [
   { value: "general", label: "General Training", hint: "Migration / work" },
 ] as const;
 
-export function SignupForm({ next, referral }: { next?: string; referral?: Referral | null }) {
+export function SignupForm({
+  next,
+  referral,
+  defaultEmail,
+}: {
+  next?: string;
+  referral?: Referral | null;
+  /** The invited address, when signup came through an emailed invitation. */
+  defaultEmail?: string;
+}) {
   const [state, action, pending] = useActionState<AuthFormState, FormData>(
     signup,
     null,
@@ -60,6 +69,7 @@ export function SignupForm({ next, referral }: { next?: string; referral?: Refer
         type="email"
         autoComplete="email"
         placeholder="you@example.com"
+        defaultValue={defaultEmail}
         required
         error={state?.fieldErrors?.email?.[0]}
       />

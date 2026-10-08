@@ -183,6 +183,13 @@
       "when": 1791371123462,
       "tag": "0025_coupon_drop_percent",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1791452437985,
+      "tag": "0026_partner_invites",
+      "breakpoints": true
     }
   ]
 }

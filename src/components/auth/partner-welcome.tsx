@@ -15,7 +15,17 @@ import { GraduationCap } from "lucide-react";
  * attaches the student, and a class that mangled the name half of its own link
  * should still get its students.
  */
-export function PartnerWelcome({ name }: { name: string | null }) {
+export function PartnerWelcome({
+  name,
+  invitedEmail,
+}: {
+  name: string | null;
+  /**
+   * Set when this is an emailed invitation rather than the shared link: the
+   * account joins the class only if it is created with this address.
+   */
+  invitedEmail?: string;
+}) {
   return (
     <div className="rounded-xl border border-green/30 bg-green-soft px-3.5 py-3">
       <p className="flex items-center gap-2 text-sm font-semibold text-green-ink">
@@ -28,6 +38,12 @@ export function PartnerWelcome({ name }: { name: string | null }) {
         they can see your progress and set you up with a plan. Your practice, scores and feedback
         stay yours.
       </p>
+      {invitedEmail && (
+        <p className="mt-1 text-xs leading-relaxed text-ink-soft">
+          Use <span className="font-medium text-ink">{invitedEmail}</span>, the address the
+          invitation was sent to.
+        </p>
+      )}
     </div>
   );
 }

@@ -47,6 +47,18 @@ async function pruneRateLimits(): Promise<number> {
   return Number((res as { count?: number }).count ?? 0);
 }
 
+/**
+ * Partner invites a month past their expiry, used or not. Nothing reads them —
+ * an expired link is refused by its `expires_at` alone — and the audit log
+ * already holds who invited and who joined.
+ */
+async function prunePartnerInvites(): Promise<number> {
+  const res = await db.execute(
+    sql`DELETE FROM partner_invites WHERE expires_at < now() - interval '30 days'`,
+  );
+  return Number((res as { count?: number }).count ?? 0);
+}
+
 export async function GET(request: Request) {
   if (!isAuthorizedCron(request)) {
     // 404, not 401: an unauthenticated caller learns nothing about whether this
@@ -56,9 +68,10 @@ export async function GET(request: Request) {
 
   const result = await expireDueSubscriptions();
   const prunedRateLimits = await pruneRateLimits();
+  const prunedPartnerInvites = await prunePartnerInvites();
 
   return NextResponse.json(
-    { ...result, prunedRateLimits },
+    { ...result, prunedRateLimits, prunedPartnerInvites },
     { headers: { "Cache-Control": "no-store" } },
   );
 }

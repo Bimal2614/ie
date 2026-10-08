@@ -187,6 +187,48 @@ export function resetPasswordTemplate(link: string) {
 }
 
 /* ------------------------------------------------------------------ *
+ * Partner invites — "join my class", sent from the partner panel.
+ *
+ * Two wordings for the same link (see src/lib/partner-invites.ts): one for an
+ * address that already has an account, one for an address that does not. Both
+ * say plainly what joining means — the class sees the student's progress — so
+ * nobody joins on the strength of a button label.
+ * ------------------------------------------------------------------ */
+
+const INVITE_FOOTER =
+  "This link works once and expires in 7 days. If you don't know this institute, ignore this email — nothing changes until you accept.";
+
+/** Someone who already practises with us: sign in, then confirm. */
+export function partnerInviteExistingTemplate(name: string, partner: string, link: string) {
+  return {
+    subject: `${partner} invited you to join their class on IELTSVega`,
+    html: layout({
+      heading: `${partner} invited you`,
+      body: `Hi ${name}, ${partner} would like to add your IELTSVega account to their class. If you accept, they will be able to see your progress and scores and can buy a plan for you. Your account, practice and feedback stay yours.`,
+      ctaLabel: "Review the invitation",
+      ctaUrl: link,
+      footer: INVITE_FOOTER,
+    }),
+    text: `Hi ${name},\n\n${partner} would like to add your IELTSVega account to their class. If you accept, they will be able to see your progress and scores and can buy a plan for you.\n\nReview the invitation:\n${link}\n\n${INVITE_FOOTER}`,
+  };
+}
+
+/** No account yet: create one with this address and you are in the class. */
+export function partnerInviteSignupTemplate(partner: string, link: string) {
+  return {
+    subject: `${partner} invited you to practise IELTS on IELTSVega`,
+    html: layout({
+      heading: `${partner} invited you`,
+      body: `${partner} has invited you to join their class on IELTSVega: full IELTS mock tests and section practice, with examiner-style feedback on Writing and Speaking. Create your account with this email address and you'll join their class straight away. They will be able to see your progress and scores.`,
+      ctaLabel: "Create my account",
+      ctaUrl: link,
+      footer: INVITE_FOOTER,
+    }),
+    text: `${partner} has invited you to join their class on IELTSVega.\n\nCreate your account with this email address and you'll join their class straight away. They will be able to see your progress and scores.\n\n${link}\n\n${INVITE_FOOTER}`,
+  };
+}
+
+/* ------------------------------------------------------------------ *
  * Partner applications
  *
  * Two messages from one submission on /partners, and they are written for two

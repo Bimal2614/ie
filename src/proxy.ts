@@ -67,6 +67,7 @@ const STRICT_CSP_PREFIXES = [
   "/login",
   "/signup",
   "/reset-password",
+  "/invite",
 ];
 
 const matchesPrefix = (pathname: string, prefixes: readonly string[]) =>

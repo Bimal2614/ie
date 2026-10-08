@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 import { EnrolForm } from "@/components/partner/enrol-form";
+import { InviteByEmail } from "@/components/partner/invite-by-email";
 import { InviteLink } from "@/components/partner/invite-link";
 import { RateCard } from "@/components/partner/plan-picker";
 import { quotesFor } from "@/lib/partner-pricing";
@@ -35,6 +36,8 @@ export default async function EnrolStudentPage() {
       </div>
 
       <RateCard quotes={quotes} />
+
+      <InviteByEmail canInvite={partner.status === "active"} />
 
       <InviteLink url={invite} />
 

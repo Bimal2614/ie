@@ -7,6 +7,12 @@ import { isGoogleConfigured } from "@/lib/env";
 import { exchangeGoogleCode, fetchGoogleProfile } from "@/lib/oauth/google";
 import { referringPartner } from "@/lib/partners";
 import { REFERRAL_COOKIE } from "@/lib/partner-referral";
+import {
+  clearedInviteCookie,
+  INVITE_COOKIE,
+  openInvite,
+  redeemInvite,
+} from "@/lib/partner-invites";
 import { createSession, getRequestContext } from "@/lib/session";
 import { safeEqual } from "@/lib/security/tokens";
 import { normalizePhone } from "@/lib/phone";
@@ -56,6 +62,16 @@ export async function GET(req: Request) {
 
   const emailNorm = profile.email.trim().toLowerCase();
 
+  /*
+   * An emailed invitation, if this browser opened one (src/lib/partner-invites.ts).
+   * Only ever applied to the address it was sent to, and only once Google has
+   * vouched for that address.
+   */
+  const inviteToken = jar.get(INVITE_COOKIE)?.value;
+  const invite = profile.emailVerified ? await openInvite(inviteToken) : null;
+  const viaInvite = invite?.email === emailNorm;
+  let afterSignIn = "/dashboard";
+
   // 1) already linked by googleId?
   let [user] = await db
     .select({ id: users.id, deactivatedAt: users.deactivatedAt, phone: users.phone })
@@ -103,6 +119,7 @@ export async function GET(req: Request) {
   }
 
   // 3) else create a fresh OAuth account (no password).
+  let createdNow = false;
   if (!user) {
     /*
      * Only a NEW account is attached to the class, and that is the whole rule.
@@ -118,7 +135,7 @@ export async function GET(req: Request) {
      * this line it is a string off a public URL that has been checked for
      * nothing but its shape.
      */
-    const referrer = await referringPartner(referralId);
+    const referrer = viaInvite ? null : await referringPartner(referralId);
     const [created] = await db
       .insert(users)
       .values({
@@ -133,6 +150,7 @@ export async function GET(req: Request) {
       })
       .returning({ id: users.id, deactivatedAt: users.deactivatedAt, phone: users.phone });
     user = created;
+    createdNow = true;
     // A new account, not a returning sign-in — see SignupBeacon.
     jar.set(SIGNED_UP_COOKIE, "google", {
       path: "/",
@@ -141,7 +159,12 @@ export async function GET(req: Request) {
       secure: process.env.NODE_ENV === "production",
     });
 
-    if (referrer) {
+    if (viaInvite) {
+      // A new account on the invited address joins straight away, as with the
+      // email signup; an existing one is sent to confirm, below.
+      const redeemed = await redeemInvite(inviteToken, { id: created.id, email: emailNorm });
+      if (redeemed.ok) jar.set(INVITE_COOKIE, "", clearedInviteCookie);
+    } else if (referrer) {
       // Same event the email signup writes, for the same reason: this account
       // was created by the candidate, not by the class. See src/app/actions/auth.ts.
       try {
@@ -157,6 +180,10 @@ export async function GET(req: Request) {
   }
 
   if (user.deactivatedAt) return fail("deactivated");
+
+  // An EXISTING account that opened an invitation addressed to it is taken to
+  // the page where it decides whether to join — never joined on its behalf.
+  if (viaInvite && !createdNow) afterSignIn = "/invite";
 
   // Already-linked account that predates the phone column (or was created
   // before Google started returning one).
@@ -180,5 +207,5 @@ export async function GET(req: Request) {
     .where(eq(users.id, user.id));
 
   await createSession(user.id);
-  return NextResponse.redirect(new URL("/dashboard", req.url));
+  return NextResponse.redirect(new URL(afterSignIn, req.url));
 }

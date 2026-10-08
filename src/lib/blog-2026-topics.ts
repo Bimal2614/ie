@@ -297,6 +297,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       { heading: "Two English rules people still get wrong", bullets: ["At-home and remote-proctored tests are not accepted for any Australian visa, from any provider. You must sit the test in person at a secure test centre, and booking IELTS Online by mistake is an expensive way to lose a month.", "IELTS One Skill Retake is accepted for the Temporary Graduate visa, so if you land 6.5 overall with a single 5.0 band, you can retake that one skill rather than the whole test.", "Results from a test sat on or before 6 August 2025 remain usable as evidence until 6 August 2028."], links: [
         { label: "IELTS One Skill Retake: how it works and when it is worth it", href: "/blog/ielts-one-skill-retake-guide" },
         { label: "IELTS vs PTE vs Duolingo: which test to sit", href: "/blog/ielts-vs-pte-vs-duolingo" },
+        { label: "IELTS score for Australia PR: points for each band", href: "/blog/ielts-score-for-australia-pr" },
         { label: "IELTS band score calculator", href: "/ielts-band-score-calculator" },
       ] },
       { heading: "What to do now", bullets: ["Check whether an exemption applies to you before you plan around family. A PhD instead of a coursework master's is now a different visa outcome; a research master's is not.", "If you are exempt, include your partner and children in the application itself. They cannot be added after the visa is granted.", "If you are in Australia on a Working Holiday, visitor or 485 visa and planned to switch to a student visa, you now need to apply from outside Australia. Plan the trip and the timing before you accept an offer.", "If Australia was your choice because of family, compare Canada, New Zealand and the UK on their current rules using the table above, not on the version you read last year.", "Whatever you decide, the English requirement is the one part of this you fully control, and a higher band widens every option at once. Get the score first."] },
@@ -749,13 +750,226 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       { heading: "The minimum versus the real target", paragraphs: ["The Federal Skilled Worker Program requires CLB 7, which is a flat 6.0 in every skill. That makes you eligible. It does not make you competitive: recent all-programme draws have generally required CRS scores in roughly the 470 to 540+ range, and CLB 7 leaves a large number of points on the table.", "CLB 9 is the target that matters. It unlocks the maximum core language points and, critically, the skill transferability bonuses that pair language with education and work experience. The step from CLB 7 to CLB 9 is frequently worth more CRS points than any other single thing an applicant can change."] },
       { heading: "Where the points actually are", bullets: ["Core language points rise steeply from CLB 7 to CLB 9, then flatten. CLB 10 is worth chasing only if you are already comfortably at 9.", "Skill transferability adds points when CLB 9 combines with post-secondary education or Canadian or foreign work experience. This is the multiplier most people miss.", "A spouse's language score earns points too, so if you have an accompanying partner, their IELTS is not optional admin, it is CRS points.", "French as a second language adds a further block of points, which is why some candidates near the cut-off add a TEF or TCF rather than pushing IELTS higher.", "Points tables are revised periodically. Check the current CRS criteria on the official site before making a plan around a specific number."] },
       { heading: "The practical plan", paragraphs: ["Work out which single half-band moves you a CLB level, and go get that one. In practice this is almost always Listening 7.5 to 8.0, or Reading 6.5 to 7.0. Both are raw-mark skills where a handful of careless errors separate the two bands, which makes them the cheapest points in the entire system.", "Then sit the test with One Skill Retake in mind. If exactly one skill lands short, you can re-sit it alone within 60 days, in the same country, provided your test was computer-delivered. Confirm that Immigration, Refugees and Citizenship Canada will accept a combined report for your specific programme before you rely on that route."] },
-      { heading: "Practise the skills that carry the points", paragraphs: ["Chasing CLB 9 means chasing specific numbers in specific skills, not general improvement. On IELTSVega you can practise General Training Reading and Writing, drill Listening by question type until careless losses stop, and get instant AI band scores on Writing and Speaking, so you can see which skill is one half-band away from moving your whole CLB level."] },
+      { heading: "Practise the skills that carry the points", paragraphs: ["Chasing CLB 9 means chasing specific numbers in specific skills, not general improvement. On IELTSVega you can practise General Training Reading and Writing, drill Listening by question type until careless losses stop, and get instant AI band scores on Writing and Speaking, so you can see which skill is one half-band away from moving your whole CLB level."] , links: [{ label: "IELTS score for Australia PR: Competent, Proficient and Superior English", href: "/blog/ielts-score-for-australia-pr" }] },
     ],
     faqs: [
       { q: "What IELTS score do I need for Canada PR?", a: "The minimum for the Federal Skilled Worker Program is CLB 7, which is 6.0 in each of the four skills on IELTS General Training. To be competitive in recent draws, most applicants target CLB 9: Listening 8.0, Reading 7.0, Writing 7.0 and Speaking 7.0." },
       { q: "Do I need IELTS Academic or General Training for Express Entry?", a: "General Training. IELTS Academic is for university admission and professional registration and is not accepted for Canadian permanent residence applications through Express Entry." },
       { q: "Why does Canada require a higher IELTS Listening score?", a: "The CLB conversion table simply sets a higher IELTS band for Listening at each level, so CLB 9 needs 8.0 in Listening but only 7.0 in the other three. It reflects how the two scales align, and it makes Listening the skill most worth drilling for Express Entry candidates." },
       { q: "Is CLB 9 worth the extra effort over CLB 7?", a: "Usually yes. CLB 9 unlocks the maximum core language points and the skill transferability bonuses that combine language with education and work experience. For most candidates it is the single largest available CRS increase." },
+    ],
+  },
+  {
+    /*
+     * Sourced 2026-10-08 from the Department of Home Affairs pages for
+     * Competent, Proficient and Superior English (tables for tests taken on or
+     * after 7 August 2025, and on or before 6 August 2025), the points tables
+     * for subclasses 189, 190 and 491, and the April 2024 points-test
+     * discussion paper (65-point pass mark, under 45, competent English).
+     * Invitation-round cut-offs change every round and are deliberately not
+     * quoted. Re-check every threshold before editing.
+     */
+    slug: "ielts-score-for-australia-pr",
+    seoTitle: "IELTS Score for Australia PR: Bands, Points & PTE",
+    title: "IELTS score for Australia PR: what each band is worth in points",
+    excerpt:
+      "Australia PR needs IELTS 6 in each skill. 7 in each adds 10 points and 8 in each adds 20. The levels, PTE scores, partner points and validity rules.",
+    category: "Requirements",
+    date: "October 2026",
+    publishedAt: "2026-10-08",
+    readMins: 10,
+    keywords: [
+      "ielts score for australia pr",
+      "minimum ielts score for australia pr",
+      "ielts points for australia pr",
+      "ielts requirement for australia pr",
+      "superior english ielts score",
+      "proficient english ielts score",
+      "competent english ielts",
+      "spouse ielts score for australia pr",
+      "pte score for australia pr",
+      "ielts validity for australia pr",
+    ],
+    sections: [
+      {
+        paragraphs: [
+          "The minimum IELTS score for Australia PR on the points-tested skilled visas (subclasses 189, 190 and 491) is 6.0 in each of Listening, Reading, Writing and Speaking. The Department of Home Affairs calls this Competent English. It makes you eligible but earns no points. 7.0 in each skill is Proficient English and earns 10 points. 8.0 in each skill is Superior English and earns 20 points, the maximum for English.",
+          "The word that catches people is 'each'. Australia does not use your overall band. Your level is set by your lowest skill, so 8.5 overall with a 7.5 in Writing counts as Proficient, not Superior. Below: the full score table with PTE equivalents, what English is worth against the 65-point pass mark, your partner's score, which tests are refused and how long a result stays valid.",
+        ],
+      },
+      {
+        heading: "IELTS scores for Australia PR at a glance",
+        table: {
+          caption: "Home Affairs English levels for tests taken on or after 7 August 2025. IELTS Academic and General Training have the same thresholds.",
+          headers: ["English level", "IELTS (each of the 4 skills)", "PTE Academic (L / R / W / S)", "Points for skilled visas"],
+          rows: [
+            ["Competent English", "6.0", "47 / 48 / 51 / 54", "0, but required to be eligible"],
+            ["Proficient English", "7.0", "58 / 59 / 69 / 76", "10"],
+            ["Superior English", "8.0", "69 / 70 / 85 / 88", "20"],
+          ],
+        },
+        bullets: [
+          "The IELTS thresholds did not change on 7 August 2025. The PTE thresholds did, because PTE changed its scoring. Older PTE results follow a different table, covered below.",
+          "A score between levels earns only the lower level. 7.5 in every skill is still Proficient English and 10 points.",
+          "Citizens of the UK, Ireland, the US, Canada and New Zealand who hold a valid passport from that country meet Competent English without a test. Proficient and Superior English can only be shown with a test score, so they still need a test to claim 10 or 20 points.",
+        ],
+        links: [
+          { label: "IELTS band score chart: what each band means", href: "/blog/ielts-band-score-chart" },
+        ],
+      },
+      {
+        heading: "Why 'in each skill' matters more than your overall band",
+        paragraphs: [
+          "Every Australian English level is defined per component: 'in each of the 4 test components, at least' a set score. Your overall band never appears in the rule. One weak skill therefore decides your points.",
+        ],
+        table: {
+          caption: "How the lowest skill sets your level",
+          headers: ["L", "R", "W", "S", "Overall", "Level", "Points"],
+          rows: [
+            ["8.5", "8.5", "7.5", "8.0", "8.0", "Proficient", "10"],
+            ["7.0", "7.5", "6.5", "7.0", "7.0", "Competent", "0"],
+            ["8.0", "8.0", "8.0", "8.0", "8.0", "Superior", "20"],
+            ["9.0", "8.5", "5.5", "7.5", "7.5", "Below Competent", "Not eligible"],
+          ],
+        },
+        bullets: [
+          "Find your lowest skill and plan around it. Improving your best skill earns nothing.",
+          "Home Affairs accepts IELTS results that include a One Skill Retake for eligible visas. If one skill is holding you back, a One Skill Retake may be faster and cheaper than a full re-sit. Check your visa's own page first.",
+        ],
+        links: [
+          { label: "IELTS One Skill Retake: how it works and who accepts it", href: "/blog/ielts-one-skill-retake-guide" },
+        ],
+      },
+      {
+        heading: "How many points English is worth on the 189, 190 and 491",
+        paragraphs: [
+          "All three points-tested visas use the same English points. To be invited you need at least 65 points, competent English, a suitable skills assessment and an age under 45. The visas differ in what else they add.",
+        ],
+        table: {
+          caption: "English points and nomination points by visa",
+          headers: ["Visa", "Competent / Proficient / Superior English", "Nomination or sponsorship points"],
+          rows: [
+            ["Skilled Independent (subclass 189)", "0 / 10 / 20", "None. No nomination"],
+            ["Skilled Nominated (subclass 190)", "0 / 10 / 20", "5, for state or territory nomination"],
+            ["Skilled Work Regional (subclass 491)", "0 / 10 / 20", "15, for state or territory nomination or eligible family sponsorship"],
+          ],
+        },
+      },
+      {
+        heading: "Why 65 is not your real target",
+        paragraphs: [
+          "65 points is the pass mark, but it does not get you invited. SkillSelect ranks expressions of interest and invites from the top, so in practice each occupation's cut-off sits above the pass mark. It varies by occupation and by round. Check the latest invitation round on the SkillSelect site rather than trusting a number from an article, this one included.",
+          "That is why English is the lever people pull first. Age points change only as the years pass, and work experience takes years to build. English points can move by 20 in a few months of focused preparation. For a 28-year-old, age is already worth 30 points (the band for at least 25 but under 33). Moving from 6 to 7 in each skill adds 10 more, and moving from 7 to 8 adds another 10.",
+        ],
+        bullets: [
+          "Superior English (20 points) is worth more than state nomination on a 190 (5 points), and more than the 491's nomination or sponsorship points (15 points).",
+          "If your points sit just under recent cut-offs, Superior English is usually the only claim you can add before your next birthday changes your age points.",
+        ],
+      },
+      {
+        heading: "Your partner's IELTS score",
+        paragraphs: [
+          "Partner skills is a separate points line, and your partner's English is part of it. Your partner must be on the same visa application. They must also not be an Australian citizen or permanent resident, and their English is assessed as at the time of invitation.",
+        ],
+        table: {
+          caption: "Partner skills points (subclass 189 points table)",
+          headers: ["Situation", "Points"],
+          rows: [
+            ["Partner is under 45, has competent English (IELTS 6 in each skill), a skilled occupation on the same list and a suitable skills assessment", "10"],
+            ["Partner has competent English only", "5"],
+            ["You are single, or your partner is an Australian citizen or permanent resident", "10"],
+            ["Partner applies with you but none of the above", "0"],
+          ],
+        },
+        bullets: [
+          "The spouse IELTS score for Australia PR is therefore 6.0 in each skill. A higher score earns your partner no extra points.",
+          "If your marital status changes during processing, Home Affairs says it may not award these points.",
+        ],
+      },
+      {
+        heading: "IELTS General Training or Academic for Australia PR?",
+        paragraphs: [
+          "Either. Home Affairs lists IELTS Academic and IELTS General Training separately, with identical thresholds at every level, and accepts One Skill Retake on both. Choose the version you score higher on. If you also need a university place in Australia, take Academic, because universities generally ask for it.",
+          "Computer-delivered and paper-based IELTS are both accepted, as long as you sit the test at a secure test centre.",
+        ],
+        links: [
+          { label: "IELTS Academic vs General Training: which one you need", href: "/blog/ielts-academic-vs-general-training" },
+          { label: "IELTS on computer or paper: which is better", href: "/blog/ielts-online-vs-paper-based" },
+        ],
+      },
+      {
+        heading: "Tests Australia will not accept",
+        paragraphs: [
+          "Home Affairs does not accept any English test taken entirely online, also called remote-proctored or at-home testing. IELTS Online is on that list, whatever its result shows. So are TOEFL iBT Home Edition, CELPIP Online, LanguageCert Academic Online, OET@Home and MET Digital taken at home.",
+          "TOEFL iBT has one extra condition. You must select 'Taking TOEFL for Australia' when you register, or the result may not be accepted.",
+        ],
+      },
+      {
+        heading: "How long your IELTS score is valid for Australia PR",
+        paragraphs: [
+          "For the skilled visas the test must be taken in the 3 years before your application. Points are assessed at the time you are invited, so the result also has to be inside that window on the invitation date. A score that expires while your EOI waits in the pool cannot support the claim.",
+          "Results from tests taken on or before 6 August 2025 can still be used until 6 August 2028 inclusive, depending on the visa, and they are judged against the older table.",
+        ],
+        table: {
+          caption: "Older results: tests taken on or before 6 August 2025",
+          headers: ["English level", "IELTS (each skill)", "PTE Academic, old scoring (each skill)"],
+          rows: [
+            ["Competent", "6.0", "50"],
+            ["Proficient", "7.0", "65"],
+            ["Superior", "8.0", "79"],
+          ],
+        },
+      },
+      {
+        heading: "IELTS vs PTE for Australia PR",
+        paragraphs: [
+          "Both are accepted at every level, along with TOEFL iBT, Cambridge C1 Advanced, OET, CELPIP General, LanguageCert Academic and the Michigan English Test. IELTS uses one number per skill at each level. Since 7 August 2025, PTE uses a different number for each skill, with the highest bars in Writing and Speaking: 85 and 88 for Superior.",
+          "Neither test is easier for everyone. Take the one whose format suits your weakest skill. A candidate whose Speaking falls apart under a live examiner may do better with a computer microphone, and the reverse is just as common. A practice test in each, scored honestly, settles it better than any comparison table.",
+        ],
+        links: [
+          { label: "IELTS vs PTE vs Duolingo: which test to take", href: "/blog/ielts-vs-pte-vs-duolingo" },
+        ],
+      },
+      {
+        heading: "Nurses, doctors and teachers: registration is a separate test",
+        paragraphs: [
+          "The scores above are what Home Affairs needs for the visa. Many professions also need registration or a skills assessment, and that body sets its own English requirement, often a different score and sometimes a different test. Nurses, for example, register with their national board, separately from the visa. Check your assessing authority's rule before booking, and plan to sit one test that clears both bars.",
+        ],
+      },
+      {
+        heading: "How to get from 7 to 8 in each skill",
+        bullets: [
+          "Take a full timed practice test and record the four bands separately. Your lowest skill is your whole plan.",
+          "Writing is where most 8.0 attempts fail. Band 8 needs a well-developed response that covers every part of the task, with only occasional errors, so get every practice essay scored against the four criteria.",
+          "In Speaking, Band 8 allows hesitation while you think about content, but rarely while you search for language. Record yourself and count the times you stop to find a word.",
+          "In Reading and Listening, 8.0 means very few lost marks. Check the raw-score chart and drill the question types where you drop them.",
+        ],
+        links: [
+          { label: "The best IELTS practice for Band 8", href: "/blog/best-ielts-practice-for-band-8" },
+          { label: "IELTS score for Canada PR: the CLB chart", href: "/blog/ielts-score-for-canada-express-entry" },
+        ],
+      },
+      {
+        heading: "Practise for the band that carries the points",
+        paragraphs: [
+          "The difference between 10 and 20 points is usually one skill. On IELTSVega you can sit full IELTS practice tests and get each skill scored separately, with instant AI band scores for Writing and Speaking against the official criteria. Find out which skill is holding you at Proficient before you pay for the real test.",
+        ],
+        links: [
+          { label: "Home Affairs: English language visa requirements", href: "https://immi.homeaffairs.gov.au/help-support/meeting-our-requirements/english-language" },
+          { label: "Home Affairs: Superior English scores", href: "https://immi.homeaffairs.gov.au/help-support/meeting-our-requirements/english-language/superior-english" },
+          { label: "Home Affairs: subclass 189 points table", href: "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/skilled-independent-189/points-table" },
+        ],
+      },
+    ],
+    faqs: [
+      { q: "What IELTS score is required for Australia PR?", a: "At least 6.0 in each of Listening, Reading, Writing and Speaking, which Home Affairs calls Competent English. That makes you eligible for the 189, 190 and 491 visas but earns no points. 7.0 in each skill earns 10 points and 8.0 in each earns 20." },
+      { q: "Is IELTS 7 each enough for Australia PR?", a: "It is Proficient English and earns 10 points. Whether that is enough depends on the rest of your points and on recent invitation cut-offs for your occupation, which usually sit above the 65-point pass mark. Many applicants aim for 8 in each skill because it adds another 10 points." },
+      { q: "Does a high overall band count if one skill is lower?", a: "No. Australia's English levels are set per skill, and the overall band is never used. 8.5 overall with a 7.5 in Writing is Proficient English, not Superior. Your lowest skill sets your level." },
+      { q: "What IELTS score does my spouse need for Australia PR?", a: "6.0 in each skill, which is Competent English. That earns 5 partner points on its own, or 10 if your partner is also under 45, has a skilled occupation on the same list and a suitable skills assessment. Your partner must be on the same application." },
+      { q: "Is 70 a good score for Australia PR?", a: "70 points is above the 65 pass mark, but the pass mark only makes you eligible to be invited. Invitations go to the highest-ranked expressions of interest in each occupation, and the cut-off changes every round. Check the latest SkillSelect round for your occupation." },
+      { q: "Does IELTS Online count for Australia PR?", a: "No. Home Affairs does not accept any English test taken fully online or at home, and it names IELTS Online specifically. Sit IELTS on computer or on paper at a test centre." },
+      { q: "How long is an IELTS score valid for Australia PR?", a: "The test must be taken in the 3 years before you apply. Because points are assessed when you are invited, the result also needs to be within that window on the invitation date." },
+      { q: "Can I use IELTS One Skill Retake for Australia PR?", a: "Home Affairs accepts IELTS results that include a One Skill Retake for eligible visas, on both Academic and General Training. Check the specific visa page to confirm it applies to yours before you book." },
     ],
   },
   {
@@ -782,7 +996,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
     ],
     sections: [
       { paragraphs: ["Three tests, three very different experiences, and one question that decides it before any of the others: which does your institution accept? Everything else is a tie-breaker. Here is the honest comparison, including where each test genuinely wins."] },
-      { heading: "Acceptance: the only question that matters first", bullets: ["IELTS: the broadest acceptance of the three. Accepted by essentially every university and by the immigration systems of the UK, Canada, Australia and New Zealand. Some visa routes name it specifically.", "PTE Academic: very widely accepted for study, and accepted for several major visa routes, though not universally across all of them.", "Duolingo English Test: accepted by more than 5,000 universities and programmes, with strong coverage in the US, Canada and Australia, but noticeably thinner for visa and immigration purposes and at some highly selective institutions.", "The rule: check your specific university programme page and your specific visa route. Not the country. Not a comparison article. The programme page."], links: [{ label: "Australia student visa 2026: can you still bring your spouse?", href: "/blog/australia-student-visa-dependants-ban-2026" }] },
+      { heading: "Acceptance: the only question that matters first", bullets: ["IELTS: the broadest acceptance of the three. Accepted by essentially every university and by the immigration systems of the UK, Canada, Australia and New Zealand. Some visa routes name it specifically.", "PTE Academic: very widely accepted for study, and accepted for several major visa routes, though not universally across all of them.", "Duolingo English Test: accepted by more than 5,000 universities and programmes, with strong coverage in the US, Canada and Australia, but noticeably thinner for visa and immigration purposes and at some highly selective institutions.", "The rule: check your specific university programme page and your specific visa route. Not the country. Not a comparison article. The programme page."], links: [{ label: "Australia student visa 2026: can you still bring your spouse?", href: "/blog/australia-student-visa-dependants-ban-2026" }, { label: "IELTS and PTE scores for Australia PR", href: "/blog/ielts-score-for-australia-pr" }] },
       { heading: "How the three feel to sit", paragraphs: ["IELTS runs about 2 hours 45 minutes and its Speaking test is a live conversation with a human examiner, which is either its best feature or its most stressful, depending on who you are. It uses a wide range of question types, including short written answers, so you cannot guess your way through.", "PTE Academic is fully computer-based and AI-scored, about two hours, with heavily integrated tasks: you speak into a microphone, and one task often scores several skills at once. It rewards a specific, learnable technique more than any of the three.", "The Duolingo English Test is the shortest, around an hour, taken at home under remote proctoring, with an adaptive question set that adjusts to your answers. It is the cheapest and the fastest to book and receive."] },
       { heading: "Cost and results speed", bullets: ["IELTS: typically USD 230 to 490 equivalent depending on the country; results in 3 to 5 days for computer-delivered tests.", "PTE Academic: generally somewhat cheaper than IELTS in most markets; results usually within about two days.", "Duolingo English Test: substantially cheaper than both; results usually within about two days.", "Fees and turnaround change. Check the current figures on each provider's site before deciding on price."] },
       { heading: "Which is actually easier?", paragraphs: ["None of them is easier in the abstract, but they reward different people. IELTS suits candidates who are comfortable talking to a person, have good general reading stamina, and write reasonable essays. PTE suits candidates who are comfortable with a microphone, dislike being watched, and are willing to learn a fairly mechanical task technique. Duolingo suits candidates who want a short, cheap, adaptive test and are not applying anywhere that demands a traditional test.", "The one honest generalisation: PTE's AI scoring is more predictable and less forgiving of technique errors, IELTS Writing and Speaking are more forgiving of technique but harder to game, and Duolingo's brevity means a single bad ten minutes weighs more heavily."] },
