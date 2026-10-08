@@ -19,7 +19,7 @@ const CONTROL =
 
 /**
  * A native <option> cannot carry a strikethrough, so the discounted price is
- * spelled out instead: "Pro · ₹1,099 (was ₹1,499)". The struck-through version
+ * spelled out instead: "Premium · ₹2,599 (was ₹2,999)". The struck-through version
  * lives on the rate card below, where it can be styled.
  */
 function label(q: Quote): string {
@@ -79,7 +79,7 @@ export function RateCard({ quotes }: { quotes: Quote[] }) {
         {rate.code && <span className="rounded-full bg-paper-elev px-2 py-0.5 text-xs">{rate.code}</span>}
       </p>
       <div className="mt-3 flex flex-wrap gap-x-8 gap-y-2">
-        {quotes.map((q) => (
+        {quotes.filter((q) => q.discountCents > 0).map((q) => (
           <p key={q.plan} className="text-sm text-ink">
             <span className="font-medium">{PLANS[q.plan].label}</span>{" "}
             <span className="font-semibold tabular-nums">{formatPrice(q.payableCents, q.currency)}</span>{" "}

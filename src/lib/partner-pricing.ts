@@ -3,8 +3,8 @@ import { formatPrice, OFFERED_PLANS, PLANS, priceFor, type BillingCurrency, type
 /**
  * What a partner pays, and what it would have cost at list.
  *
- * PURE AND CLIENT-SAFE ON PURPOSE. The panel renders "₹1,099, was ₹1,499" and the
- * order is opened for ₹1,099 — and both numbers come from this one function, so
+ * PURE AND CLIENT-SAFE ON PURPOSE. The panel renders "₹2,599, was ₹2,999" and the
+ * order is opened for ₹2,599 — and both numbers come from this one function, so
  * the price a class is shown and the price its card is asked for cannot drift
  * apart. The server still computes the amount it sends to Razorpay itself; the
  * browser never names a price, it only renders one.
@@ -33,6 +33,12 @@ export type Quote = {
 };
 
 /**
+ * The plans a partner rate applies to. Pro is always sold at list, to partners
+ * as to everyone — the deal is on Premium only.
+ */
+export const DISCOUNTED_PLANS: readonly OfferedPlan[] = ["premium"];
+
+/**
  * Minor units per major unit. 100 for both currencies we sell in, which is why
  * rounding to a whole rupee and to a whole dollar is the same arithmetic.
  */
@@ -43,7 +49,7 @@ const MINOR = 100;
  *
  * The floor of 1 major unit exists so a rate can never produce an order of
  * zero, which Razorpay rejects outright. The coupon form refuses an amount at or
- * above the cheapest plan, so this is unreachable with today's prices; it is
+ * above the cheapest discounted plan, so this is unreachable with today's prices; it is
  * here because a price cut could reach it.
  */
 export function applyRate(listCents: number, offCents: number): number {
@@ -53,7 +59,8 @@ export function applyRate(listCents: number, offCents: number): number {
 
 export function quoteFor(plan: OfferedPlan, currency: BillingCurrency, rate: PartnerRate): Quote {
   const listCents = priceFor(plan, currency);
-  const payableCents = applyRate(listCents, rate?.amountCents[currency] ?? 0);
+  const offCents = DISCOUNTED_PLANS.includes(plan) ? (rate?.amountCents[currency] ?? 0) : 0;
+  const payableCents = applyRate(listCents, offCents);
   return {
     plan,
     currency,
@@ -75,8 +82,9 @@ export function savingOf(quote: Quote): number {
   return quote.discountCents;
 }
 
-/** "₹400 off · $5 off" — how a coupon reads on the admin screens. */
+/** "₹400 off · $5 off Premium" — how a coupon reads on the admin screens. */
 export function describeRate(amounts: { amountInrCents: number; amountUsdCents: number | null }): string {
   const inr = `${formatPrice(amounts.amountInrCents, "INR")} off`;
-  return amounts.amountUsdCents ? `${inr} · ${formatPrice(amounts.amountUsdCents, "USD")} off` : inr;
+  const both = amounts.amountUsdCents ? `${inr} · ${formatPrice(amounts.amountUsdCents, "USD")} off` : inr;
+  return `${both} ${DISCOUNTED_PLANS.map((p) => PLANS[p].label).join(" & ")}`;
 }

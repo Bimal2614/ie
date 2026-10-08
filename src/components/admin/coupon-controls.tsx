@@ -82,7 +82,7 @@ export function CreateCouponForm() {
         </div>
         <div>
           <label htmlFor="amountInr" className="text-sm font-medium text-ink">
-            ₹ off per student
+            ₹ off Premium, per student
           </label>
           <input
             id="amountInr"

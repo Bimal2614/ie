@@ -1,7 +1,8 @@
 import { z } from "zod";
 
 import { isValidStoredPhone } from "@/lib/phone";
-import { OFFERED_PLANS, priceFor, type BillingCurrency } from "@/lib/plans";
+import { DISCOUNTED_PLANS } from "@/lib/partner-pricing";
+import { priceFor, type BillingCurrency } from "@/lib/plans";
 
 /**
  * Server-side input validation. Every Server Action re-validates with these —
@@ -205,9 +206,9 @@ export type EnrolStudentInput = z.input<typeof enrolStudentSchema>;
  * it is generated here and shown to the partner — so this validates what an
  * admin creates, not what a visitor submits.
  */
-/** The cheapest plan on sale, in whole rupees / dollars — the ceiling on a coupon. */
+/** The cheapest plan a coupon applies to, in whole rupees / dollars — its ceiling. */
 const CHEAPEST = Object.fromEntries(
-  (["INR", "USD"] as const).map((c) => [c, Math.min(...OFFERED_PLANS.map((p) => priceFor(p, c))) / 100]),
+  (["INR", "USD"] as const).map((c) => [c, Math.min(...DISCOUNTED_PLANS.map((p) => priceFor(p, c))) / 100]),
 ) as Record<BillingCurrency, number>;
 
 export const couponSchema = z.object({
@@ -221,7 +222,8 @@ export const couponSchema = z.object({
   /**
    * Whole rupees / dollars off, as typed. Converted to minor units by the action.
    *
-   * Must stay below the cheapest plan in that currency. A free account is an
+   * Must stay below the Premium price in that currency — Premium is the only
+   * plan a coupon applies to (`DISCOUNTED_PLANS`). A free account is an
    * admin grant, which the students screen already does properly, and Razorpay
    * refuses an order of zero — so an amount that wipes out a plan would fail at
    * the checkout rather than here, which is far too late to explain it.
@@ -230,7 +232,7 @@ export const couponSchema = z.object({
     .number()
     .int("Whole rupees only")
     .min(1, "At least ₹1")
-    .max(CHEAPEST.INR - 1, `Must be less than ₹${CHEAPEST.INR}, the cheapest plan`),
+    .max(CHEAPEST.INR - 1, `Must be less than ₹${CHEAPEST.INR}, the Premium price`),
   /** Blank means classes paying in dollars get no discount. */
   amountUsd: z.preprocess(
     (v) => (v === "" || v == null ? null : Number(v)),
@@ -238,7 +240,7 @@ export const couponSchema = z.object({
       .number("Enter a number")
       .int("Whole dollars only")
       .min(1, "At least $1")
-      .max(CHEAPEST.USD - 1, `Must be less than $${CHEAPEST.USD}, the cheapest plan`)
+      .max(CHEAPEST.USD - 1, `Must be less than $${CHEAPEST.USD}, the Premium price`)
       .nullable(),
   ),
   /** yyyy-mm-dd from a date input; empty means "until we turn it off". */

@@ -82,12 +82,13 @@ export const coupons = pgTable(
     /** Uppercase, e.g. "ILDS25". Unique so it is never ambiguous in writing. */
     code: text().notNull(),
     /**
-     * A fixed amount off the list price, in minor units — ₹400 is 40000.
+     * A fixed amount off the PREMIUM list price, in minor units — ₹400 is 40000.
+     * Pro is never discounted (see DISCOUNTED_PLANS in src/lib/partner-pricing.ts).
      *
      * ONE AMOUNT PER CURRENCY, because ₹400 off says nothing about a dollar
      * price. Rupees are required; dollars are optional, and NULL means a class
      * paying in USD pays list. Both are whole rupees/dollars and always less than
-     * the cheapest plan: a free account is an admin grant, which /admin/students
+     * the Premium price: a free account is an admin grant, which /admin/students
      * already does properly, and Razorpay refuses an order of zero.
      */
     amountInrCents: integer().notNull(),
