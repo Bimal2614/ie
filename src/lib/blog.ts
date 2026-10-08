@@ -794,6 +794,12 @@ export const POSTS: BlogPost[] = [
           "6-9 = Band 3.5",
           "4-5 = Band 3",
         ],
+        links: [
+          { label: "27 out of 40 in IELTS Listening: what band it is", href: "/ielts-score/listening/27-out-of-40" },
+          { label: "30 out of 40 in IELTS Listening: what band it is", href: "/ielts-score/listening/30-out-of-40" },
+          { label: "32 out of 40 in IELTS Listening: what band it is", href: "/ielts-score/listening/32-out-of-40" },
+          { label: "35 out of 40 in IELTS Listening: what band it is", href: "/ielts-score/listening/35-out-of-40" },
+        ],
       },
       {
         heading: "IELTS Academic Reading band score chart",
@@ -813,6 +819,12 @@ export const POSTS: BlogPost[] = [
           "8-9 = Band 3.5",
           "6-7 = Band 3",
         ],
+        links: [
+          { label: "27 out of 40 in IELTS Academic Reading: what band it is", href: "/ielts-score/academic-reading/27-out-of-40" },
+          { label: "30 out of 40 in IELTS Academic Reading: what band it is", href: "/ielts-score/academic-reading/30-out-of-40" },
+          { label: "32 out of 40 in IELTS Academic Reading: what band it is", href: "/ielts-score/academic-reading/32-out-of-40" },
+          { label: "35 out of 40 in IELTS Academic Reading: what band it is", href: "/ielts-score/academic-reading/35-out-of-40" },
+        ],
       },
       {
         heading: "IELTS General Training Reading band score chart",
@@ -831,6 +843,12 @@ export const POSTS: BlogPost[] = [
           "15-18 = Band 4",
           "12-14 = Band 3.5",
           "9-11 = Band 3",
+        ],
+        links: [
+          { label: "30 out of 40 in IELTS General Training Reading: what band it is", href: "/ielts-score/general-reading/30-out-of-40" },
+          { label: "32 out of 40 in IELTS General Training Reading: what band it is", href: "/ielts-score/general-reading/32-out-of-40" },
+          { label: "34 out of 40 in IELTS General Training Reading: what band it is", href: "/ielts-score/general-reading/34-out-of-40" },
+          { label: "37 out of 40 in IELTS General Training Reading: what band it is", href: "/ielts-score/general-reading/37-out-of-40" },
         ],
       },
       {

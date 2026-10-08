@@ -4,6 +4,7 @@ import { MarketingShell, PageHead } from "@/components/marketing/marketing-shell
 import { BandCalculator } from "@/components/marketing/band-calculator";
 import { JsonLd } from "@/components/seo/json-ld";
 import { BAND_TABLES } from "@/lib/ielts";
+import { MAX_SCORE, MIN_SCORE, SCORE_SECTIONS, SECTION_KEYS, scorePath } from "@/lib/score-pages";
 import { KEYWORDS, breadcrumbJsonLd, faqJsonLd, pageMeta, webAppJsonLd } from "@/lib/seo";
 
 const PATH = "/ielts-band-score-calculator";
@@ -119,6 +120,23 @@ export default function BandScoreCalculatorPage() {
         statistically equated, so the exact raw score needed for a band can move by a
         mark or two. Treat the chart as a close guide rather than a fixed rule.
       </p>
+
+      {/* One page per raw score, for people who search a single score. */}
+      <h2 className="mt-14 text-xl font-semibold text-ink">Look up a single score</h2>
+      <div className="mt-4 grid gap-5 lg:grid-cols-3">
+        {SECTION_KEYS.map((k) => (
+          <div key={k}>
+            <p className="text-sm font-semibold text-ink">{SCORE_SECTIONS[k].name}</p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {Array.from({ length: MAX_SCORE - MIN_SCORE + 1 }, (_, i) => MAX_SCORE - i).map((n) => (
+                <Link key={n} href={scorePath(k, n)} className="rounded-md border border-line px-2 py-0.5 text-xs tabular-nums text-ink transition-colors hover:bg-paper-sunken">
+                  {n}/40
+                </Link>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
 
       {/* The rounding rule — the actual reason most people land on this page. */}
       <h2 className="mt-14 text-xl font-semibold text-ink">How the overall band is rounded</h2>

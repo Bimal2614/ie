@@ -4,6 +4,7 @@ import { POSTS } from "@/lib/blog";
 import { BAND_SLUGS } from "@/lib/band-content";
 import { WRITING_GUIDES } from "@/lib/study-writing";
 import { SITE_URL as BASE } from "@/lib/site";
+import { allScorePaths } from "@/lib/score-pages";
 
 /**
  * XML sitemap of every public, indexable URL — the map Google uses to discover
@@ -56,12 +57,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
    * crawl history, which is what it was doing anyway. Add a real date here only
    * if these pages ever start tracking one.
    */
+  // One URL per raw score per section (/ielts-score/listening/32-out-of-40):
+  // 93 pages computed from BAND_TABLES, see src/lib/score-pages.ts.
+  const scorePaths = allScorePaths();
+
   const staticEntries: MetadataRoute.Sitemap = Array.from(
-    new Set([...staticPaths, ...sectionPaths, ...bandPaths, ...writingTypePaths]),
+    new Set([...staticPaths, ...sectionPaths, ...bandPaths, ...writingTypePaths, ...scorePaths]),
   ).map((path) => ({
     url: `${BASE}${path}`,
     changeFrequency: path === "" ? "weekly" : "monthly",
-    priority: path === "" ? 1 : path.startsWith("/resources") || path.startsWith("/ielts-band") ? 0.8 : 0.6,
+    priority: path === "" ? 1 : path.startsWith("/resources") || path.startsWith("/ielts-band") || path.startsWith("/ielts-score") ? 0.8 : 0.6,
   }));
 
   /**
