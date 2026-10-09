@@ -7,6 +7,7 @@ import { signup } from "@/app/actions/auth";
 import { clearAuthCache } from "@/lib/auth-cache";
 import { REF_ID, type Referral } from "@/lib/partner-referral";
 import { type AuthFormState } from "@/lib/validation";
+import { withNetworkError } from "@/lib/action-network";
 import { cn } from "@/lib/utils";
 import { AuthField, authButton, authError } from "./auth-ui";
 import { PhoneField } from "./phone-field";
@@ -15,6 +16,8 @@ const MODULES = [
   { value: "academic", label: "Academic", hint: "University / professional" },
   { value: "general", label: "General Training", hint: "Migration / work" },
 ] as const;
+
+const signupAction = withNetworkError(signup);
 
 export function SignupForm({
   next,
@@ -27,7 +30,7 @@ export function SignupForm({
   defaultEmail?: string;
 }) {
   const [state, action, pending] = useActionState<AuthFormState, FormData>(
-    signup,
+    signupAction,
     null,
   );
   const [show, setShow] = useState(false);

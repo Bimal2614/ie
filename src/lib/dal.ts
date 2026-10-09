@@ -1,10 +1,10 @@
 import "server-only";
 
 import { cache } from "react";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { homeFor } from "@/lib/auth-routes";
-import { validateSession, SESSION_COOKIE, type AuthenticatedUser } from "@/lib/session";
+import { homeFor, SIGNED_OUT_PARAM } from "@/lib/auth-routes";
+import { validateSession, clearedSessionCookie, SESSION_COOKIE, type AuthenticatedUser } from "@/lib/session";
 
 /**
  * Data Access Layer — the single, centralized place auth is enforced.
@@ -80,8 +80,21 @@ export async function requirePartner(): Promise<PartnerUser> {
  * a request to /login would bounce it right back here — /login → /dashboard →
  * /login — so it goes via /logout, which clears the cookie first. Without a
  * cookie there is nothing to clear, so /login is safe and cheaper.
+ *
+ * Inside a Server Action the detour must NOT be taken. Next resolves an action's
+ * redirect on the server, fetching the target and following /logout's 307 to
+ * /login: the browser never sees the Set-Cookie, and the router keeps /logout
+ * as the URL while painting the login form. That form then posts its action to
+ * /logout — a GET-only Route Handler — and fails with "An unexpected response
+ * was received from the server" (Sentry IELTS-VEGA-E). An action may write
+ * cookies, so it clears the stale one itself and goes straight to /login.
  */
 async function rejectPath(): Promise<string> {
-  const hasStaleCookie = (await cookies()).has(SESSION_COOKIE);
-  return hasStaleCookie ? "/logout" : "/login";
+  const cookieStore = await cookies();
+  if (!cookieStore.has(SESSION_COOKIE)) return "/login";
+  if ((await headers()).has("next-action")) {
+    cookieStore.set(clearedSessionCookie());
+    return `/login?${SIGNED_OUT_PARAM}=1`;
+  }
+  return "/logout";
 }

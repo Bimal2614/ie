@@ -6,10 +6,13 @@ import { Eye, EyeOff, Loader2, ArrowRight } from "lucide-react";
 import { login } from "@/app/actions/auth";
 import { clearAuthCache } from "@/lib/auth-cache";
 import { type AuthFormState } from "@/lib/validation";
+import { withNetworkError } from "@/lib/action-network";
 import { AuthField, authButton, authError } from "./auth-ui";
 
+const loginAction = withNetworkError(login);
+
 export function LoginForm({ next }: { next?: string }) {
-  const [state, action, pending] = useActionState<AuthFormState, FormData>(login, null);
+  const [state, action, pending] = useActionState<AuthFormState, FormData>(loginAction, null);
   const [show, setShow] = useState(false);
 
   return (

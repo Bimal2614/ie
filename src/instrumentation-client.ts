@@ -15,6 +15,11 @@ Sentry.init({
   replaysSessionSampleRate: 0,
   replaysOnErrorSampleRate: 1.0,
   integrations: [Sentry.replayIntegration()],
+  // Scripts that Facebook/Instagram's in-app browsers inject into every page
+  // (app://browser_declutter, app://navigation_performance_logger_android).
+  // They throw on their own, in code we neither ship nor can fix.
+  denyUrls: [/^app:\/\//],
+  ignoreErrors: [/Java bridge method invocation error/],
 });
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
