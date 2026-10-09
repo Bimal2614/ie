@@ -97,7 +97,7 @@ async function call<T>(path: string, init?: { method?: string; body?: unknown })
  * Cadence
  * ------------------------------------------------------------------ */
 
-export type Cadence = { period: "weekly" | "monthly" | "yearly"; interval: number };
+export type Cadence = { period: "daily" | "monthly" | "yearly"; interval: number };
 
 /**
  * Our "how long does one payment buy" as Razorpay's period + interval.
@@ -105,12 +105,16 @@ export type Cadence = { period: "weekly" | "monthly" | "yearly"; interval: numbe
  * Razorpay has no "every 3 months" period; it has `monthly` with an interval of
  * 3, which is the same thing said differently. Whole years become `yearly`
  * rather than 12-month intervals because Razorpay caps how many cycles a plan
- * may run for, and a yearly plan buys far more runway inside that cap. Weeks
- * map straight onto `weekly`.
+ * may run for, and a yearly plan buys far more runway inside that cap.
+ *
+ * A week is `daily` with an interval of 7, not `weekly` with 1. Both bill every
+ * seven days, but the live Weekly plans were created the first way and a plan
+ * cannot be edited — so this says a week the way those plans say it, and the
+ * checkout's term-by-term comparison matches.
  */
 export function cadenceFor(term: BillingTerm | null): Cadence {
   if (!term || term.count <= 0) throw new Error(`cadenceFor: ${JSON.stringify(term)} is not a term`);
-  if (term.unit === "week") return { period: "weekly", interval: term.count };
+  if (term.unit === "week") return { period: "daily", interval: 7 * term.count };
   return term.count % 12 === 0
     ? { period: "yearly", interval: term.count / 12 }
     : { period: "monthly", interval: term.count };
@@ -130,8 +134,8 @@ export function cadenceFor(term: BillingTerm | null): Cadence {
  * other, rather than being cut off mid-term.
  */
 export function cycleCount({ period, interval }: Cadence): number {
-  const cap = period === "yearly" ? 100 : period === "weekly" ? 5200 : 1200;
-  const perYear = period === "yearly" ? 1 / interval : period === "weekly" ? 52 / interval : 12 / interval;
+  const cap = period === "yearly" ? 100 : period === "daily" ? 36500 : 1200;
+  const perYear = period === "yearly" ? 1 / interval : period === "daily" ? 365 / interval : 12 / interval;
   return Math.max(1, Math.min(cap, Math.ceil(perYear * 10)));
 }
 
