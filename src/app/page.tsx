@@ -180,7 +180,7 @@ const QUESTION_HUB: {
       { label: "Part 3: the abstract two-way discussion", href: "/resources/speaking#part-3-discussion" },
       { label: "Sentence banks for Speaking Part 2", href: "/templates" },
       { label: "Band descriptors: Band 6 vs 7 vs 8", href: "/blog/ielts-speaking-band-descriptors" },
-      { label: "Recent Speaking questions this cycle", href: "/blog/recent-ielts-speaking-questions-july-2026" },
+      { label: "Recent Speaking questions this cycle", href: "/blog/recent-ielts-speaking-questions-september-october-2026" },
     ],
   },
 ];
