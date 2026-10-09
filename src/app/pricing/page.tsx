@@ -71,7 +71,7 @@ const PLANS = [
     excludes: ["AI band scoring on Writing & Speaking"],
   },
   {
-    name: "Weekly",
+    name: "Lite",
     tier: "weekly" as PlanKey,
     cadence: billingPeriodLabel("weekly"),
     tagline: "Test next week? Everything Pro has, seven days at a time.",

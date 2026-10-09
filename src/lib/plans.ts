@@ -158,7 +158,7 @@ export const PLANS: Record<PlanKey, Entitlements> = {
     advancedReports: false,
   },
   weekly: {
-    label: "Weekly",
+    label: "Lite",
     prices: {
       INR: { priceCents: 39900, listPriceCents: null },
       USD: { priceCents: 600, listPriceCents: null },
@@ -279,7 +279,7 @@ export type OfferedPlan = (typeof OFFERED_PLANS)[number];
 /**
  * The tier a purchase or a manual grant lands on when none is named.
  *
- * Named rather than `OFFERED_PLANS[0]`: Weekly is the cheapest payment and so
+ * Named rather than `OFFERED_PLANS[0]`: Lite (`weekly`) is the cheapest payment and so
  * sits first, but a support grant of "a plan" means a month of Pro, not seven
  * days.
  */
@@ -306,7 +306,7 @@ export const PARTNER_DEFAULT_PLAN: PartnerPlan = "premium";
 /**
  * The tiers a PARTNER can buy a seat on.
  *
- * Weekly is left out: a class enrols a student for a course, and a seat that
+ * Lite (`weekly`) is left out: a class enrols a student for a course, and a seat that
  * lapses after seven days is a student locked out mid-term. Every partner
  * picker lists these, and the partner checkout action refuses anything else.
  */
@@ -325,9 +325,9 @@ export function isOfferedPlan(value: unknown): value is OfferedPlan {
 /**
  * Ranking, for "is this at least Pro?" questions and for upgrade/downgrade logs.
  *
- * Weekly sits BELOW Pro although it grants the same things: it is the shorter
+ * Lite (`weekly`) sits BELOW Pro although it grants the same things: it is the shorter
  * commitment, so moving from it to Pro is an upgrade and the Pro card still
- * offers itself to a Weekly candidate instead of reading "current plan".
+ * offers itself to a Lite candidate instead of reading "current plan".
  */
 const RANK: Record<PlanKey, number> = { free: 0, weekly: 1, pro: 2, premium: 3 };
 
