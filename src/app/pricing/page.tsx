@@ -71,6 +71,23 @@ const PLANS = [
     excludes: ["AI band scoring on Writing & Speaking"],
   },
   {
+    name: "Weekly",
+    tier: "weekly" as PlanKey,
+    cadence: billingPeriodLabel("weekly"),
+    tagline: "Test next week? Everything Pro has, seven days at a time.",
+    cta: "Start a week",
+    href: "/signup",
+    featured: false,
+    features: [
+      "Unlimited practice questions",
+      "AI band scoring on Writing & Speaking",
+      "Unlimited full mock tests",
+      "All 4 skills, every task type",
+      "Renews weekly, cancel anytime",
+    ],
+    excludes: ["Priority AI scoring", "Band-prediction reports & study plan"],
+  },
+  {
     name: "Pro",
     tier: "pro" as PlanKey,
     cadence: billingPeriodLabel("pro"),
@@ -92,7 +109,7 @@ const PLANS = [
   {
     name: "Premium",
     tier: "premium" as PlanKey,
-    // "3 months" — one payment covers the whole term. `billingMonths` in
+    // "3 months" — one payment covers the whole term. `billingTerm` in
     // src/lib/plans.ts is what both this and the granted window read from.
     cadence: billingPeriodLabel("premium"),
     tagline: "Serious prep, with a plan built around your weak spots.",
@@ -158,7 +175,7 @@ export default async function PricingPage() {
           </div>
 
           {/* Plans */}
-          <div className="mx-auto mt-6 grid max-w-5xl items-start gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mx-auto mt-6 grid max-w-6xl items-start gap-6 sm:grid-cols-2 xl:grid-cols-4">
             {PLANS.map((p, i) => (
               <Reveal key={p.name} delay={i * 0.1} className="h-full">
                 <div

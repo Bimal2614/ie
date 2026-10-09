@@ -52,7 +52,8 @@ export type Receipt = {
   student: { name: string; email: string };
   item: {
     planLabel: string;
-    months: number;
+    /** "1 month", "3 months" — what the seat bought. */
+    term: string | null;
     /** When the term this payment bought runs out; null when open-ended. */
     accessUntil: Date | null;
   };

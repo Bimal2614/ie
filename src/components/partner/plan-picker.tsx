@@ -24,9 +24,8 @@ const CONTROL =
  */
 function label(q: Quote): string {
   const paid = formatPrice(q.payableCents, q.currency);
-  const months = `${q.months} month${q.months === 1 ? "" : "s"}`;
-  if (q.discountCents === 0) return `${PLANS[q.plan].label} · ${paid} · ${months}`;
-  return `${PLANS[q.plan].label} · ${paid} (was ${formatPrice(q.listCents, q.currency)}) · ${months}`;
+  if (q.discountCents === 0) return `${PLANS[q.plan].label} · ${paid} · ${q.term}`;
+  return `${PLANS[q.plan].label} · ${paid} (was ${formatPrice(q.listCents, q.currency)}) · ${q.term}`;
 }
 
 export function PlanPicker({

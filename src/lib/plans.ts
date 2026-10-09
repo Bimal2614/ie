@@ -49,7 +49,7 @@ export function toBillingCurrency(value: unknown): BillingCurrency {
   return isBillingCurrency(value) ? value : DEFAULT_CURRENCY;
 }
 
-export const PLAN_KEYS = ["free", "pro", "premium"] as const;
+export const PLAN_KEYS = ["free", "weekly", "pro", "premium"] as const;
 export type PlanKey = (typeof PLAN_KEYS)[number];
 
 /** The four IELTS skills, named as `user_responses.section` names them. */
@@ -73,6 +73,17 @@ export type Price = {
   listPriceCents: number | null;
 };
 
+/**
+ * How long one payment buys: a count of weeks or of calendar months.
+ *
+ * A UNIT AND NOT A NUMBER OF DAYS because the two are different promises.
+ * "A month" bought on the 30th of November runs to the end of February's last
+ * day, not to 30 days later; "a week" is exactly seven days. Razorpay draws
+ * the same distinction (`weekly` vs `monthly` periods), and its plan has to
+ * match this one term for term.
+ */
+export type BillingTerm = { unit: "week" | "month"; count: number };
+
 export type Entitlements = {
   /** Display name, as the pricing page and upgrade prompts say it. */
   label: string;
@@ -93,18 +104,19 @@ export type Entitlements = {
    */
   prices: Record<BillingCurrency, Price>;
   /**
-   * How long that one payment buys, in months.
+   * How long that one payment buys.
    *
    * THE BILLING TERM, NOT AN ALLOWANCE. The monthly quotas below still reset on
    * the calendar month inside it — a quarterly plan does not hand over three
    * months of questions on day one. `subscriptions.current_period_end` is
-   * computed from this, so a tier sold by the quarter grants a quarter; the
-   * flat "one month from the start" this replaces is precisely how a 3-month
-   * sale ends up with a 1-month window.
+   * computed from this, so a tier sold by the quarter grants a quarter and a
+   * tier sold by the week grants seven days; the flat "one month from the
+   * start" this replaces is precisely how a 3-month sale ends up with a 1-month
+   * window.
    *
-   * 0 for free, which is the absence of a subscription rather than a term.
+   * `null` for free, which is the absence of a subscription rather than a term.
    */
-  billingMonths: number;
+  billingTerm: BillingTerm | null;
   /**
    * Practice answers a candidate may record per calendar month.
    * `null` = unlimited. Counted in ANSWERS (one row per gap), because that is
@@ -137,11 +149,27 @@ export const PLANS: Record<PlanKey, Entitlements> = {
       INR: { priceCents: 0, listPriceCents: null },
       USD: { priceCents: 0, listPriceCents: null },
     },
-    billingMonths: 0,
+    billingTerm: null,
     monthlyPracticeAnswers: 50,
     practiceSections: ["reading", "listening"],
     aiScoring: false,
     monthlyMockSittings: 0,
+    priorityScoring: false,
+    advancedReports: false,
+  },
+  weekly: {
+    label: "Weekly",
+    prices: {
+      INR: { priceCents: 39900, listPriceCents: null },
+      USD: { priceCents: 600, listPriceCents: null },
+    },
+    // Pro's entitlements, sold seven days at a time — for the candidate whose
+    // test is next week and who will not pay for a month they won't use.
+    billingTerm: { unit: "week", count: 1 },
+    monthlyPracticeAnswers: null,
+    practiceSections: ["reading", "listening", "writing", "speaking"],
+    aiScoring: true,
+    monthlyMockSittings: null,
     priorityScoring: false,
     advancedReports: false,
   },
@@ -155,7 +183,7 @@ export const PLANS: Record<PlanKey, Entitlements> = {
     },
     // One month is the term Pro has always been sold on, so accounts already
     // holding it keep the window they bought.
-    billingMonths: 1,
+    billingTerm: { unit: "month", count: 1 },
     monthlyPracticeAnswers: null,
     practiceSections: ["reading", "listening", "writing", "speaking"],
     aiScoring: true,
@@ -171,7 +199,7 @@ export const PLANS: Record<PlanKey, Entitlements> = {
       // $40 for the quarter, down from $46.
       USD: { priceCents: 4000, listPriceCents: 4600 },
     },
-    billingMonths: 3,
+    billingTerm: { unit: "month", count: 3 },
     monthlyPracticeAnswers: null,
     practiceSections: ["reading", "listening", "writing", "speaking"],
     aiScoring: true,
@@ -244,12 +272,18 @@ export function isPlanBlock(value: unknown): value is PlanBlock {
  * it has no plan id for in the currency being quoted, rather than falling back
  * to another tier's price or to the other currency's plan.
  */
-export const OFFERED_PLANS = ["pro", "premium"] as const satisfies readonly Exclude<PlanKey, "free">[];
+export const OFFERED_PLANS = ["weekly", "pro", "premium"] as const satisfies readonly Exclude<PlanKey, "free">[];
 
 export type OfferedPlan = (typeof OFFERED_PLANS)[number];
 
-/** The tier a purchase or a manual grant lands on when none is named. */
-export const DEFAULT_OFFERED_PLAN: OfferedPlan = OFFERED_PLANS[0];
+/**
+ * The tier a purchase or a manual grant lands on when none is named.
+ *
+ * Named rather than `OFFERED_PLANS[0]`: Weekly is the cheapest payment and so
+ * sits first, but a support grant of "a plan" means a month of Pro, not seven
+ * days.
+ */
+export const DEFAULT_OFFERED_PLAN: OfferedPlan = "pro";
 
 /**
  * The tier the PARTNER PANEL's plan pickers open on.
@@ -267,14 +301,35 @@ export const DEFAULT_OFFERED_PLAN: OfferedPlan = OFFERED_PLANS[0];
  * loads. Kept separate from `DEFAULT_OFFERED_PLAN` so that changing what a
  * class sees first never moves what an admin's manual grant lands on.
  */
-export const PARTNER_DEFAULT_PLAN: OfferedPlan = "premium";
+export const PARTNER_DEFAULT_PLAN: PartnerPlan = "premium";
+
+/**
+ * The tiers a PARTNER can buy a seat on.
+ *
+ * Weekly is left out: a class enrols a student for a course, and a seat that
+ * lapses after seven days is a student locked out mid-term. Every partner
+ * picker lists these, and the partner checkout action refuses anything else.
+ */
+export const PARTNER_PLANS = ["pro", "premium"] as const satisfies readonly OfferedPlan[];
+
+export type PartnerPlan = (typeof PARTNER_PLANS)[number];
+
+export function isPartnerPlan(value: unknown): value is PartnerPlan {
+  return (PARTNER_PLANS as readonly string[]).includes(String(value));
+}
 
 export function isOfferedPlan(value: unknown): value is OfferedPlan {
   return (OFFERED_PLANS as readonly string[]).includes(String(value));
 }
 
-/** Ranking, for "is this at least Pro?" questions and for upgrade/downgrade logs. */
-const RANK: Record<PlanKey, number> = { free: 0, pro: 1, premium: 2 };
+/**
+ * Ranking, for "is this at least Pro?" questions and for upgrade/downgrade logs.
+ *
+ * Weekly sits BELOW Pro although it grants the same things: it is the shorter
+ * commitment, so moving from it to Pro is an upgrade and the Pro card still
+ * offers itself to a Weekly candidate instead of reading "current plan".
+ */
+const RANK: Record<PlanKey, number> = { free: 0, weekly: 1, pro: 2, premium: 3 };
 
 export function planRank(plan: PlanKey): number {
   return RANK[plan];
@@ -365,6 +420,33 @@ export function monthStart(now: Date = new Date()): Date {
 }
 
 /**
+ * The end of a term that starts at `from`.
+ *
+ * Calendar arithmetic for months, not "+30 days": a candidate who buys on the
+ * 30th of November should run to the last day of February, and JS's Date
+ * already rolls an overflowing day into the next month. A week is seven days.
+ */
+export function addTerm(from: Date, term: BillingTerm): Date {
+  const end = new Date(from.getTime());
+  if (term.unit === "week") end.setUTCDate(end.getUTCDate() + 7 * term.count);
+  else end.setUTCMonth(end.getUTCMonth() + term.count);
+  return end;
+}
+
+/** The term as a length of time — "1 week", "1 month", "3 months". */
+export function termInWords(term: BillingTerm): string {
+  return `${term.count} ${term.unit}${term.count === 1 ? "" : "s"}`;
+}
+
+/**
+ * The term in months, for figures that need ONE unit across tiers — a monthly
+ * run rate. A week is 12/52 of a month, not a quarter of one.
+ */
+export function termInMonths(term: BillingTerm): number {
+  return term.unit === "month" ? term.count : (term.count * 12) / 52;
+}
+
+/**
  * The denominator in "₹2,499 / 3 months" — what one payment buys, in words.
  *
  * Here and not in the page's copy, because it is a term of sale rather than
@@ -373,9 +455,9 @@ export function monthStart(now: Date = new Date()): Date {
  * false promise. Free has no term, and reads "forever".
  */
 export function billingPeriodLabel(plan: PlanKey): string {
-  const months = PLANS[plan].billingMonths;
-  if (months <= 0) return "forever";
-  return months === 1 ? "month" : `${months} months`;
+  const term = PLANS[plan].billingTerm;
+  if (!term) return "forever";
+  return term.count === 1 ? term.unit : termInWords(term);
 }
 
 /**

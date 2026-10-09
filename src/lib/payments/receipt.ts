@@ -6,7 +6,7 @@ import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
 import { partnerPayments, partners, subscriptions, users } from "@/db/schema";
 import { OPERATOR } from "@/lib/legal-content";
-import { PLANS, toPlanKey } from "@/lib/plans";
+import { PLANS, termInWords, toPlanKey } from "@/lib/plans";
 import { renderReceiptPdf, winAnsi, type Receipt, type ReceiptLine } from "@/lib/payments/receipt-pdf";
 
 /**
@@ -114,8 +114,8 @@ export async function partnerReceipt(
   const paidAt = row.paidAt ?? row.createdAt;
   const number = receiptNumber(row.id, paidAt);
 
-  const months = plan.billingMonths;
-  const term = months > 0 ? `${plan.label} plan · ${months} month${months === 1 ? "" : "s"}` : plan.label;
+  const termWords = plan.billingTerm ? termInWords(plan.billingTerm) : null;
+  const term = termWords ? `${plan.label} plan · ${termWords}` : plan.label;
 
   /*
    * The discount is shown as its own line rather than folded into the price.
@@ -159,7 +159,7 @@ export async function partnerReceipt(
       name: row.studentName ?? "Student removed",
       email: row.studentEmail ?? "",
     },
-    item: { planLabel: plan.label, months, accessUntil: row.accessUntil },
+    item: { planLabel: plan.label, term: termWords, accessUntil: row.accessUntil },
     currency: row.currency,
     lines,
     totalCents: row.amountCents,

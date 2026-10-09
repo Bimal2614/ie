@@ -36,7 +36,7 @@ export const ieltsModule = pgEnum("ielts_module", ["academic", "general"]);
  * src/lib/plans.ts — this column is only the identity, so a change of price or
  * of what a tier includes never needs a migration.
  */
-export const userPlan = pgEnum("user_plan", ["free", "pro", "premium"]);
+export const userPlan = pgEnum("user_plan", ["free", "weekly", "pro", "premium"]);
 
 /* ------------------------------------------------------------------ *
  * Partners (IELTS classes we have onboarded)
@@ -426,7 +426,7 @@ export const subscriptions = pgTable(
     /**
      * When this paid window closes. There is no cadence column because the plan
      * already says what was bought: the writer computes this from that tier's
-     * `billingMonths` in src/lib/plans.ts - Premium sells three months at a
+     * `billingTerm` in src/lib/plans.ts - Premium sells three months at a
      * time, Pro one. NULL means "does not lapse", which is how an admin grants
      * an open-ended account.
      */

@@ -2,6 +2,7 @@ import "server-only";
 
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { env } from "@/lib/env";
+import type { BillingTerm } from "@/lib/plans";
 
 /**
  * Minimal Razorpay REST client — no SDK, for the same reason src/lib/oauth
@@ -96,21 +97,23 @@ async function call<T>(path: string, init?: { method?: string; body?: unknown })
  * Cadence
  * ------------------------------------------------------------------ */
 
-export type Cadence = { period: "monthly" | "yearly"; interval: number };
+export type Cadence = { period: "weekly" | "monthly" | "yearly"; interval: number };
 
 /**
- * Our "how many months does one payment buy" as Razorpay's period + interval.
+ * Our "how long does one payment buy" as Razorpay's period + interval.
  *
  * Razorpay has no "every 3 months" period; it has `monthly` with an interval of
  * 3, which is the same thing said differently. Whole years become `yearly`
  * rather than 12-month intervals because Razorpay caps how many cycles a plan
- * may run for, and a yearly plan buys far more runway inside that cap.
+ * may run for, and a yearly plan buys far more runway inside that cap. Weeks
+ * map straight onto `weekly`.
  */
-export function cadenceFor(billingMonths: number): Cadence {
-  if (billingMonths <= 0) throw new Error(`cadenceFor: ${billingMonths} months is not a term`);
-  return billingMonths % 12 === 0
-    ? { period: "yearly", interval: billingMonths / 12 }
-    : { period: "monthly", interval: billingMonths };
+export function cadenceFor(term: BillingTerm | null): Cadence {
+  if (!term || term.count <= 0) throw new Error(`cadenceFor: ${JSON.stringify(term)} is not a term`);
+  if (term.unit === "week") return { period: "weekly", interval: term.count };
+  return term.count % 12 === 0
+    ? { period: "yearly", interval: term.count / 12 }
+    : { period: "monthly", interval: term.count };
 }
 
 /**
@@ -127,8 +130,8 @@ export function cadenceFor(billingMonths: number): Cadence {
  * other, rather than being cut off mid-term.
  */
 export function cycleCount({ period, interval }: Cadence): number {
-  const cap = period === "yearly" ? 100 : 1200;
-  const perYear = period === "yearly" ? 1 / interval : 12 / interval;
+  const cap = period === "yearly" ? 100 : period === "weekly" ? 5200 : 1200;
+  const perYear = period === "yearly" ? 1 / interval : period === "weekly" ? 52 / interval : 12 / interval;
   return Math.max(1, Math.min(cap, Math.ceil(perYear * 10)));
 }
 

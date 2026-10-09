@@ -8,7 +8,7 @@ import { users, auditLog } from "@/db/schema";
 import { requireAdmin } from "@/lib/dal";
 import { destroyAllSessions } from "@/lib/session";
 import { isUuid } from "@/lib/uuid";
-import { DEFAULT_OFFERED_PLAN, isOfferedPlan, priceFor, type PlanKey } from "@/lib/plans";
+import { DEFAULT_OFFERED_PLAN, isOfferedPlan, OFFERED_PLANS, priceFor, type PlanKey } from "@/lib/plans";
 import {
   grantPlan,
   revokePlan,
@@ -140,7 +140,7 @@ const verifySchema = z.object({
    * student on a tier the business has withdrawn.
    */
   plan: z
-    .enum(["pro", "premium"])
+    .enum(OFFERED_PLANS)
     .default(DEFAULT_OFFERED_PLAN)
     .refine(isOfferedPlan, "That plan is not on sale."),
   /** 0 means "never lapses"; anything else is that many months from now. */
@@ -182,7 +182,7 @@ export async function verifyStudent(input: VerifyStudentInput): Promise<AdminAct
       ? new Date(Date.now() + days * 24 * 60 * 60 * 1000)
       : months === 0
         ? null
-        : periodEndFor(new Date(), months),
+        : periodEndFor(new Date(), { unit: "month", count: months }),
     priceCents: null,
     actor: "admin",
     actorUserId: admin.id,

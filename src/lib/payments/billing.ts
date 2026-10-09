@@ -5,12 +5,14 @@ import { db } from "@/db";
 import { subscriptions, users } from "@/db/schema";
 import { allowPlanMismatch, env, razorpayPlanIdFor } from "@/lib/env";
 import {
+  billingPeriodLabel,
   DEFAULT_CURRENCY,
   PLANS,
   priceFor,
   toBillingCurrency,
   toPlanKey,
   type BillingCurrency,
+  type OfferedPlan,
   type PlanKey,
 } from "@/lib/plans";
 import {
@@ -34,6 +36,7 @@ import {
   periodEndFor,
   renewSubscription,
   subscriptionByProviderId,
+  termOf,
 } from "@/lib/subscriptions";
 
 /**
@@ -110,7 +113,7 @@ function currencyOf(sub: RazorpaySubscription): BillingCurrency {
  * corrected in the dashboard stayed wrong here until something evicted it.
  */
 export async function resolvePlanTerms(
-  plan: Exclude<PlanKey, "free">,
+  plan: OfferedPlan,
   currency: BillingCurrency = DEFAULT_CURRENCY,
 ): Promise<PlanTerms> {
   const entitlements = PLANS[plan];
@@ -134,7 +137,7 @@ export async function resolvePlanTerms(
   const expected = {
     amount: priceFor(plan, currency),
     currency,
-    cadence: cadenceFor(entitlements.billingMonths),
+    cadence: cadenceFor(entitlements.billingTerm),
   };
 
   const actual = await fetchPlan(planId);
@@ -289,7 +292,7 @@ export type CheckoutSession = {
  */
 export async function openCheckout(
   user: { id: string; name: string; email: string; phone: string | null },
-  plan: Exclude<PlanKey, "free">,
+  plan: OfferedPlan,
   currency: BillingCurrency = DEFAULT_CURRENCY,
 ): Promise<CheckoutSession> {
   const terms = await resolvePlanTerms(plan, currency);
@@ -312,7 +315,7 @@ export async function openCheckout(
     subscriptionId: subscription.id,
     keyId: env.RAZORPAY_KEY_ID!,
     planLabel: entitlements.label,
-    description: `${entitlements.label} — billed every ${entitlements.billingMonths} month(s)`,
+    description: `${entitlements.label} — billed every ${billingPeriodLabel(plan)}`,
     amount: terms.amount,
     currency: terms.currency,
     // E.164, not the stored shape. Numbers are kept as `+91-9904529857` here,
@@ -352,7 +355,7 @@ function windowOf(
   plan: Exclude<PlanKey, "free">,
 ): { start: Date; end: Date } {
   const start = fromUnix(sub.current_start) ?? new Date();
-  const end = fromUnix(sub.current_end) ?? periodEndFor(start, PLANS[plan].billingMonths);
+  const end = fromUnix(sub.current_end) ?? periodEndFor(start, termOf(plan));
   return { start, end };
 }
 

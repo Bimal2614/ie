@@ -21,7 +21,7 @@ import {
   type StudentCheckoutSession,
 } from "@/lib/payments/partner-billing";
 import { RazorpayApiError, verifyOrderSignature } from "@/lib/payments/razorpay";
-import { isOfferedPlan, toBillingCurrency } from "@/lib/plans";
+import { isPartnerPlan, toBillingCurrency } from "@/lib/plans";
 import { rateLimit } from "@/lib/security/rate-limit";
 import { enrolStudentSchema } from "@/lib/validation";
 import { alert } from "@/lib/monitoring/alert";
@@ -120,7 +120,7 @@ export async function startStudentCheckout(
   }
 
   if (!z.uuid().safeParse(studentId).success) return { ok: false, error: "That request wasn't valid." };
-  if (!isOfferedPlan(plan)) return { ok: false, error: "That plan isn't available." };
+  if (!isPartnerPlan(plan)) return { ok: false, error: "That plan isn't available." };
   if (!(await ownsStudent(partner.id, studentId))) {
     // Not this class's student. Same message either way — a partner must not be
     // able to tell "no such account" from "someone else's".

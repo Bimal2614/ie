@@ -1,4 +1,12 @@
-import { formatPrice, OFFERED_PLANS, PLANS, priceFor, type BillingCurrency, type OfferedPlan } from "@/lib/plans";
+import {
+  formatPrice,
+  PARTNER_PLANS,
+  PLANS,
+  priceFor,
+  termInWords,
+  type BillingCurrency,
+  type PartnerPlan,
+} from "@/lib/plans";
 
 /**
  * What a partner pays, and what it would have cost at list.
@@ -20,7 +28,7 @@ import { formatPrice, OFFERED_PLANS, PLANS, priceFor, type BillingCurrency, type
 export type PartnerRate = { code: string; amountCents: Record<BillingCurrency, number | null> } | null;
 
 export type Quote = {
-  plan: OfferedPlan;
+  plan: PartnerPlan;
   currency: BillingCurrency;
   /** What the plan costs everyone else, in minor units. */
   listCents: number;
@@ -29,14 +37,15 @@ export type Quote = {
   /** What the rate takes off, in minor units. 0 at list — so callers can branch on one field. */
   discountCents: number;
   code: string | null;
-  months: number;
+  /** "1 month", "3 months" — what one seat buys. */
+  term: string;
 };
 
 /**
  * The plans a partner rate applies to. Pro is always sold at list, to partners
  * as to everyone — the deal is on Premium only.
  */
-export const DISCOUNTED_PLANS: readonly OfferedPlan[] = ["premium"];
+export const DISCOUNTED_PLANS: readonly PartnerPlan[] = ["premium"];
 
 /**
  * Minor units per major unit. 100 for both currencies we sell in, which is why
@@ -57,7 +66,7 @@ export function applyRate(listCents: number, offCents: number): number {
   return Math.max(MINOR, listCents - offCents);
 }
 
-export function quoteFor(plan: OfferedPlan, currency: BillingCurrency, rate: PartnerRate): Quote {
+export function quoteFor(plan: PartnerPlan, currency: BillingCurrency, rate: PartnerRate): Quote {
   const listCents = priceFor(plan, currency);
   const offCents = DISCOUNTED_PLANS.includes(plan) ? (rate?.amountCents[currency] ?? 0) : 0;
   const payableCents = applyRate(listCents, offCents);
@@ -68,13 +77,13 @@ export function quoteFor(plan: OfferedPlan, currency: BillingCurrency, rate: Par
     payableCents,
     discountCents: listCents - payableCents,
     code: rate?.code ?? null,
-    months: PLANS[plan].billingMonths,
+    term: termInWords(PLANS[plan].billingTerm!),
   };
 }
 
-/** Every plan on sale, priced for this partner. What the pickers render from. */
+/** Every plan a partner can buy, priced for this partner. What the pickers render from. */
 export function quotesFor(currency: BillingCurrency, rate: PartnerRate): Quote[] {
-  return OFFERED_PLANS.map((plan) => quoteFor(plan, currency, rate));
+  return PARTNER_PLANS.map((plan) => quoteFor(plan, currency, rate));
 }
 
 /** What the class saves on one seat — for the "you save ₹400" line. */

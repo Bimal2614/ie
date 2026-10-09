@@ -1,0 +1,1 @@
+ALTER TYPE "public"."user_plan" ADD VALUE 'weekly' BEFORE 'pro';

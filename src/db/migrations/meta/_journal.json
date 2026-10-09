@@ -190,6 +190,13 @@
       "when": 1791452437985,
       "tag": "0026_partner_invites",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1791537706159,
+      "tag": "0027_weekly_plan",
+      "breakpoints": true
     }
   ]
 }

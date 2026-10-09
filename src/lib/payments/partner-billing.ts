@@ -6,11 +6,11 @@ import { db } from "@/db";
 import { partnerPayments, users } from "@/db/schema";
 import { env } from "@/lib/env";
 import { quoteFor, type PartnerRate } from "@/lib/partner-pricing";
-import { PLANS, type BillingCurrency, type OfferedPlan, type PlanKey } from "@/lib/plans";
+import { billingPeriodLabel, PLANS, type BillingCurrency, type PartnerPlan, type PlanKey } from "@/lib/plans";
 import { createOrder, fetchOrder } from "@/lib/payments/razorpay";
 import { recordCharge } from "@/lib/payments/transactions";
 import { toE164 } from "@/lib/phone";
-import { grantPlan, periodEndFor } from "@/lib/subscriptions";
+import { grantPlan, periodEndFor, termOf } from "@/lib/subscriptions";
 import type { Partner } from "@/db/schema";
 
 /**
@@ -70,7 +70,7 @@ export async function openStudentOrder(input: {
   /** The partner login pressing the button — the payer, and the audit trail. */
   payer: { id: string; name: string; email: string; phone: string | null };
   student: { id: string; name: string; email: string };
-  plan: OfferedPlan;
+  plan: PartnerPlan;
   currency: BillingCurrency;
   /**
    * The partner's rate, resolved from the SESSION by `partnerContext` — never
@@ -127,7 +127,7 @@ export async function openStudentOrder(input: {
     amount: amountCents,
     currency: input.currency,
     planLabel: entitlements.label,
-    description: `${entitlements.label} for ${input.student.name} — ${entitlements.billingMonths} month(s)`,
+    description: `${entitlements.label} for ${input.student.name} — ${billingPeriodLabel(input.plan)}`,
     studentName: input.student.name,
     listAmount: quote.listCents,
     discountAmount: quote.discountCents,
@@ -260,7 +260,7 @@ export async function settleStudentOrder(input: {
   const periodEnd = !stillRunning
     ? undefined // let grantPlan use the plan's own term from today
     : student?.planExpiresAt
-      ? periodEndFor(student.planExpiresAt, PLANS[plan].billingMonths)
+      ? periodEndFor(student.planExpiresAt, termOf(plan))
       : // Already on this tier with no expiry — an open-ended admin grant. Paying
         // for a term must not put an end date on an account that had none.
         null;

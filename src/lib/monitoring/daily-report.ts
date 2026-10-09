@@ -4,7 +4,7 @@ import { sql } from "drizzle-orm";
 import { db } from "@/db";
 import { env } from "@/lib/env";
 import { ledgerBetween } from "@/lib/payments/transactions";
-import { PLAN_KEYS, PLANS, toPlanKey, type PlanKey } from "@/lib/plans";
+import { PLAN_KEYS, PLANS, termInMonths, toPlanKey, type PlanKey } from "@/lib/plans";
 import type { subscriptionStatus } from "@/db/schema";
 
 /**
@@ -476,10 +476,11 @@ export async function buildDailyReport(day: IstDay): Promise<DailyReport> {
   for (const row of liveRows) {
     const plan = toPlanKey(row.plan);
     liveTally.set(plan, (liveTally.get(plan) ?? 0) + Number(row.n));
-    const months = PLANS[plan].billingMonths;
-    // `free` bills zero months and must never divide. A live subscription on
-    // `free` is not something the writers can produce, but a report is the
-    // wrong place to find out otherwise.
+    const term = PLANS[plan].billingTerm;
+    // `free` has no term and must never divide. A live subscription on `free`
+    // is not something the writers can produce, but a report is the wrong
+    // place to find out otherwise. Weekly is converted to its monthly share.
+    const months = term ? termInMonths(term) : 0;
     if (months > 0) {
       runRateRows.push({ currency: row.currency, cents: Math.round(Number(row.cents) / months) });
     }

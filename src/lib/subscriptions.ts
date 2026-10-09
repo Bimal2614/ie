@@ -10,7 +10,16 @@ import {
   users,
 } from "@/db/schema";
 import type { Subscription } from "@/db/schema";
-import { DEFAULT_CURRENCY, effectivePlan, planRank, PLANS, toPlanKey, type PlanKey } from "@/lib/plans";
+import {
+  addTerm,
+  DEFAULT_CURRENCY,
+  effectivePlan,
+  planRank,
+  PLANS,
+  toPlanKey,
+  type BillingTerm,
+  type PlanKey,
+} from "@/lib/plans";
 
 /**
  * The ONLY writer for what a candidate is entitled to.
@@ -44,22 +53,23 @@ const LIVE_STATUSES = ["active", "cancelling", "past_due"] as const;
 /**
  * When a period that starts at `from` runs out.
  *
- * `months` IS REQUIRED, and that is the point. It used to default to 1, which
- * held only while every tier was monthly — the moment Premium became a 3-month
- * plan, that default would have sold a quarter and granted a month. The term
- * now comes from `PLANS[plan].billingMonths` at each call, so changing a tier's
- * length is a one-line edit in src/lib/plans.ts and nothing here has to
- * remember to change with it. Pass an explicit figure only for the arrangements
- * a human drives - a support credit, a deal agreed off-platform.
- *
- * Calendar arithmetic, not "+30 days": a candidate who buys on the 30th of
- * November should run to the last day of February, and JS's Date already rolls
- * an overflowing day into the next month.
+ * `term` IS REQUIRED, and that is the point. It used to default to one month,
+ * which held only while every tier was monthly — the moment Premium became a
+ * 3-month plan, that default would have sold a quarter and granted a month. The
+ * term now comes from `PLANS[plan].billingTerm` at each call, so changing a
+ * tier's length is a one-line edit in src/lib/plans.ts and nothing here has to
+ * remember to change with it. Pass an explicit term only for the arrangements a
+ * human drives - a support credit, a deal agreed off-platform.
  */
-export function periodEndFor(from: Date, months: number): Date {
-  const end = new Date(from.getTime());
-  end.setUTCMonth(end.getUTCMonth() + months);
-  return end;
+export function periodEndFor(from: Date, term: BillingTerm): Date {
+  return addTerm(from, term);
+}
+
+/** The paid tier's own term. Only free has none, and free is never granted. */
+export function termOf(plan: PlanKey): BillingTerm {
+  const term = PLANS[plan].billingTerm;
+  if (!term) throw new Error(`termOf: "${plan}" has no billing term`);
+  return term;
 }
 
 /* ------------------------------------------------------------------ *
@@ -193,7 +203,7 @@ export type GrantInput = {
   /** Defaults to now. A payment callback passes the moment it was paid. */
   startsAt?: Date;
   /**
-   * Defaults to the plan's own term (`billingMonths`) from `startsAt`. Pass an
+   * Defaults to the plan's own term (`billingTerm`) from `startsAt`. Pass an
    * explicit date for a longer arrangement, or `null` for an account that never
    * lapses.
    */
@@ -242,7 +252,7 @@ export async function grantPlan(input: GrantInput): Promise<Subscription> {
   const periodEnd =
     input.periodEnd !== undefined
       ? input.periodEnd
-      : periodEndFor(startsAt, PLANS[input.plan].billingMonths);
+      : periodEndFor(startsAt, termOf(input.plan));
 
   return db.transaction(async (tx) => {
     const [user] = await tx
@@ -377,7 +387,7 @@ export async function renewSubscription(
     const periodEnd =
       opts.periodEnd !== undefined
         ? opts.periodEnd
-        : periodEndFor(base, PLANS[toPlanKey(sub.plan)].billingMonths);
+        : periodEndFor(base, termOf(toPlanKey(sub.plan)));
 
     await tx
       .update(subscriptions)

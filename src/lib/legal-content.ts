@@ -31,9 +31,9 @@ import {
   OFFERED_PLANS,
   PLANS,
   PLAN_KEYS,
-  billingPeriodLabel,
   formatPrice,
   priceFor,
+  termInWords,
   type PlanKey,
 } from "@/lib/plans";
 
@@ -94,17 +94,16 @@ const TAX_ID = OPERATOR.gstin ? ` (GSTIN ${OPERATOR.gstin})` : "";
 /**
  * The price table in the Refund Policy, built from PLANS rather than typed out.
  *
- * "Term" comes from `billingPeriodLabel`, so a plan whose `billingMonths`
+ * "Term" comes from `termInWords`, so a plan whose `billingTerm`
  * changes cannot leave the policy quoting the old term. Free renders as "—"
  * because "forever" is not a refundable term.
  */
 const PRICE_ROWS: string[][] = PLAN_KEYS.map((plan: PlanKey) => {
-  const months = PLANS[plan].billingMonths;
+  const term = PLANS[plan].billingTerm;
   return [
     PLANS[plan].label,
-    // billingPeriodLabel gives "month" / "3 months" / "forever"; only a real
-    // term belongs in a refund table, and a one-month term reads as "1 month".
-    months <= 0 ? "—" : months === 1 ? "1 month" : billingPeriodLabel(plan),
+    // Only a real term belongs in a refund table: "1 week", "1 month", "3 months".
+    term ? termInWords(term) : "—",
     formatPrice(priceFor(plan, "INR"), "INR"),
     formatPrice(priceFor(plan, "USD"), "USD"),
   ];
@@ -124,8 +123,8 @@ const FREE_ALLOWANCE: string = (() => {
 
 /** "Pro for one month, Premium for 3 months" — the terms actually on sale. */
 const PAID_TERMS: string = OFFERED_PLANS.map((plan) => {
-  const months = PLANS[plan].billingMonths;
-  return `${PLANS[plan].label} for ${months === 1 ? "one month" : billingPeriodLabel(plan)}`;
+  const term = PLANS[plan].billingTerm!;
+  return `${PLANS[plan].label} for ${term.count === 1 ? `one ${term.unit}` : termInWords(term)}`;
 }).join(", ");
 
 /** The skills and features a paid plan adds, named from the tier that has them. */

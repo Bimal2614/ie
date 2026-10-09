@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { DEFAULT_CURRENCY, OFFERED_PLANS, type BillingCurrency } from "@/lib/plans";
+import { DEFAULT_CURRENCY, OFFERED_PLANS, type BillingCurrency, type OfferedPlan } from "@/lib/plans";
 
 /**
  * Strips one layer of wrapping quotes. `.env` parsers drop them, but shell
@@ -132,6 +132,7 @@ const EnvSchema = z.object({
    */
   RAZORPAY_PLAN_PREMIUM: z.string().optional(),
   RAZORPAY_PLAN_PRO: z.string().optional(),
+  RAZORPAY_PLAN_WEEKLY: z.string().optional(),
   /*
    * ...and the same tiers again, as the USD plans sold outside India.
    *
@@ -149,6 +150,7 @@ const EnvSchema = z.object({
    */
   RAZORPAY_PLAN_PREMIUM_USD: z.string().optional(),
   RAZORPAY_PLAN_PRO_USD: z.string().optional(),
+  RAZORPAY_PLAN_WEEKLY_USD: z.string().optional(),
   /**
    * Let a Razorpay plan disagree with the price the pricing page advertises.
    *
@@ -219,8 +221,10 @@ export const env = EnvSchema.parse({
   RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET,
   RAZORPAY_PLAN_PREMIUM: process.env.RAZORPAY_PLAN_PREMIUM,
   RAZORPAY_PLAN_PRO: process.env.RAZORPAY_PLAN_PRO,
+  RAZORPAY_PLAN_WEEKLY: process.env.RAZORPAY_PLAN_WEEKLY,
   RAZORPAY_PLAN_PREMIUM_USD: process.env.RAZORPAY_PLAN_PREMIUM_USD,
   RAZORPAY_PLAN_PRO_USD: process.env.RAZORPAY_PLAN_PRO_USD,
+  RAZORPAY_PLAN_WEEKLY_USD: process.env.RAZORPAY_PLAN_WEEKLY_USD,
   RAZORPAY_ALLOW_PLAN_MISMATCH: process.env.RAZORPAY_ALLOW_PLAN_MISMATCH,
   BILLING_TEST_COUNTRY: process.env.BILLING_TEST_COUNTRY,
   AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
@@ -311,13 +315,15 @@ export function isRazorpayConfigured(): boolean {
  * shown $29; the checkout refusing the sale is the correct failure.
  */
 export function razorpayPlanIdFor(
-  plan: "pro" | "premium",
+  plan: OfferedPlan,
   currency: BillingCurrency = DEFAULT_CURRENCY,
 ): string | undefined {
-  if (currency === "USD") {
-    return plan === "premium" ? env.RAZORPAY_PLAN_PREMIUM_USD : env.RAZORPAY_PLAN_PRO_USD;
-  }
-  return plan === "premium" ? env.RAZORPAY_PLAN_PREMIUM : env.RAZORPAY_PLAN_PRO;
+  const ids: Record<OfferedPlan, Record<BillingCurrency, string | undefined>> = {
+    weekly: { INR: env.RAZORPAY_PLAN_WEEKLY, USD: env.RAZORPAY_PLAN_WEEKLY_USD },
+    pro: { INR: env.RAZORPAY_PLAN_PRO, USD: env.RAZORPAY_PLAN_PRO_USD },
+    premium: { INR: env.RAZORPAY_PLAN_PREMIUM, USD: env.RAZORPAY_PLAN_PREMIUM_USD },
+  };
+  return ids[plan][currency];
 }
 
 /**
