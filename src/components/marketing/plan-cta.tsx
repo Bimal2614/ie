@@ -63,7 +63,7 @@ export function PlanCta({
   }, [granted, plan, currency]);
 
   const base =
-    "mt-6 inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold transition-[filter,background-color]";
+    "mt-6 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-3 text-sm font-semibold transition-[filter,background-color]";
   const primary = "bg-green text-green-ink hover:brightness-105";
   const secondary = "border border-line text-ink hover:bg-paper-sunken";
 

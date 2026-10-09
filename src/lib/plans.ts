@@ -370,6 +370,28 @@ export function listPriceFor(
   return priceOf(plan, currency).listPriceCents;
 }
 
+/**
+ * What one week of the tier costs, in minor units — the figure that lets a
+ * card say "≈ ₹231 a week" beside a quarterly price.
+ *
+ * The comparison a candidate is actually making is "how much per week until my
+ * test", and a ₹2,999 / 3 months card next to a ₹399 / week one hides that
+ * Premium is the cheaper week by far. Rupees round to the whole rupee
+ * ("₹231", not "₹230.69", which reads like a bill); dollars keep the cents,
+ * where "$3.08" is how a dollar price is said. Null on free, which has no term
+ * to divide.
+ */
+export function weeklyEquivalentCents(
+  plan: PlanKey,
+  currency: BillingCurrency = DEFAULT_CURRENCY,
+): number | null {
+  const term = PLANS[plan].billingTerm;
+  if (!term) return null;
+  const weeks = term.unit === "week" ? term.count : (term.count * 52) / 12;
+  const cents = priceFor(plan, currency) / weeks;
+  return currency === "INR" ? Math.round(cents / 100) * 100 : Math.round(cents);
+}
+
 /** Narrow an unvalidated string (a DB read from before an enum change, a param). */
 export function toPlanKey(value: unknown): PlanKey {
   return (PLAN_KEYS as readonly string[]).includes(String(value)) ? (value as PlanKey) : "free";

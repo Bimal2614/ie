@@ -5,6 +5,7 @@ import {
   DEFAULT_CURRENCY,
   formatPrice,
   priceOf,
+  weeklyEquivalentCents,
   type BillingCurrency,
   type PlanKey,
 } from "@/lib/plans";
@@ -134,20 +135,47 @@ export function CurrencySwitch({ className }: { className?: string }) {
 export function PriceTag({ tier, cadence }: { tier: PlanKey; cadence: string }) {
   const { currency } = useBillingCurrency();
   const { priceCents, listPriceCents } = priceOf(tier, currency);
+  const perWeek = weeklyEquivalentCents(tier, currency);
+  const savePct =
+    listPriceCents !== null ? Math.round(((listPriceCents - priceCents) / listPriceCents) * 100) : null;
 
+  /*
+   * THREE FIXED ROWS, filled or not, so every card's price and button sit on
+   * the same line across the grid. A struck price that only some tiers have,
+   * rendered as an extra wrapped line, pushed Pro and Premium a row lower than
+   * Free and Lite — the eye reads that misalignment as a broken page.
+   */
   return (
-    <div className="mt-6 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-      {listPriceCents !== null && (
-        <span className="font-serif text-2xl tracking-tight text-ink-muted line-through">
-          <span className="sr-only">Was </span>
-          {formatPrice(listPriceCents, currency)}
+    <div className="mt-6">
+      <div className="flex h-6 items-center gap-2 text-sm">
+        {listPriceCents !== null ? (
+          <>
+            <span className="font-serif text-lg tracking-tight text-ink-muted line-through">
+              <span className="sr-only">Was </span>
+              {formatPrice(listPriceCents, currency)}
+            </span>
+            {savePct !== null && savePct > 0 && (
+              <span className="rounded-full bg-green/15 px-2 py-0.5 text-xs font-semibold text-green">
+                Save {savePct}%
+              </span>
+            )}
+          </>
+        ) : null}
+      </div>
+      <div className="flex items-baseline gap-1.5 whitespace-nowrap">
+        <span className="font-serif text-4xl tracking-tight text-ink sm:text-[2.75rem] xl:text-4xl">
+          {listPriceCents !== null && <span className="sr-only">now </span>}
+          {formatPrice(priceCents, currency)}
         </span>
-      )}
-      <span className="font-serif text-5xl tracking-tight text-ink">
-        {listPriceCents !== null && <span className="sr-only">now </span>}
-        {formatPrice(priceCents, currency)}
-      </span>
-      <span className="text-sm text-ink-muted">/ {cadence}</span>
+        <span className="text-sm text-ink-muted">/ {cadence}</span>
+      </div>
+      <p className="mt-1 h-5 text-sm text-ink-muted">
+        {perWeek === null
+          ? "No card needed"
+          : tier === "weekly"
+            ? "Renews weekly · cancel anytime"
+            : `≈ ${formatPrice(perWeek, currency)} a week`}
+      </p>
     </div>
   );
 }

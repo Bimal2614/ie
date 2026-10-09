@@ -74,7 +74,7 @@ const PLANS = [
     name: "Lite",
     tier: "weekly" as PlanKey,
     cadence: billingPeriodLabel("weekly"),
-    tagline: "Test next week? Everything Pro has, seven days at a time.",
+    tagline: "Test soon? All of Pro, a week at a time.",
     cta: "Start a week",
     href: "/signup",
     featured: false,
@@ -180,11 +180,11 @@ export default async function PricingPage() {
               <Reveal key={p.name} delay={i * 0.1} className="h-full">
                 <div
                   className={cn(
-                    "flex h-full flex-col rounded-2xl border bg-paper-elev p-7",
+                    "flex h-full flex-col rounded-2xl border bg-paper-elev p-7 xl:p-6",
                     p.featured ? "border-2 border-green shadow-lg" : "border-line",
                   )}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex h-7 items-center justify-between">
                     <h2 className="text-lg font-semibold text-ink">{p.name}</h2>
                     {p.featured && (
                       <span className="rounded-full bg-green px-3 py-1 text-xs font-semibold text-green-ink">
@@ -192,7 +192,8 @@ export default async function PricingPage() {
                       </span>
                     )}
                   </div>
-                  <p className="mt-2 text-sm text-ink-muted">{p.tagline}</p>
+                  {/* Two lines reserved, so a one-line tagline doesn't lift its card's price. */}
+                  <p className="mt-2 min-h-10 text-sm text-ink-muted">{p.tagline}</p>
 
                   <PriceTag tier={p.tier} cadence={p.cadence} />
 
