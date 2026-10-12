@@ -18,6 +18,132 @@ import type { BlogPost } from "./blog-types";
  */
 export const TOPIC_POSTS_2026: BlogPost[] = [
   /**
+   * Timely policy post (12 Oct 2026) — DOL suspension of eight employers from
+   * PERM, announced 8 Oct 2026 by VP Vance and Labor Secretary Sonderling at a
+   * White House press conference. As of 10 Oct DOL had published no written
+   * notice, Federal Register entry or guidance (Boundless, i-9intelligence);
+   * every detail here is "as announced / as reported". No end date given.
+   * H-1B $100k fee: proclamation of 18 Sep 2026 extends it to 21 Sep 2027;
+   * vacated by D. Mass. 8 Jun 2026, stay denied by 1st Cir. 24 Jul 2026, not
+   * collected (Yale OISS). Destination thresholds: canada.ca (GT only, CLB 7,
+   * 2-year validity), gov.uk (B2, £41,700), British Council (UKVI 5.5 each),
+   * Home Affairs via ielts-score-for-australia-pr; 482 "5 in each" is from
+   * IDP/agents only. Update on a DOL notice, an end date, or litigation.
+   */
+  {
+    slug: "us-green-card-freeze-perm-infosys-tcs-2026",
+    seoTitle: "US Green Card Freeze 2026: Is H-1B Banned for Indians?",
+    title: "US green card freeze on Infosys, TCS and Microsoft: is H-1B banned?",
+    excerpt:
+      "No, H-1B is not banned. The US froze green card filings at 8 firms on 8 Oct 2026. Who it affects, and the IELTS scores for Canada, the UK and Australia.",
+    category: "Requirements",
+    date: "October 2026",
+    publishedAt: "2026-10-12",
+    readMins: 7,
+    keywords: [
+      "us green card freeze infosys tcs",
+      "perm suspension 2026",
+      "is h1b banned for indians",
+      "h1b news october 2026",
+      "green card suspension wipro hcl cognizant",
+      "h1b $100000 fee court",
+      "ielts score for canada pr",
+      "ielts for uk skilled worker visa",
+      "ielts score for australia pr",
+      "ielts general training or academic for pr",
+    ],
+    sections: [
+      { paragraphs: [
+        "Short answer: no, the US has not banned H-1B visas for Indians. On 8 October 2026 the US Department of Labor suspended eight employers, Microsoft, Adobe, Infosys, TCS, Wipro, HCL, Cognizant and Capgemini, from PERM, the labor certification that is the first step of most employer-sponsored green cards. That freezes green card sponsorship at those eight companies. It does not cancel anyone's H-1B, and it does not stop other employers sponsoring green cards.",
+        "It still matters, because for many Indian engineers at these firms the green card was the long-term plan. This post sets out what was announced, who it touches, where the separate $100,000 H-1B fee stands, and, for anyone now weighing Canada, the UK or Australia instead, the exact IELTS scores each of those routes asks for.",
+      ] },
+      { heading: "What was announced on 8 October", paragraphs: [
+        "Vice President JD Vance and Labor Secretary Keith Sonderling announced the suspension at a White House press conference. As reported, the Department of Labor will not accept new PERM applications from the eight employers and will not process applications they have already filed.",
+        "Officials gave two different reasons. For Microsoft and Adobe, Sonderling cited multiple active federal investigations. For the six IT services firms, the stated reason was volume: officials said the eight companies had obtained more than 100,000 permanent labor certifications since 2009.",
+        "One caution about everything that follows. As of 10 October, the Department of Labor had not published a written notice, a Federal Register entry or any guidance on the suspension. The details come from the press conference and from immigration lawyers reading it. They may be refined once something is in writing.",
+      ] },
+      { heading: "Who is affected, and who is not", paragraphs: [
+        "The suspension is narrow. It targets one step, PERM, at eight named employers.",
+      ], table: {
+        caption: "As announced on 8 October 2026 and reported by immigration law firms. No written DOL guidance had been published as of 10 October 2026. Confirm your own case with an immigration attorney.",
+        headers: ["Situation", "Affected?", "What we know"],
+        rows: [
+          ["New PERM filed by one of the eight employers", "Yes", "Not being accepted"],
+          ["PERM already filed and pending at one of the eight", "Yes", "Reported to be on hold, not rejected"],
+          ["PERM already certified, or I-140 filed or approved", "Unclear", "Officials did not address it"],
+          ["Your current H-1B status and job", "No", "H-1B was not part of the announcement"],
+          ["PERM filed by any other employer", "No", "Normal rules still apply"],
+          ["Students on F-1 or OPT", "No", "Not part of this action"],
+        ],
+      } },
+      { heading: "Is H-1B banned? Where the $100,000 fee stands", paragraphs: [
+        "No. H-1B is open, and there is no nationality-based restriction on it. The confusion comes from two separate actions landing within three weeks of each other.",
+        "On 18 September 2026 the President extended the $100,000 payment on certain new H-1B petitions for people outside the US until 21 September 2027. That fee is not being collected. A federal court in Massachusetts struck down the policy that implemented it on 8 June 2026, and on 24 July 2026 the First Circuit refused the government's request to pause that ruling during its appeal. USCIS says it will collect the fee if the court order is lifted, so watch the appeal.",
+        "The same day, the White House also ordered closer review of H-1B filings across agencies, including attention to employers who have laid off US workers. That changes how petitions are scrutinised. It does not stop them.",
+      ], links: [
+        { label: "The proposed $70,000 OPT fee for F-1 students", href: "/blog/us-opt-fee-70000-proposed-rule-2026" },
+      ] },
+      { heading: "If you are on H-1B at one of these eight companies", paragraphs: [
+        "Your status and your job are not touched by this announcement. What is at risk is the time it takes to get a green card, and that has a knock-on effect if you are close to the six-year H-1B limit, because extensions beyond six years depend on a PERM or I-140 having been filed at least a year earlier, or on an approved I-140.",
+      ], bullets: [
+        "Find out exactly where your case is: not yet filed, PERM pending, PERM certified, or I-140 approved. The answer decides how exposed you are.",
+        "If your I-140 is already approved, lawyers note that you generally keep its priority date if you change employer.",
+        "A new employer can sponsor you from scratch with its own PERM. Its labor market test starts from the beginning, so this is a reset, not a transfer.",
+        "Speak to an immigration attorney before you resign, travel or move. This post explains the announcement; it cannot assess your case.",
+      ] },
+      { heading: "Why people are looking at Canada, the UK and Australia", paragraphs: [
+        "For some engineers this is the moment to keep a second option open. Unlike US employer sponsorship, the main Canadian, UK and Australian skilled routes all ask for an English test, and IELTS is accepted by all of them. The scores below are the ones that decide whether you qualify.",
+      ], table: {
+        caption: "Checked on 12 October 2026 against canada.ca, gov.uk, the British Council and the Department of Home Affairs. The 482 figure is reported by IDP and migration agents. Confirm on the official site before you book a test or lodge anything.",
+        headers: ["Route", "Job offer needed?", "Which IELTS", "Minimum score", "Competitive score"],
+        rows: [
+          ["Canada Express Entry (Federal Skilled Worker)", "No", "General Training only", "CLB 7: 6.0 in each skill", "CLB 9: L 8.0, R 7.0, W 7.0, S 7.0"],
+          ["UK Skilled Worker visa", "Yes, from a licensed sponsor", "IELTS for UKVI, at a test centre", "B2: 5.5 in each skill", "No points for higher scores"],
+          ["Australia skilled PR (189, 190, 491)", "No for 189", "Academic or General Training", "6.0 in each skill", "7.0 each = 10 points, 8.0 each = 20 points"],
+          ["Australia Skills in Demand (482)", "Yes, employer-sponsored", "Academic or General Training", "5.0 in each skill (tests from 13 Sep 2025)", "No points for higher scores"],
+        ],
+      } },
+      { heading: "Canada Express Entry: the points route", paragraphs: [
+        "Canada takes General Training only. Academic results are not accepted for Express Entry, and results must be under two years old both when you create your profile and when you apply for permanent residence. CELPIP-General and PTE Core are the alternatives in English.",
+        "The Federal Skilled Worker Program needs CLB 7, which is 6.0 in every skill, and 67 points on its own selection grid. That makes you eligible, not invited. Invitations go by CRS score, and CLB 9 is where the language points and the skill transferability bonuses for education and work experience really open up. For an experienced engineer, the step from CLB 7 to CLB 9 is often the largest single gain available.",
+      ], links: [
+        { label: "IELTS score for Canada PR: the full CLB chart and CRS points", href: "/blog/ielts-score-for-canada-express-entry" },
+      ] },
+      { heading: "UK Skilled Worker: the job-offer route", paragraphs: [
+        "The UK route starts with a job offer from a Home Office licensed sponsor, paid at least £41,700 a year or the going rate for the role, whichever is higher. Since 8 January 2026, first-time applicants need English at B2. On IELTS for UKVI that is 5.5 in each of the four skills, not an overall average.",
+        "The test must be IELTS for UKVI taken at an approved centre. A standard IELTS result, or IELTS Online, does not count for a UK visa, however good the score. Some people are exempt, including holders of a degree taught in English that Ecctis confirms is equivalent to a UK bachelor's or higher.",
+      ], links: [
+        { label: "IELTS for UKVI vs IELTS Academic: which one you need", href: "/blog/ielts-ukvi-vs-ielts-academic" },
+      ] },
+      { heading: "Australia: points PR or an employer visa", paragraphs: [
+        "Australia's points-tested skilled visas need Competent English, 6.0 in each skill, just to be eligible. Proficient English, 7.0 in each, adds 10 points and Superior English, 8.0 in each, adds 20, which is often the difference between an invitation and a long wait. Your level is set by your lowest skill, not your overall band.",
+        "Academic and General Training have the same thresholds for Australian visas. The test must be taken at a centre: at-home and online tests are not accepted for Australian visas.",
+      ], links: [
+        { label: "IELTS score for Australia PR: what each band is worth in points", href: "/blog/ielts-score-for-australia-pr" },
+      ] },
+      { heading: "What to do this week", bullets: [
+        "Do not panic-resign. Your H-1B is unaffected by this announcement, and a gap in employment creates problems of its own.",
+        "Get your case stage in writing from your employer's immigration team, then take it to your own attorney.",
+        "If you want a second option, pick one country, not three. Each needs different paperwork, and Canada's General Training requirement differs from the UK's UKVI requirement.",
+        "Take a diagnostic before booking. Canada's CLB 9 asks for 8.0 in Listening, which surprises many strong speakers. Know your weakest skill before you pay for a test.",
+        "Watch for a written DOL notice and for the First Circuit ruling on the $100,000 fee. Either could change the picture, and we will update this post when they do.",
+      ] },
+      { heading: "Practise for the score your route needs", paragraphs: [
+        "Each of these routes turns on a specific number in a specific skill. On IELTSVega you can sit full General Training and Academic practice tests, drill Listening by question type, and get instant AI band scores on Writing and Speaking, so you know which skill stands between you and CLB 9, B2 or Proficient English before you book the real test.",
+      ], links: [
+        { label: "IELTS Academic vs General Training: which one to take", href: "/blog/ielts-academic-vs-general-training" },
+      ] },
+    ],
+    faqs: [
+      { q: "Has the US stopped H-1B visas for Indians?", a: "No. The 8 October 2026 action suspended eight employers from PERM, the first step of an employer-sponsored green card. It did not cancel H-1B visas, and there is no H-1B restriction based on nationality. The separate $100,000 H-1B fee has been extended to September 2027 but is blocked by a court and is not being collected." },
+      { q: "Which companies are suspended from the US green card process?", a: "Microsoft, Adobe, Infosys, Tata Consultancy Services, Wipro, HCL, Cognizant and Capgemini. The Department of Labor will not accept new PERM applications from them, and pending ones are reported to be on hold. Other employers are not affected." },
+      { q: "What happens to my pending green card at Infosys or TCS?", a: "A pending PERM is reported to be on hold, not rejected. Officials did not say how certified PERMs or approved I-140s are treated, and no written guidance had been published as of 10 October 2026. Check your case stage with your employer and speak to an immigration attorney before making any move." },
+      { q: "How long will the PERM suspension last?", a: "No end date or path to reinstatement has been announced. Until the Department of Labor publishes a written notice, the duration is unknown." },
+      { q: "Do I need IELTS for an H-1B or a US green card?", a: "No. Neither H-1B nor employer-sponsored green cards require an English test. You need IELTS if you are applying through Canada's Express Entry, the UK Skilled Worker visa or Australia's skilled visas." },
+      { q: "Which IELTS do I need for Canada PR, and which for a UK work visa?", a: "Canada Express Entry accepts IELTS General Training only, with CLB 7 (6.0 in each skill) as the minimum. A UK Skilled Worker visa needs IELTS for UKVI taken at an approved centre, with 5.5 in each skill for B2. Australia accepts Academic or General Training with the same thresholds." },
+    ],
+  },
+  /**
    * Timely policy post (8 Oct 2026) — DHS/ICE notice of proposed rulemaking
    * "Optional Practical Training Fees" (FR Doc 2026-20660, Docket
    * ICEB-2026-0100, RIN 1653-AB01), published in the Federal Register 8 Oct
@@ -100,6 +226,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
         { label: "IELTS vs TOEFL: which one US universities prefer", href: "/blog/ielts-vs-toefl" },
         { label: "IELTS vs PTE vs Duolingo: which test is accepted where", href: "/blog/ielts-vs-pte-vs-duolingo" },
         { label: "How long you can stay on an F-1 visa now the 4-year rule is blocked", href: "/blog/us-f1-duration-of-status-rule-blocked-2026" },
+        { label: "The US green card freeze on Infosys, TCS and Microsoft, and what it means for H-1B", href: "/blog/us-green-card-freeze-perm-infosys-tcs-2026" },
         { label: "IELTS band score calculator", href: "/ielts-band-score-calculator" },
       ] },
       { heading: "What to do now", bullets: [
@@ -759,7 +886,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       { heading: "The minimum versus the real target", paragraphs: ["The Federal Skilled Worker Program requires CLB 7, which is a flat 6.0 in every skill. That makes you eligible. It does not make you competitive: recent all-programme draws have generally required CRS scores in roughly the 470 to 540+ range, and CLB 7 leaves a large number of points on the table.", "CLB 9 is the target that matters. It unlocks the maximum core language points and, critically, the skill transferability bonuses that pair language with education and work experience. The step from CLB 7 to CLB 9 is frequently worth more CRS points than any other single thing an applicant can change."] },
       { heading: "Where the points actually are", bullets: ["Core language points rise steeply from CLB 7 to CLB 9, then flatten. CLB 10 is worth chasing only if you are already comfortably at 9.", "Skill transferability adds points when CLB 9 combines with post-secondary education or Canadian or foreign work experience. This is the multiplier most people miss.", "A spouse's language score earns points too, so if you have an accompanying partner, their IELTS is not optional admin, it is CRS points.", "French as a second language adds a further block of points, which is why some candidates near the cut-off add a TEF or TCF rather than pushing IELTS higher.", "Points tables are revised periodically. Check the current CRS criteria on the official site before making a plan around a specific number."] },
       { heading: "The practical plan", paragraphs: ["Work out which single half-band moves you a CLB level, and go get that one. In practice this is almost always Listening 7.5 to 8.0, or Reading 6.5 to 7.0. Both are raw-mark skills where a handful of careless errors separate the two bands, which makes them the cheapest points in the entire system.", "Then sit the test with One Skill Retake in mind. If exactly one skill lands short, you can re-sit it alone within 60 days, in the same country, provided your test was computer-delivered. Confirm that Immigration, Refugees and Citizenship Canada will accept a combined report for your specific programme before you rely on that route."] },
-      { heading: "Practise the skills that carry the points", paragraphs: ["Chasing CLB 9 means chasing specific numbers in specific skills, not general improvement. On IELTSVega you can practise General Training Reading and Writing, drill Listening by question type until careless losses stop, and get instant AI band scores on Writing and Speaking, so you can see which skill is one half-band away from moving your whole CLB level."] , links: [{ label: "IELTS score for Australia PR: Competent, Proficient and Superior English", href: "/blog/ielts-score-for-australia-pr" }] },
+      { heading: "Practise the skills that carry the points", paragraphs: ["Chasing CLB 9 means chasing specific numbers in specific skills, not general improvement. On IELTSVega you can practise General Training Reading and Writing, drill Listening by question type until careless losses stop, and get instant AI band scores on Writing and Speaking, so you can see which skill is one half-band away from moving your whole CLB level."] , links: [{ label: "IELTS score for Australia PR: Competent, Proficient and Superior English", href: "/blog/ielts-score-for-australia-pr" }, { label: "On H-1B and weighing Canada after the US green card freeze?", href: "/blog/us-green-card-freeze-perm-infosys-tcs-2026" }] },
     ],
     faqs: [
       { q: "What IELTS score do I need for Canada PR?", a: "The minimum for the Federal Skilled Worker Program is CLB 7, which is 6.0 in each of the four skills on IELTS General Training. To be competitive in recent draws, most applicants target CLB 9: Listening 8.0, Reading 7.0, Writing 7.0 and Speaking 7.0." },
@@ -824,6 +951,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
         ],
         links: [
           { label: "IELTS band score chart: what each band means", href: "/blog/ielts-band-score-chart" },
+          { label: "Leaving the US? The 2026 green card freeze and the IELTS score each country needs", href: "/blog/us-green-card-freeze-perm-infosys-tcs-2026" },
         ],
       },
       {
