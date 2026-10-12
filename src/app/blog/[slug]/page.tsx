@@ -327,6 +327,36 @@ export default async function BlogArticle({ params }: { params: Promise<Params> 
                   ))}
                 </ul>
               )}
+              {/* Tables are wrapped in their own horizontal scroller so a wide
+                  fee or band-conversion table never forces the article body to
+                  scroll sideways on a phone. */}
+              {s.table && (
+                <div className="mt-4 overflow-x-auto">
+                  <table className="w-full min-w-[32rem] border-collapse text-sm">
+                    {s.table.caption && (
+                      <caption className="pb-2 text-left text-xs text-ink-muted">{s.table.caption}</caption>
+                    )}
+                    <thead>
+                      <tr className="border-b border-line">
+                        {s.table.headers.map((h) => (
+                          <th key={h} scope="col" className="px-3 py-2 text-left font-semibold text-ink">
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {s.table.rows.map((row, r) => (
+                        <tr key={r} className="border-b border-line/60">
+                          {row.map((cell, c) => (
+                            <td key={c} className="px-3 py-2 align-top text-ink-soft">{cell}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
               {/* In-body internal links. These are the ones that actually pass
                   equity to the pages we want indexed, so the anchor text is the
                   author's descriptive label rather than a bare URL. */}
@@ -357,36 +387,6 @@ export default async function BlogArticle({ params }: { params: Promise<Params> 
                     </li>
                   ))}
                 </ul>
-              )}
-              {/* Tables are wrapped in their own horizontal scroller so a wide
-                  fee or band-conversion table never forces the article body to
-                  scroll sideways on a phone. */}
-              {s.table && (
-                <div className="mt-4 overflow-x-auto">
-                  <table className="w-full min-w-[32rem] border-collapse text-sm">
-                    {s.table.caption && (
-                      <caption className="pb-2 text-left text-xs text-ink-muted">{s.table.caption}</caption>
-                    )}
-                    <thead>
-                      <tr className="border-b border-line">
-                        {s.table.headers.map((h) => (
-                          <th key={h} scope="col" className="px-3 py-2 text-left font-semibold text-ink">
-                            {h}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {s.table.rows.map((row, r) => (
-                        <tr key={r} className="border-b border-line/60">
-                          {row.map((cell, c) => (
-                            <td key={c} className="px-3 py-2 align-top text-ink-soft">{cell}</td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
               )}
             </section>
           ))}
