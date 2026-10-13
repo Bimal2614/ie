@@ -18,6 +18,115 @@ import type { BlogPost } from "./blog-types";
  */
 export const TOPIC_POSTS_2026: BlogPost[] = [
   /**
+   * Timely policy post (13 Oct 2026) — SEVP broadcast messages 2608-01 (12 Aug
+   * 2026) and 2608-02 (24 Aug 2026) narrowing when DSOs may authorise CPT, and
+   * the lawsuit AAU v. DHS filed 5 Oct 2026 in the District of Massachusetts,
+   * with a motion for a preliminary injunction and stay.
+   * GUIDANCE, NOT A NEW RULE: the CPT regulation is unchanged; the broadcasts
+   * say they are not a rule or final action. No court order as of 13 Oct 2026.
+   * Update on any preliminary-injunction ruling, new SEVP guidance, or a rule.
+   */
+  {
+    slug: "us-cpt-restrictions-lawsuit-2026",
+    seoTitle: "CPT 2026: Is It Banned? ICE Rules and the Lawsuit",
+    title: "Can F-1 students still do CPT? 2026 ICE restrictions and the lawsuit",
+    excerpt:
+      "ICE now says CPT must be required for every student in a program. It is guidance, not a new rule, and universities have sued. What it means for you.",
+    category: "Requirements",
+    date: "October 2026",
+    publishedAt: "2026-10-13",
+    readMins: 8,
+    keywords: [
+      "cpt new rules 2026",
+      "is cpt banned 2026",
+      "is day 1 cpt banned",
+      "cpt lawsuit",
+      "why is cpt being paused",
+      "cpt elective internship f1",
+      "sevp cpt guidance august 2026",
+      "universities pause cpt",
+      "cpt vs opt 2026",
+      "f1 internship rules 2026",
+      "ielts score for us student visa",
+    ],
+    sections: [
+      { paragraphs: [
+        "Short answer: CPT still exists, but far fewer internships now qualify, and many universities have stopped approving new CPT while a court case runs. In August 2026 the agency that oversees F-1 students told universities that Curricular Practical Training is allowed only when the training is required for every student in the program. An elective internship taken for credit no longer passes that test. Nothing in the regulation itself has changed.",
+        "On 5 October 2026 four university groups sued to reverse that reading. No court has ruled yet, so the narrow reading is what your school applies today. This post covers what ICE said, what it means for Day 1 CPT, what to do if you already have CPT, and what to ask a university before you accept an offer.",
+      ] },
+      { heading: "What ICE told universities in August", paragraphs: [
+        "The Student and Exchange Visitor Program (SEVP), part of Immigration and Customs Enforcement, sent two broadcast messages to designated school officials (DSOs), the staff who approve CPT. The first, on 12 August 2026 (BCM 2608-01), said SEVP was seeing CPT approvals that did not meet the regulation and would scrutinise them more closely. It told DSOs to approve CPT only where a degree could not be completed without it and where the work is required for all students in that degree.",
+        "The second, on 24 August 2026 (BCM 2608-02), answered follow-up questions. An optional elective does not count. If a program treats practical training as integral, every student in it, American students included, must do that training. CPT must be with an employer that has a cooperative agreement with the school. Both messages warned that wrong approvals could cost a school its permission to enrol international students and expose individual DSOs to penalties.",
+      ] },
+      { heading: "Is this a new rule?", paragraphs: [
+        "No. The CPT regulation has not been amended, and both broadcasts state that they are not a rule or a final agency action. What changed is how strictly ICE says the existing words must be read, and the warning attached to it. Universities have responded by applying the strict reading, because the risk of getting it wrong falls on the institution.",
+        "That is why the lawsuit matters. The universities argue that a change this large needed formal rulemaking with public comment. If a court agrees, it could pause the guidance. If it does not, the strict reading stays.",
+      ] },
+      { heading: "CPT before and after the August guidance", paragraphs: [
+        "The table compares how many schools handled CPT before August with what the broadcasts now require. Individual schools always had their own policies, so check yours.",
+      ], table: {
+        caption: "Based on SEVP broadcast messages 2608-01 (12 Aug 2026) and 2608-02 (24 Aug 2026) on ice.gov. Guidance, not a regulation change. Your DSO's current policy is what counts. Confirm with them before accepting any offer.",
+        headers: ["Situation", "Common practice before Aug 2026", "What the guidance now requires"],
+        rows: [
+          ["Internship as an optional elective for credit", "Often approved as CPT", "Does not qualify: optional training is not integral"],
+          ["Internship required for every student in the program", "Approved", "Still qualifies"],
+          ["Program where only international students do the internship", "Sometimes approved", "Does not qualify: required for all students, regardless of citizenship"],
+          ["Employer without a cooperative agreement with the school", "Varied by school", "Should not be approved"],
+          ["CPT in the first term (\"Day 1 CPT\")", "Offered by some programs", "Not banned as such, but must meet the same required-for-all test"],
+          ["OPT (after or during study)", "Separate from CPT", "Unchanged by this guidance. A fee is proposed separately"],
+        ],
+      } },
+      { heading: "Why universities are pausing CPT", paragraphs: [
+        "Because the penalty for a wrong approval lands on the school. SEVP warned that improper CPT could cost an institution its certification to enrol international students, which would affect every international student on campus, not just the ones on internships. Faced with that, many offices chose to stop approving anything that might not meet the strict reading until they had reviewed each program.",
+        "The pauses are written in similar terms. The University of Utah's international office said on 3 September 2026 that it would issue no new optional CPT until its review is complete. Iowa State's office paused new CPT for work that is not required for all students, regardless of citizenship, and said previously approved CPT stays valid until its current end date. Press reports also name Harvard, MIT, Boston University, Tufts, Penn and several University of California campuses among schools that have paused or narrowed CPT.",
+      ] },
+      { heading: "The lawsuit", paragraphs: [
+        "The Association of American Universities, the Presidents' Alliance on Higher Education and Immigration, NAFSA and the Association of Independent Colleges and Universities in Massachusetts filed the case on 5 October 2026 in the federal district court in Massachusetts, against ICE, the Department of Homeland Security and the Department of Justice. With the complaint they asked the court for a preliminary injunction and a stay, which would pause the August guidance while the case is decided.",
+        "They argue that the broadcasts reversed about 35 years of practice without explanation or public comment, and that the threat of penalties is unlawful. They ask the court to restore the earlier CPT framework and to protect students and schools from penalties for past approvals. Those are the plaintiffs' claims, not findings. As of 13 October 2026 the court has not ruled on the motion, and ICE has said it does not comment on pending litigation.",
+      ] },
+      { heading: "If you already have CPT or an internship offer", paragraphs: [
+        "Most schools that paused CPT have said that authorisations already approved stay valid until their end date. Iowa State says so in writing. Press and plaintiff statements say some students with offers that were still pending lost them.",
+        "Do not start or continue work unless your CPT authorisation shows in SEVIS and on your I-20 for those exact dates and that employer. Working without it can break F-1 status, and that problem follows you into OPT, H-1B and any later visa. If your school withdraws or refuses CPT, ask your DSO in writing what changed and whether it will revisit the decision if a court acts.",
+      ] },
+      { heading: "How much CPT can you do, and does it cost you OPT?", paragraphs: [
+        "The regulation sets no overall cap on CPT, and the August guidance did not add one. Part-time CPT, 20 hours a week or less, has no effect on OPT. Full-time CPT is the trap: if you build up 12 months or more of full-time CPT, you lose eligibility for post-completion OPT. Less than 12 months of full-time CPT does not reduce your OPT.",
+        "CPT is also never mandatory for you as a student. It is a work authorisation your school grants when your program requires the training. Under the August guidance, that requirement has to apply to everyone in the program.",
+      ] },
+      { heading: "If you are choosing a US university for 2027", paragraphs: [
+        "If paid work during your degree is part of your plan, ask each university two questions in writing before you accept. First, is practical training required for every student in this program, international and domestic? Second, has the school paused or narrowed CPT since August 2026? A program built around a required co-op or practicum is in a much stronger position than one that offers internships as an option.",
+        "Be careful with programs sold mainly on Day 1 CPT. They are not banned, but they are exactly the kind of program SEVP said it is scrutinising, and ICE has warned schools they could lose certification. Put this together with the proposed OPT fee before you commit: both affect how much work, and how much income, a US degree can lead to.",
+      ] },
+      { heading: "What this does NOT change: your English requirement", paragraphs: [
+        "The CPT guidance is about work during study, not about admission or the F-1 visa. There is no single US visa-level IELTS score. Universities set their own minimums, usually 6.5 to 7.0 for graduate programs and around 6.0 to 6.5 for undergraduate, and your I-20 records whether you met them.",
+        "If the US route looks less attractive because of CPT, the OPT fee proposal and the duration-of-status case, you may compare other countries, each with its own English rules. One score that clears the strictest requirement keeps every option open.",
+      ], links: [
+        { label: "Will you have to pay $70,000 for OPT? The proposed rule explained", href: "/blog/us-opt-fee-70000-proposed-rule-2026" },
+        { label: "How long you can stay on an F-1 visa now the 4-year rule is blocked", href: "/blog/us-f1-duration-of-status-rule-blocked-2026" },
+        { label: "IELTS vs TOEFL: which one US universities prefer", href: "/blog/ielts-vs-toefl" },
+        { label: "IELTS band score calculator", href: "/ielts-band-score-calculator" },
+      ] },
+      { heading: "What to do now", bullets: [
+        "Already on CPT: confirm with your DSO that your authorisation still stands, and do not work outside the dates and employer in SEVIS.",
+        "Holding an internship offer: ask your DSO before you accept whether your program meets the required-for-all test, and get the answer in writing.",
+        "Choosing a university: ask whether practical training is required for every student in the program, and whether CPT has been paused since August 2026.",
+        "Treat Day 1 CPT programs with caution until the court rules or SEVP clarifies.",
+        "Keep full-time CPT under 12 months in total if you want to keep OPT.",
+        "Do not pay an agent or employer who promises CPT \"regardless\" of the new guidance. Only your DSO can authorise it.",
+        "Finish your English test early. It is the one part of the plan no US rule change has touched.",
+      ] },
+    ],
+    faqs: [
+      { q: "Is CPT banned in 2026?", a: "No. CPT still exists, and the regulation has not changed. Since August 2026 ICE guidance says it is allowed only where the training is required for every student in the program, so many elective internships no longer qualify." },
+      { q: "Why is CPT being paused?", a: "SEVP warned in August 2026 that wrongly approved CPT could cost a school its certification to enrol international students. Many universities paused new CPT approvals while they check which programs meet the stricter required-for-all-students test." },
+      { q: "Is Day 1 CPT banned?", a: "Not as such. No rule bans CPT in the first term. But a Day 1 CPT program must meet the same test, training required for all students in the curriculum, and SEVP has said it is scrutinising schools that use CPT mainly for work." },
+      { q: "Can I do CPT for an elective internship?", a: "Under the August 2026 SEVP guidance, no. If the course is optional, the training is not integral to the curriculum, so a DSO should not authorise CPT for it. A court could change this if the lawsuit succeeds." },
+      { q: "How much CPT can an F-1 student do?", a: "There is no overall limit. Part-time CPT (20 hours a week or less) does not affect OPT, but 12 months or more of full-time CPT makes you ineligible for post-completion OPT." },
+      { q: "Has a court blocked the new CPT guidance?", a: "Not as of 13 October 2026. University groups sued on 5 October 2026 in the District of Massachusetts and asked for a preliminary injunction, but no order has been issued, so schools are applying the stricter reading." },
+      { q: "Does the CPT guidance affect OPT?", a: "No. OPT is separate and unchanged by this guidance. A separate DHS proposal of 8 October 2026 would add a fee for OPT, but it is not law and does not cover CPT." },
+      { q: "Has the IELTS score for US universities changed because of this?", a: "No. The guidance is about work during study. Universities still set their own English minimums, usually IELTS 6.5 to 7.0 for graduate programs, and the F-1 visa rules on English are unchanged." },
+    ],
+  },
+  /**
    * Timely policy post (12 Oct 2026) — DOL suspension of eight employers from
    * PERM, announced 8 Oct 2026 by VP Vance and Labor Secretary Sonderling at a
    * White House press conference. As of 10 Oct DOL had published no written
@@ -225,6 +334,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       ], links: [
         { label: "IELTS vs TOEFL: which one US universities prefer", href: "/blog/ielts-vs-toefl" },
         { label: "IELTS vs PTE vs Duolingo: which test is accepted where", href: "/blog/ielts-vs-pte-vs-duolingo" },
+        { label: "CPT in 2026: what ICE changed and what the lawsuit asks for", href: "/blog/us-cpt-restrictions-lawsuit-2026" },
         { label: "How long you can stay on an F-1 visa now the 4-year rule is blocked", href: "/blog/us-f1-duration-of-status-rule-blocked-2026" },
         { label: "The US green card freeze on Infosys, TCS and Microsoft, and what it means for H-1B", href: "/blog/us-green-card-freeze-perm-infosys-tcs-2026" },
         { label: "IELTS band score calculator", href: "/ielts-band-score-calculator" },
@@ -303,6 +413,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       { heading: "What happens next", paragraphs: ["On 30 September 2026 the government filed a notice of appeal against the injunction with the US Court of Appeals for the First Circuit (case number 26-2112). Filing an appeal does not bring the rule back. The injunction stays in force while the appeal is heard, unless the government asks for a stay and a court grants one. As of 2 October 2026 the government had not asked for a stay.", "The case also continues in the district court in Massachusetts, which scheduled a status conference for 2 October 2026. Any of these steps can change the answer above, so check the date at the top of this post."] },
       { heading: "What this does NOT change: your English requirement", paragraphs: ["The court case is about how long you can stay, not how you qualify. Nothing in the rule or the injunction touches English testing. The US has no single visa-level IELTS score. Your university sets its own minimum, usually 6.5 to 7.0 for graduate programs and around 6.0 to 6.5 for undergraduate, and your I-20 records whether you have met it. The consular officer can still ask you questions in English at the interview.", "One provision does have an English-learning angle. If the rule returns, English language programs would be capped at 24 months in total. If you plan to do an intensive English course before your degree, raising your IELTS band before you travel shortens the time you need in that program, and it may let you skip it altogether."], links: [
         { label: "IELTS vs TOEFL: which one US universities prefer", href: "/blog/ielts-vs-toefl" },
+        { label: "Can you still do CPT on an F-1? The 2026 restrictions explained", href: "/blog/us-cpt-restrictions-lawsuit-2026" },
         { label: "IELTS exam fee in the USA", href: "/blog/ielts-exam-fee-usa" },
         { label: "IELTS band score calculator", href: "/ielts-band-score-calculator" },
       ] },
