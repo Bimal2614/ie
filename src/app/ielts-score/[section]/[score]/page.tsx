@@ -145,28 +145,40 @@ export default async function ScorePage({ params }: { params: Promise<Params> })
             <span className="font-serif text-5xl tabular-nums text-brand">{b}</span>
           </p>
         </div>
+        {/* Visitors tap the boxes (Clarity logged dead clicks), so each one with
+            a page opens it. Hidden from the accessibility tree and the tab order
+            because the "Every score" row below carries the same links. */}
         <ol className="mt-5 grid max-w-md grid-cols-10 gap-1" aria-hidden="true">
           {Array.from({ length: 40 }, (_, i) => {
             const n = i + 1;
             const right = n <= f.score;
             const inBand = n >= f.range.min && n <= f.range.max;
             const isNext = f.next && n === f.next.min;
+            const cell = `grid aspect-square place-items-center rounded-md border text-[10px] tabular-nums ${
+              right ? "border-brand bg-brand text-paper" : "border-line text-ink-muted"
+            } ${inBand ? "ring-2 ring-green ring-offset-1 ring-offset-paper-elev" : ""} ${
+              isNext ? "border-dashed border-green text-green" : ""
+            }`;
             return (
-              <li
-                key={n}
-                className={`grid aspect-square place-items-center rounded-md border text-[10px] tabular-nums ${
-                  right ? "border-brand bg-brand text-paper" : "border-line text-ink-muted"
-                } ${inBand ? "ring-2 ring-green ring-offset-1 ring-offset-paper-elev" : ""} ${
-                  isNext ? "border-dashed border-green text-green" : ""
-                }`}
-              >
-                {n}
+              <li key={n}>
+                {n >= MIN_SCORE && n !== f.score ? (
+                  <Link
+                    href={scorePath(f.key, n)}
+                    tabIndex={-1}
+                    title={`${n} out of 40`}
+                    className={`${cell} transition-transform hover:scale-110 hover:border-brand`}
+                  >
+                    {n}
+                  </Link>
+                ) : (
+                  <span className={cell}>{n}</span>
+                )}
               </li>
             );
           })}
         </ol>
         <p className="mt-4 text-xs text-ink-muted">
-          Filled: correct answers ({f.percent}%). Ringed: the {f.range.min}–{f.range.max} range for Band {b}.
+          Tap a box to see that score. Filled: correct answers ({f.percent}%). Ringed: the {f.range.min}–{f.range.max} range for Band {b}.
           {f.next ? ` Dashed: ${f.next.min}, where Band ${fmtBand(f.next.band)} starts.` : ""}
           {f.cushion > 0
             ? ` You could lose ${f.cushion} answer${f.cushion === 1 ? "" : "s"} and keep Band ${b}.`
