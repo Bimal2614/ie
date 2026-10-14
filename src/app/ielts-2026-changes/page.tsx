@@ -42,7 +42,7 @@ const CHANGES: {
   {
     Icon: ShieldCheck,
     title: "The UK raised its work-visa English requirement to B2",
-    body: "From 8 January 2026 the English requirement for first-time Skilled Worker, Scale-up and High Potential Individual applicants rose from B1 to B2. On IELTS for UKVI that is 5.5 in every one of the four skills — a per-skill benchmark, not an overall average, so a 6.5 overall with 5.0 in Writing does not qualify. UKVI IELTS also moved to computer-only delivery on 22 March 2026, ahead of the global transition.",
+    body: "From 8 January 2026 the English requirement for first-time Skilled Worker, Scale-up and High Potential Individual applicants rose from B1 to B2. On IELTS for UKVI that is 5.5 in every one of the four skills — a per-skill benchmark, not an overall average, so a 6.5 overall with 5.0 in Writing does not qualify. UKVI IELTS also moved to computer-only delivery in early 2026, ahead of the global transition; the date was set country by country, between February and March.",
   },
   {
     Icon: Users,

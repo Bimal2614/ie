@@ -3,7 +3,9 @@ import Link from "next/link";
 import { ArrowRight, Check } from "lucide-react";
 import { MarketingShell, PageHead } from "@/components/marketing/marketing-shell";
 import { BANDS, BAND_SLUGS } from "@/lib/band-content";
-import { pageMeta } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/json-ld";
+import { WEBSITE_ID, breadcrumbJsonLd, pageMeta } from "@/lib/seo";
+import { SITE_URL } from "@/lib/site";
 import { LONG_TAIL } from "@/lib/keywords";
 
 /**
@@ -55,6 +57,26 @@ const SCALE = [
 export default function BandScoresPage() {
   return (
     <MarketingShell>
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "@id": `${SITE_URL}/ielts-band-scores`,
+          url: `${SITE_URL}/ielts-band-scores`,
+          name: "IELTS band score scale: what each band means (0-9)",
+          description:
+            "The IELTS band score scale from 0 to 9: what each band means, its CEFR level, which bands universities and visas ask for, and how the overall band works.",
+          inLanguage: "en",
+          isPartOf: { "@id": WEBSITE_ID },
+          about: { "@type": "Thing", name: "IELTS band score" },
+        }}
+      />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "IELTS band scores", path: "/ielts-band-scores" },
+        ])}
+      />
       <PageHead
         eyebrow="IELTS scoring"
         title="IELTS band scores, explained."

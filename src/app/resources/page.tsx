@@ -31,7 +31,7 @@ export const metadata = pageMeta({
 const SHIFTS_2026 = [
   {
     title: "Reading and Listening are on screen",
-    body: "Paper-based IELTS was retired in most markets from 27 June 2026, and UKVI IELTS moved to computer-only on 22 March 2026. You cannot underline a passage with a pencil any more — the highlight and note tools are on screen, and long passages scroll instead of sitting open in a spread.",
+    body: "Paper-based IELTS was retired in most markets from 27 June 2026, and UKVI IELTS moved to computer-only in early 2026 (February to March, depending on the country). You cannot underline a passage with a pencil any more — the highlight and note tools are on screen, and long passages scroll instead of sitting open in a spread.",
   },
   {
     title: "Listening transfer time is gone",
