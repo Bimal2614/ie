@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from "react";
 
 /**
  * Counts up to a target when scrolled into view — a purposeful, one-time motion
- * (not the generic fade-in-everything). Honours reduced-motion by rendering the
- * final value immediately. Formats with a prefix/suffix and thousands grouping.
+ * (not the generic fade-in-everything). The server renders the real value, so
+ * crawlers, AI answer engines and no-JS readers never see a row of zeros; the
+ * reset to `from` happens only while the number is still off-screen. Honours
+ * reduced-motion. Formats with a prefix/suffix and thousands grouping.
  */
 export function CountUp({
   to,
@@ -25,17 +27,19 @@ export function CountUp({
   className?: string;
 }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const [value, setValue] = useState(from);
+  const [value, setValue] = useState(to);
   const done = useRef(false);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
 
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setValue(to);
-      return;
-    }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    // Already on screen at mount: resetting now would flash the real number to
+    // zero in front of the reader, so leave it be.
+    if (el.getBoundingClientRect().top < window.innerHeight) return;
+    setValue(from);
 
     const io = new IntersectionObserver(
       (entries) => {
