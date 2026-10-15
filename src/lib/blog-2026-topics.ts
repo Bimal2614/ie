@@ -18,6 +18,181 @@ import type { BlogPost } from "./blog-types";
  */
 export const TOPIC_POSTS_2026: BlogPost[] = [
   /**
+   * Evergreen, news-pegged (15 Oct 2026): what happens when the TEST CENTRE
+   * cancels or a test fails on the day. The candidate-initiated transfer and
+   * cancel rules are owned by how-to-book-ielts-test; link there, never copy.
+   *
+   * Sources: ielts.org cancellations page (centre cancels -> full refund or
+   * transfer, your choice); ielts.org complaints procedure (5 / 20 working
+   * days); IDP India transfer-cancellation page; China Daily 13 Oct 2026 and
+   * Global Times 13 Oct 2026 (remedy terms); Caixin 14 Oct 2026 (~10,000
+   * affected, OSR on the last day of the 60-day window, IDP slots 17-31 Oct);
+   * The PIE News 13 Nov 2025 (2023-2025 score correction).
+   * DO NOT add the claim that Cambridge refused to extend the OSR window: one
+   * secondary source only. Update if the British Council or IELTS publishes
+   * anything on the 60-day window for cancelled sittings.
+   */
+  {
+    slug: "ielts-test-cancelled-refund-rights",
+    seoTitle: "IELTS Test Cancelled? Your Refund and Rebooking Rights",
+    title: "IELTS test cancelled or disrupted? Your refund and retest rights",
+    excerpt:
+      "If the centre cancels your IELTS test, you choose a full refund or a free transfer. What China's October outage showed, test-day faults, and One Skill Retake.",
+    category: "Booking",
+    date: "October 2026",
+    publishedAt: "2026-10-15",
+    readMins: 8,
+    keywords: [
+      "ielts test cancelled",
+      "ielts test cancelled refund",
+      "ielts cancelled by test centre",
+      "ielts technical problem on test day",
+      "ielts reschedule after cancellation",
+      "ielts one skill retake 60 days cancelled",
+      "ielts complaint test day",
+      "british council ielts china cancellation",
+      "ielts force majeure",
+    ],
+    sections: [
+      {
+        paragraphs: [
+          "If the test centre cancels your IELTS test, whether for bad weather, unrest or a technical failure, the official IELTS terms give you the choice: a full refund, or a transfer to a future test date at no cost. That is the opposite of what happens when you cancel, when you lose up to 25% of the fee or all of it, depending on how close the test is.",
+          "Between 10 and 13 October 2026, the British Council cancelled computer-delivered IELTS across mainland China after a technical failure, and around 10,000 candidates found out what those rights look like in practice. Here is what happened, what you are entitled to if it happens to you, what to do if your test fails partway through, and the One Skill Retake question nobody has answered yet.",
+        ],
+      },
+      {
+        heading: "What happened to IELTS in China in October 2026",
+        paragraphs: [
+          "Computer-delivered IELTS sessions run by the British Council were cancelled across the Chinese mainland on Saturday 10 and Sunday 11 October, and One Skill Retake sessions on 10, 12 and 13 October. The British Council blamed a technical failure that it said may have affected test security, and cancelled to protect the fairness of the results. Caixin estimated about 10,000 candidates were affected. Testing resumed on Wednesday 14 October.",
+          "The remedy package, as reported by China Daily and the Global Times on 13 October:",
+        ],
+        table: {
+          caption: "British Council remedies for cancelled sessions in mainland China, announced 13 October 2026",
+          headers: ["Your situation", "What the British Council offered"],
+          rows: [
+            ["Computer-delivered test cancelled", "A full refund of the test fee"],
+            ["You also had another date booked", "Keep that booking and get one test fee refunded, or move free to a special session on 19 or 20 October"],
+            ["No other date, and 19–20 October does not work", "A free voucher for the same test type, valid until the end of December 2026"],
+            ["One Skill Retake cancelled", "One test fee refunded if you had another date booked; otherwise a free voucher valid until the end of December"],
+            ["You travelled from another city", "Reimbursement of reasonable travel and accommodation costs, claimed with tickets or hotel invoices"],
+          ],
+        },
+        bullets: [
+          "The British Council also offered explanatory letters for overseas universities on request. If a deadline is the problem, that letter is the most useful thing in the package.",
+          "IDP, which also runs IELTS in China, was not affected. Its tests went ahead, and it added extra test slots from 17 to 31 October.",
+        ],
+      },
+      {
+        heading: "Your rights when the test centre cancels",
+        paragraphs: [
+          "The official IELTS terms separate two kinds of cancellation, and your rights depend on which one it is. When the cancellation comes from the test centre's side, you are not the one paying for it:",
+        ],
+        table: {
+          caption: "Centre cancellations: IELTS terms on ielts.org. Candidate cancellations: IDP India's rules for IELTS on Computer, checked 15 October 2026",
+          headers: ["Who cancels", "Why", "What you get"],
+          rows: [
+            ["The test centre", "Outside its control: extreme weather, natural disaster, civil unrest, industrial action, a pandemic", "Your choice of a full refund or a transfer to a future date"],
+            ["The test centre", "Technical failure, venue or environmental problems", "Your choice of a refund or a transfer"],
+            ["You, 15 or more days before", "Any reason", "Refund minus an administration fee of up to 25%"],
+            ["You, 14 days or fewer before", "Any reason", "No refund"],
+            ["You, with evidence", "Illness, injury, bereavement or a similar crisis", "You can apply to the centre for special consideration"],
+          ],
+        },
+        bullets: [
+          "The centre has to give you as much notice as possible, but there is no minimum. The China cancellations for Tuesday 13 October reached candidates by text the day before.",
+          "Travel and hotel costs are not in the standard terms. The China reimbursement was part of a one-off package, not a right you can rely on elsewhere. If you travelled and the centre cancelled, ask in writing anyway, with receipts.",
+          "Where your local consumer law gives better cancellation rights than the IELTS terms, the IELTS terms say the local law applies.",
+          "A transfer to a later date is usually the better choice if you still need the score. A refund leaves you competing for a new seat at the same time as everyone else who was cancelled.",
+        ],
+        links: [
+          { label: "Cancelling or moving your IELTS booking yourself: the IDP India fee table", href: "/blog/how-to-book-ielts-test" },
+        ],
+      },
+      {
+        heading: "If your computer fails during the test",
+        paragraphs: [
+          "IELTS publishes no special rule for a single candidate whose screen freezes or whose headphones die partway through. What it does publish is a complaints procedure, and the timing in it decides how much can be done for you.",
+        ],
+        bullets: [
+          "Tell the invigilator the moment it happens. Raise your hand, do not keep working on a frozen screen, and note the time and the section.",
+          "Before you leave, ask for the problem to be written down, and get the name of the person who recorded it. Problems the centre recorded on the day are far easier to act on than ones reported a week later.",
+          "If the centre could not fix it, file the formal complaint on the official IELTS complaints form, on the day if you can and in any case before your results are released. The complaints procedure says delay limits what can be investigated.",
+          "IELTS says it acknowledges a referred complaint within five working days and gives a full reply within 20 working days.",
+          "The same applies to Speaking: a broken video link, a noisy room or an interrupted interview is a test-day problem, and it should be reported before you leave, not after you see your band.",
+        ],
+        links: [
+          { label: "What computer-delivered IELTS looks like on screen", href: "/blog/computer-delivered-ielts-guide" },
+        ],
+      },
+      {
+        heading: "One Skill Retake: what a cancellation does to the 60-day window",
+        paragraphs: [
+          "One Skill Retake has to be sat within 60 days of your original test, and the official terms say there are no exceptions. A cancellation is exactly the situation that rule does not cover. Caixin reported that some of the One Skill Retake sessions cancelled in China fell on the last day of a candidate's 60-day window. The published remedy offers those candidates a refund or a voucher valid until the end of December, and says nothing about whether the 60-day limit moves with them.",
+          "Until IELTS or the British Council says otherwise, treat the 60-day window as fixed, and plan around it:",
+        ],
+        bullets: [
+          "Book your retake early in the window, not at the end. A retake on day 20 survives one cancellation. A retake on day 59 does not.",
+          "If your retake is cancelled, ask the centre in writing whether your new date or voucher still counts as a One Skill Retake. Get the answer in writing before you sit it.",
+          "If the window closes, the fallback is a full test at the full fee. In India that is INR 19,000 against INR 12,650 for the retake.",
+        ],
+        links: [
+          { label: "IELTS One Skill Retake: the rules and the 60-day deadline", href: "/blog/ielts-one-skill-retake-guide" },
+        ],
+      },
+      {
+        heading: "How to protect a deadline against a cancelled test",
+        paragraphs: [
+          "The candidates who suffered most in China were the ones testing a week before an application deadline. A cancellation costs you a date, and a date is the one thing you cannot buy back. The protection is buffer, not luck.",
+        ],
+        bullets: [
+          "Count backwards from the deadline. Computer-delivered results usually arrive in 3 to 5 days, so a test two weeks before the deadline leaves room for one cancellation and a rebooking.",
+          "In China, candidates with a deadline could switch to IDP, which kept testing and added seats. In India that option does not exist: IDP is the only IELTS provider, so your hedge is a different city or an earlier date, not a different organisation.",
+          "If a cancellation does push you past a deadline, ask the university for a short extension, and attach the cancellation notice or the centre's explanatory letter. Admissions offices see this often, and an official letter usually settles it.",
+          "Keep the cancellation email, the booking confirmation and any receipts. Every remedy in China, from refunds to travel costs, needed evidence.",
+        ],
+        links: [
+          { label: "IELTS slot booking: how to find an earlier date", href: "/blog/ielts-exam-dates-slot-booking-2026" },
+        ],
+      },
+      {
+        heading: "What to do in the first 48 hours after a cancellation",
+        bullets: [
+          "Read the cancellation notice properly: which sessions, why, and what options it lists. Do not accept the first offer by reflex.",
+          "Choose between refund and transfer on purpose. If you still need the score, a transfer usually gets you a seat sooner than a refund and a new booking.",
+          "If you had a One Skill Retake booked, ask in writing whether your 60-day window is protected.",
+          "Tell your university or visa adviser the same day, with the notice attached, if any deadline is close.",
+          "Collect receipts for travel and accommodation if you made the journey, and claim if the centre offers it.",
+          "Use the extra time. A cancelled test is unwelcome, but a week more of targeted practice before the new date is worth having.",
+        ],
+      },
+      {
+        heading: "When a result goes wrong after the test",
+        paragraphs: [
+          "Disruption is not always a cancelled day. In November 2025 IELTS apologised for a technical issue that affected some Listening and Reading results issued between August 2023 and September 2025. Most corrections went up, some went down, and some candidates' overall band moved by 0.5. IELTS sent revised results, told the receiving organisations, and offered refunds and free resits. It said more than 99% of tests in that period were unaffected.",
+          "If you simply think a band is wrong, that is a different process: an Enquiry on Results, whose fee is refunded in full if any band changes.",
+        ],
+        links: [
+          { label: "How an IELTS remark works, and when it is worth it", href: "/blog/ielts-results-trf-validity-remark" },
+        ],
+      },
+      {
+        heading: "Make the new date count",
+        paragraphs: [
+          "If your test moved, the extra days are preparation time. On IELTSVega you can sit full computer-delivered mock tests on real timing, get instant AI band scores on Writing and Speaking against all four official criteria, and drill the one skill holding your band down, so you walk into the rebooked test better prepared than you would have been for the original.",
+        ],
+      },
+    ],
+    faqs: [
+      { q: "What happens if my IELTS test is cancelled by the test centre?", a: "You choose between a full refund and a transfer to a future test date at no cost. That applies whether the cause was outside the centre's control, such as extreme weather or unrest, or a technical failure or venue problem. The centre should give you as much notice as possible." },
+      { q: "Do I get a full refund if IELTS cancels my test?", a: "Yes, if you choose a refund rather than a transfer. The administration fee of up to 25% applies only when you cancel, not when the test centre does." },
+      { q: "Will IELTS pay my travel costs if the test is cancelled?", a: "Not as a standard right. The IELTS terms promise a refund or a transfer, not travel costs. In October 2026 the British Council did reimburse reasonable travel and accommodation for candidates in mainland China, but that was part of a one-off package. Ask in writing with receipts, but do not count on it." },
+      { q: "What should I do if my computer stops working during the IELTS test?", a: "Tell the invigilator immediately, note the time and section, and ask for the problem to be recorded before you leave the centre. If it is not resolved on the day, file a complaint on the official IELTS form before your results are released. IELTS acknowledges complaints within five working days and replies within 20." },
+      { q: "Is the One Skill Retake 60-day window extended if my retake is cancelled?", a: "No rule says so. The terms state the retake must be sat within 60 days with no exceptions, and the British Council's October 2026 remedy in China did not address the window. Ask the centre in writing whether your new date still counts as a One Skill Retake, and book retakes early in the window so one cancellation does not end it." },
+      { q: "Why was IELTS cancelled in China in October 2026?", a: "The British Council cancelled computer-delivered sessions across the Chinese mainland from 10 to 13 October 2026 after a technical failure it said may have affected test security. Testing resumed on 14 October, with free make-up sessions on 19 and 20 October, refunds, vouchers valid to the end of December, and travel reimbursement. IDP's tests were not affected." },
+      { q: "Can I switch from the British Council to IDP if my test is cancelled?", a: "Where both run IELTS, yes, by booking a new test with IDP, as many candidates in China did in October 2026. In India it is not an option: IDP has been the only IELTS provider since 2021, so the hedge there is a different city or an earlier date." },
+    ],
+  },
+  /**
    * Timely policy post (13 Oct 2026) — SEVP broadcast messages 2608-01 (12 Aug
    * 2026) and 2608-02 (24 Aug 2026) narrowing when DSOs may authorise CPT, and
    * the lawsuit AAU v. DHS filed 5 Oct 2026 in the District of Massachusetts,
@@ -615,6 +790,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
     category: "Booking",
     date: "August 2026",
     publishedAt: "2026-08-05",
+    updatedAt: "2026-10-15",
     readMins: 8,
     keywords: [
       "ielts slot booking",
@@ -634,13 +810,13 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       { heading: "When demand peaks", bullets: ["June to August and December to January are the heaviest periods, driven by university intake deadlines. Book four to six weeks ahead in these windows.", "February to April and September to November are noticeably easier. You can often find something within two weeks.", "Weekend and morning slots go first everywhere. Weekday afternoon and evening slots frequently sit open.", "Test cycles around major visa deadlines in your own country can spike locally, regardless of the global pattern."] },
       { heading: "Six tactics that find you an earlier slot", bullets: ["Widen the city, not just the date. A centre 60 to 90 minutes away often has capacity when your nearest one does not.", "Check both providers. The British Council and IDP publish separate calendars, and candidates routinely check only one.", "Take a weekday slot. If you can take a day off, you will usually find something one to two weeks sooner.", "Check back mid-week. Cancellations and transfers release seats, and they are re-listed immediately rather than held.", "Book the confirmed date you can get, then use the reschedule window if a better one appears. Check the fee and deadline first, because rescheduling is usually cheaper than losing the seat.", "If your Speaking test can be on a separate day, do not filter that out. Same-day Speaking slots are the scarcest part of the calendar."] },
       { heading: "What to have ready before you start", paragraphs: ["Complete the booking in one sitting. The slot you have selected is held only for a short window, and abandoned bookings release it. Have your passport or accepted national ID open in front of you: the name and number must match exactly, because you will present that same document at the centre, and a mismatch means refused entry.", "Decide two things before you start clicking: Academic or General Training, and standard IELTS or IELTS for UKVI. Both are chosen during booking, both are difficult to change afterwards, and choosing wrong is the most expensive mistake in the whole process."] },
-      { heading: "Rescheduling and cancelling", paragraphs: ["Most centres let you move or cancel your test up to about five weeks before the date for an administrative fee, and refund little or nothing after that. Medical cancellations with documentation are usually treated separately. The exact deadlines and fees vary by country and provider, so read the terms your centre shows during booking rather than a general article, including this one."] },
+      { heading: "Rescheduling and cancelling", paragraphs: ["In India, IDP lets you move an IELTS on Computer booking free of charge 15 or more days before the test, and for an administration fee of up to 25% between 5 and 14 days before. Cancelling 15 or more days out refunds the fee minus up to 25%; inside 14 days there is no refund. Illness and similar emergencies go through special consideration. Other countries set their own deadlines and fees, so read the terms your centre shows during booking.", "If the test centre cancels instead, the position reverses: you choose a full refund or a free transfer."], links: [{ label: "IDP India's transfer and cancellation table", href: "/blog/how-to-book-ielts-test" }, { label: "IELTS test cancelled by the centre: your refund and rebooking rights", href: "/blog/ielts-test-cancelled-refund-rights" }] },
       { heading: "Pick the date your practice supports", paragraphs: ["The best predictor of a good IELTS day is not the slot you got, it is whether your practice scores are already sitting at your target band. Work backwards: get to consistent target-band mocks, then book the first date after that. On IELTSVega you can sit full timed mock tests and get instant AI band scores on Writing and Speaking, so you know precisely when you are ready to spend the fee."] },
     ],
     faqs: [
       { q: "How far in advance should I book my IELTS test?", a: "Four to six weeks is a good default, and longer between June and August or December and January when demand peaks. Booking too early carries its own risk: pick a date you can realistically be prepared for, because a retake costs the full fee again." },
       { q: "Why are there no IELTS slots available in my city?", a: "Centres publish dates in two to three month blocks and top them up as capacity is confirmed, so an empty calendar usually means the next block has not been released yet. Check both the British Council and IDP calendars, look at nearby cities, and check back mid-week when cancellations are re-listed." },
-      { q: "Can I change my IELTS test date after booking?", a: "Usually yes, up to about five weeks before your test date, for an administrative fee. Inside that window you typically forfeit most of the fee unless you have a documented medical reason. Check the exact terms shown by your test centre during booking." },
+      { q: "Can I change my IELTS test date after booking?", a: "Yes. In India, IDP transfers an IELTS on Computer booking free 15 or more days before the test, and for an administration fee of up to 25% between 5 and 14 days before. Within 4 days a transfer is treated as a cancellation and the fee is lost. Other countries set their own rules, so check the terms shown by your test centre during booking." },
       { q: "Are IELTS test dates available every day?", a: "In major cities, computer-delivered IELTS now runs on most days of the week, often with several slots a day. Smaller centres run fewer dates. Weekend and morning slots are the most contested; weekday afternoons are usually the easiest to get." },
     ],
   },
@@ -653,7 +829,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
     category: "Booking",
     date: "August 2026",
     publishedAt: "2026-08-06",
-    updatedAt: "2026-10-03",
+    updatedAt: "2026-10-15",
     readMins: 9,
     keywords: [
       "ielts exam fee",
@@ -688,7 +864,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       },
       { heading: "Why is IELTS so expensive?", paragraphs: ["Because a person marks it. Your Writing is assessed by a trained examiner, and your Speaking is a live interview with one, so every candidate uses examiner time that fully automated tests do not pay for. That is the main reason IELTS costs more than PTE or the Duolingo English Test. The rest of the fee goes on:"], bullets: ["Human examiners. Two of the four sections are marked by trained, certified people, and the Speaking test needs an examiner present for every single candidate.", "Supervised, secure test days. ID checks on arrival, invigilated rooms and secure test materials cost money at every sitting.", "Local operating costs. Venue hire, staff, taxes and exchange rates differ by country, which is why the fee is set market by market rather than globally.", "Extra requirements for some versions. IELTS for UKVI adds the UK Home Office's reporting rules and is only run at approved centres, so it costs more again."] },
       { heading: "Why the same test costs different amounts", paragraphs: ["The fee is set per market by the British Council and IDP, and it absorbs local costs: venue hire, examiner pay, invigilation, and the Speaking examiner's time. It also reflects what the local market will bear. None of this changes the test you sit or the score you get: a USD 325 test in the United States and an INR 19,000 test in India are the same paper, marked to the same standard."] },
-      { heading: "The fees nobody mentions", bullets: ["Rescheduling: typically an administrative fee if you move your date more than about five weeks out.", "Cancellation: usually a partial refund before the deadline, and little or nothing after it. Documented medical cases are handled separately.", "Enquiry on Results (a remark): a fee that is refunded in full if any band changes. You normally have six weeks from your test date to apply.", "One Skill Retake: a separate fee, though generally lower than a full test. That is the point of it.", "Extra Test Report Forms sent to institutions beyond the free allowance.", "A full re-sit: the entire fee again, which is why the cheapest thing you can buy in IELTS is preparation."] },
+      { heading: "The fees nobody mentions", bullets: ["Rescheduling: free in India 15 or more days before the test, then an administration fee of up to 25% between 5 and 14 days before. Other countries set their own rules.", "Cancellation: in India, the fee minus up to 25% if you cancel 15 or more days out, and nothing inside 14 days. If the test centre cancels, you get a full refund or a free transfer instead.", "Enquiry on Results (a remark): a fee that is refunded in full if any band changes. You normally have six weeks from your test date to apply.", "One Skill Retake: a separate fee, though generally lower than a full test. That is the point of it.", "Extra Test Report Forms sent to institutions beyond the free allowance.", "A full re-sit: the entire fee again, which is why the cheapest thing you can buy in IELTS is preparation."] },
       { heading: "How to spend it once", paragraphs: ["The real cost of IELTS is not the fee, it is the number of times you pay it. Two sittings plus a remark costs more than most people's entire preparation budget. Three things reduce the odds of a second payment: know your exact requirement including any per-skill minimum, practise in the format you will actually sit, and only book once your timed mock scores are consistently at or above target.", "If you fall short in exactly one skill, check One Skill Retake before booking a full test. It is computer-delivered only, must be taken within 60 days of your original test and in the same country, and is available across most of the 110+ IELTS countries, though not in the United States. Confirm your receiving organisation accepts a One Skill Retake result before relying on it."] },
       { heading: "Is IELTS worth it against cheaper tests?", paragraphs: ["Duolingo English Test and PTE Academic are usually cheaper. Acceptance is what decides it. IELTS is accepted by essentially every university and immigration system that asks for English, while the cheaper tests are accepted broadly but not universally, and some visa routes still specify IELTS. Check your specific university, employer or visa route first: a cheaper test your institution does not accept costs you 100% of its fee."] },
       { heading: "Get your money's worth on the first attempt", paragraphs: ["The most expensive IELTS is the one you sit twice. On IELTSVega you can sit full timed mock tests, get instant AI band scores on Writing and Speaking against all four criteria, and work through 15,000+ Academic and General Training questions, so the fee buys a result rather than a diagnostic."] },
@@ -704,7 +880,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
     faqs: [
       { q: "How much does the IELTS exam cost in 2026?", a: "Globally the fee typically falls between about USD 230 and USD 490 equivalent, set locally by the British Council and IDP. In India it rose to roughly INR 19,000 from 1 April 2026. Always confirm the current price on your test centre's booking page, as fees change without much notice." },
       { q: "Why does IELTS for UKVI cost more?", a: "IELTS for UKVI is the same test under additional UK Home Office administrative and reporting requirements, and it is only offered at approved centres. That adds around 10% to the standard fee in some markets, but much less in others: in India, IDP charges INR 19,250 for UKVI against INR 19,000 for standard IELTS on computer." },
-      { q: "Is the IELTS fee refundable if I cancel?", a: "Usually you receive a partial refund if you cancel more than about five weeks before your test date, and little or nothing after that. Documented medical reasons are normally handled separately. Check your centre's specific terms, which are shown during booking." },
+      { q: "Is the IELTS fee refundable if I cancel?", a: "Partly, if you cancel early enough. In India, IDP refunds the fee minus an administration fee of up to 25% when you cancel 15 or more days before the test, and nothing inside 14 days. Illness and similar emergencies go through special consideration. If the test centre cancels, you get a full refund or a free transfer. Other countries set their own terms, shown during booking." },
       { q: "Is One Skill Retake cheaper than sitting IELTS again?", a: "Yes. It carries its own fee, but it is generally lower than a full test, which is the reason it exists. It applies only to computer-delivered tests, must be taken within 60 days and in the same country as your original test, and is not available in the United States." },
       { q: "Did the IELTS fee increase in 2026?", a: "Yes, in several markets. In India the fee rose to around INR 19,000 from 1 April 2026, up from INR 18,000. In the United States it rose from USD 285 to USD 325 at most centres on 1 October 2026. Fees are set per market rather than globally, so an increase in one country does not mean every country changed. Check your own centre's booking page for the figure that applies to you." },
       { q: "Is an IELTS score valid for 5 years?", a: "No. An IELTS Test Report Form is normally valid for two years from your test date. Some institutions and immigration routes accept older results in specific circumstances, but two years is the standard validity and you should plan around it. If your result is close to expiring and you still need it, budget for a re-sit rather than assuming an extension." },
@@ -831,7 +1007,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       { heading: "Writing: the word count is free information", bullets: ["You type both tasks. There is a live word count, so the old skill of estimating 250 words by eye is obsolete. Use the count and stop guessing.", "Cut, copy and paste work, so restructuring a paragraph is cheap. Take advantage: write your Task 2 body paragraphs in whatever order they come, then reorder.", "There is no spell-checker and no grammar checker. Proofreading is entirely on you, and it is worth the last three minutes.", "Typing speed matters. If you type under about 30 words per minute, that is a real risk to your Writing band, and it is the single most improvable thing on this list."] },
       { heading: "Results arrive faster, which changes your planning", paragraphs: ["Computer-delivered results usually arrive within 3 to 5 days, against up to 13 days for paper. If you are working to an application deadline, that shortens the buffer you need. It also means a One Skill Retake, which must happen within 60 days of your original test, is genuinely usable rather than theoretical."] },
       { heading: "The 'Writing on Paper' option", paragraphs: ["In selected markets you can choose to handwrite the Writing component while Listening and Reading run on computer. It is an option at some centres, not the default, and availability varies. If handwriting is genuinely faster for you than typing, check whether your centre offers it before you book, but be aware that you are also giving up the live word count and free editing."] },
-      { heading: "Practise on the screen you will sit", paragraphs: ["Familiarity with the interface is worth real marks, and it is free. IELTSVega runs entirely in your browser with a typed Writing editor and word count, on-screen Listening and Reading with highlighting, and full timed mock tests that mirror the computer-delivered experience, plus instant AI band scoring on Writing and Speaking so you know where you actually stand."], links: [{ label: "Computer or paper: which to choose", href: "/blog/ielts-online-vs-paper-based" }] },
+      { heading: "Practise on the screen you will sit", paragraphs: ["Familiarity with the interface is worth real marks, and it is free. IELTSVega runs entirely in your browser with a typed Writing editor and word count, on-screen Listening and Reading with highlighting, and full timed mock tests that mirror the computer-delivered experience, plus instant AI band scoring on Writing and Speaking so you know where you actually stand."], links: [{ label: "Computer or paper: which to choose", href: "/blog/ielts-online-vs-paper-based" }, { label: "IELTS test cancelled or a technical problem on test day: what to do", href: "/blog/ielts-test-cancelled-refund-rights" }] },
     ],
     faqs: [
       { q: "Is IELTS fully computer-based now?", a: "In most markets, yes. Paper-based delivery was retired from mid-2026, with the final paper date in most locations on 27 June 2026. A \"Writing on Paper\" option exists in selected markets, where you handwrite the Writing component while the rest runs on computer." },
@@ -867,7 +1043,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       { paragraphs: ["You needed 7.0 in every skill. You got 7.5, 7.5, 7.5 and 6.5 in Writing. Until recently that meant sitting the entire three-hour exam again and paying the whole fee to fix one number. IELTS One Skill Retake (often shortened to OSR) ends that: you re-sit the single skill that let you down and receive an additional Test Report Form with the new score.", "It is genuinely useful, and it comes with specific rules that people get caught by: a hard 60-day deadline, one retake per test, and an acceptance question you have to settle before you pay. Here is all of it, including the fee, how to book and what happens if the retake goes worse."] },
       { heading: "IELTS One Skill Retake: the eligibility rules", bullets: ["Your original test must have been IELTS on computer, taken at a centre that offers One Skill Retake. Since full paper-based IELTS was withdrawn in most markets in 2026, computer is now the default rather than a restriction.", "You must sit the retake within 60 days of your original test date. The official terms say there are no exceptions to this rule.", "You get one One Skill Retake per full test. You cannot retake a second skill, or the same skill twice, against the same original test.", "You retake exactly one skill: Listening, Reading, Writing or Speaking.", "It is offered for both IELTS Academic and General Training. IELTS on computer for UKVI is eligible in selected locations only.", "There is no minimum band required. You do not need to have nearly passed.", "Book with the same passport you used for the original test. A different ID document can stop you sitting the retake."] },
       { heading: "How much does IELTS One Skill Retake cost?", paragraphs: ["There is no single global price. Each test centre sets its own fee, and you see the exact amount in your test taker portal before you pay. It is always cheaper than a full test, but not dramatically: in India it costs about two-thirds of the full fee."], table: { caption: "IELTS One Skill Retake fee in India vs a full test (IDP India, October 2026)", headers: ["Booking", "Fee in India"], rows: [["IELTS One Skill Retake (Academic or General Training)", "INR 12,650"], ["IELTS One Skill Retake for UKVI", "INR 12,650"], ["Full IELTS on Computer test", "INR 19,000"], ["Full IELTS on Computer for UKVI", "INR 19,250"]] }, links: [{ label: "IELTS exam fee in 2026, country by country", href: "/blog/ielts-exam-fee-2026" }] },
-      { heading: "Where One Skill Retake is available", paragraphs: ["One Skill Retake is offered at participating IELTS on computer centres in most markets, including every city in India where IDP runs computer-delivered tests, and the list keeps growing. It is not offered at every centre, and several prep guides report that it is not available in the United States, so check before you book your full test, not after.", "The quickest check is your test taker portal: if your test is eligible, a Retake option appears next to each skill on your results page. If it is not there, ask your centre why before planning around it."], links: [{ label: "How to book the IELTS test and pick a centre", href: "/blog/how-to-book-ielts-test" }] },
+      { heading: "Where One Skill Retake is available", paragraphs: ["One Skill Retake is offered at participating IELTS on computer centres in most markets, including every city in India where IDP runs computer-delivered tests, and the list keeps growing. It is not offered at every centre, and several prep guides report that it is not available in the United States, so check before you book your full test, not after.", "The quickest check is your test taker portal: if your test is eligible, a Retake option appears next to each skill on your results page. If it is not there, ask your centre why before planning around it."], links: [{ label: "How to book the IELTS test and pick a centre", href: "/blog/how-to-book-ielts-test" }, { label: "If your IELTS test or retake is cancelled: refund, rebooking and the 60-day window", href: "/blog/ielts-test-cancelled-refund-rights" }] },
       { heading: "How to book IELTS One Skill Retake", bullets: ["Wait for your full test results. You cannot book a retake until the original result is issued.", "Log in to the test taker portal of the provider you booked with (IDP or British Council) and open your results.", "Click Retake next to the one skill you want to improve.", "Choose a date and session. The retake itself, not just the booking, must fall within 60 days of your original test date.", "Pay the fee shown and confirm. Bring the same passport on the day.", "If you also want a remark on the original test, submit that first: in India, an Enquiry on Results on the original must be made before you register for the retake."] },
       { heading: "One Skill Retake results: when they arrive and which TRF you use", paragraphs: ["One Skill Retake results normally arrive in 3 to 5 calendar days, the same turnaround as any computer-delivered test, though a centre can take longer if extra checks are needed.", "You receive an additional Test Report Form with its own unique TRF number. It shows the new score for the skill you retook, your other three scores from the original sitting, and a recalculated overall band. Your original Test Report Form stays valid. You decide which of the two to send to a university or visa authority."], links: [{ label: "How the overall IELTS band score is calculated", href: "/blog/how-ielts-band-score-is-calculated" }] },
       { heading: "What if your One Skill Retake score is lower?", paragraphs: ["It can happen. The official terms are explicit that the retaken skill can go up, down or stay the same, and the overall band on the new report is recalculated from it, so that can drop too.", "A lower result does not cost you your original score. Because the original Test Report Form remains valid, you simply keep using it. What you do lose is the fee and your one retake for that test, which is why the decision to sit it should rest on evidence that the skill has actually improved, not on the calendar."] },

@@ -743,6 +743,9 @@ export const POSTS: BlogPost[] = [
           "Outside India the British Council and IDP set their own deadlines and fees per country. Read the transfer policy on your own booking confirmation before you rely on any of the numbers above.",
           "New dates depend on availability, so a free transfer is only useful if there is a seat you want.",
         ],
+        links: [
+          { label: "If the test centre cancels your IELTS test: refund and rebooking rights", href: "/blog/ielts-test-cancelled-refund-rights" },
+        ],
       },
       { heading: "Step 4: Prepare for test day", bullets: ["Bring the same identity document you registered with, no exceptions.", "Arrive early; latecomers are usually refused entry.", "Know your test centre's rules on what you can bring into the room.", "For computer-delivered tests, arrive familiar with the on-screen interface."] },
       { heading: "Step 5: Get results and plan a retake if needed", paragraphs: ["Results (the Test Report Form) arrive within a few days for computer-delivered tests. If you fall short in one skill, you can now retake a single section with 'One Skill Retake' in many locations, rather than sitting the whole test again, check availability in your country."] },
