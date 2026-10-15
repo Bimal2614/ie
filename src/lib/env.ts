@@ -79,6 +79,14 @@ const EnvSchema = z.object({
   // Window over which violations accumulate toward deactivation.
   RATE_LIMIT_VIOLATION_WINDOW_DAYS: z.coerce.number().int().positive().default(30),
 
+  /**
+   * Free AI scores granted to each NEW account: Writing/Speaking submissions
+   * band-scored before the paywall. 0 turns the grant off. Read at signup, so a
+   * change affects accounts created afterwards, never an existing balance. See
+   * src/lib/security/ai-credits.ts.
+   */
+  FREE_AI_CREDITS: z.coerce.number().int().min(0).max(100).default(5),
+
   // --- Scheduled jobs. The subscription sweep (/api/cron/subscriptions)
   //     authenticates with this. Optional, and the route stays CLOSED while it
   //     is unset: an unauthenticated sweep would let anyone churn the ledger. ---
@@ -212,6 +220,7 @@ export const env = EnvSchema.parse({
   RATE_LIMIT_AI_ACCOUNT_WINDOW_DAYS: process.env.RATE_LIMIT_AI_ACCOUNT_WINDOW_DAYS,
   RATE_LIMIT_VIOLATIONS_BEFORE_DEACTIVATE: process.env.RATE_LIMIT_VIOLATIONS_BEFORE_DEACTIVATE,
   RATE_LIMIT_VIOLATION_WINDOW_DAYS: process.env.RATE_LIMIT_VIOLATION_WINDOW_DAYS,
+  FREE_AI_CREDITS: process.env.FREE_AI_CREDITS,
   CRON_SECRET: process.env.CRON_SECRET,
   ADMIN_EMAILS: process.env.ADMIN_EMAILS,
   SLACK_WEBHOOK_URL: process.env.SLACK_WEBHOOK_URL,

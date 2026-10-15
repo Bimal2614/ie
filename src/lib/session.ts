@@ -141,6 +141,8 @@ export type AuthenticatedUser = {
   planExpiresAt: Date | null;
   /** The tier stored on the row, before expiry was applied — for support/UI. */
   storedPlan: PlanKey;
+  /** Free AI scores left. Only read when the plan itself has no AI scoring. */
+  aiCredits: number;
 };
 
 /**
@@ -171,6 +173,7 @@ export async function validateSession(): Promise<AuthenticatedUser | null> {
       // this row to authenticate, so gating costs no extra query.
       plan: users.plan,
       planExpiresAt: users.planExpiresAt,
+      aiCredits: users.aiCredits,
     })
     .from(sessions)
     .innerJoin(users, eq(sessions.userId, users.id))

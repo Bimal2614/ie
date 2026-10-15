@@ -18,6 +18,8 @@ interface AppShellProps {
    * authenticated user wait on a probe to find out they are not being upsold.
    */
   plan?: PlanKey | null;
+  /** Free AI scores left, from the same session read. */
+  aiCredits?: number;
   /**
    * The account has no phone number on file — i.e. a Google sign-in, since
    * email signup collects one. Blocks the shell with a prompt until it's given.
@@ -28,7 +30,7 @@ interface AppShellProps {
   children: ReactNode;
 }
 
-export function AppShell({ user, plan, needsPhone, logoutAction, children }: AppShellProps) {
+export function AppShell({ user, plan, aiCredits, needsPhone, logoutAction, children }: AppShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -64,6 +66,7 @@ export function AppShell({ user, plan, needsPhone, logoutAction, children }: App
         <Topbar
           user={user}
           plan={plan}
+          aiCredits={aiCredits}
           onOpenSidebar={() => setMobileOpen(true)}
           logoutAction={logoutAction}
         />

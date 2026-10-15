@@ -17,6 +17,7 @@ import { createSession, getRequestContext } from "@/lib/session";
 import { safeEqual } from "@/lib/security/tokens";
 import { normalizePhone } from "@/lib/phone";
 import { SIGNED_UP_COOKIE } from "@/lib/analytics";
+import { creditsForNewAccount, readDeviceSignals, recordSignupDevice } from "@/lib/security/ai-credits";
 
 /**
  * Google OAuth callback → find-or-create the user, then create an app session.
@@ -136,6 +137,10 @@ export async function GET(req: Request) {
      * nothing but its shape.
      */
     const referrer = viaInvite ? null : await referringPartner(referralId);
+    // Same device check as the email signup — the cookie was written by the
+    // login/signup page before the candidate left for Google.
+    const device = await readDeviceSignals();
+    const aiCredits = await creditsForNewAccount(device);
     const [created] = await db
       .insert(users)
       .values({
@@ -147,10 +152,12 @@ export async function GET(req: Request) {
         phone,
         avatarUrl: profile.picture ?? null,
         partnerId: referrer?.id ?? null,
+        aiCredits,
       })
       .returning({ id: users.id, deactivatedAt: users.deactivatedAt, phone: users.phone });
     user = created;
     createdNow = true;
+    await recordSignupDevice(created.id, device, (await getRequestContext()).ip, aiCredits);
     // A new account, not a returning sign-in — see SignupBeacon.
     jar.set(SIGNED_UP_COOKIE, "google", {
       path: "/",

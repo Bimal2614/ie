@@ -17,6 +17,7 @@ import {
   type SectionKey,
 } from "@/lib/plans";
 import type { AuthenticatedUser } from "@/lib/session";
+import { attemptIsCreditFunded, hasSpentAiCredits, spendAiCredit } from "@/lib/security/ai-credits";
 
 /**
  * Where a plan stops.
@@ -107,6 +108,8 @@ export async function planUsage(user: AuthenticatedUser) {
     resetsAt: nextMonthStart().toISOString(),
     sections: e.practiceSections,
     aiScoring: e.aiScoring,
+    /** Free AI scores left; null when the plan scores without them. */
+    aiCredits: e.aiScoring ? null : user.aiCredits,
     mocks: e.monthlyMockSittings,
   };
 }
@@ -141,7 +144,13 @@ export async function checkPracticeAccess(
   const e = entitlements(user.plan);
 
   const locked = [...new Set(sections)].filter((s) => !e.practiceSections.includes(s));
-  if (locked.length > 0) {
+  // Writing/Speaking on a free account are unlocked by a free AI credit, which
+  // the caller spends when it writes the answers (see `needsAiCredit`).
+  const aiOnly = locked.length > 0 && locked.every(isAiSection);
+  if (aiOnly && user.aiCredits <= 0 && (await hasSpentAiCredits(user.id))) {
+    return creditsExhaustedBlock();
+  }
+  if (locked.length > 0 && !(aiOnly && user.aiCredits > 0)) {
     const names = locked.map((s) => s[0].toUpperCase() + s.slice(1));
     const required = cheapestWith((p) => locked.every((s) => p.practiceSections.includes(s)));
     // Said from the candidate's side: they have written the answer, and what
@@ -173,6 +182,71 @@ export async function checkPracticeAccess(
     "pro",
     { used, limit: e.monthlyPracticeAnswers, resetsAt: resetsAt.toISOString() },
   );
+}
+
+/* ------------------------------------------------------------------ *
+ * Free AI credits (src/lib/security/ai-credits.ts)
+ * ------------------------------------------------------------------ */
+
+const AI_SECTIONS: readonly SectionKey[] = ["writing", "speaking"];
+
+function isAiSection(s: SectionKey): boolean {
+  return AI_SECTIONS.includes(s);
+}
+
+/**
+ * Must this submission be paid for with a free credit?
+ *
+ * Yes when it contains Writing/Speaking answers and the plan has no AI scoring
+ * of its own. `sections` are those of the rows actually being written, so a
+ * Writing set submitted blank costs nothing.
+ */
+export function needsAiCredit(user: AuthenticatedUser, sections: readonly SectionKey[]): boolean {
+  return !entitlements(user.plan).aiScoring && sections.some(isAiSection);
+}
+
+/**
+ * Write a practice attempt's answers, spending a free credit when they need one.
+ *
+ * One transaction: the credit and the answers land together or not at all, so
+ * a candidate never pays for answers that were not recorded, and never has
+ * answers queued for scoring that nobody paid for. Returns the paywall when the
+ * last credit went to a concurrent submit — nothing is written, and the
+ * candidate's answers are still on the page.
+ */
+export async function insertAttemptRows(
+  user: AuthenticatedUser,
+  attemptId: string,
+  rows: (typeof userResponses.$inferInsert)[],
+): Promise<PlanBlock | null> {
+  const useCredit = needsAiCredit(user, rows.map((r) => r.section as SectionKey));
+  const written = await db.transaction(async (tx) => {
+    if (useCredit && (await spendAiCredit(tx, user.id, attemptId)) === null) return false;
+    await tx.insert(userResponses).values(rows);
+    return true;
+  });
+  return written ? null : creditsExhaustedBlock();
+}
+
+/** The paywall, once the free credits are gone. */
+export function creditsExhaustedBlock(): PlanBlock {
+  const required = cheapestWith((p) => p.aiScoring);
+  return block(
+    "credits_exhausted",
+    `${PLANS[required].label} and above include ` +
+      `unlimited AI band scoring for Writing and Speaking, plus full mock tests.`,
+    required,
+  );
+}
+
+/**
+ * The recording upload's gate: a plan with AI scoring, or a free credit left
+ * to spend at submit. Mock speaking needs a paid plan to start at all, so a
+ * credit holder only ever reaches this from practice.
+ */
+export function checkAiScoringOrCredit(user: AuthenticatedUser): PlanBlock | null {
+  if (user.aiCredits > 0) return null;
+  return checkAiScoring(user);
 }
 
 /** May this candidate have Writing/Speaking answers band-scored by the AI? */
@@ -247,7 +321,7 @@ export function checkAdvancedReports(user: AuthenticatedUser): PlanBlock | null 
  * have given, including the expiry check, because a subscription can lapse
  * between a submit and the scoring it scheduled.
  */
-export async function userMayUseAiScoring(userId: string): Promise<boolean> {
+export async function userMayUseAiScoring(userId: string, attemptId?: string): Promise<boolean> {
   const [row] = await db
     .select({ plan: users.plan, planExpiresAt: users.planExpiresAt })
     .from(users)
@@ -255,7 +329,10 @@ export async function userMayUseAiScoring(userId: string): Promise<boolean> {
     .limit(1);
   if (!row) return false;
 
-  return entitlements(effectivePlan(toPlanKey(row.plan), row.planExpiresAt)).aiScoring;
+  if (entitlements(effectivePlan(toPlanKey(row.plan), row.planExpiresAt)).aiScoring) return true;
+  // A practice attempt paid for with a free credit stays scorable after the
+  // balance reaches 0 — the credit was spent when it was submitted.
+  return attemptId ? attemptIsCreditFunded(attemptId) : false;
 }
 
 /**

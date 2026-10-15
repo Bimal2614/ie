@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/dal";
 import { scoreAttemptWritingFor } from "@/lib/scoring/score-attempt";
 import { tryConsumeAi } from "@/lib/security/rate-guard";
 import { checkAiScoring } from "@/lib/security/plan-guard";
+import { attemptIsCreditFunded } from "@/lib/security/ai-credits";
 
 /**
  * Retry Writing scoring for one attempt.
@@ -21,7 +22,11 @@ export async function scoreAttemptWriting(
   // Plan before rate limit: a tier that never had AI scoring should be told so,
   // not handed a throttle message about an allowance it does not have.
   const gate = checkAiScoring(user);
-  if (gate) return { scored: 0, limited: true, message: gate.message };
+  // An attempt paid for with a free credit may be retried after the balance
+  // reaches 0 — the credit bought its scoring when it was submitted.
+  if (gate && !(await attemptIsCreditFunded(attemptId))) {
+    return { scored: 0, limited: true, message: gate.message };
+  }
 
   const budget = await tryConsumeAi(user.id);
   if (!budget.allowed) return { scored: 0, limited: true, message: budget.message };

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/dal";
 import { uploadSpeakingAudio } from "@/lib/speech/s3";
 import { toWav16kMono, wavDurationSeconds } from "@/lib/speech/transcode";
-import { checkAiScoring } from "@/lib/security/plan-guard";
+import { checkAiScoringOrCredit } from "@/lib/security/plan-guard";
 import { isProd } from "@/lib/env";
 
 /**
@@ -101,7 +101,7 @@ export async function POST(req: Request): Promise<NextResponse> {
   // and storing audio no examiner will ever hear is pure cost. `blocked` tells
   // the recorder this is a plan matter, not a failure — the candidate keeps
   // practising, and the dialog at submit explains what a plan would buy.
-  const gate = checkAiScoring(user);
+  const gate = checkAiScoringOrCredit(user);
   if (gate) return json({ error: gate.message, blocked: true });
 
   let file: FormDataEntryValue | null;

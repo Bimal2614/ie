@@ -8,6 +8,7 @@ export default async function MockTestsLayout({ children }: { children: React.Re
     <AppShell
       user={{ name: user.name, email: user.email, targetModule: user.targetModule }}
       plan={user.plan}
+      aiCredits={user.aiCredits}
       needsPhone={!user.phone}
       logoutAction={logout}
     >

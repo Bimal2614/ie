@@ -225,7 +225,9 @@ export type PlanBlockCode =
   /** The monthly allowance is spent. */
   | "quota_exhausted"
   /** The feature needs a higher tier (mocks, AI scoring, reports). */
-  | "upgrade_required";
+  | "upgrade_required"
+  /** A free account has spent all its free AI scores. */
+  | "credits_exhausted";
 
 export type PlanBlock = {
   blocked: true;

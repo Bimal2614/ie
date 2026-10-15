@@ -44,7 +44,9 @@ export function PlanBlockDialog({
   const title =
     block.code === "quota_exhausted"
       ? "That's your free questions for this month"
-      : "This answer needs a paid plan to evaluate";
+      : block.code === "credits_exhausted"
+        ? "You've used your free AI scores"
+        : "This answer needs a paid plan to evaluate";
 
   return (
     <div

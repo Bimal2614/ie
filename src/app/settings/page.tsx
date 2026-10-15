@@ -114,6 +114,12 @@ export default async function SettingsPage() {
                     ? `Renews automatically on ${renews}.`
                     : "Active."}
             </p>
+            {usage.aiCredits !== null && usage.aiCredits > 0 && (
+              <p className="mt-2 text-sm text-ink-soft">
+                <span className="font-medium text-ink">{usage.aiCredits}</span> free AI{" "}
+                {usage.aiCredits === 1 ? "score" : "scores"} left for Writing and Speaking
+              </p>
+            )}
             {/* Only a capped plan has a count worth showing. */}
             {usage.practiceLimit !== null && (
               <p className="mt-2 text-sm text-ink-soft">

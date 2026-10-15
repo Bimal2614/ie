@@ -192,6 +192,17 @@ export const users = pgTable(
     planExpiresAt: timestamp({ withTimezone: true }),
 
     /**
+     * Free AI scores left: Writing/Speaking submissions a FREE account may have
+     * band-scored before the paywall. One credit is one submitted attempt (an
+     * essay, a speaking part), not one answer — see src/lib/security/ai-credits.ts.
+     *
+     * DEFAULT 0, NOT THE GRANT. Accounts that predate the feature keep 0; a new
+     * signup is given `FREE_AI_CREDITS` (env) at insert, unless its device has
+     * already claimed a grant. Paid plans never read this column.
+     */
+    aiCredits: integer().notNull().default(0),
+
+    /**
      * This account's Razorpay customer id (`cust_…`), created on first checkout
      * and reused forever after.
      *
@@ -870,6 +881,67 @@ export const auditLog = pgTable(
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("audit_log_user_idx").on(t.userId), index("audit_log_event_idx").on(t.event)],
+);
+
+/* ------------------------------------------------------------------ *
+ * Free AI credits
+ * See src/lib/security/ai-credits.ts.
+ * ------------------------------------------------------------------ */
+
+/**
+ * One row per self-service signup: which device it came from, and whether it
+ * was granted the free AI credits.
+ *
+ * Two signals, matched with OR: the FingerprintJS visitorId (survives clearing
+ * storage and most incognito windows) and a random id kept in localStorage
+ * (never collides, so two identical laptops in one class are told apart). A
+ * device that already received a grant gets an account but 0 credits.
+ *
+ * THE IP IS FOR REVIEW ONLY and decides nothing: a coaching centre or a mobile
+ * carrier puts hundreds of genuine candidates behind one address.
+ */
+export const signupDevices = pgTable(
+  "signup_devices",
+  {
+    id: uuid().defaultRandom().primaryKey(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    deviceId: text(),
+    localId: text(),
+    ipAddress: text(),
+    creditsGranted: integer().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("signup_devices_device_idx").on(t.deviceId),
+    index("signup_devices_local_idx").on(t.localId),
+    index("signup_devices_user_idx").on(t.userId),
+  ],
+);
+
+/**
+ * Which practice attempts were paid for with a free credit.
+ *
+ * The background scorer and the sweeper run after the request, when the credit
+ * is already spent and the balance may read 0. This row is how they know the
+ * attempt was paid for, and the unique attempt id is what makes a double-submit
+ * spend one credit, not two.
+ */
+export const aiCreditSpends = pgTable(
+  "ai_credit_spends",
+  {
+    id: uuid().defaultRandom().primaryKey(),
+    userId: uuid()
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    attemptId: uuid().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("ai_credit_spends_attempt_uq").on(t.attemptId),
+    index("ai_credit_spends_user_idx").on(t.userId),
+  ],
 );
 
 /* ------------------------------------------------------------------ *

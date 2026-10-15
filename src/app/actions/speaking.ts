@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/dal";
 import { scoreAttemptSpeakingFor } from "@/lib/scoring/score-attempt";
 import { tryConsumeAi } from "@/lib/security/rate-guard";
 import { checkAiScoring } from "@/lib/security/plan-guard";
+import { attemptIsCreditFunded } from "@/lib/security/ai-credits";
 
 /**
  * Speaking, server-side.
@@ -33,7 +34,11 @@ export async function scoreAttemptSpeaking(
   const user = await requireUser();
 
   const gate = checkAiScoring(user);
-  if (gate) return { scored: 0, limited: true, message: gate.message };
+  // An attempt paid for with a free credit may be retried after the balance
+  // reaches 0 — the credit bought its scoring when it was submitted.
+  if (gate && !(await attemptIsCreditFunded(attemptId))) {
+    return { scored: 0, limited: true, message: gate.message };
+  }
 
   const budget = await tryConsumeAi(user.id);
   if (!budget.allowed) return { scored: 0, limited: true, message: budget.message };

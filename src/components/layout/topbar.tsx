@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu, ChevronRight, User as UserIcon, Settings as SettingsIcon, LogOut } from "lucide-react";
+import { Menu, ChevronRight, User as UserIcon, Settings as SettingsIcon, LogOut, Sparkles } from "lucide-react";
 import { LogoMark } from "@/components/ui/logo";
 import { clearAuthCache } from "@/lib/auth-cache";
 import { type PlanKey } from "@/lib/plans";
@@ -38,11 +38,13 @@ interface TopbarProps {
   user: TopbarUser;
   /** From the session, not the browser — `null` only if a caller omits it. */
   plan?: PlanKey | null;
+  /** Free AI scores left, from the session. Shown only on the free plan. */
+  aiCredits?: number;
   onOpenSidebar: () => void;
   logoutAction: () => void | Promise<void>;
 }
 
-export function Topbar({ user, plan, onOpenSidebar, logoutAction }: TopbarProps) {
+export function Topbar({ user, plan, aiCredits, onOpenSidebar, logoutAction }: TopbarProps) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const pageLabel = pageLabelFor(pathname);
@@ -83,6 +85,19 @@ export function Topbar({ user, plan, onOpenSidebar, logoutAction }: TopbarProps)
           <span className={cn("h-1.5 w-1.5 rounded-full", user.targetModule === "general" ? "bg-accent" : "bg-brand")} />
           {user.targetModule === "general" ? "General Training" : "Academic"}
         </span>
+
+        {/* Free AI scores left — a count, not a card. Hidden at 0; the paywall
+            dialog says that at the moment it matters. */}
+        {plan === "free" && aiCredits !== undefined && aiCredits > 0 && (
+          <span
+            title={`${aiCredits} free AI ${aiCredits === 1 ? "score" : "scores"} left for Writing and Speaking`}
+            className="inline-flex h-8 items-center gap-1.5 rounded-full border border-brand/30 bg-brand-soft px-3 text-xs font-medium text-brand"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            <span className="font-semibold tabular-nums">{aiCredits}</span>
+            <span className="hidden sm:inline">AI {aiCredits === 1 ? "credit" : "credits"} left</span>
+          </span>
+        )}
 
         {canUpgrade && (
           <Link

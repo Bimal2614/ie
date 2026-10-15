@@ -65,7 +65,7 @@ export function scheduleAttemptScoring(userId: string, attemptId: string): void 
       // lapse in between, and a row written while entitled must not pull a
       // scoring call afterwards. Reads the tier from the row, since there is no
       // session here. Rows stay band-less, exactly as an outage leaves them.
-      if (!(await userMayUseAiScoring(userId))) {
+      if (!(await userMayUseAiScoring(userId, attemptId))) {
         console.warn(`[scoring] skipped attempt=${attemptId} reason=plan_has_no_ai_scoring`);
         return;
       }

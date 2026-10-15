@@ -33,6 +33,7 @@ import { effectivePlan, toPlanKey, type PlanKey } from "@/lib/plans";
 import { studentProgress, type StudentProgress } from "@/lib/student-progress";
 import { hashPassword } from "@/lib/security/password";
 import { destroyAllSessions } from "@/lib/session";
+import { env } from "@/lib/env";
 
 /**
  * Partners — the institutions we have onboarded, and the students they enrol.
@@ -658,6 +659,9 @@ export async function enrolStudent(input: EnrolInput): Promise<EnrolResult> {
         partnerId: input.partnerId,
         targetModule: input.targetModule,
         targetBand: input.targetBand ?? null,
+        // A new account like any other. No device check: the class, not the
+        // candidate, creates it, so there is no browser to farm grants from.
+        aiCredits: env.FREE_AI_CREDITS,
       })
       .returning({ id: users.id });
     studentId = created.id;

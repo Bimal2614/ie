@@ -27,6 +27,7 @@ import { sendEmail } from "@/lib/email/mailer";
 import { welcomeTemplate } from "@/lib/email/templates";
 import { env } from "@/lib/env";
 import { SIGNED_UP_COOKIE } from "@/lib/analytics";
+import { creditsForNewAccount, readDeviceSignals, recordSignupDevice } from "@/lib/security/ai-credits";
 
 // Identical message for "no such user" and "wrong password" — no enumeration.
 const INVALID_CREDENTIALS = "Incorrect email or password.";
@@ -106,6 +107,10 @@ export async function signup(
   const invite = await openInvite(inviteToken);
   const viaInvite = invite?.email === email;
 
+  // Free AI credits, unless this browser has already claimed a grant.
+  const device = await readDeviceSignals();
+  const aiCredits = await creditsForNewAccount(device);
+
   let userId: string;
   try {
     const [created] = await db
@@ -129,6 +134,7 @@ export async function signup(
          */
         lastLoginAt: new Date(),
         lastLoginIp: ip,
+        aiCredits,
       })
       .returning({ id: users.id });
     userId = created.id;
@@ -141,6 +147,7 @@ export async function signup(
 
   await createSession(userId); // rotates in a fresh session token
   await audit(userId, "signup", ip, userAgent);
+  await recordSignupDevice(userId, device, ip, aiCredits);
   // Read once by SignupBeacon on the page this redirects to — the only way the
   // browser can learn an account was created. Readable by script on purpose.
   (await cookies()).set(SIGNED_UP_COOKIE, "email", {

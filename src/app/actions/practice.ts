@@ -10,7 +10,7 @@ import { scheduleAttemptScoring } from "@/lib/scoring/background";
 import { QUESTION_TYPES, isObjective, type QuestionTypeKey } from "@/lib/ielts";
 import { gradeMarks } from "@/lib/grading";
 import { guardGeneral } from "@/lib/security/rate-guard";
-import { checkPracticeAccess, type PlanBlock } from "@/lib/security/plan-guard";
+import { checkPracticeAccess, insertAttemptRows, type PlanBlock } from "@/lib/security/plan-guard";
 import type { SectionKey } from "@/lib/plans";
 
 /**
@@ -190,7 +190,8 @@ export async function submitPractice(
   // would count it as practised and drag the dashboard's accuracy down for
   // questions nobody tried — the score above already treats them as wrong.
   if (rows.length > 0) {
-    await db.insert(userResponses).values(rows);
+    const paywall = await insertAttemptRows(user, attemptId, rows);
+    if (paywall) return paywall;
     // Writing/Speaking bands are filled in after the response goes out, so the
     // submit returns immediately and the scoring no longer depends on the
     // browser staying open to ask for it. No-op when nothing subjective was

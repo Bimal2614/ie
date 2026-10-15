@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Check, Loader2, Headphones, BookOpen, PenLine, Mic, ArrowUpRight } from "lucide-react";
 import { LogoMark } from "@/components/ui/logo";
 import { cn } from "@/lib/utils";
+import { DeviceSignals } from "@/components/auth/device-signals";
 
 /**
  * Auth shell — split-screen, LIGHT form + DARK showcase, matching the landing's
@@ -13,6 +14,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   // Fixed to the viewport — the auth pages never scroll; content fits.
   return (
     <div className="grid h-svh overflow-hidden bg-paper text-ink lg:grid-cols-[minmax(0,460px)_1fr]">
+      <DeviceSignals />
       {/*
         ── Form column (light). Slim top bar: logo (home) + back-to-site. ──
 

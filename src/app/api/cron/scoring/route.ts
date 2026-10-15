@@ -79,8 +79,8 @@ type Sweep = { picked: number; scored: number; skipped: number };
  * a rate-limit token spent to discover that. A refusal here is not a failure:
  * the row keeps its null band and the next run asks again.
  */
-async function mayScoreNow(userId: string): Promise<boolean> {
-  if (!(await userMayUseAiScoring(userId))) return false;
+async function mayScoreNow(userId: string, attemptId?: string): Promise<boolean> {
+  if (!(await userMayUseAiScoring(userId, attemptId))) return false;
   // `tryConsumeAi`, never a guard that registers a violation. This runs every
   // five minutes against the same account for as long as its rows stay pending,
   // so a guard that escalated would deactivate a candidate for our own retries
@@ -136,7 +136,7 @@ async function sweepAttempts(from: Date, until: Date, startedAt: number): Promis
     if (!job.attemptId) continue;
     if (Date.now() - startedAt > START_DEADLINE_MS) break;
 
-    if (!(await mayScoreNow(job.userId))) {
+    if (!(await mayScoreNow(job.userId, job.attemptId))) {
       skipped++;
       continue;
     }
