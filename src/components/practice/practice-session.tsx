@@ -27,6 +27,7 @@ import { SetBody, taskHeading, type PlayerSet } from "./set-body";
 import { InstructionBar } from "./question-body";
 import { AttemptFeedback } from "./attempt-feedback";
 import { AttemptHistoryPanel } from "./attempt-history-panel";
+import { PracticeClock } from "./practice-clock";
 
 /**
  * Set-based practice player.
@@ -581,7 +582,14 @@ export function PracticeSession({
       // reading-column cap comes off so a wide screen goes into the essay
       // rather than into two empty margins. See `.practice-root[data-frame]`.
       data-frame={frame}
-      className={cn("practice-root mx-auto w-full max-w-6xl", sideStimulus && "lg:max-w-none")}
+      className={cn(
+        "practice-root mx-auto w-full max-w-6xl",
+        // The page scrolls here, under the app's sticky top bar, so a pinned
+        // recording stops below it. Fullscreen has no top bar and scrolls this
+        // element itself, so it pins at the very top.
+        "[--sticky-audio-top:var(--topbar-height)] [&:fullscreen]:[--sticky-audio-top:0px]",
+        sideStimulus && "lg:max-w-none",
+      )}
       ref={topRef}
     >
       <PlanBlockDialog block={blocked} onClose={() => setBlocked(null)} />
@@ -681,6 +689,22 @@ export function PracticeSession({
               </button>
             )}
           </div>
+
+          {/* Reading and Writing are where the clock decides the band, and a
+              mock is sat only now and then — so practice keeps time too. */}
+          {(section === "reading" || section === "writing") && currentSet && !loading && (
+            <PracticeClock
+              resetKey={`${currentSet.id}-${restartKey}`}
+              stopped={Boolean(result)}
+              target={
+                questionType === "writing_task2"
+                  ? 40 * 60
+                  : section === "writing"
+                    ? 20 * 60
+                    : undefined
+              }
+            />
+          )}
 
           {/* Writing a 250-word essay inside the sidebar and topbar wastes most
               of the screen, so this route offers the same fullscreen control the

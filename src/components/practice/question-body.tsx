@@ -1385,9 +1385,7 @@ function Stimulus({
    */
   const soloImage = fit && Boolean(image) && !doc.passageText;
 
-  return (
-    <div className="space-y-4">
-      {doc.audioSrc && (
+  const audioBar = doc.audioSrc ? (
         <div
           className={cn(
             // One row of controls and nothing else, so the padding is a frame
@@ -1395,7 +1393,7 @@ function Stimulus({
             "rounded-xl border border-line bg-paper-elev px-3 py-2",
             // Sticky: the recording is the stimulus for every group below it, so
             // it must stay reachable while scrolling from a table into the notes.
-            sticky && "sticky top-2 z-20 bg-paper-elev/95 shadow-[var(--shadow-md)] backdrop-blur",
+            sticky && "sticky top-[var(--sticky-audio-top,0px)] z-20 bg-paper-elev/95 shadow-[var(--shadow-md)] backdrop-blur",
           )}
         >
           {/* Our own controls, never the browser's: a native <audio controls>
@@ -1404,8 +1402,10 @@ function Stimulus({
               separately — see src/lib/protected-media.ts. */}
           <AudioStimulus src={doc.audioSrc} audioRef={audioRef} range={audioRange} />
         </div>
-      )}
+  ) : null;
 
+  const rest = (image || doc.passageText) && (
+    <div className="space-y-4">
       {image && (
         <div
           className={cn(
@@ -1448,5 +1448,25 @@ function Stimulus({
           </article>
         ))}
     </div>
+  );
+
+  // STICKY ONLY HOLDS WHILE ITS PARENT IS ON SCREEN. Boxed on its own, the
+  // bar's parent ended where the bar did, so it scrolled away with the first
+  // question and the candidate had to go back up to pause. As a fragment the
+  // bar is a sibling of the questions — the annotation layer around it is
+  // `display: contents` — so it stays pinned for the whole part.
+  if (!sticky) {
+    return (
+      <div className="space-y-4">
+        {audioBar}
+        {rest}
+      </div>
+    );
+  }
+  return (
+    <>
+      {audioBar}
+      {rest}
+    </>
   );
 }

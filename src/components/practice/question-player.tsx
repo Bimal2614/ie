@@ -50,6 +50,8 @@ export function QuestionPlayer({
   /** The submit request itself failed — the answers are untouched, so it is one retry. */
   const [submitFailed, setSubmitFailed] = useState(false);
   const [current, setCurrent] = useState<number | null>(null);
+  /** Bumped by "Try again", so the clock times the new attempt from zero. */
+  const [attempt, setAttempt] = useState(0);
 
   const handleAnswer = useCallback((qid: string, value: Answer) => {
     setAnswers((prev) => ({ ...prev, [qid]: value }));
@@ -136,6 +138,7 @@ export function QuestionPlayer({
 
   const reset = () => {
     setResult(null);
+    setAttempt((a) => a + 1);
     setBlocked(null);
     setAnswers({});
     setCurrent(null);
@@ -237,6 +240,8 @@ export function QuestionPlayer({
     <ExamShell
       title={paperTitle ?? set.title}
       partLabel={meta?.label ?? sec.label}
+      timerStopped={Boolean(result)}
+      timerKey={attempt}
       instruction={instruction}
       badges={
         <>

@@ -39,6 +39,8 @@ export function ExamShell({
   menu,
   remainingSec,
   timerState,
+  timerStopped = false,
+  timerKey,
   parts,
   activePartId,
   answered,
@@ -85,6 +87,13 @@ export function ExamShell({
    */
   remainingSec?: number;
   timerState?: "ok" | "warning" | "critical";
+  /**
+   * Counting up only: the part is submitted, so freeze on the time it took.
+   * Left running, the clock kept climbing over the score card.
+   */
+  timerStopped?: boolean;
+  /** Counting up only: a new value starts the clock again from zero (Try again). */
+  timerKey?: string | number;
   parts: StripPart[];
   activePartId: string;
   answered: Set<number>;
@@ -114,11 +123,17 @@ export function ExamShell({
   const armedClear = confirmClear && !clearDisabled;
 
   const counting = remainingSec === undefined;
+  const [lastTimerKey, setLastTimerKey] = useState(timerKey);
+  if (lastTimerKey !== timerKey) {
+    setLastTimerKey(timerKey);
+    setElapsed(0);
+  }
+  const ticking = counting && !timerStopped;
   useEffect(() => {
-    if (!counting) return;
+    if (!ticking) return;
     const t = window.setInterval(() => setElapsed((e) => e + 1), 1000);
     return () => window.clearInterval(t);
-  }, [counting]);
+  }, [ticking, timerKey]);
 
   const state = timerState ?? "ok";
 
@@ -143,7 +158,7 @@ export function ExamShell({
         <span
           className="exam-timer inline-flex shrink-0 items-center gap-1.5 text-base tabular-nums sm:text-lg"
           data-state={state}
-          aria-label={counting ? "Time elapsed" : "Time remaining"}
+          aria-label={counting ? (timerStopped ? "Time taken" : "Time elapsed") : "Time remaining"}
         >
           <Clock className="size-4" />
           {clock(counting ? elapsed : remainingSec!)}

@@ -107,6 +107,8 @@ export function SectionPlayer({
   const [confirming, setConfirming] = useState(false);
   /** A part the candidate asked to move to, held until they confirm the loss. */
   const [leaving, setLeaving] = useState<PartNeighbour | null>(null);
+  /** Bumped by "Try again", so the clock times the new attempt from zero. */
+  const [attempt, setAttempt] = useState(0);
   /**
    * This attempt's working notes.
    *
@@ -236,6 +238,7 @@ export function SectionPlayer({
     // the same argument retires the highlights.
     setFlagged(new Set());
     clearAnnotations(annotationScope);
+    setAttempt((a) => a + 1);
   };
 
   // A part is 10 of the paper's 40 marks, so a band off this alone would be an
@@ -406,6 +409,8 @@ export function SectionPlayer({
         </>
       }
       partNav={partNav}
+      timerStopped={Boolean(result)}
+      timerKey={attempt}
       onClearAll={result ? undefined : () => setAnswers({})}
       // Empty boxes left behind by a cleared gap are not answers, so the
       // button greys out in step with the counter on the answer strip.
