@@ -55,6 +55,7 @@ const COLS: { title: string; links: { label: string; href: string }[] }[] = [
       { label: "All study materials", href: "/resources" },
       { label: "Sentence banks & templates", href: "/templates" },
       { label: "IELTS band score calculator", href: "/ielts-band-score-calculator" },
+      { label: "IELTS typing test", href: "/ielts-typing-test" },
       { label: "How IELTS scoring works", href: "/ielts-band-scores" },
       { label: "IELTS 2026 changes", href: "/ielts-2026-changes" },
     ],

@@ -233,6 +233,12 @@ export default function Ielts2026ChangesPage() {
         >
           Band score calculator <ArrowRight className="size-4" />
         </Link>
+        <Link
+          href="/ielts-typing-test"
+          className="inline-flex items-center gap-2 rounded-lg border border-line px-5 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-paper-sunken"
+        >
+          Free IELTS typing test <ArrowRight className="size-4" />
+        </Link>
       </div>
     </MarketingShell>
   );

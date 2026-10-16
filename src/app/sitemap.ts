@@ -30,6 +30,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/resources/writing/task-2",
     "/ielts-band-scores",
     "/ielts-band-score-calculator",
+    "/ielts-typing-test",
     "/ielts-2026-changes",
   ];
 

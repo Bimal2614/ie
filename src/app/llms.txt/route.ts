@@ -67,6 +67,7 @@ Everything below is free to read without an account. Practice sessions, mock tes
 
 ## Tools
 
+${link("IELTS typing test", "/ielts-typing-test", "free typing speed and exam pace test on a copy of the computer-delivered Writing screen, showing how much of the 60 minutes typing takes")}
 ${link("IELTS band score calculator", "/ielts-band-score-calculator", "convert raw Listening/Reading scores and Writing/Speaking bands into an overall band, with the official rounding rules")}
 ${link("How IELTS band scores work", "/ielts-band-scores", "the 0-9 scale, half bands, per-skill marking and how the overall score is averaged and rounded")}
 

@@ -163,6 +163,12 @@ export default function ResourcesPage() {
             >
               Band score calculator
             </Link>
+            <Link
+              href="/ielts-typing-test"
+              className="rounded-full border border-brand/40 bg-brand-soft px-5 py-2 text-sm font-medium text-brand transition-colors hover:bg-brand hover:text-white"
+            >
+              IELTS typing test
+            </Link>
           </div>
         </section>
 
