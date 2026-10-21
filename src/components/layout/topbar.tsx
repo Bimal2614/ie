@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu, ChevronRight, User as UserIcon, Settings as SettingsIcon, LogOut, Sparkles } from "lucide-react";
+import { Menu, ChevronRight, User as UserIcon, Settings as SettingsIcon, LogOut } from "lucide-react";
 import { LogoMark } from "@/components/ui/logo";
+import { CreditsPopover } from "@/components/layout/credits-popover";
 import { clearAuthCache } from "@/lib/auth-cache";
 import { type PlanKey } from "@/lib/plans";
 import { cn } from "@/lib/utils";
@@ -86,18 +87,9 @@ export function Topbar({ user, plan, aiCredits, onOpenSidebar, logoutAction }: T
           {user.targetModule === "general" ? "General Training" : "Academic"}
         </span>
 
-        {/* Free AI scores left — a count, not a card. Hidden at 0; the paywall
-            dialog says that at the moment it matters. */}
-        {plan === "free" && aiCredits !== undefined && aiCredits > 0 && (
-          <span
-            title={`${aiCredits} free AI ${aiCredits === 1 ? "score" : "scores"} left for Writing and Speaking`}
-            className="inline-flex h-8 items-center gap-1.5 rounded-full border border-brand/30 bg-brand-soft px-3 text-xs font-medium text-brand"
-          >
-            <Sparkles className="h-3.5 w-3.5" />
-            <span className="font-semibold tabular-nums">{aiCredits}</span>
-            <span className="hidden sm:inline">AI {aiCredits === 1 ? "credit" : "credits"} left</span>
-          </span>
-        )}
+        {/* Free AI scores left. Hidden at 0; the paywall dialog says that at
+            the moment it matters. Opens what they were spent on. */}
+        {plan === "free" && aiCredits !== undefined && aiCredits > 0 && <CreditsPopover credits={aiCredits} />}
 
         {canUpgrade && (
           <Link
