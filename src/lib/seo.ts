@@ -281,7 +281,10 @@ export function organizationJsonLd() {
     "@type": "EducationalOrganization",
     "@id": ORG_ID,
     name: BRAND,
-    alternateName: "IELTS Vega",
+    // Every spelling people type. Google answered a search for "ieltsvega" with
+    // "Did you mean: ielts vega" (16 Oct 2026): it did not yet tie the joined
+    // spelling to this entity.
+    alternateName: ["IELTS Vega", "ieltsvega", "IELTSVega.com"],
     url: SITE_URL,
     // Google rejects a favicon here and wants a raster image of at least
     // 112x112; logo-512.png is the 512px master.
@@ -330,6 +333,7 @@ export function webSiteJsonLd() {
     "@type": "WebSite",
     "@id": WEBSITE_ID,
     name: SITE_NAME,
+    alternateName: ["IELTS Vega", "ieltsvega"],
     url: SITE_URL,
     description: "Practise IELTS online with AI band scoring and full mock tests.",
     inLanguage: "en",
