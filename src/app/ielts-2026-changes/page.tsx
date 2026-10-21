@@ -222,7 +222,7 @@ export default function Ielts2026ChangesPage() {
 
       <div className="mt-10 flex flex-wrap gap-3">
         <Link
-          href="/mock-tests"
+          href="/signup"
           className="inline-flex items-center gap-2 rounded-lg bg-brand px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
         >
           Practise on screen, like the real test <ArrowRight className="size-4" />
