@@ -46,6 +46,15 @@ export function BrandLogo({
  * rewrites the brand half on the client rather than threading a name through
  * every one of their `metadata` exports. It re-applies on navigation and
  * whenever Next swaps the <title>, which it does after the route change lands.
+ *
+ * ONLY TITLES NEXT WROTE ARE REWRITTEN. A class called "Test IELTSVega" still
+ * contains the word after the swap, and the observer fires on our own write —
+ * so without remembering what we set, it rewrote its own output forever
+ * ("Test Test Test …") and the tab never finished loading.
+ *
+ * The favicon links are Next's own (favicon.ico, icon.png, apple-icon), so they
+ * are re-pointed in place rather than removed — React owns those nodes — and
+ * re-pointed again whenever Next puts them back.
  */
 export function BrandDocument({ brand }: { brand: PartnerBrand | null | undefined }) {
   const pathname = usePathname();
@@ -54,10 +63,11 @@ export function BrandDocument({ brand }: { brand: PartnerBrand | null | undefine
 
   useEffect(() => {
     if (!name) return;
+    let written: string | null = null;
     const apply = () => {
-      if (document.title.includes("IELTSVega")) {
-        document.title = document.title.replaceAll("IELTSVega", name);
-      }
+      if (document.title === written || !document.title.includes("IELTSVega")) return;
+      written = document.title.replaceAll("IELTSVega", name);
+      document.title = written;
     };
     apply();
     const observer = new MutationObserver(apply);
@@ -67,9 +77,21 @@ export function BrandDocument({ brand }: { brand: PartnerBrand | null | undefine
 
   useEffect(() => {
     if (!logo) return;
-    document.querySelectorAll<HTMLLinkElement>('link[rel~="icon"]').forEach((link) => {
-      link.href = logo;
-    });
+    const apply = () => {
+      document.head
+        .querySelectorAll<HTMLLinkElement>('link[rel~="icon"], link[rel="apple-touch-icon"]')
+        .forEach((link) => {
+          if (link.getAttribute("href") === logo) return;
+          link.href = logo;
+          // The sizes and type described IELTSVega's files, not the class's logo.
+          link.removeAttribute("sizes");
+          link.removeAttribute("type");
+        });
+    };
+    apply();
+    const observer = new MutationObserver(apply);
+    observer.observe(document.head, { childList: true, subtree: true, attributes: true, attributeFilter: ["href"] });
+    return () => observer.disconnect();
   }, [logo, pathname]);
 
   return null;
