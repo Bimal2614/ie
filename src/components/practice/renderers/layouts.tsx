@@ -12,7 +12,7 @@ import type {
   DiagramLayout,
   OptionsLayout,
 } from "@/lib/question-content";
-import { GapField, GapText, type GapResolver } from "./gap-field";
+import { GapField, GapText, type GapBinding, type GapResolver } from "./gap-field";
 import { AnnotatedText } from "./annotations";
 import { ChoiceBank, ChoiceBankProvider, ChoiceSlot } from "./choice-bank";
 
@@ -111,7 +111,11 @@ function firstBlankDisabled(layout: InlineBlanksLayout, resolve: GapResolver): b
  * ------------------------------------------------------------------ */
 
 function Notes({ layout, resolve, run }: LayoutProps<NotesLayout>) {
-  return (
+  const renderGap = layout.choices
+    ? (binding: GapBinding | null) => <ChoiceSlot binding={binding} />
+    : undefined;
+
+  const sheet = (
     <Sheet>
       {/* The paper's own hierarchy, in the paper's own order: a title, the
           worked answer it gives away, then sections of notes. Rendered flat
@@ -144,7 +148,12 @@ function Notes({ layout, resolve, run }: LayoutProps<NotesLayout>) {
               // to the notes beneath it, which a long page of sections needs.
               <p className="mb-2.5 border-l-2 border-brand/60 pl-2.5 text-sm font-bold text-ink-strong">
                 {/* A heading can hold a gap, so it renders through GapText too. */}
-                <GapText text={group.title} resolve={resolve} run={`${run}:t${gi}`} />
+                <GapText
+                  text={group.title}
+                  resolve={resolve}
+                  run={`${run}:t${gi}`}
+                  renderGap={renderGap}
+                />
               </p>
             )}
             <ul className={cn("space-y-2.5", group.title && "pl-3")}>
@@ -153,7 +162,12 @@ function Notes({ layout, resolve, run }: LayoutProps<NotesLayout>) {
                   key={ii}
                   className="relative pl-4 text-sm leading-relaxed text-ink before:absolute before:left-0 before:top-[0.6em] before:size-1.5 before:rounded-full before:bg-ink-muted/50"
                 >
-                  <GapText text={item} resolve={resolve} run={`${run}:i${gi}.${ii}`} />
+                  <GapText
+                    text={item}
+                    resolve={resolve}
+                    run={`${run}:i${gi}.${ii}`}
+                    renderGap={renderGap}
+                  />
                 </li>
               ))}
             </ul>
@@ -175,8 +189,33 @@ function Notes({ layout, resolve, run }: LayoutProps<NotesLayout>) {
           </div>
         </div>
       )}
+
+      {/* "Choose your answers from the box below and write the correct letter"
+          — a placement task, so the box sits under the notes exactly as the
+          summary's does. Without it the gaps fell back to free typing with
+          nothing to type from. */}
+      {layout.choices && (
+        <div className="mt-5">
+          <ChoiceBank />
+        </div>
+      )}
     </Sheet>
   );
+
+  if (!layout.choices) return sheet;
+
+  return (
+    <ChoiceBankProvider choices={layout.choices} disabled={firstNoteGapDisabled(layout, resolve)}>
+      {sheet}
+    </ChoiceBankProvider>
+  );
+}
+
+/** Graded state of the notes' first real gap. See Flowchart's twin. */
+function firstNoteGapDisabled(layout: NotesLayout, resolve: GapResolver): boolean {
+  const text = layout.groups.flatMap((g) => [g.title ?? "", ...g.items]).join(" ");
+  const m = text.match(/\[\[(\d+)\]\]/);
+  return m ? (resolve(Number(m[1]))?.disabled ?? false) : false;
 }
 
 /* ------------------------------------------------------------------ *

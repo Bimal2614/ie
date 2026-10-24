@@ -115,6 +115,12 @@ export type NotesLayout = {
    * without it.
    */
   wordBank?: string[];
+  /**
+   * A lettered box the gaps are filled from — "Choose your answers from the box
+   * below and write the correct letter". Same meaning as `choices` on the
+   * summary and flow-chart layouts; `wordBank` is the unlettered kind.
+   */
+  choices?: { key: string; text: string }[];
 };
 
 export type TableCell = {
