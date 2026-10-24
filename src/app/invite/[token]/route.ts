@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { sameHostUrl } from "@/lib/partner-brand";
 import { clearedInviteCookie, INVITE_COOKIE, inviteCookieOptions, isInviteToken } from "@/lib/partner-invites";
 
 /**
@@ -11,7 +12,7 @@ import { clearedInviteCookie, INVITE_COOKIE, inviteCookieOptions, isInviteToken 
  */
 export async function GET(req: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  const res = NextResponse.redirect(new URL("/invite", req.url));
+  const res = NextResponse.redirect(sameHostUrl("/invite", req));
   res.headers.set("Cache-Control", "no-store");
   // A mangled link must not fall back on an older invite still in the jar.
   if (isInviteToken(token)) res.cookies.set(INVITE_COOKIE, token, inviteCookieOptions);

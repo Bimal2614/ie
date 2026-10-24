@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
@@ -7,6 +8,15 @@ import { z } from "zod";
 import { db } from "@/db";
 import { auditLog, coupons, partners, users } from "@/db/schema";
 import { isUniqueViolation } from "@/lib/db-errors";
+import { env } from "@/lib/env";
+import { isAllowedSubdomain, isHexColor } from "@/lib/partner-brand";
+import {
+  attachSubdomain,
+  detachSubdomain,
+  domainStatus,
+  type DomainResult,
+} from "@/lib/partner-domains";
+import { putObject } from "@/lib/speech/s3";
 import { requireAdmin } from "@/lib/dal";
 import {
   createPartnerWithLogin,
@@ -241,4 +251,125 @@ export async function assignCouponAction(
   revalidatePath("/admin/partners");
   revalidatePath(`/admin/partners/${partnerId}`);
   return { ok: true };
+}
+
+/* ------------------------------------------------------------------ *
+ * White label
+ * ------------------------------------------------------------------ */
+
+/** Logos are small marks, not photographs. */
+const MAX_LOGO_BYTES = 512 * 1024;
+
+/**
+ * The image type a logo's bytes ACTUALLY are, from their magic number — never
+ * from the filename or the browser's claim. SVG is deliberately absent: it is a
+ * document that can carry script, and this file is served from our own origin.
+ */
+function sniffImage(bytes: Uint8Array): { ext: string; contentType: string } | null {
+  const at = (i: number, ...b: number[]) => b.every((v, k) => bytes[i + k] === v);
+  if (at(0, 0x89, 0x50, 0x4e, 0x47)) return { ext: "png", contentType: "image/png" };
+  if (at(0, 0xff, 0xd8, 0xff)) return { ext: "jpg", contentType: "image/jpeg" };
+  if (at(0, 0x52, 0x49, 0x46, 0x46) && at(8, 0x57, 0x45, 0x42, 0x50)) {
+    return { ext: "webp", contentType: "image/webp" };
+  }
+  return null;
+}
+
+export type BrandingResult =
+  | { ok: true; domain: DomainResult | null }
+  | { ok: false; error: string };
+
+/**
+ * Save a class's white label: subdomain, logo, tagline, colours. Every field is
+ * optional, and an empty one clears that piece back to the IELTSVega default.
+ *
+ * A FormData rather than an object because the logo travels with it. The row
+ * is written first and the domain wired second: a Vercel or Hostinger outage
+ * must not lose what the admin typed, and the wiring is safe to retry.
+ */
+export async function savePartnerBrandingAction(
+  partnerId: string,
+  form: FormData,
+): Promise<BrandingResult> {
+  const admin = await requireAdmin();
+  if (!z.uuid().safeParse(partnerId).success) return { ok: false, error: "That request wasn't valid." };
+
+  const text = (key: string) => {
+    const v = form.get(key);
+    return typeof v === "string" && v.trim() ? v.trim() : null;
+  };
+  const subdomain = text("subdomain")?.toLowerCase() ?? null;
+  const tagline = text("tagline");
+  const brandColor = text("brandColor")?.toLowerCase() ?? null;
+  const brandTextColor = text("brandTextColor")?.toLowerCase() ?? null;
+
+  if (subdomain && !isAllowedSubdomain(subdomain)) {
+    return {
+      ok: false,
+      error: "Use 2–40 lowercase letters, numbers or hyphens for the subdomain (and not a reserved word like www).",
+    };
+  }
+  if (tagline && tagline.length > 120) return { ok: false, error: "Keep the tagline under 120 characters." };
+  if (brandColor && !isHexColor(brandColor)) return { ok: false, error: "The brand colour must look like #1a2b3c." };
+  if (brandTextColor && !isHexColor(brandTextColor)) {
+    return { ok: false, error: "The text colour must look like #1a2b3c." };
+  }
+
+  const [current] = await db
+    .select({ subdomain: partners.subdomain, logoKey: partners.logoKey })
+    .from(partners)
+    .where(eq(partners.id, partnerId))
+    .limit(1);
+  if (!current) return { ok: false, error: "That partner no longer exists." };
+
+  let logoKey = form.get("removeLogo") === "1" ? null : current.logoKey;
+  const logo = form.get("logo");
+  if (logo instanceof File && logo.size > 0) {
+    if (logo.size > MAX_LOGO_BYTES) return { ok: false, error: "The logo must be under 512 KB." };
+    const bytes = new Uint8Array(await logo.arrayBuffer());
+    const kind = sniffImage(bytes);
+    if (!kind) return { ok: false, error: "Upload the logo as a PNG, JPG or WebP." };
+    const key = `${env.S3_FOLDER_PREFIX ?? ""}partner-logos/${partnerId}/${randomUUID()}.${kind.ext}`;
+    if (!(await putObject(key, bytes, kind.contentType))) {
+      return { ok: false, error: "The logo couldn't be stored. Check the S3 settings and try again." };
+    }
+    logoKey = key;
+  }
+
+  try {
+    await db
+      .update(partners)
+      .set({ subdomain, tagline, brandColor, brandTextColor, logoKey, updatedAt: new Date() })
+      .where(eq(partners.id, partnerId));
+  } catch (err) {
+    if (isUniqueViolation(err)) return { ok: false, error: "Another class already has that subdomain." };
+    throw err;
+  }
+
+  await db.insert(auditLog).values({
+    userId: admin.id,
+    event: "partner.branding_updated",
+    metadata: { partnerId, subdomain, previousSubdomain: current.subdomain, logoChanged: logoKey !== current.logoKey },
+  });
+
+  // A rename frees the old name — on Vercel and in DNS — before taking the new.
+  if (current.subdomain && current.subdomain !== subdomain) await detachSubdomain(current.subdomain);
+  const domain = subdomain ? await attachSubdomain(subdomain) : null;
+
+  revalidatePath(`/admin/partners/${partnerId}`);
+  return { ok: true, domain };
+}
+
+/** Re-check a subdomain, or retry wiring it up when it is missing. */
+export async function checkPartnerDomainAction(partnerId: string): Promise<BrandingResult> {
+  await requireAdmin();
+  if (!z.uuid().safeParse(partnerId).success) return { ok: false, error: "That request wasn't valid." };
+  const [row] = await db
+    .select({ subdomain: partners.subdomain })
+    .from(partners)
+    .where(eq(partners.id, partnerId))
+    .limit(1);
+  if (!row?.subdomain) return { ok: true, domain: null };
+  const status = await domainStatus(row.subdomain);
+  return { ok: true, domain: status.state === "missing" ? await attachSubdomain(row.subdomain) : status };
 }

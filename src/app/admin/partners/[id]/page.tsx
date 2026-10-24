@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
+import { PartnerBranding } from "@/components/admin/partner-branding";
 import { PartnerControls } from "@/components/admin/partner-controls";
 import { PartnerStudentRow } from "@/components/admin/partner-student-row";
 import { cardClass, StatTile } from "@/components/dashboard/ui";
@@ -11,8 +12,9 @@ import { isUuid } from "@/lib/uuid";
 import { couponOptions } from "@/lib/admin";
 import { requireAdmin } from "@/lib/dal";
 import { parsePageRequest } from "@/lib/pagination";
-import { env } from "@/lib/env";
 import { referralLink } from "@/lib/partner-referral";
+import { brandFrom, partnerRootDomain } from "@/lib/partner-brand";
+import { partnerOrigin } from "@/lib/partner-tenant";
 import { describeRate } from "@/lib/partner-pricing";
 import { partnerForAdmin, STUDENT_LIST_DEFAULTS } from "@/lib/partners";
 import { formatPrice, PLANS } from "@/lib/plans";
@@ -92,11 +94,27 @@ export default async function AdminPartnerPage({
       {/* The same link the class sees in its own panel — here so it can be
           sent over at onboarding, before anyone has signed in to fetch it. */}
       <InviteLink
-        url={referralLink(env.APP_URL ?? "https://ieltsvega.com", {
+        url={referralLink(partnerOrigin(partner.subdomain), {
           id: partner.id,
           name: partner.name,
         })}
       />
+
+      <section className={cn(cardClass, "p-5")}>
+        <PartnerBranding
+          partnerId={partner.id}
+          partnerName={partner.name}
+          rootDomain={partnerRootDomain()}
+          siteUrl={partner.subdomain ? partnerOrigin(partner.subdomain) : null}
+          initial={{
+            subdomain: partner.subdomain,
+            tagline: partner.tagline,
+            brandColor: partner.brandColor,
+            brandTextColor: partner.brandTextColor,
+            logoUrl: brandFrom(partner)?.logoUrl ?? null,
+          }}
+        />
+      </section>
 
       <section className={cn(cardClass, "p-5")}>
         <PartnerControls

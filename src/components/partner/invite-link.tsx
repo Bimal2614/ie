@@ -50,9 +50,8 @@ export function InviteLink({ url }: { url: string }) {
         <Link2 className="size-4 text-brand" /> Your student sign-up link
       </p>
       <p className="mt-1 text-xs leading-relaxed text-ink-muted">
-        Share this with your students. Anyone who creates an account through it — with an email or
-        with Google — joins your roster automatically, and you can buy their plan from here at your
-        partner rate.
+        Share this with your students. Anyone who creates an account through it joins your roster
+        automatically, and you can buy their plan from here at your partner rate.
       </p>
 
       <div className="mt-3 flex flex-col gap-2 sm:flex-row">

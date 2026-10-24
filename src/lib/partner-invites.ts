@@ -7,6 +7,7 @@ import { auditLog, partnerInvites, partners, users } from "@/db/schema";
 import { sendEmail } from "@/lib/email/mailer";
 import { partnerInviteExistingTemplate, partnerInviteSignupTemplate } from "@/lib/email/templates";
 import { env } from "@/lib/env";
+import { partnerOrigin } from "@/lib/partner-tenant";
 import { alert } from "@/lib/monitoring/alert";
 import { rateLimit } from "@/lib/security/rate-limit";
 import { generateToken, hashToken } from "@/lib/security/tokens";
@@ -73,8 +74,13 @@ export function isInviteToken(value: unknown): value is string {
   return typeof value === "string" && TOKEN_SHAPE.test(value);
 }
 
-export function inviteUrl(raw: string): string {
-  return `${(env.APP_URL ?? "https://ieltsvega.com").replace(/\/+$/, "")}/invite/${raw}`;
+/**
+ * The emailed link. A NEW account is created on the class's own subdomain when
+ * it has one, so the student starts inside the class's app; an EXISTING account
+ * is on www, where it already signs in, and joins the class from there.
+ */
+export function inviteUrl(raw: string, origin?: string): string {
+  return `${(origin ?? env.APP_URL ?? "https://ieltsvega.com").replace(/\/+$/, "")}/invite/${raw}`;
 }
 
 async function audit(
@@ -158,7 +164,12 @@ export async function issuePartnerInvite(input: {
       });
     });
 
-    const link = inviteUrl(raw);
+    const [{ subdomain } = { subdomain: null }] = await db
+      .select({ subdomain: partners.subdomain })
+      .from(partners)
+      .where(eq(partners.id, input.partnerId))
+      .limit(1);
+    const link = inviteUrl(raw, account ? undefined : partnerOrigin(subdomain));
     const t = account
       ? partnerInviteExistingTemplate(account.name, input.partnerName, link)
       : partnerInviteSignupTemplate(input.partnerName, link);

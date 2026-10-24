@@ -4,7 +4,9 @@ import { cookies, headers } from "next/headers";
 import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { effectivePlan, toPlanKey, type PlanKey } from "@/lib/plans";
-import { sessions, users } from "@/db/schema";
+import { partners, sessions, users } from "@/db/schema";
+import { brandFrom, type PartnerBrand } from "@/lib/partner-brand";
+import { requestSubdomain } from "@/lib/partner-tenant";
 import { generateToken, hashToken } from "@/lib/security/tokens";
 import { isProd } from "@/lib/env";
 
@@ -143,6 +145,14 @@ export type AuthenticatedUser = {
   storedPlan: PlanKey;
   /** Free AI scores left. Only read when the plan itself has no AI scoring. */
   aiCredits: number;
+
+  /**
+   * The institution's white label — name, logo, tagline, colours — for every
+   * row that has a `partnerId`, whether or not any of it was filled in. NULL
+   * for everyone else. Loaded by the same query as the session, so drawing a
+   * partner's chrome costs nothing.
+   */
+  brand: PartnerBrand | null;
 };
 
 /**
@@ -174,9 +184,19 @@ export async function validateSession(): Promise<AuthenticatedUser | null> {
       plan: users.plan,
       planExpiresAt: users.planExpiresAt,
       aiCredits: users.aiCredits,
+      partner: {
+        id: partners.id,
+        name: partners.name,
+        subdomain: partners.subdomain,
+        logoKey: partners.logoKey,
+        tagline: partners.tagline,
+        brandColor: partners.brandColor,
+        brandTextColor: partners.brandTextColor,
+      },
     })
     .from(sessions)
     .innerJoin(users, eq(sessions.userId, users.id))
+    .leftJoin(partners, eq(partners.id, users.partnerId))
     .where(
       and(
         eq(sessions.tokenHash, tokenHash),
@@ -189,12 +209,28 @@ export async function validateSession(): Promise<AuthenticatedUser | null> {
     )
     .limit(1);
 
-  const row = rows[0];
-  if (!row) return null;
+  const found = rows[0];
+  if (!found) return null;
+  const { partner, ...row } = found;
+
+  /*
+   * A PARTNER SUBDOMAIN ONLY EVER SEES THAT PARTNER'S PEOPLE.
+   *
+   * The login action already refuses anyone else there, and the cookie is
+   * host-only (`__Host-`), so a session on classx.ieltsvega.com was created on
+   * classx.ieltsvega.com. This is the check that still holds after that — a
+   * student moved to another class, a partner whose subdomain was renamed —
+   * and it holds for every reader at once, pages, actions and API routes,
+   * because they all come through here. A mismatch reads as signed out, and
+   * the DAL's usual path clears the cookie.
+   */
+  const subdomain = await requestSubdomain();
+  if (subdomain && partner?.subdomain !== subdomain) return null;
 
   const storedPlan = toPlanKey(row.plan);
   return {
     ...row,
+    brand: partner ? brandFrom(partner) : null,
     storedPlan,
     // Resolved here, once, rather than at each call site.
     plan: effectivePlan(storedPlan, row.planExpiresAt),

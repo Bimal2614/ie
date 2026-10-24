@@ -17,6 +17,7 @@ import {
 import { getCurrentUser } from "@/lib/dal";
 import { isUniqueViolation } from "@/lib/db-errors";
 import { referringPartner } from "@/lib/partners";
+import { partnerOrigin, requestTenant } from "@/lib/partner-tenant";
 import {
   clearedInviteCookie,
   INVITE_COOKIE,
@@ -93,7 +94,18 @@ export async function signup(
    * and the account is created as an ordinary one — a broken link must cost the
    * candidate their institution, not their account.
    */
-  const referrer = await referringPartner(formData.get("ref"));
+  /*
+   * ON A CLASS'S SUBDOMAIN THE HOST DECIDES, not the form. Every account made
+   * there belongs to that class — the session check refuses anyone else on
+   * that host, so an unattached account would be created and immediately
+   * signed out. A class we have suspended takes nobody new, so the signup is
+   * turned away instead.
+   */
+  const tenant = await requestTenant();
+  const referrer = await referringPartner(tenant ? tenant.partnerId : formData.get("ref"));
+  if (tenant && !referrer) {
+    return { error: `${tenant.name} isn't accepting new sign-ups right now. Please ask your institute.` };
+  }
 
   /*
    * An emailed invitation (src/lib/partner-invites.ts), from its httpOnly
@@ -183,7 +195,7 @@ export async function signup(
   // `email_verify` token here and send `verifyEmailTemplate` instead; the token
   // type and the /verify-email route are both still in place.
   try {
-    const t = welcomeTemplate(name, `${env.APP_URL ?? "https://ieltsvega.com"}/dashboard`);
+    const t = welcomeTemplate(name, `${tenant ? partnerOrigin(tenant.subdomain) : (env.APP_URL ?? "https://ieltsvega.com")}/dashboard`);
     await sendEmail({ to: email, subject: t.subject, html: t.html, text: t.text });
   } catch {
     // A mail outage must not fail account creation.
@@ -254,6 +266,21 @@ export async function login(
       .where(eq(users.id, user.id));
     await audit(user.id, "login.fail", ip, userAgent, { attempts });
     return { error: INVALID_CREDENTIALS };
+  }
+
+  /*
+   * A class's subdomain signs in that class's people only — its own login and
+   * its students. Checked AFTER the password, so the answer cannot be used to
+   * learn which addresses have accounts; anyone who knows the password is told
+   * where their account actually lives. The failed-attempt counter is left
+   * alone: the password was right.
+   */
+  const tenant = await requestTenant();
+  if (tenant && user.partnerId !== tenant.partnerId) {
+    await audit(user.id, "login.fail.wrong_partner_host", ip, userAgent, { partnerId: tenant.partnerId });
+    return {
+      error: `This account isn't part of ${tenant.name}. Sign in at ieltsvega.com instead.`,
+    };
   }
 
   // Success: reset counters, bind last-login, rotate session, clear throttle.

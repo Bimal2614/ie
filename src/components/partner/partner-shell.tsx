@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { GraduationCap, LogOut, UserPlus, Users } from "lucide-react";
 
-import { LogoMark } from "@/components/ui/logo";
+import { BrandDocument, BrandLogo } from "@/components/ui/brand-mark";
+import { brandName, chromeStyle, type PartnerBrand } from "@/lib/partner-brand";
 import { cn } from "@/lib/utils";
 
 /**
@@ -23,12 +24,15 @@ const LINKS = [
 
 export function PartnerShell({
   partnerName,
+  brand,
   loginName,
   suspended,
   logoutAction,
   children,
 }: {
   partnerName: string;
+  /** The class's own white label. Null keeps the IELTSVega header. */
+  brand: PartnerBrand | null;
   loginName: string;
   /** Read-only mode. The banner is the only warning a class gets. */
   suspended: boolean;
@@ -39,31 +43,54 @@ export function PartnerShell({
 
   return (
     <div className="min-h-dvh bg-paper">
-      <header className="border-b border-line bg-paper-elev">
+      <BrandDocument brand={brand} />
+      {/* The header takes the class's colour when it set one. The nav strip
+          below stays on paper so the active tab's brand-blue underline reads. */}
+      <div
+        style={chromeStyle(brand)}
+        className={brand?.color ? "bg-(--chrome-bg) text-(--chrome-fg)" : "bg-paper-elev"}
+      >
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 sm:px-6">
-          <Link href="/partner" className="flex items-center gap-2 text-ink">
-            <LogoMark className="size-7" />
-            <span className="font-semibold">IELTSVega</span>
+          <Link href="/partner" className={cn("flex min-w-0 items-center gap-2", !brand?.color && "text-ink")}>
+            <BrandLogo brand={brand} className="size-7" />
+            <span className="min-w-0">
+              <span className="block truncate font-semibold">{brandName(brand)}</span>
+              {brand?.tagline && (
+                <span className={cn("block truncate text-xs", brand.color ? "text-(--chrome-fg)/70" : "text-ink-muted")}>
+                  {brand.tagline}
+                </span>
+              )}
+            </span>
           </Link>
-          <span className="hidden items-center gap-1.5 rounded-full bg-brand-soft px-2.5 py-1 text-xs font-semibold text-brand sm:inline-flex">
-            <GraduationCap className="size-3.5" /> Partner
-          </span>
+          {!brand && (
+            <span className="hidden items-center gap-1.5 rounded-full bg-brand-soft px-2.5 py-1 text-xs font-semibold text-brand sm:inline-flex">
+              <GraduationCap className="size-3.5" /> Partner
+            </span>
+          )}
 
           <div className="ml-auto flex items-center gap-3">
             <div className="hidden text-right sm:block">
-              <p className="text-sm font-semibold leading-tight text-ink">{partnerName}</p>
-              <p className="text-xs text-ink-muted">{loginName}</p>
+              {/* The class name is already the header's title when branded. */}
+              {!brand && <p className="text-sm font-semibold leading-tight text-ink">{partnerName}</p>}
+              <p className={cn("text-xs", brand?.color ? "text-(--chrome-fg)/70" : "text-ink-muted")}>{loginName}</p>
             </div>
             <form action={logoutAction}>
               <button
                 type="submit"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-2 text-sm font-medium text-ink-soft transition-colors hover:bg-paper-sunken hover:text-ink"
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
+                  brand?.color
+                    ? "border-(--chrome-fg)/25 text-(--chrome-fg) hover:bg-(--chrome-fg)/10"
+                    : "border-line text-ink-soft hover:bg-paper-sunken hover:text-ink",
+                )}
               >
                 <LogOut className="size-4" /> <span className="hidden sm:inline">Sign out</span>
               </button>
             </form>
           </div>
         </div>
+      </div>
+      <header className="border-b border-line bg-paper-elev">
 
         <nav className="mx-auto flex max-w-6xl gap-1 px-4 sm:px-6">
           {LINKS.map(({ href, label, icon: Icon, ...rest }) => {

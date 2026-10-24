@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { Check, Loader2, Headphones, BookOpen, PenLine, Mic, ArrowUpRight } from "lucide-react";
 import { LogoMark } from "@/components/ui/logo";
+import { BrandDocument, BrandLogo } from "@/components/ui/brand-mark";
 import { cn } from "@/lib/utils";
 import { DeviceSignals } from "@/components/auth/device-signals";
+import { chromeStyle, type PartnerBrand } from "@/lib/partner-brand";
+import { requestTenant } from "@/lib/partner-tenant";
 
 /**
  * Auth shell — split-screen, LIGHT form + DARK showcase, matching the landing's
@@ -10,11 +13,19 @@ import { DeviceSignals } from "@/components/auth/device-signals";
  * surface (same as the landing hero/method/footer), with the green accent card
  * and a "pipeline" chip stack mirroring the product's real AI flow.
  */
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+export default async function AuthLayout({ children }: { children: React.ReactNode }) {
+  /*
+   * On a class's subdomain these are the class's sign-in pages: its name and
+   * logo in the corner, its colour on the showcase, and no link "back" to an
+   * IELTSVega marketing site the class's students never came from.
+   */
+  const tenant = await requestTenant();
+
   // Fixed to the viewport — the auth pages never scroll; content fits.
   return (
     <div className="grid h-svh overflow-hidden bg-paper text-ink lg:grid-cols-[minmax(0,460px)_1fr]">
       <DeviceSignals />
+      {tenant && <BrandDocument brand={tenant} />}
       {/*
         ── Form column (light). Slim top bar: logo (home) + back-to-site. ──
 
@@ -30,30 +41,82 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         simply no longer engages at normal heights.
       */}
       <div className="flex h-full flex-col overflow-y-auto px-6 py-3 sm:px-12">
-        <div className="flex items-center justify-between">
-          <Link href="/" className="inline-flex w-fit items-center gap-2.5">
-            <LogoMark className="size-9" priority />
-            <span className="text-lg font-semibold tracking-tight">IELTSVega</span>
-          </Link>
-          <Link href="/" className="text-xs font-medium text-ink-muted transition-colors hover:text-ink">
-            ← Back to site
-          </Link>
-        </div>
+        {tenant ? (
+          <div className="flex items-center gap-2.5 py-1">
+            <BrandLogo brand={tenant} className="size-9" priority />
+            <span className="truncate text-lg font-semibold tracking-tight">{tenant.name}</span>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between">
+            <Link href="/" className="inline-flex w-fit items-center gap-2.5">
+              <LogoMark className="size-9" priority />
+              <span className="text-lg font-semibold tracking-tight">IELTSVega</span>
+            </Link>
+            <Link href="/" className="text-xs font-medium text-ink-muted transition-colors hover:text-ink">
+              ← Back to site
+            </Link>
+          </div>
+        )}
 
         <div className="flex flex-1 items-center justify-center py-2 lg:py-0">
           <div className="w-full max-w-sm">{children}</div>
         </div>
 
         <p className="text-center text-xs text-ink-muted lg:text-left">
-          Academic &amp; General Training · 2026 exam format
+          {tenant ? "IELTS practice · Powered by IELTSVega" : "Academic & General Training · 2026 exam format"}
         </p>
       </div>
 
       {/* ── Showcase column (desktop) ── */}
-      <aside className="relative hidden flex-col justify-between gap-6 overflow-hidden border-l border-white/10 bg-paper-strong p-10 lg:flex xl:p-12">
-        <Showcase />
-      </aside>
+      {tenant ? (
+        <PartnerShowcase brand={tenant} />
+      ) : (
+        <aside className="relative hidden flex-col justify-between gap-6 overflow-hidden border-l border-white/10 bg-paper-strong p-10 lg:flex xl:p-12">
+          <Showcase />
+        </aside>
+      )}
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * Partner showcase — the class's own panel on its subdomain.
+ *
+ * Drawn entirely in the class's two colours (or IELTSVega's slate and white
+ * when it set none), so whatever it chose, the text on it is readable: every
+ * tint below is the text colour at an opacity, never a fixed white.
+ * ------------------------------------------------------------------ */
+
+function PartnerShowcase({ brand }: { brand: PartnerBrand }) {
+  return (
+    <aside
+      style={chromeStyle(brand)}
+      className="relative hidden flex-col justify-between gap-6 overflow-hidden bg-(--chrome-bg,hsl(var(--surface-strong))) p-10 text-(--chrome-fg,#ffffff) lg:flex xl:p-12"
+    >
+      <p className="text-[11px] font-medium uppercase tracking-[0.24em] opacity-50">
+        IELTS preparation
+      </p>
+
+      <div className="max-w-lg">
+        <BrandLogo brand={brand} className="size-20" priority />
+        <h2 className="font-serif mt-6 text-[2.75rem] leading-[1.05] tracking-tight">{brand.name}</h2>
+        {brand.tagline && <p className="mt-4 text-lg leading-relaxed opacity-75">{brand.tagline}</p>}
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        {SKILLS.map(({ label, Icon }) => (
+          <div
+            key={label}
+            className="flex items-center gap-2.5 rounded-2xl border border-current/15 px-4 py-3 text-sm font-medium"
+          >
+            <Icon className="size-4 shrink-0 opacity-60" strokeWidth={1.5} />
+            {label}
+          </div>
+        ))}
+      </div>
+
+      <p className="font-mono text-[11px] uppercase tracking-wider opacity-40">Powered by IELTSVega</p>
+    </aside>
   );
 }
 

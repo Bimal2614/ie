@@ -14,6 +14,7 @@ export default async function SectionPracticeLayout({
       plan={user.plan}
       aiCredits={user.aiCredits}
       needsPhone={!user.phone}
+      brand={user.brand}
       logoutAction={logout}
     >
       {children}

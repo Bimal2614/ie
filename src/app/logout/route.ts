@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { clearedSessionCookie, destroySession } from "@/lib/session";
 import { SIGNED_OUT_PARAM } from "@/lib/auth-routes";
+import { sameHostUrl } from "@/lib/partner-brand";
 
 /**
  * Clear the session cookie, then bounce to /login.
@@ -20,7 +21,8 @@ export async function GET(request: NextRequest) {
   await destroySession();
 
   const next = request.nextUrl.searchParams.get("next");
-  const url = new URL("/login", request.url);
+  // The same host: a class's student signs back in on the class's subdomain.
+  const url = sameHostUrl("/login", request);
   // Only ever an internal path — never reflect an absolute URL into a redirect.
   if (next?.startsWith("/") && !next.startsWith("//")) {
     url.searchParams.set("next", next);

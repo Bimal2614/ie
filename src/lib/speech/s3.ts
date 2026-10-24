@@ -156,3 +156,29 @@ export async function presignGetUrl(key: string, expiresSec = 3600): Promise<str
     expiresIn: expiresSec,
   });
 }
+
+/**
+ * Store any small object under an exact key. For uploads that are not speaking
+ * audio — a partner's logo — which choose their own key layout and need nothing
+ * from the recording pipeline above.
+ */
+export async function putObject(
+  key: string,
+  body: Buffer | Uint8Array,
+  contentType: string,
+): Promise<boolean> {
+  if (!isS3Configured()) return false;
+  try {
+    await client().send(
+      new PutObjectCommand({
+        Bucket: env.S3_BUCKET_NAME!,
+        Key: key,
+        Body: Buffer.from(body),
+        ContentType: contentType,
+      }),
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}

@@ -192,6 +192,18 @@ const EnvSchema = z.object({
   AWS_REGION: z.string().optional(),
   S3_BUCKET_NAME: z.string().optional(),
   S3_FOLDER_PREFIX: z.string().optional(),
+
+  // --- Partner subdomains (classx.ieltsvega.com). See src/lib/partner-domains.ts.
+  //     The domain partner subdomains hang off. Unset means "ieltsvega.com" in
+  //     production and "localhost" in dev, so classx.localhost:3000 works. ---
+  PARTNER_ROOT_DOMAIN: z.string().optional(),
+  //     Optional: without these a subdomain is still saved and served, it just
+  //     has to be added in Vercel and Hostinger by hand.
+  VERCEL_API_TOKEN: z.string().optional(),
+  VERCEL_PROJECT_ID: z.string().optional(),
+  VERCEL_TEAM_ID: z.string().optional(),
+  //     hPanel → API. Writes the CNAME for each subdomain.
+  HOSTINGER_API_TOKEN: z.string().optional(),
 });
 
 export const env = EnvSchema.parse({
@@ -241,6 +253,11 @@ export const env = EnvSchema.parse({
   AWS_REGION: process.env.AWS_REGION,
   S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,
   S3_FOLDER_PREFIX: process.env.S3_FOLDER_PREFIX,
+  PARTNER_ROOT_DOMAIN: process.env.PARTNER_ROOT_DOMAIN,
+  VERCEL_API_TOKEN: process.env.VERCEL_API_TOKEN,
+  VERCEL_PROJECT_ID: process.env.VERCEL_PROJECT_ID,
+  VERCEL_TEAM_ID: process.env.VERCEL_TEAM_ID,
+  HOSTINGER_API_TOKEN: process.env.HOSTINGER_API_TOKEN,
 });
 
 export const isProd = env.NODE_ENV === "production";

@@ -4,6 +4,8 @@ import { useState, type ReactNode } from "react";
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
 import { PhonePrompt } from "@/components/auth/phone-prompt";
+import { BrandDocument } from "@/components/ui/brand-mark";
+import type { PartnerBrand } from "@/lib/partner-brand";
 
 import { type PlanKey } from "@/lib/plans";
 
@@ -26,18 +28,24 @@ interface AppShellProps {
    * Lives here rather than in each layout so every authed route inherits it.
    */
   needsPhone?: boolean;
+  /**
+   * The class white label from the session — null for everyone not enrolled
+   * through a white-labelled partner, who see IELTSVega exactly as before.
+   */
+  brand?: PartnerBrand | null;
   logoutAction: () => void | Promise<void>;
   children: ReactNode;
 }
 
-export function AppShell({ user, plan, aiCredits, needsPhone, logoutAction, children }: AppShellProps) {
+export function AppShell({ user, plan, aiCredits, needsPhone, brand, logoutAction, children }: AppShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <div className="app-shell">
+      <BrandDocument brand={brand} />
       {/* Desktop sidebar */}
       <div className="hidden lg:block">
-        <Sidebar plan={plan} />
+        <Sidebar plan={plan} brand={brand} />
       </div>
 
       {/* Mobile drawer */}
@@ -52,6 +60,7 @@ export function AppShell({ user, plan, aiCredits, needsPhone, logoutAction, chil
           <div className="fixed inset-y-0 left-0 z-50 w-[280px] lg:hidden">
             <Sidebar
               plan={plan}
+              brand={brand}
               showCloseButton
               onClose={() => setMobileOpen(false)}
               onNavigate={() => setMobileOpen(false)}
@@ -67,6 +76,7 @@ export function AppShell({ user, plan, aiCredits, needsPhone, logoutAction, chil
           user={user}
           plan={plan}
           aiCredits={aiCredits}
+          brand={brand}
           onOpenSidebar={() => setMobileOpen(true)}
           logoutAction={logoutAction}
         />

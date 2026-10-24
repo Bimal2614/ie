@@ -378,13 +378,20 @@
   .app-page { padding: clamp(16px, 3vw, 32px); max-width: 1240px; width: 100%; margin-inline: auto; }
 
   /* Sidebar */
+  /* The sidebar's two colours are variables so a partner's white label can
+     swap them (see chromeStyle in src/components/ui/brand-mark.tsx): its brand
+     colour as the surface, and its text colour — black on white, white on
+     navy — for everything drawn on it. Unset, they are IELTSVega's slate and
+     white, and every rule below renders exactly as it did before. */
   .sidebar-shell {
+    --chrome-bg: hsl(var(--surface-strong));
+    --chrome-fg: #ffffff;
     position: sticky;
     top: 0;
     height: 100vh;
-    background-color: hsl(var(--surface-strong));
-    color: hsl(0 0% 100% / 0.86);
-    border-right: 1px solid hsl(0 0% 100% / 0.05);
+    background-color: var(--chrome-bg);
+    color: color-mix(in srgb, var(--chrome-fg) 86%, transparent);
+    border-right: 1px solid color-mix(in srgb, var(--chrome-fg) 5%, transparent);
     display: flex;
     flex-direction: column;
   }
@@ -398,18 +405,18 @@
     padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
     font-weight: 500;
-    color: hsl(0 0% 100% / 0.7);
+    color: color-mix(in srgb, var(--chrome-fg) 70%, transparent);
     transition: background-color 0.15s ease, color 0.15s ease;
   }
-  .sidebar-item:hover { background-color: hsl(0 0% 100% / 0.05); color: #fff; }
-  .sidebar-item[data-active="true"] { background-color: hsl(0 0% 100% / 0.1); color: #fff; }
+  .sidebar-item:hover { background-color: color-mix(in srgb, var(--chrome-fg) 5%, transparent); color: var(--chrome-fg); }
+  .sidebar-item[data-active="true"] { background-color: color-mix(in srgb, var(--chrome-fg) 10%, transparent); color: var(--chrome-fg); }
   .sidebar-group-label {
     padding: 0.5rem 0.75rem;
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    color: hsl(0 0% 100% / 0.4);
+    color: color-mix(in srgb, var(--chrome-fg) 40%, transparent);
   }
 
   /* Scroll affordance — the shell hides its scrollbars, so a nav that runs
@@ -426,12 +433,12 @@
   .sidebar-fade-top {
     top: 0;
     height: 1.5rem;
-    background: linear-gradient(to bottom, hsl(var(--surface-strong)), transparent);
+    background: linear-gradient(to bottom, var(--chrome-bg), transparent);
   }
   .sidebar-fade-bottom {
     bottom: 0;
     height: 3.25rem;
-    background: linear-gradient(to top, hsl(var(--surface-strong)) 40%, transparent);
+    background: linear-gradient(to top, var(--chrome-bg) 40%, transparent);
   }
   .sidebar-more {
     position: absolute;
@@ -442,20 +449,20 @@
     gap: 0.3rem;
     transform: translateX(-50%);
     border-radius: 999px;
-    border: 1px solid hsl(0 0% 100% / 0.14);
-    background-color: hsl(0 0% 100% / 0.08);
+    border: 1px solid color-mix(in srgb, var(--chrome-fg) 14%, transparent);
+    background-color: color-mix(in srgb, var(--chrome-fg) 8%, transparent);
     padding: 0.2rem 0.6rem;
     font-size: 10px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: hsl(0 0% 100% / 0.7);
+    color: color-mix(in srgb, var(--chrome-fg) 70%, transparent);
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.2s ease, visibility 0.2s ease, background-color 0.15s ease, color 0.15s ease;
   }
   .sidebar-more[data-visible="true"] { opacity: 1; visibility: visible; }
-  .sidebar-more:hover { background-color: hsl(0 0% 100% / 0.16); color: #fff; }
+  .sidebar-more:hover { background-color: color-mix(in srgb, var(--chrome-fg) 16%, transparent); color: var(--chrome-fg); }
   .sidebar-more svg { animation: sidebar-nudge 1.8s ease-in-out infinite; }
   @keyframes sidebar-nudge {
     0%, 55%, 100% { transform: translateY(0); }

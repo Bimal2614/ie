@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { logout } from "@/app/actions/auth";
 import { PartnerShell } from "@/components/partner/partner-shell";
+import { brandFrom } from "@/lib/partner-brand";
 import { partnerContext } from "@/lib/partners";
 
 export const metadata: Metadata = {
@@ -24,6 +25,7 @@ export default async function PartnerLayout({ children }: { children: React.Reac
   return (
     <PartnerShell
       partnerName={partner.name}
+      brand={brandFrom(partner)}
       loginName={user.name}
       suspended={partner.status !== "active"}
       logoutAction={logout}

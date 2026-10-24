@@ -10,6 +10,7 @@ export default async function ResultsLayout({ children }: { children: React.Reac
       plan={user.plan}
       aiCredits={user.aiCredits}
       needsPhone={!user.phone}
+      brand={user.brand}
       logoutAction={logout}
     >
       {children}

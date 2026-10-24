@@ -6,7 +6,7 @@ import { StatTile } from "@/components/dashboard/ui";
 import { InviteByEmail } from "@/components/partner/invite-by-email";
 import { InviteLink } from "@/components/partner/invite-link";
 import { RateCard } from "@/components/partner/plan-picker";
-import { env } from "@/lib/env";
+import { partnerOrigin } from "@/lib/partner-tenant";
 import { parsePageRequest, toPage } from "@/lib/pagination";
 import { referralLink } from "@/lib/partner-referral";
 import { quotesFor } from "@/lib/partner-pricing";
@@ -65,7 +65,9 @@ export default async function PartnerHome({
   // Built here, not in the browser: `location.origin` would read localhost in
   // development and a preview domain on a preview deploy, and a class that
   // copied either would hand its students a link to nowhere.
-  const invite = referralLink(env.APP_URL ?? "https://ieltsvega.com", {
+  // On the class's own subdomain when it has one: the signup there joins the
+  // class from the host, and the student lands in the class's branded app.
+  const invite = referralLink(partnerOrigin(partner.subdomain), {
     id: partner.id,
     name: partner.name,
   });

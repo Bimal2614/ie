@@ -22,7 +22,8 @@ import {
   Library,
   Mail,
 } from "lucide-react";
-import { LogoMark } from "@/components/ui/logo";
+import { BrandLogo } from "@/components/ui/brand-mark";
+import { brandName, chromeStyle, type PartnerBrand } from "@/lib/partner-brand";
 import { type PlanKey } from "@/lib/plans";
 import { cn } from "@/lib/utils";
 
@@ -106,11 +107,16 @@ interface SidebarProps {
   onClose?: () => void;
   /** From the session. Drives which items still read as locked. */
   plan?: PlanKey | null;
+  /** The student's class white label, or null for IELTSVega's own chrome. */
+  brand?: PartnerBrand | null;
 }
 
-export function Sidebar({ onNavigate, showCloseButton, onClose, plan }: SidebarProps) {
+export function Sidebar({ onNavigate, showCloseButton, onClose, plan, brand }: SidebarProps) {
   const pathname = usePathname();
-  const groups = GROUPS;
+  // "Learn" is IELTSVega's public reading — the blog and the study-material
+  // landing pages, under our marketing nav. A class's students are kept inside
+  // the class's app instead of being walked out to our sales pages.
+  const groups = brand ? GROUPS.filter((g) => g.label !== "Learn") : GROUPS;
   // The "Premium" badge marks a locked feature. To someone who has it, the same
   // badge reads as a wall they have already paid to get past.
   const showsLocks = !plan || plan === "free";
@@ -151,16 +157,24 @@ export function Sidebar({ onNavigate, showCloseButton, onClose, plan }: SidebarP
     exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <aside className="sidebar-shell w-full">
+    <aside className="sidebar-shell w-full" style={chromeStyle(brand)}>
       <div className="flex items-center justify-between px-4 pt-5 pb-4">
-        <Link href="/dashboard" className="flex items-center gap-2.5 text-white" onClick={onNavigate}>
-          <LogoMark className="h-9 w-9" priority />
-          <span className="flex flex-col leading-tight">
-            <span className="text-lg font-semibold tracking-tight" style={{ fontFamily: "var(--font-heading)" }}>
-              IELTSVega
+        <Link href="/dashboard" className="flex min-w-0 items-center gap-2.5 text-(--chrome-fg)" onClick={onNavigate}>
+          <BrandLogo brand={brand} className="h-9 w-9" priority />
+          <span className="flex min-w-0 flex-col leading-tight">
+            {/* A class's name is often longer than "IELTSVega": it wraps to a
+                second line, a size down, rather than being cut mid-word. */}
+            <span
+              className={cn(
+                "font-semibold tracking-tight",
+                brandName(brand).length > 16 ? "line-clamp-2 text-base leading-tight" : "truncate text-lg",
+              )}
+              style={{ fontFamily: "var(--font-heading)" }}
+            >
+              {brandName(brand)}
             </span>
-            <span className="text-[10px] uppercase tracking-[0.18em] text-white/40">
-              Academic &amp; General
+            <span className="line-clamp-2 text-[10px] uppercase tracking-[0.18em] text-(--chrome-fg)/40">
+              {brand?.tagline ?? "Academic & General"}
             </span>
           </span>
         </Link>
@@ -169,7 +183,7 @@ export function Sidebar({ onNavigate, showCloseButton, onClose, plan }: SidebarP
             type="button"
             onClick={onClose}
             aria-label="Close navigation"
-            className="rounded-md p-1.5 text-white/60 hover:bg-white/5 hover:text-white"
+            className="rounded-md p-1.5 text-(--chrome-fg)/60 hover:bg-(--chrome-fg)/5 hover:text-(--chrome-fg)"
           >
             <PanelLeftClose className="h-5 w-5" />
           </button>
@@ -202,7 +216,7 @@ export function Sidebar({ onNavigate, showCloseButton, onClose, plan }: SidebarP
                             onClick={() => setExpanded((p) => ({ ...p, [item.href]: !isOpen }))}
                             aria-expanded={isOpen}
                             aria-label={`${isOpen ? "Collapse" : "Expand"} ${item.label}`}
-                            className="rounded-md p-1 text-white/60 hover:bg-white/10 hover:text-white"
+                            className="rounded-md p-1 text-(--chrome-fg)/60 hover:bg-(--chrome-fg)/10 hover:text-(--chrome-fg)"
                           >
                             <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")} />
                           </button>
@@ -212,7 +226,7 @@ export function Sidebar({ onNavigate, showCloseButton, onClose, plan }: SidebarP
                           <item.icon className="h-4 w-4 shrink-0 opacity-80" />
                           <span className="flex-1 truncate">{item.label}</span>
                           {item.badge && showsLocks && (
-                            <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-white">
+                            <span className="rounded-full bg-(--chrome-fg)/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-(--chrome-fg)">
                               {item.badge}
                             </span>
                           )}
@@ -220,7 +234,7 @@ export function Sidebar({ onNavigate, showCloseButton, onClose, plan }: SidebarP
                       )}
 
                       {item.children && isOpen && (
-                        <ul className="ml-4 space-y-0.5 border-l border-white/10 pl-2">
+                        <ul className="ml-4 space-y-0.5 border-l border-(--chrome-fg)/10 pl-2">
                           {item.children.map((child) => (
                             <li key={child.href}>
                               <Link href={child.href} className="sidebar-item" data-active={isActive(child.href)} onClick={onNavigate}>
@@ -255,7 +269,7 @@ export function Sidebar({ onNavigate, showCloseButton, onClose, plan }: SidebarP
         </button>
       </div>
 
-      <div className="space-y-0.5 border-t border-white/5 px-3 py-3">
+      <div className="space-y-0.5 border-t border-(--chrome-fg)/5 px-3 py-3">
         <Link href="/pricing" className="sidebar-item" data-active={isActive("/pricing")} onClick={onNavigate}>
           <CreditCard className="h-4 w-4 opacity-80" />
           <span>Pricing</span>
@@ -268,6 +282,11 @@ export function Sidebar({ onNavigate, showCloseButton, onClose, plan }: SidebarP
           <Mail className="h-4 w-4 opacity-80" />
           <span>Contact Us</span>
         </Link>
+        {brand && (
+          <p className="px-3 pt-2 text-[10px] uppercase tracking-[0.16em] text-(--chrome-fg)/35">
+            Powered by IELTSVega
+          </p>
+        )}
       </div>
     </aside>
   );

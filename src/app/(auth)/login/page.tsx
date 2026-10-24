@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { LoginForm } from "@/components/auth/login-form";
 import { AuthHeader } from "@/components/auth/auth-ui";
 import { GoogleButton } from "@/components/auth/google-button";
+import { requestTenant } from "@/lib/partner-tenant";
 
 const OAUTH_ERROR: Record<string, string> = {
   unavailable: "Google sign-in isn't available right now. Please use your email and password.",
@@ -17,12 +18,15 @@ export const metadata: Metadata = {
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ verified?: string; verify?: string; oauth?: string; signedout?: string; next?: string }> }) {
   const { verified, verify, oauth, signedout, next } = await searchParams;
   const oauthError = oauth ? OAUTH_ERROR[oauth] : null;
+  // A class's students are enrolled by the class with a password, and Google
+  // can only call back to www — so a class's own sign-in page has no Google.
+  const tenant = await requestTenant();
   return (
     <div className="space-y-6">
       <AuthHeader
         chip="Welcome back"
         title="Sign in"
-        subtitle="Sign in to continue your IELTS prep."
+        subtitle={tenant ? `Sign in to ${tenant.name} to continue your IELTS prep.` : "Sign in to continue your IELTS prep."}
       />
       {/* Reached via /logout: the session was revoked or idled out. The most
           common cause by far is a sign-in elsewhere (one device at a time). */}
@@ -45,7 +49,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <p className="rounded-lg border border-danger/25 bg-danger-soft px-3 py-2 text-sm text-danger">{oauthError}</p>
       )}
       <LoginForm next={next} />
-      <GoogleButton />
+      {!tenant && <GoogleButton />}
     </div>
   );
 }

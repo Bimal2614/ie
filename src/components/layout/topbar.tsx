@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Menu, ChevronRight, User as UserIcon, Settings as SettingsIcon, LogOut } from "lucide-react";
-import { LogoMark } from "@/components/ui/logo";
+import { BrandLogo } from "@/components/ui/brand-mark";
+import { brandName, type PartnerBrand } from "@/lib/partner-brand";
 import { CreditsPopover } from "@/components/layout/credits-popover";
 import { clearAuthCache } from "@/lib/auth-cache";
 import { type PlanKey } from "@/lib/plans";
@@ -41,11 +42,13 @@ interface TopbarProps {
   plan?: PlanKey | null;
   /** Free AI scores left, from the session. Shown only on the free plan. */
   aiCredits?: number;
+  /** The student's class white label, or null for IELTSVega's own. */
+  brand?: PartnerBrand | null;
   onOpenSidebar: () => void;
   logoutAction: () => void | Promise<void>;
 }
 
-export function Topbar({ user, plan, aiCredits, onOpenSidebar, logoutAction }: TopbarProps) {
+export function Topbar({ user, plan, aiCredits, brand, onOpenSidebar, logoutAction }: TopbarProps) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const pageLabel = pageLabelFor(pathname);
@@ -67,9 +70,9 @@ export function Topbar({ user, plan, aiCredits, onOpenSidebar, logoutAction }: T
         </button>
         <div className="hidden min-w-0 items-center gap-2 text-sm text-ink-muted sm:flex">
           <Link href="/dashboard" className="flex items-center gap-1.5 hover:text-ink-soft">
-            <LogoMark className="h-6 w-6" priority />
+            <BrandLogo brand={brand} className="h-6 w-6" priority />
             <span className="font-semibold text-ink-strong" style={{ fontFamily: "var(--font-heading)" }}>
-              IELTSVega
+              {brandName(brand)}
             </span>
           </Link>
           {pageLabel && (

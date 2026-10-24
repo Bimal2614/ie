@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { INLINE_ANALYTICS_SCRIPTS } from "@/lib/analytics-snippets";
 import { SIGNED_OUT_PARAM } from "@/lib/auth-routes";
+import { subdomainFromHost } from "@/lib/partner-brand";
 
 /**
  * Proxy (formerly "middleware") — runs before every matched route.
@@ -72,6 +73,47 @@ const STRICT_CSP_PREFIXES = [
 
 const matchesPrefix = (pathname: string, prefixes: readonly string[]) =>
   prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+
+/**
+ * What a partner subdomain (classx.ieltsvega.com) serves: the app a class's
+ * students and staff use, and the pages that app links to. Everything else —
+ * the blog, the tools, the landing pages — is IELTSVega's marketing site and is
+ * sent to www, so search engines never find a second copy of it under every
+ * class's name and a class's students never land on our sales pitch.
+ *
+ * AN ALLOW-LIST, NOT A DENY-LIST: a page added to the site later stays on www
+ * until somebody decides a class should serve it too.
+ *
+ * /admin and /verify-students are deliberately absent. IELTSVega's own admin
+ * lives on www only.
+ */
+const PARTNER_HOST_PREFIXES = [
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+  "/invite",
+  "/logout",
+  "/verify-email",
+  "/dashboard",
+  "/history",
+  "/practice",
+  "/section-practice",
+  "/mock-test",
+  "/mock-tests",
+  "/results",
+  "/settings",
+  "/partner",
+  "/pricing",
+  "/contact",
+  "/privacy",
+  "/terms",
+  "/refunds",
+  "/manifest.webmanifest",
+];
+
+/** Where a partner host sends the pages it does not serve. */
+const MAIN_SITE = process.env.NODE_ENV === "production" ? "https://www.ieltsvega.com" : null;
 
 /**
  * The analytics bootstraps the root layout renders inline, trusted on strict
@@ -178,8 +220,9 @@ function buildCsp(nonce: string | null): string {
   ].join("; ");
 }
 
-function applySecurityHeaders(res: NextResponse, csp: string): void {
+function applySecurityHeaders(res: NextResponse, csp: string, partnerHost?: string | null): void {
   res.headers.set("Content-Security-Policy", csp);
+  if (partnerHost) res.headers.set("X-Robots-Tag", "noindex, nofollow");
   // Force HTTPS for 2 years incl. subdomains (only meaningful over TLS).
   if (!isDev) {
     res.headers.set(
@@ -215,6 +258,25 @@ function applySecurityHeaders(res: NextResponse, csp: string): void {
 
 export function proxy(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
+  const partnerHost = subdomainFromHost(request.headers.get("host"));
+
+  /*
+   * A class's subdomain is not a website anyone should find in search: one
+   * robots.txt that refuses everything, and noindex on every response below.
+   */
+  if (partnerHost && pathname === "/robots.txt") {
+    return new NextResponse("User-agent: *\nDisallow: /\n", {
+      headers: { "Content-Type": "text/plain", "Cache-Control": "public, max-age=3600" },
+    });
+  }
+  if (partnerHost && pathname !== "/" && !matchesPrefix(pathname, PARTNER_HOST_PREFIXES)) {
+    // Locally there is no www to send to; the page simply renders.
+    if (MAIN_SITE) {
+      const res = NextResponse.redirect(new URL(`${pathname}${request.nextUrl.search}`, MAIN_SITE));
+      res.headers.set("X-Robots-Tag", "noindex");
+      return res;
+    }
+  }
   const strict = matchesPrefix(pathname, STRICT_CSP_PREFIXES);
   const nonce = strict ? Buffer.from(crypto.randomUUID()).toString("base64") : null;
   const csp = buildCsp(nonce);
@@ -233,12 +295,13 @@ export function proxy(request: NextRequest): NextResponse {
   const isProtected = matchesPrefix(pathname, PROTECTED_PREFIXES);
   const isAuthRoute = AUTH_ROUTES.includes(pathname);
 
-  // Not logged in → bounce to login, preserving intended destination.
-  if (isProtected && !hasSession) {
+  // Not logged in → bounce to login, preserving intended destination. On a
+  // partner host the home page is the sign-in form: there is no landing page.
+  if ((isProtected || (partnerHost && pathname === "/")) && !hasSession) {
     const url = new URL("/login", request.url);
-    url.searchParams.set("next", pathname);
+    if (pathname !== "/") url.searchParams.set("next", pathname);
     const res = NextResponse.redirect(url);
-    applySecurityHeaders(res, csp);
+    applySecurityHeaders(res, csp, partnerHost);
     return res;
   }
 
@@ -256,12 +319,12 @@ export function proxy(request: NextRequest): NextResponse {
   const justSignedOut = request.nextUrl.searchParams.has(SIGNED_OUT_PARAM);
   if ((isAuthRoute || pathname === "/") && hasSession && !justSignedOut) {
     const res = NextResponse.redirect(new URL("/dashboard", request.url));
-    applySecurityHeaders(res, csp);
+    applySecurityHeaders(res, csp, partnerHost);
     return res;
   }
 
   const res = NextResponse.next({ request: { headers: requestHeaders } });
-  applySecurityHeaders(res, csp);
+  applySecurityHeaders(res, csp, partnerHost);
   return res;
 }
 

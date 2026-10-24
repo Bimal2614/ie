@@ -129,9 +129,32 @@ export const partners = pgTable("partners", {
    */
   couponId: uuid().references(() => coupons.id, { onDelete: "set null" }),
 
+  /*
+   * WHITE LABEL. Every column below is optional and independent: whatever is
+   * set replaces the IELTSVega default in that one place, and whatever is NULL
+   * leaves the default alone. See src/lib/partner-brand.ts.
+   */
+
+  /**
+   * The label in `<subdomain>.ieltsvega.com`. Validated by SUBDOMAIN_RE in
+   * src/lib/partner-brand.ts. Unique: the host IS the lookup key, so two
+   * classes can never answer on the same one.
+   */
+  subdomain: text(),
+  /** S3 key of the uploaded logo. Served by /api/partner-logo/[id]. */
+  logoKey: text(),
+  tagline: text(),
+  /** `#rrggbb`. The class's colour for the app chrome (sidebar, header). */
+  brandColor: text(),
+  /**
+   * `#rrggbb`. Text drawn ON `brandColor`. NULL picks black or white by
+   * contrast, so a class that only chooses a colour still gets readable text.
+   */
+  brandTextColor: text(),
+
   createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [uniqueIndex("partners_subdomain_uq").on(t.subdomain)]);
 
 /* ------------------------------------------------------------------ *
  * Users

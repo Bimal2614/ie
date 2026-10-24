@@ -6,6 +6,7 @@ import { GoogleButton } from "@/components/auth/google-button";
 import { PartnerWelcome } from "@/components/auth/partner-welcome";
 import { parseReferral } from "@/lib/partner-referral";
 import { INVITE_COOKIE, openInvite } from "@/lib/partner-invites";
+import { requestTenant } from "@/lib/partner-tenant";
 
 export const metadata: Metadata = {
   title: "Create account · IELTSVega",
@@ -33,6 +34,12 @@ export default async function SignupPage({
    * It only takes effect if the account is created with the invited address.
    */
   const invite = await openInvite((await cookies()).get(INVITE_COOKIE)?.value);
+  /*
+   * On a class's subdomain the class IS the referral: the account is attached
+   * to it by the signup action, from the host, whatever the URL says. No
+   * Google here — see the login page.
+   */
+  const tenant = await requestTenant();
 
   return (
     <div className="space-y-4">
@@ -42,17 +49,21 @@ export default async function SignupPage({
       />
       {invite ? (
         <PartnerWelcome name={invite.partnerName} invitedEmail={invite.email} />
+      ) : tenant ? (
+        <PartnerWelcome name={tenant.name} />
       ) : (
         referral && <PartnerWelcome name={referral.name} />
       )}
-      <GoogleButton
-        label="Sign up with Google"
-        position="top"
-        referral={invite ? null : referral}
-      />
+      {!tenant && (
+        <GoogleButton
+          label="Sign up with Google"
+          position="top"
+          referral={invite ? null : referral}
+        />
+      )}
       <SignupForm
         next={next}
-        referral={invite ? null : referral}
+        referral={invite || tenant ? null : referral}
         defaultEmail={invite?.email}
       />
     </div>
