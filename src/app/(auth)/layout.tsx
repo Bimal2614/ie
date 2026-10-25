@@ -1,17 +1,20 @@
 import Link from "next/link";
-import { Check, Loader2, Headphones, BookOpen, PenLine, Mic, ArrowUpRight } from "lucide-react";
 import { LogoMark } from "@/components/ui/logo";
 import { BrandDocument, BrandLogo } from "@/components/ui/brand-mark";
-import { cn } from "@/lib/utils";
 import { DeviceSignals } from "@/components/auth/device-signals";
-import { chromeStyle, type PartnerBrand } from "@/lib/partner-brand";
+import { FactDeck } from "@/components/auth/fact-deck";
+import { chromeStyle, contrastRatio, type PartnerBrand } from "@/lib/partner-brand";
 import { requestTenant } from "@/lib/partner-tenant";
 
 /**
- * Auth shell — split-screen, LIGHT form + DARK showcase, matching the landing's
- * exact light/dark language: the dark panel is the theme's `bg-paper-strong`
- * surface (same as the landing hero/method/footer), with the green accent card
- * and a "pipeline" chip stack mirroring the product's real AI flow.
+ * Auth shell — two equal halves: the LIGHT form on the left, and on the right
+ * a showcase panel holding one card that walks through IELTS facts, each with
+ * its own drawing (see FactDeck).
+ *
+ * On www the panel is the theme's dark `bg-paper-strong` with IELTSVega green
+ * on the card. On a class's subdomain it is the class's own colour, with its
+ * logo, name and tagline above the card, and the card's accent and the form's
+ * main button in that colour too.
  */
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
   /*
@@ -23,7 +26,11 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
 
   // Fixed to the viewport — the auth pages never scroll; content fits.
   return (
-    <div className="grid h-svh overflow-hidden bg-paper text-ink lg:grid-cols-[minmax(0,460px)_1fr]">
+    <div
+      // On a class's subdomain the form's main button takes the class's colour (see authButton).
+      style={tenant?.color ? ({ "--cta-bg": tenant.color, "--cta-fg": tenant.textColor } as React.CSSProperties) : undefined}
+      className="grid h-svh overflow-hidden bg-paper text-ink lg:grid-cols-2"
+    >
       <DeviceSignals />
       {tenant && <BrandDocument brand={tenant} />}
       {/*
@@ -68,161 +75,128 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
       </div>
 
       {/* ── Showcase column (desktop) ── */}
-      {tenant ? (
-        <PartnerShowcase brand={tenant} />
-      ) : (
-        <aside className="relative hidden flex-col justify-between gap-6 overflow-hidden border-l border-white/10 bg-paper-strong p-10 lg:flex xl:p-12">
-          <Showcase />
-        </aside>
-      )}
+      {tenant ? <PartnerShowcase brand={tenant} /> : <Showcase />}
     </div>
   );
 }
 
 /* ------------------------------------------------------------------ *
- * Partner showcase — the class's own panel on its subdomain.
- *
- * Drawn entirely in the class's two colours (or IELTSVega's slate and white
- * when it set none), so whatever it chose, the text on it is readable: every
- * tint below is the text colour at an opacity, never a fixed white.
+ * The two showcase panels. Both are a header, the fact card, a footer.
  * ------------------------------------------------------------------ */
 
-function PartnerShowcase({ brand }: { brand: PartnerBrand }) {
+const PANEL =
+  "relative isolate hidden flex-col items-center justify-between gap-5 overflow-hidden px-10 py-8 lg:flex xl:px-14";
+
+/** A dot grid and a soft light from the top corner, tinted with the panel's text colour. */
+function PanelTexture() {
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-0 -z-10"
+      style={{
+        backgroundImage:
+          "radial-gradient(55% 45% at 90% 0%, color-mix(in srgb, var(--fg) 16%, transparent), transparent 70%), radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--fg) 13%, transparent) 1px, transparent 0)",
+        backgroundSize: "auto, 22px 22px",
+      }}
+    />
+  );
+}
+
+/** IELTSVega's own panel on www: slate, with the green accent. */
+function Showcase() {
   return (
     <aside
-      style={chromeStyle(brand)}
-      className="relative hidden flex-col justify-between gap-6 overflow-hidden bg-(--chrome-bg,hsl(var(--surface-strong))) p-10 text-(--chrome-fg,#ffffff) lg:flex xl:p-12"
+      className={`${PANEL} bg-paper-strong text-white`}
+      style={
+        {
+          "--fg": "#ffffff",
+          "--deck-card": "hsl(var(--bg-elev))",
+          "--deck-ink": "hsl(var(--ink))",
+          "--deck-muted": "hsl(var(--ink-muted))",
+          "--deck-soft": "hsl(var(--bg-sunken))",
+          "--deck-track": "hsl(var(--line))",
+          "--deck-accent": "hsl(var(--green))",
+          "--deck-accent-ink": "hsl(var(--green-ink))",
+        } as React.CSSProperties
+      }
     >
-      <p className="text-[11px] font-medium uppercase tracking-[0.24em] opacity-50">
-        IELTS preparation
-      </p>
-
-      <div className="max-w-lg">
-        <BrandLogo brand={brand} className="size-20" priority />
-        <h2 className="font-serif mt-6 text-[2.75rem] leading-[1.05] tracking-tight">{brand.name}</h2>
-        {brand.tagline && <p className="mt-4 text-lg leading-relaxed opacity-75">{brand.tagline}</p>}
+      <PanelTexture />
+      <div className="w-full max-w-[30rem]">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/50">AI-scored IELTS practice</p>
+        <h2 className="mt-2 text-[2rem] font-semibold leading-[1.1] tracking-tight xl:text-[2.25rem]">
+          Know the exam <span className="text-green">before</span> it tests you.
+        </h2>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        {SKILLS.map(({ label, Icon }) => (
-          <div
-            key={label}
-            className="flex items-center gap-2.5 rounded-2xl border border-current/15 px-4 py-3 text-sm font-medium"
-          >
-            <Icon className="size-4 shrink-0 opacity-60" strokeWidth={1.5} />
-            {label}
-          </div>
-        ))}
-      </div>
+      <FactDeck />
 
-      <p className="font-mono text-[11px] uppercase tracking-wider opacity-40">Powered by IELTSVega</p>
+      <div className="flex w-full max-w-[30rem] items-center justify-between gap-4 text-[11px] font-medium uppercase tracking-wider text-white/45">
+        <span>15,000+ questions</span>
+        <span>Full mocks</span>
+        <span>Academic + General</span>
+      </div>
     </aside>
   );
 }
 
-/* ------------------------------------------------------------------ *
- * Showcase — a filled, aligned composition (no empty tiles).
- * ------------------------------------------------------------------ */
+/**
+ * The class's panel on its subdomain, in its two colours (or IELTSVega's slate
+ * and white when it set none).
+ *
+ * The card's accent is the class colour, unless that colour would vanish on
+ * the white card (a white or pale-yellow brand) — then it falls back to ink,
+ * so the drawings never lose their highlights.
+ */
+function PartnerShowcase({ brand }: { brand: PartnerBrand }) {
+  const accentShows = brand.color ? contrastRatio(brand.color, "#ffffff") >= 1.6 : false;
+  const accent = brand.color && accentShows ? brand.color : brand.color ? "hsl(var(--ink))" : "hsl(var(--green))";
+  const accentInk = brand.color && accentShows ? brand.textColor! : brand.color ? "#ffffff" : "hsl(var(--green-ink))";
 
-const SKILLS = [
-  { label: "Listening", Icon: Headphones },
-  { label: "Reading", Icon: BookOpen },
-  { label: "Writing", Icon: PenLine },
-  { label: "Speaking", Icon: Mic },
-] as const;
-
-function Showcase() {
   return (
-    <>
-      {/* Heading */}
-      <div>
-        <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-white/40">
-          AI-scored IELTS practice
-        </p>
-        <h2 className="font-serif mt-4 max-w-md text-[2.5rem] leading-[1.05] tracking-tight text-white">
-          <span className="italic text-brand-soft">Band 9</span> starts with the right practice.
-        </h2>
-      </div>
-
-      {/* Hero — the solid green accent card (design-token classes). */}
-      <div className="rounded-3xl bg-green p-7 text-green-ink">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h3 className="text-2xl font-semibold leading-tight">AI Band Scoring</h3>
-            <p className="mt-2 max-w-[22rem] text-sm leading-relaxed text-green-ink/75">
-              Writing &amp; Speaking graded on all four IELTS criteria, in seconds, not days.
-            </p>
-          </div>
-          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-green-ink/12">
-            <ArrowUpRight className="size-5" />
-          </span>
-        </div>
-
-        <div className="mt-6 flex items-end justify-between gap-4">
-          <div>
-            <span className="text-xs font-medium uppercase tracking-wider text-green-ink/60">
-              Target band
-            </span>
-            <p className="font-serif text-6xl leading-none tabular-nums">9.0</p>
-          </div>
-          {/* Pipeline chips — contained inside the card, not floating. */}
-          <div className="space-y-1.5">
-            <PipelineChip label="evaluate_writing" done />
-            <PipelineChip label="score_speaking" done />
-            <PipelineChip label="generate_band_report" active />
-          </div>
-        </div>
-      </div>
-
-      {/* Two aligned cards fill the rest — no blanks. */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
-          <p className="text-base font-semibold text-white">Instant feedback</p>
-          <p className="mt-1.5 text-sm leading-relaxed text-white/50">
-            Every answer scored and every mistake explained the moment you finish.
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
-          <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.16em] text-white/40">
-            All four skills
-          </p>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
-            {SKILLS.map(({ label, Icon }) => (
-              <div key={label} className="flex items-center gap-2 text-sm text-white/75">
-                <Icon className="size-3.5 shrink-0 text-white/45" strokeWidth={1.5} />
-                {label}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Footer spec strip. */}
-      <div
-        className="font-mono flex items-center gap-4 text-[11px] uppercase tracking-wider text-white/35"
-      >
-        <span>15,000+ questions</span>
-        <span className="text-white/15">/</span>
-        <span>Full mocks</span>
-        <span className="text-white/15">/</span>
-        <span>Academic + General</span>
-      </div>
-    </>
-  );
-}
-
-/** A mono "command" chip — done ones get a check, the active one a spinner. */
-function PipelineChip({ label, done, active }: { label: string; done?: boolean; active?: boolean }) {
-  return (
-    <div
-      className={cn(
-        "font-mono inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px]",
-        active ? "bg-green-ink text-green" : "bg-green-ink/10 text-green-ink/80",
-      )}
+    <aside
+      className={`${PANEL} bg-(--chrome-bg,hsl(var(--surface-strong))) text-(--chrome-fg,#ffffff)`}
+      style={
+        {
+          ...chromeStyle(brand),
+          "--fg": "var(--chrome-fg, #ffffff)",
+          "--deck-card": "hsl(var(--bg-elev))",
+          "--deck-ink": "hsl(var(--ink))",
+          "--deck-muted": "hsl(var(--ink-muted))",
+          "--deck-soft": "hsl(var(--bg-sunken))",
+          "--deck-track": "hsl(var(--line))",
+          "--deck-accent": accent,
+          "--deck-accent-ink": accentInk,
+        } as React.CSSProperties
+      }
     >
-      {done ? <Check className="size-3" /> : <Loader2 className="size-3 animate-spin" />}
-      {label}
-    </div>
+      <PanelTexture />
+      <div className="flex w-full max-w-[30rem] items-center gap-4">
+        <span
+          className="size-14 shrink-0 overflow-hidden rounded-2xl"
+          style={{ boxShadow: "0 0 0 1px color-mix(in srgb, var(--fg) 25%, transparent), 0 14px 30px -12px rgb(0 0 0 / 0.4)" }}
+        >
+          <BrandLogo brand={brand} className="size-full object-cover" priority />
+        </span>
+        <div className="min-w-0">
+          <h2 className="truncate text-[1.75rem] font-semibold leading-tight tracking-tight">{brand.name}</h2>
+          <p
+            className="truncate text-sm font-medium"
+            style={{ color: "color-mix(in srgb, var(--fg) 85%, transparent)" }}
+          >
+            {brand.tagline ?? "IELTS preparation"}
+          </p>
+        </div>
+      </div>
+
+      <FactDeck />
+
+      <div
+        className="flex w-full max-w-[30rem] items-center justify-between gap-4 text-[11px] font-medium uppercase tracking-wider"
+        style={{ color: "color-mix(in srgb, var(--fg) 65%, transparent)" }}
+      >
+        <span>Student portal</span>
+        <span>Powered by IELTSVega</span>
+      </div>
+    </aside>
   );
 }

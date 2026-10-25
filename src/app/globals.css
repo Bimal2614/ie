@@ -655,6 +655,120 @@
 .rise { opacity: 0; transform: translateY(16px); animation: rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
 @keyframes rise { to { opacity: 1; transform: translateY(0); } }
 
+/* The sign-in fact deck: each fact slides in; the active segment fills. */
+@keyframes deck-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes deck-progress { from { width: 0; } to { width: 100%; } }
+
+/*
+ * The fact deck's drawings. Each class is one small joke; `d1`–`d4` stagger
+ * them. Shapes scale and turn about their own box unless a rule names a
+ * point on the 240×150 canvas instead. Only the animated parts (a-*) get
+ * this: on anything else it would also move the pivot of a drawing's own
+ * transform="rotate(…)" and knock it out of place.
+ */
+.deck-art [class*="a-"] { transform-box: fill-box; transform-origin: center; }
+.deck-art .d1 { animation-delay: 0.15s; }
+.deck-art .d2 { animation-delay: 0.35s; }
+.deck-art .d3 { animation-delay: 0.6s; }
+.deck-art .d4 { animation-delay: 0.85s; }
+
+.deck-art .a-fade { animation: deck-fade 0.5s ease-out both; }
+.deck-art .a-pop { animation: deck-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.deck-art .a-slam { animation: deck-slam 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2) 0.35s both; }
+.deck-art .a-splat { opacity: 0; animation: deck-splat 0.5s ease-out 0.75s both; }
+.deck-art .a-hunt { animation: deck-hunt 3.2s ease-in-out 0.9s infinite; }
+.deck-art .a-wave { animation: deck-wave 1.6s ease-out infinite; }
+.deck-art .a-wave.d2 { animation-delay: 0.5s; }
+.deck-art .a-blink { animation: deck-blink 2.6s ease-in-out infinite; }
+.deck-art .a-gasp { animation: deck-gasp 1.3s ease-in-out infinite; }
+.deck-art .a-bob { animation: deck-bob 2.4s ease-in-out infinite; }
+.deck-art .a-wobble { animation: deck-wobble 1.8s ease-in-out infinite; }
+.deck-art .a-tip {
+  transform-box: view-box;
+  transform-origin: 120px 40px;
+  animation: deck-tip 1.1s cubic-bezier(0.3, 1.4, 0.5, 1) 0.55s both, deck-sway 2.8s ease-in-out 1.8s infinite;
+}
+.deck-art .a-drop { animation: deck-drop 0.55s cubic-bezier(0.5, 0, 0.7, 1.4) 0.2s both; }
+.deck-art .a-pulse { animation: deck-pulse 1s ease-in-out infinite; }
+.deck-art .a-chatter { transform-origin: bottom center; animation: deck-chatter 0.9s ease-in-out infinite; }
+.deck-art .a-talk { animation: deck-talk 0.22s ease-in-out infinite alternate; }
+.deck-art .a-write { stroke-dasharray: 1; animation: deck-draw 1.4s ease-out 0.2s both; }
+.deck-art .a-draw { stroke-dasharray: 1; animation: deck-draw 0.7s ease-out 0.4s both; }
+.deck-art .a-draw.d2 { animation-delay: 1s; }
+.deck-art .a-type { animation: deck-type 0.9s steps(13) 1.3s both; }
+.deck-art .a-shake { animation: deck-shake 0.5s ease-in-out infinite; }
+.deck-art .a-spin { transform-box: view-box; transform-origin: 178px 86px; animation: deck-spin 1.1s linear infinite; }
+.deck-art .a-drain { stroke-dasharray: 176 176; animation: deck-drain 5s linear infinite; }
+.deck-art .a-drip { animation: deck-drip 1.4s ease-in infinite; }
+.deck-art .a-drip.d2 { animation-delay: 0.7s; }
+.deck-art .a-scribble { animation: deck-scribble 0.5s ease-in-out infinite; }
+.deck-art .a-grow { transform-origin: bottom center; animation: deck-grow 0.6s cubic-bezier(0.3, 1.3, 0.5, 1) both; }
+.deck-art .a-hop { animation: deck-hop 0.9s cubic-bezier(0.3, 0, 0.5, 1) 1.2s infinite alternate backwards; }
+
+@keyframes deck-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes deck-pop { from { opacity: 0; transform: scale(0.3); } to { opacity: 1; transform: scale(1); } }
+@keyframes deck-slam {
+  0% { opacity: 0; transform: translateY(-34px) scale(1.7) rotate(-10deg); }
+  60% { opacity: 1; transform: scale(0.92); }
+  80% { transform: scale(1.05); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes deck-splat { from { opacity: 0; transform: scale(0.4); } 50% { opacity: 1; } to { opacity: 1; transform: scale(1); } }
+@keyframes deck-hunt {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-14px, -6px); }
+  50% { transform: translate(-36px, 2px); }
+  75% { transform: translate(-10px, 6px); }
+}
+@keyframes deck-wave {
+  0% { opacity: 0; transform: scale(0.7); }
+  30% { opacity: 0.7; }
+  100% { opacity: 0; transform: scale(1.3); }
+}
+@keyframes deck-blink { 0%, 44%, 52%, 100% { transform: scaleY(1); } 48% { transform: scaleY(0.1); } }
+@keyframes deck-gasp { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.4); } }
+@keyframes deck-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@keyframes deck-wobble { 0%, 100% { transform: rotate(-9deg) scale(1); } 50% { transform: rotate(9deg) scale(1.08); } }
+@keyframes deck-tip { from { transform: rotate(-12deg); } to { transform: rotate(0); } }
+@keyframes deck-sway { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(2.5deg); } }
+@keyframes deck-drop {
+  0% { opacity: 0; transform: translateY(-44px); }
+  70% { opacity: 1; transform: translateY(2px); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes deck-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.07); } }
+@keyframes deck-chatter { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
+@keyframes deck-talk { from { transform: scaleY(0.25); } to { transform: scaleY(1.1); } }
+@keyframes deck-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes deck-type { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes deck-shake {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-4deg); }
+  75% { transform: rotate(4deg); }
+}
+@keyframes deck-spin { to { transform: rotate(360deg); } }
+@keyframes deck-drain { from { stroke-dashoffset: 0; } to { stroke-dashoffset: 176; } }
+@keyframes deck-drip {
+  0% { opacity: 0; transform: translateY(-4px); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(18px); }
+}
+@keyframes deck-scribble {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-7px, 3px); }
+  50% { transform: translate(-2px, -2px); }
+  75% { transform: translate(-9px, -1px); }
+}
+@keyframes deck-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes deck-hop { from { transform: translateY(0) rotate(0); } to { transform: translateY(-6px) rotate(-8deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .deck-art [class*="a-"] { animation: none !important; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .reveal-line > span, .float-slow, .rise, .skeleton::after {
     animation: none;
