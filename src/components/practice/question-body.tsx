@@ -1277,7 +1277,9 @@ function passageBlocks(text: string): PassageBlock[] {
     }
     // A bare number is a question number the export leaked into the passage,
     // not a heading. It is left as body rather than dressed up as structure.
-    if (/^\d+$/.test(s)) {
+    // So is a list item: "– job sharing" is short and unpunctuated, but it is a
+    // bullet, and bolding it as a heading breaks the list it belongs to.
+    if (/^\d+$/.test(s) || /^[–•]\s/.test(s)) {
       out.push({ kind: "body", text: s, at });
       continue;
     }
