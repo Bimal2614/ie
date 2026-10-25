@@ -173,7 +173,7 @@ export function Sidebar({ onNavigate, showCloseButton, onClose, plan, brand }: S
             >
               {brandName(brand)}
             </span>
-            <span className="line-clamp-2 text-[10px] uppercase tracking-[0.18em] text-(--chrome-fg)/40">
+            <span className={cn("line-clamp-2 text-[10px] uppercase tracking-[0.18em]", brand?.tagline ? "text-(--chrome-fg)/85" : "text-(--chrome-fg)/40")}>
               {brand?.tagline ?? "Academic & General"}
             </span>
           </span>

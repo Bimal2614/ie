@@ -9,7 +9,7 @@ import { db } from "@/db";
 import { auditLog, coupons, partners, users } from "@/db/schema";
 import { isUniqueViolation } from "@/lib/db-errors";
 import { env } from "@/lib/env";
-import { isAllowedSubdomain, isHexColor } from "@/lib/partner-brand";
+import { RESERVED_SUBDOMAINS, isAllowedSubdomain, isHexColor } from "@/lib/partner-brand";
 import {
   attachSubdomain,
   detachSubdomain,
@@ -303,10 +303,13 @@ export async function savePartnerBrandingAction(
   const brandColor = text("brandColor")?.toLowerCase() ?? null;
   const brandTextColor = text("brandTextColor")?.toLowerCase() ?? null;
 
+  if (subdomain && RESERVED_SUBDOMAINS.has(subdomain)) {
+    return { ok: false, error: `"${subdomain}" is kept for IELTSVega's own use. Pick another name, such as "${subdomain}class".` };
+  }
   if (subdomain && !isAllowedSubdomain(subdomain)) {
     return {
       ok: false,
-      error: "Use 2–40 lowercase letters, numbers or hyphens for the subdomain (and not a reserved word like www).",
+      error: "Use 2–40 lowercase letters, numbers or hyphens for the subdomain, starting with a letter or number.",
     };
   }
   if (tagline && tagline.length > 120) return { ok: false, error: "Keep the tagline under 120 characters." };

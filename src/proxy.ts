@@ -337,5 +337,23 @@ export const config = {
         { type: "header", key: "purpose", value: "prefetch" },
       ],
     },
+    /*
+     * Prefetches too, but only on a host with a subdomain in front. Without
+     * this a class's /pricing page prefetched the marketing nav's /resources
+     * and /blog straight from the server, skipping the redirect to www, and a
+     * click rendered IELTSVega's marketing pages on the class's address.
+     * Through here the prefetch gets the cross-origin redirect, fails, and the
+     * click becomes a full navigation that lands on www.
+     *
+     * Kept to such hosts so the thousands of prefetches on www still cost
+     * nothing.
+     */
+    {
+      source: "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+      has: [
+        { type: "header", key: "next-router-prefetch" },
+        { type: "header", key: "host", value: "^(?!www\\.)[a-z0-9-]+\\.(?:ieltsvega\\.com|localhost)(?::\\d+)?$" },
+      ],
+    },
   ],
 };

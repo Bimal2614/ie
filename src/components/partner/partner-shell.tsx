@@ -56,7 +56,7 @@ export function PartnerShell({
             <span className="min-w-0">
               <span className="block truncate font-semibold">{brandName(brand)}</span>
               {brand?.tagline && (
-                <span className={cn("block truncate text-xs", brand.color ? "text-(--chrome-fg)/70" : "text-ink-muted")}>
+                <span className={cn("block truncate text-xs", brand.color ? "text-(--chrome-fg)/85" : "text-ink-muted")}>
                   {brand.tagline}
                 </span>
               )}

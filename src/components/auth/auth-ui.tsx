@@ -5,9 +5,13 @@ import { cn } from "@/lib/utils";
  * Kept in one place so login and signup stay identical.
  */
 
-/** Primary "go" CTA — solid green (the conversion action per the colour system). */
+/**
+ * Primary "go" CTA — solid green (the conversion action per the colour system).
+ * On a class's subdomain the auth layout sets --cta-bg/--cta-fg to the class's
+ * two colours, so the button matches its panel instead of IELTSVega's green.
+ */
 export const authButton =
-  "flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-green text-sm font-semibold text-green-ink transition-[filter] hover:brightness-105 disabled:opacity-60";
+  "flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-(--cta-bg,var(--color-green)) text-sm font-semibold text-(--cta-fg,var(--color-green-ink)) transition-[filter] hover:brightness-105 disabled:opacity-60";
 
 export const authError =
   "rounded-lg border border-danger/25 bg-danger-soft px-3 py-2 text-sm text-danger";

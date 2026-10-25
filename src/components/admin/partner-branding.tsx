@@ -231,7 +231,7 @@ export function PartnerBranding({
               )}
               <div className="min-w-0 leading-tight">
                 <p className="truncate text-lg font-semibold">{partnerName}</p>
-                <p className="line-clamp-2 text-[10px] uppercase tracking-[0.18em] opacity-50">
+                <p className={`line-clamp-2 text-[10px] uppercase tracking-[0.18em] ${tagline ? "opacity-85" : "opacity-50"}`}>
                   {tagline || "Academic & General"}
                 </p>
               </div>
