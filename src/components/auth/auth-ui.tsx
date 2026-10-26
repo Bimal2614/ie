@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
  * two colours, so the button matches its panel instead of IELTSVega's green.
  */
 export const authButton =
-  "flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-(--cta-bg,var(--color-green)) text-sm font-semibold text-(--cta-fg,var(--color-green-ink)) transition-[filter] hover:brightness-105 disabled:opacity-60";
+  "flex h-11 w-full items-center justify-center gap-2 rounded-xl short:h-10 bg-(--cta-bg,var(--color-green)) text-sm font-semibold text-(--cta-fg,var(--color-green-ink)) transition-[filter] hover:brightness-105 disabled:opacity-60";
 
 export const authError =
   "rounded-lg border border-danger/25 bg-danger-soft px-3 py-2 text-sm text-danger";
@@ -68,7 +68,7 @@ export function AuthField({
       {!hideLabel && (
         <label
           htmlFor={props.id}
-          className="mb-1.5 block text-xs font-medium text-ink-soft"
+          className="mb-1.5 block text-xs font-medium text-ink-soft short:mb-1"
         >
           {label}
         </label>
@@ -78,7 +78,7 @@ export function AuthField({
           aria-label={hideLabel ? label : undefined}
           aria-invalid={Boolean(error)}
           className={cn(
-            "auth-input h-11 w-full rounded-lg border border-line bg-paper-elev px-3.5 text-sm text-ink outline-none transition-colors",
+            "auth-input h-11 w-full rounded-lg short:h-10 border border-line bg-paper-elev px-3.5 text-sm text-ink outline-none transition-colors",
             "placeholder:text-ink-muted",
             "focus:border-brand focus:ring-2 focus:ring-brand/15",
             "aria-[invalid=true]:border-danger",

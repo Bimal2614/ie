@@ -32,11 +32,10 @@ export function PartnerWelcome({
         <GraduationCap className="size-4 shrink-0" />
         {name ? `You're joining through ${name}` : "You're joining through your institute"}
       </p>
-      <p className="mt-1 text-xs leading-relaxed text-ink-soft">
-        Finish signing up and your account is linked to{" "}
-        {name ? <span className="font-medium text-ink">{name}</span> : "them"} as their student, so
-        they can see your progress and set you up with a plan. Your practice, scores and feedback
-        stay yours.
+      {/* On a short window the title alone says it; the detail would push the form off-screen. */}
+      <p className="mt-1 text-xs leading-relaxed text-ink-soft short:hidden">
+        You&apos;ll be linked to {name ? "them" : "your institute"} as a student, so they can follow your
+        progress and set up your plan. Your scores stay yours.
       </p>
       {invitedEmail && (
         <p className="mt-1 text-xs leading-relaxed text-ink-soft">

@@ -42,7 +42,7 @@ export default async function SignupPage({
   const tenant = await requestTenant();
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 short:space-y-3">
       <AuthHeader
         title="Create account"
         subtitle="Enter your details to start practising."

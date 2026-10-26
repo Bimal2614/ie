@@ -70,7 +70,7 @@ export function PhoneField({
 
   return (
     <div>
-      <label htmlFor={id} className="mb-1.5 block text-xs font-medium text-ink-soft">
+      <label htmlFor={id} className="mb-1.5 block text-xs font-medium text-ink-soft short:mb-1">
         {label}
       </label>
 
@@ -82,7 +82,7 @@ export function PhoneField({
           aria-label="Country calling code"
           value={country}
           onChange={(e) => setCountry(e.target.value as CountryCode)}
-          className="h-11 w-[8.5rem] shrink-0 truncate rounded-lg border border-line bg-paper-elev px-2 text-sm text-ink outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand/15"
+          className="h-11 short:h-10 w-[8.5rem] shrink-0 truncate rounded-lg border border-line bg-paper-elev px-2 text-sm text-ink outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand/15"
         >
           {COUNTRY_OPTIONS.map((c) => (
             <option key={c.code} value={c.code}>
@@ -102,7 +102,7 @@ export function PhoneField({
           onChange={(e) => setNational(e.target.value)}
           aria-invalid={Boolean(error)}
           placeholder="98765 43210"
-          className="auth-input h-11 min-w-0 flex-1 rounded-lg border border-line bg-paper-elev px-3.5 text-sm text-ink outline-none transition-colors placeholder:text-ink-muted focus:border-brand focus:ring-2 focus:ring-brand/15 aria-[invalid=true]:border-danger"
+          className="auth-input h-11 short:h-10 min-w-0 flex-1 rounded-lg border border-line bg-paper-elev px-3.5 text-sm text-ink outline-none transition-colors placeholder:text-ink-muted focus:border-brand focus:ring-2 focus:ring-brand/15 aria-[invalid=true]:border-danger"
         />
       </div>
 

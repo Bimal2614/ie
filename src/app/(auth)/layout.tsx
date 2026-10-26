@@ -69,7 +69,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
           <div className="w-full max-w-sm">{children}</div>
         </div>
 
-        <p className="text-center text-xs text-ink-muted lg:text-left">
+        <p className="text-center text-xs text-ink-muted short:hidden lg:text-left">
           {tenant ? "IELTS practice · Powered by IELTSVega" : "Academic & General Training · 2026 exam format"}
         </p>
       </div>

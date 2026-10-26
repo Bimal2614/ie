@@ -39,7 +39,7 @@ export function SignupForm({
   return (
     // Same reason as LoginForm: drop whoever was cached before the session is
     // swapped, so the new account is never painted with the old one's tier.
-    <form action={action} onSubmit={() => clearAuthCache()} className="space-y-3" noValidate>
+    <form action={action} onSubmit={() => clearAuthCache()} className="space-y-3 short:space-y-2.5" noValidate>
       {/* See LoginForm: a hint for where to land, revalidated by `safeNext`. */}
       {next && <input type="hidden" name="next" value={next} />}
       {/*
@@ -108,7 +108,7 @@ export function SignupForm({
       </div>
 
       <div>
-        <span className="mb-1.5 block text-xs font-medium text-ink-soft">
+        <span className="mb-1.5 block text-xs font-medium text-ink-soft short:mb-1">
           I&apos;m preparing for
         </span>
         <input type="hidden" name="targetModule" value={module} />
@@ -119,7 +119,7 @@ export function SignupForm({
               key={m.value}
               onClick={() => setModule(m.value)}
               className={cn(
-                "rounded-lg border p-2.5 text-left transition-colors",
+                "rounded-lg border p-2.5 text-left transition-colors short:py-2",
                 module === m.value
                   ? "border-brand bg-brand-soft"
                   : "border-line hover:bg-paper-sunken",

@@ -2,6 +2,11 @@
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
+/*
+ * A short window: a laptop with browser chrome is ~650-700px tall. The auth
+ * pages never scroll, so their fields tighten here rather than spill over.
+ */
+@custom-variant short (@media (max-height: 760px));
 
 /* ───────────────────────── DESIGN TOKENS (ported from PTEAce) ─────────────────
    Single source of truth. Semantic tokens only (--bg, --ink, --brand). Section
