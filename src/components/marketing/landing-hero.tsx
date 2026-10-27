@@ -39,7 +39,7 @@ export function LandingHero() {
           full-bleed background. One <Image> either way, so one download. */}
       <div className="relative order-last aspect-[4/3] w-full sm:absolute sm:inset-0 sm:order-none sm:aspect-auto">
         <Image
-          src="/hero-imgs.png"
+          src="/hero-student.webp"
           alt=""
           aria-hidden
           fill
