@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { MarketingShell } from "@/components/marketing/marketing-shell";
 import { JsonLd } from "@/components/seo/json-ld";
+import { PracticeCta } from "@/components/marketing/practice-cta";
 import { breadcrumbJsonLd, faqJsonLd, pageMeta } from "@/lib/seo";
 import { BAND_SLUGS } from "@/lib/band-content";
 import {
@@ -318,6 +319,16 @@ export default async function ScorePage({ params }: { params: Promise<Params> })
         )}
       </div>
 
+      <PracticeCta
+        kind={f.key === "listening" ? "listening" : "reading"}
+        from={`score-${f.key}-${f.score}`}
+        heading={
+          f.next
+            ? `Find the ${f.next.more} answer${f.next.more === 1 ? "" : "s"} between you and Band ${fmtBand(f.next.band)}.`
+            : `Check you can hold ${f.score}/40 on a fresh paper.`
+        }
+      />
+
       <h2 className="mt-14 text-2xl font-semibold tracking-tight text-ink">{f.section.name} score questions</h2>
       <div className="mt-5 divide-y divide-line border-y border-line">
         {faqs.map((q) => (
@@ -367,7 +378,7 @@ export default async function ScorePage({ params }: { params: Promise<Params> })
         <p className="max-w-md text-sm text-ink-soft">
           Sit full timed {f.section.name} papers, marked out of 40 and converted to a band, with every answer explained.
         </p>
-        <Link href="/signup" className="inline-flex items-center gap-2 rounded-lg bg-green px-6 py-3 text-sm font-semibold text-green-ink transition-[filter] hover:brightness-105">
+        <Link href={`/signup?from=score-end-${f.key}-${f.score}`} className="inline-flex items-center gap-2 rounded-lg bg-green px-6 py-3 text-sm font-semibold text-green-ink transition-[filter] hover:brightness-105">
           Start practising free <ArrowRight className="size-4" />
         </Link>
       </div>

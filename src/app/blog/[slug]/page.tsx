@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { BRAND, LOGO_URL, pageMeta } from "@/lib/seo";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Fragment } from "react";
 import { ArrowLeft, Clock, ArrowRight } from "lucide-react";
 import { MarketingShell } from "@/components/marketing/marketing-shell";
+import { PracticeCta, practiceCtaKindFor } from "@/components/marketing/practice-cta";
 import { POSTS, POST_BY_SLUG } from "@/lib/blog";
 import { SITE_URL } from "@/lib/site";
 
@@ -271,6 +273,13 @@ export default async function BlogArticle({ params }: { params: Promise<Params> 
     .slice(0, 3);
 
   const cta = CTA_BY_AUDIENCE[post.category === B2B_CATEGORY ? "institute" : "candidate"];
+  /*
+   * The in-article practice CTA goes after the second section: far enough in
+   * that the reader has the answer they came for, early enough that most of
+   * them are still on the page, so it renders before the third. Institute posts
+   * keep only their own closing CTA, and posts too short to have a middle get none.
+   */
+  const showInlineCta = post.category !== B2B_CATEGORY && post.sections.length >= 4;
 
   return (
     <MarketingShell>
@@ -312,7 +321,11 @@ export default async function BlogArticle({ params }: { params: Promise<Params> 
 
         <div className="mt-8 space-y-7 border-t border-line pt-8">
           {post.sections.map((s, i) => (
-            <section key={i}>
+            <Fragment key={i}>
+            {showInlineCta && i === 2 && (
+              <PracticeCta kind={practiceCtaKindFor(post.category)} from={`blog-${post.slug}`} />
+            )}
+            <section>
               {s.heading && <h2 className="text-xl font-semibold text-ink">{s.heading}</h2>}
               {s.paragraphs?.map((p, j) => (
                 <p key={j} className="mt-2 leading-relaxed text-ink-soft">{p}</p>
@@ -389,6 +402,7 @@ export default async function BlogArticle({ params }: { params: Promise<Params> 
                 </ul>
               )}
             </section>
+            </Fragment>
           ))}
         </div>
       </article>
@@ -405,7 +419,7 @@ export default async function BlogArticle({ params }: { params: Promise<Params> 
       <div className="mt-12 flex flex-col items-center gap-4 rounded-2xl border border-line bg-paper-elev p-8 text-center">
         <h2 className="font-serif text-2xl tracking-tight">{cta.heading}</h2>
         <p className="max-w-md text-sm text-ink-soft">{cta.body}</p>
-        <Link href={cta.href} className="inline-flex items-center gap-2 rounded-lg bg-green px-6 py-3 text-sm font-semibold text-green-ink transition-[filter] hover:brightness-105">
+        <Link href={cta.href === "/signup" ? `/signup?from=blog-end-${post.slug}` : cta.href} className="inline-flex items-center gap-2 rounded-lg bg-green px-6 py-3 text-sm font-semibold text-green-ink transition-[filter] hover:brightness-105">
           {cta.label} <ArrowRight className="size-4" />
         </Link>
       </div>
