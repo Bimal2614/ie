@@ -5,8 +5,6 @@ import {
   ArrowRight, ArrowUpRight,
   Headphones, BookOpen, PenLine, Mic,
 } from "lucide-react";
-import { EntryLoader } from "@/components/marketing/entry-loader";
-import { PremiumCursor } from "@/components/marketing/premium-cursor";
 import { CountUp } from "@/components/marketing/count-up";
 import { LandingNav } from "@/components/marketing/landing-nav";
 import { LandingHero } from "@/components/marketing/landing-hero";
@@ -199,8 +197,6 @@ const SKILLS = [
 export default function Home() {
   return (
     <div className="landing min-h-svh bg-paper text-ink">
-      <PremiumCursor />
-      <EntryLoader />
       <StructuredData />
 
       {/* Sticky header across the whole landing (transparent → solid on scroll) */}
