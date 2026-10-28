@@ -18,8 +18,17 @@ Sentry.init({
   // Scripts that Facebook/Instagram's in-app browsers inject into every page
   // (app://browser_declutter, app://navigation_performance_logger_android).
   // They throw on their own, in code we neither ship nor can fix.
-  denyUrls: [/^app:\/\//],
-  ignoreErrors: [/Java bridge method invocation error/],
+  // Browser extensions run their own scripts in our pages too.
+  denyUrls: [/^app:\/\//, /^(chrome|moz|safari(-web)?)-extension:\/\//],
+  ignoreErrors: [
+    /Java bridge method invocation error/,
+    // A crypto-wallet extension's inpage.js, rejecting on its own message bus.
+    /func sseError not found/,
+    // Outlook Safe Links' scanner opening the page from an emailed link.
+    /Object Not Found Matching Id:\d+, MethodName:/,
+    // iOS in-app browsers probing for a native bridge that is not there.
+    /window\.webkit\.messageHandlers/,
+  ],
 });
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

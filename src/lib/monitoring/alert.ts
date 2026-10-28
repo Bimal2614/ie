@@ -1,5 +1,7 @@
 import "server-only";
 
+import * as Sentry from "@sentry/nextjs";
+
 import { env, isProd } from "@/lib/env";
 
 /**
@@ -13,8 +15,8 @@ import { env, isProd } from "@/lib/env";
  * test catches a dead provider within the day; this catches it on the first
  * real answer it costs us.
  *
- * ONE FUNCTION, CALLED FROM THE FAILURE BRANCH. Callers keep their own
- * `console.error` (the log is still the full record); this adds the page. It
+ * ONE FUNCTION, CALLED FROM THE FAILURE BRANCH. Every call is also written to
+ * the log and to Sentry (see `record`), so callers need not log it again. It
  * never throws and gives up after a few seconds, so an alert about an outage can
  * never become a second outage.
  *
@@ -58,6 +60,7 @@ const SEND_TIMEOUT_MS = 4_000;
 const recent = new Map<string, { sentAt: number; held: number }>();
 
 export async function alert(input: AlertInput): Promise<void> {
+  record(input);
   try {
     const url = env.SLACK_WEBHOOK_URL;
     if (!url) return;
@@ -84,6 +87,62 @@ export async function alert(input: AlertInput): Promise<void> {
     // Never let the pager take the page down with it.
     console.error("[alert] could not send", e instanceof Error ? e.message : e);
   }
+}
+
+/**
+ * The durable record of every alert: one log line and one Sentry event.
+ *
+ * Slack is the page, and it is deduped and production-only, so it is not the
+ * record. These failures are handled, not thrown, so Sentry never sees them on
+ * its own — a provider outage would otherwise leave nothing searchable once the
+ * Slack message scrolls away. Sentry counts every occurrence; the fingerprint
+ * is the dedupe key, so one cause stays one issue. "server-error" is skipped
+ * there because onRequestError already captured the same error with its stack.
+ */
+function record(a: AlertInput): void {
+  try {
+    const detail = a.detail ?? (a.error !== undefined ? errorMessage(a.error) : undefined);
+    const key = a.key ?? `${a.source}|${a.title}|${a.status ?? ""}`;
+    const level = (a.severity ?? "critical") === "critical" ? "error" : "warning";
+    console[level === "error" ? "error" : "warn"](`[alert:${a.source}] ${a.title}`, {
+      status: a.status,
+      detail: detail ? clip(detail, 2000) : undefined,
+      ...a.context,
+    });
+    if (a.source === "server-error") return;
+
+    const error = a.error instanceof Error ? a.error : raisedHere(a);
+    Sentry.withScope((scope) => {
+      scope.setLevel(level);
+      scope.setFingerprint(["alert", key]);
+      scope.setTag("alert.source", a.source);
+      if (a.status !== undefined) scope.setTag("http.status", String(a.status));
+      scope.setContext("alert", { status: a.status, detail: detail ? clip(detail, 4000) : undefined, ...a.context });
+      scope.setExtra("title", a.title);
+      // A caught error already carries the stack of where it was thrown. A
+      // handled failure (a provider's 500 returned as a value) has none, so one
+      // is made with this file cut off the top: the issue then points at the
+      // caller that raised it.
+      Sentry.captureException(error);
+    });
+  } catch {
+    // Recording must never break the caller either.
+  }
+}
+
+/**
+ * An Error whose stack starts at alert()'s caller. Must be called directly from
+ * record(), which alert() calls before its first await — so the top three frames
+ * are always raisedHere, record and alert, whatever the bundler names them.
+ */
+function raisedHere(a: AlertInput): Error {
+  const e = new Error(a.title);
+  e.name = a.source;
+  if (e.stack) {
+    const [head, ...frames] = e.stack.split("\n");
+    e.stack = [head, ...frames.slice(3)].join("\n");
+  }
+  return e;
 }
 
 /**

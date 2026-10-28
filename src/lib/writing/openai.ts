@@ -389,7 +389,10 @@ export async function scoreWriting(params: WritingScoreParams): Promise<WritingS
     },
     key: `writing-ai|${primary.reason}|${primary.status ?? ""}|${backup ? backup.ok : "none"}`,
   });
-  return backup?.ok ? backup : primary;
+  if (backup?.ok) return backup;
+  // Both failed: carry Gemini's reason too, so the smoke test and logs show why
+  // the backup did not cover it, not just why OpenAI failed.
+  return backupNote ? { ...primary, detail: (primary.detail ?? primary.reason) + backupNote.replace(/^\n\n/, " | ") } : primary;
 }
 
 function prepare(params: WritingScoreParams, written: string, wordCount: number): PreparedRequest {
