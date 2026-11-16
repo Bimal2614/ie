@@ -15,7 +15,23 @@
  * led with prose bullets. `rows` is rendered as-is; keep each row the same
  * length as `headers` or the table will render ragged.
  */
-export type BlogTable = { caption?: string; headers: string[]; rows: string[][] };
+export type BlogTable = {
+  caption?: string;
+  headers: string[];
+  rows: string[][];
+  /**
+   * Puts a practice link under the prompt in every row (`column` is the index
+   * of the prompt cell).
+   *
+   * Readers of the monthly topic posts collect prompts and leave (Clarity,
+   * Nov 2026): the only practice link sat after the last section. This puts
+   * one under each prompt, where the intent is. `next` is a practice path;
+   * the link goes through signup like PracticeCta, with a per-row `from` so
+   * GA4 shows which prompt produced the visit. The practice page draws its own
+   * question, so `label` must not promise this exact prompt.
+   */
+  practice?: { next: string; label: string; column: number };
+};
 
 /**
  * An in-body internal link. Bullets and paragraphs are plain strings, so before

@@ -73,6 +73,7 @@ export const POSTS: BlogPost[] = [
       { heading: "What December means for your preparation", bullets: ["Part 2: no new pool is expected before January. Every card reported since September is still in play, so December is the best-documented month of the cycle.", "Person cards are the most reported type this cycle. Have at least two people stories ready.", "Part 1: the opener (work or study, home, hometown) never changes. The short topic frames after it rotate more often, so expect one you have not seen.", "Part 3: follows your cue card topic, so it depends on which card you get.", "Testing in early January? See the section near the end: prepare this pool, but practise unfamiliar cards too."] },
       { heading: "Part 2 cue cards to prepare for December 2026", paragraphs: ["These cards appear across this cycle's published cue card banks, which are built from candidate reports. They are grouped by type, because one well-prepared story usually covers two or three cards of the same type."], table: {
         headers: ["Type", "Cue card (our wording)", "One story that covers it"],
+        practice: { next: "/practice/speaking/speaking_part2", label: "Record a cue card, scored free", column: 1 },
         rows: [
           ["Person", "Describe a person you met only once and would like to know better.", "Someone on a train, at a wedding or at a workshop"],
           ["Person", "Describe someone older than you whom you admire.", "A grandparent, a senior colleague or a neighbour"],
@@ -147,6 +148,7 @@ export const POSTS: BlogPost[] = [
       { paragraphs: ["IELTS Writing Task 2 topics for December 2026 are best predicted from what candidates reported in November: class sizes in education, animal extinction, the media and national culture, advertising, renting versus owning a home, artificial intelligence and jobs, attention spans, renewable energy and practical skills at school. Task 2 has no fixed rotation the way Speaking does, so the most useful preparation is a bank of arguments for each recurring theme. Below are the themes, a representative question for each in our own wording, and plans for three of them."] },
       { heading: "Themes reported in November, to prepare for December", table: {
         headers: ["Theme", "Representative question (our wording)", "Question type"],
+        practice: { next: "/practice/writing/writing_task2", label: "Write a Task 2 essay, scored free", column: 1 },
         rows: [
           ["Class size", "Some say small classes are essential for learning a language. Others think class size makes little difference. Discuss both views.", "Discussion"],
           ["Extinction", "Some people think the extinction of animal species is a natural process and humans should not try to prevent it. To what extent do you agree?", "Opinion"],
@@ -205,6 +207,7 @@ export const POSTS: BlogPost[] = [
       { heading: "What changes in November, and what does not", bullets: ["Part 2 cue cards: no new pool is expected. The cards reported since September should keep appearing until the end of December.", "Part 1: the opener (work or study, home, hometown) never changes. The two short topic frames after it rotate more often, so expect a few you have not seen in any list.", "Part 3: always follows from your Part 2 card. Prepare the card well and Part 3 has a predictable direction.", "Wording: the topic repeats, the sentence does not. A card about 'an object you value' may arrive as 'something you own that you would never sell'."] },
       { heading: "Part 2 cue cards to prepare for November 2026", paragraphs: ["These cards appear in this cycle's published cue card banks and forecasts. They are grouped by type, because one well-prepared story usually covers two or three cards of the same type."], table: {
         headers: ["Type", "Cue card (our wording)", "One story that covers it"],
+        practice: { next: "/practice/speaking/speaking_part2", label: "Record a cue card, scored free", column: 1 },
         rows: [
           ["Object", "Describe something you own that is important to you.", "A gift, a watch, a phone or a notebook with a history"],
           ["Object", "Describe a gift you gave someone that they liked.", "Same object story, told from the giver's side"],
@@ -279,6 +282,7 @@ export const POSTS: BlogPost[] = [
       { paragraphs: ["IELTS Writing Task 2 topics for November 2026 are best predicted from what candidates reported in October: industry and pollution, cities and migration, poverty, education access, health and exercise, public services and the media. Task 2 has no fixed rotation the way Speaking does, so the most useful preparation is a bank of arguments for each recurring theme. Below are the themes, a representative question for each, and three worked plans with Band 8 openings. These are questions we have written around reported themes. IELTS never releases its real exam questions."] },
       { heading: "Themes reported in October, to prepare for November", table: {
         headers: ["Theme", "Representative question (our wording)", "Question type"],
+        practice: { next: "/practice/writing/writing_task2", label: "Write a Task 2 essay, scored free", column: 1 },
         rows: [
           ["Pollution and industry", "Should industries that pollute most pay higher taxes, or are there better ways to cut pollution?", "Discussion"],
           ["Cities and migration", "More people are moving from the countryside to cities. What problems does this cause, and how can they be solved?", "Problem / solution"],

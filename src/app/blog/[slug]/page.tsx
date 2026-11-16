@@ -7,6 +7,7 @@ import { ArrowLeft, Clock, ArrowRight } from "lucide-react";
 import { MarketingShell } from "@/components/marketing/marketing-shell";
 import { PracticeCta, practiceCtaKindFor } from "@/components/marketing/practice-cta";
 import { POSTS, POST_BY_SLUG, supersedingRecentPost } from "@/lib/blog";
+import type { BlogTable } from "@/lib/blog-types";
 import { SITE_URL } from "@/lib/site";
 
 type Params = { slug: string };
@@ -381,7 +382,12 @@ export default async function BlogArticle({ params }: { params: Promise<Params> 
                       {s.table.rows.map((row, r) => (
                         <tr key={r} className="border-b border-line/60">
                           {row.map((cell, c) => (
-                            <td key={c} className="px-3 py-2 align-top text-ink-soft">{cell}</td>
+                            <td key={c} className="px-3 py-2 align-top text-ink-soft">
+                              {cell}
+                              {s.table?.practice?.column === c && (
+                                <PracticeLink practice={s.table.practice} from={`blog-${post.slug}-row${r + 1}`} />
+                              )}
+                            </td>
                           ))}
                         </tr>
                       ))}
@@ -481,5 +487,22 @@ export default async function BlogArticle({ params }: { params: Promise<Params> 
         </section>
       )}
     </MarketingShell>
+  );
+}
+
+/**
+ * The practice link under a prompt in a table with `practice` set (see
+ * BlogTable). It lives inside the prompt cell, not in a column of its own: the
+ * table scrolls sideways on a phone, and a last column would start off-screen.
+ */
+function PracticeLink({ practice, from }: { practice: NonNullable<BlogTable["practice"]>; from: string }) {
+  return (
+    <Link
+      href={`/signup?${new URLSearchParams({ next: practice.next, from }).toString()}`}
+      className="mt-1.5 flex w-fit items-center gap-1 text-xs font-semibold text-brand underline decoration-brand/30 underline-offset-4 transition-colors hover:decoration-brand"
+    >
+      {practice.label}
+      <ArrowRight className="size-3" aria-hidden />
+    </Link>
   );
 }
