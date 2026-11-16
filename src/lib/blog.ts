@@ -47,6 +47,130 @@ export const POSTS: BlogPost[] = [
    * Add a new one each month; keep publishedAt current.
    * ---------------------------------------------------------------- */
   {
+    slug: "recent-ielts-reading-topics-november-december-2026",
+    seoTitle: "Recent IELTS Reading Topics Nov–Dec 2026 (Academic)",
+    title: "Recent IELTS Reading topics: November & December 2026",
+    excerpt:
+      "IELTS Academic Reading passage topics reported in autumn 2026, the question types that came with them, and how to prepare for a November or December test.",
+    category: "Reading",
+    date: "November 2026",
+    publishedAt: "2026-11-16",
+    readMins: 6,
+    keywords: [
+      "recent ielts reading topics 2026",
+      "ielts reading topics november 2026",
+      "ielts reading topics december 2026",
+      "recent ielts reading passages",
+      "ielts reading actual test 2026",
+      "ielts academic reading topics 2026",
+      "ielts reading recent exam passages",
+      "ielts reading practice test",
+      "ielts practice",
+    ],
+    sections: [
+      { paragraphs: ["IELTS Academic Reading passages reported by candidates in October and November 2026 include the cane toad problem in Australia, Jean Piaget and child development, memory champions, future food supply and traditional Māori fish hooks. Earlier this cycle, candidates reported passages on dolls through history, bird migration and moving sand dunes. Reading passages are reused across test dates and countries, so any of these can come up again in November or December.", "This page lists the reported topics, the question types they usually carry, and a short plan for the weeks before your test. You will not get the same passage you read here, because the exact texts are confidential. What you can prepare is the type of text and the question types."] },
+      { heading: "Reading passages reported this autumn", paragraphs: ["Reported by candidates and collected by IELTS prep sites. Titles are descriptive, not the official passage names."], table: {
+        headers: ["Reported topic", "Passage type", "Question types to expect"],
+        rows: [
+          ["Cane toads in Australia", "Science / ecology problem", "True / False / Not Given, summary completion"],
+          ["Jean Piaget and child development", "Biography and theory", "Matching features (researchers to ideas), multiple choice"],
+          ["Memory champions and memory techniques", "Psychology research", "Yes / No / Not Given, sentence completion"],
+          ["Future food supply", "Argument on a global issue", "Matching headings, multiple choice"],
+          ["Māori fish hooks", "History and archaeology", "Matching information, note or table completion"],
+          ["Dolls through the ages", "Cultural history", "True / False / Not Given, short answers"],
+          ["Bird migration", "Natural science", "Diagram or flow-chart completion, multiple choice"],
+          ["Living (moving) sand dunes", "Earth science", "Sentence completion, matching information"],
+        ],
+        practice: { next: "/practice/reading", label: "Do a timed Reading passage, scored free", column: 0 },
+      } },
+      { heading: "What the reported topics tell you", bullets: ["Science and natural history dominate. At least half of the reported passages are about animals, ecology or the earth, so read popular science, not just news.", "One passage in each test is usually about a person or a theory (Piaget this cycle). Those passages bring matching features: link a researcher to the claim they made.", "Psychology research passages (memory, learning, behaviour) tend to carry Yes / No / Not Given, which is about the writer's claims, not facts.", "Historical passages (fish hooks, dolls) often use matching information: which paragraph contains a detail. Read the questions first and scan for names, dates and places."] },
+      { heading: "A two-week plan for a November or December test", table: {
+        headers: ["Days", "Focus", "Task"],
+        rows: [
+          ["1–3", "Timing", "One passage a day in exactly 20 minutes, including the time to write answers"],
+          ["4–6", "Weakest question type", "Find the type you get wrong most often and do 15 questions of only that type"],
+          ["7–9", "Science texts", "One popular-science article a day; write a one-line summary of each paragraph"],
+          ["10–12", "Full tests", "Two full 60-minute Reading tests with no pauses"],
+          ["13–14", "Review", "For every wrong answer, find the exact line in the text that gives the right one"],
+        ],
+      } },
+      { heading: "How we built this list", paragraphs: ["IELTS does not publish its passages. This list comes from candidate reports collected by IELTS prep sites in September to November 2026. Where two sites reported the same topic, we kept it; where only one did, we kept it only if it matched a recurring passage type. Treat it as a guide to the kinds of texts in circulation, not a list of guaranteed passages."] },
+      { heading: "Recent questions for the other skills", paragraphs: ["The same cycle's lists for the other three skills:"], links: [
+        { label: "IELTS Speaking questions December 2026", href: "/blog/recent-ielts-speaking-questions-december-2026" },
+        { label: "IELTS Writing Task 2 topics December 2026", href: "/blog/recent-ielts-writing-task-2-topics-december-2026" },
+        { label: "Recent IELTS Listening topics: November & December 2026", href: "/blog/recent-ielts-listening-topics-november-december-2026" },
+        { label: "IELTS Reading tips to improve your score fast", href: "/blog/ielts-reading-tips-improve-score" },
+      ] },
+      { heading: "Practise Reading under exam timing", paragraphs: ["Knowing the topics helps, but Reading is lost on time. On IELTSVega you can take full Academic and General Training Reading passages with every official question type, timed like the real test, and see exactly which question types cost you marks."] },
+    ],
+    faqs: [
+      { q: "What are the recent IELTS Reading topics in 2026?", a: "Candidates reported Academic passages in autumn 2026 on cane toads in Australia, Jean Piaget and child development, memory champions, future food supply, Māori fish hooks, dolls through history, bird migration and moving sand dunes. Science and natural history make up most of the list." },
+      { q: "Do IELTS Reading passages repeat?", a: "Yes. The same tests are used on different dates and in different countries, which is why candidate reports from one month are useful for the next. You will not see the exact text in advance, but the type of passage and its question types repeat." },
+      { q: "Are these the real IELTS Reading passages for December 2026?", a: "No one can know that. These are topics candidates reported after their tests. Any site claiming to have the real December passages is guessing or breaking IELTS rules." },
+      { q: "Is General Training Reading included?", a: "This list is for Academic Reading, which is what candidates report most. General Training Sections 1 and 2 use everyday and workplace texts such as notices, adverts and policies, and Section 3 is a longer general-interest text." },
+    ],
+  },
+  {
+    slug: "recent-ielts-listening-topics-november-december-2026",
+    seoTitle: "Recent IELTS Listening Topics Nov–Dec 2026 (Parts 1–4)",
+    title: "Recent IELTS Listening topics: November & December 2026",
+    excerpt:
+      "What comes up in each IELTS Listening part in November and December 2026, why 'real test' videos are not real, and a two-week plan before your test.",
+    category: "Listening",
+    date: "November 2026",
+    publishedAt: "2026-11-16",
+    readMins: 6,
+    keywords: [
+      "recent ielts listening topics 2026",
+      "ielts listening topics november 2026",
+      "ielts listening topics december 2026",
+      "ielts listening actual test 2026",
+      "recent ielts listening test",
+      "ielts listening part 1 topics",
+      "ielts listening part 4 topics",
+      "ielts listening practice test",
+      "ielts practice",
+    ],
+    sections: [
+      { paragraphs: ["Unlike Speaking cue cards, IELTS Listening topics are not reported reliably month by month. The recordings are reused across dates, and candidates remember the situation (a hotel booking, a campus tour, a lecture on a natural process) far better than the questions. What does stay the same is the shape of each part. For a November or December 2026 test, prepare for the situations below, because every Listening test follows them.", "One warning first. The YouTube videos titled 'real November 2026 IELTS Listening test with answers' are practice tests recorded by the channel. They can be useful practice, but they are not the actual exam, and their difficulty often does not match it."] },
+      { heading: "What comes up in each part", table: {
+        headers: ["Part", "Situation", "Typical topics", "Question types"],
+        rows: [
+          ["Part 1", "Two people, an everyday transaction", "Booking a hotel or venue, joining a club or gym, renting a flat, a job enquiry, reporting lost property", "Form or note completion: names, numbers, dates, addresses"],
+          ["Part 2", "One speaker, an everyday talk", "A guided tour, a facility or museum orientation, a local event, volunteering information", "Map or plan labelling, multiple choice, matching"],
+          ["Part 3", "Students and a tutor discussing study", "A group assignment, a research project, feedback on a presentation, choosing a topic", "Multiple choice, matching opinions to people"],
+          ["Part 4", "A lecture on an academic subject", "A natural process (how an island formed), animal behaviour, a history of a technology or material, urban design", "Note, sentence or flow-chart completion"],
+        ],
+        practice: { next: "/practice/listening", label: "Take a timed Listening test, scored free", column: 0 },
+      } },
+      { heading: "Where marks are lost in each part", bullets: ["Part 1: spelling and numbers. A misspelt name or street is wrong, and so is writing 15 for 50. Practise letters and numbers spoken fast.", "Part 2: maps. Learn the direction language (opposite, to the left of the entrance, at the far end) before the test, not during it.", "Part 3: distractors. Speakers often suggest an answer and then reject it. Wait for the agreement, not the first option mentioned.", "Part 4: no break in the middle. Read all the questions in Part 4 before it starts, and follow the headings in the notes so you never lose your place."] },
+      { heading: "A two-week plan for a November or December test", table: {
+        headers: ["Days", "Focus", "Task"],
+        rows: [
+          ["1–3", "Part 1 accuracy", "Two Part 1 recordings a day; check every spelling and number"],
+          ["4–6", "Maps and plans", "Three map-labelling tasks; learn the direction words you miss"],
+          ["7–9", "Parts 3 and 4", "One of each a day; for every wrong answer, find the distractor in the transcript"],
+          ["10–12", "Full tests", "Two full 30-minute tests, audio played once, answers written as you go"],
+          ["13–14", "Review", "List your three most common errors and do one targeted section for each"],
+        ],
+      } },
+      { heading: "How we built this guide", paragraphs: ["We looked for candidate reports of Listening topics from October and November 2026 and found too few to list honestly. So this page describes what every Listening test contains, based on the official test format, and the topics that have recurred across years of reported tests. If reliable reports appear, we will add them here."] },
+      { heading: "Recent questions for the other skills", paragraphs: ["The same cycle's lists for the other three skills:"], links: [
+        { label: "IELTS Speaking questions December 2026", href: "/blog/recent-ielts-speaking-questions-december-2026" },
+        { label: "IELTS Writing Task 2 topics December 2026", href: "/blog/recent-ielts-writing-task-2-topics-december-2026" },
+        { label: "Recent IELTS Reading topics: November & December 2026", href: "/blog/recent-ielts-reading-topics-november-december-2026" },
+        { label: "IELTS Listening strategies that actually work", href: "/blog/ielts-listening-strategies" },
+      ] },
+      { heading: "Practise Listening the way the test plays it", paragraphs: ["Listening is a skill you build by doing it under test conditions. On IELTSVega the audio plays once, exactly like exam day, across all four parts and 40 questions, and you get your band and the questions you missed straight away."] },
+    ],
+    faqs: [
+      { q: "What are the recent IELTS Listening topics in 2026?", a: "Listening topics are not reported reliably by month, but every test follows the same pattern: an everyday booking or enquiry in Part 1, a tour or orientation talk in Part 2, a student discussion in Part 3 and an academic lecture in Part 4." },
+      { q: "Are the 'real IELTS Listening test November 2026' videos real?", a: "No. They are practice tests made by the channels that post them. Real IELTS recordings are confidential. The videos can still be useful practice if the difficulty is close to the real test." },
+      { q: "Do IELTS Listening tests repeat?", a: "Recordings are reused across dates and countries, which is why candidates in different places sometimes describe the same situation. You will not know which one you will get, so prepare for each part's situation rather than a specific recording." },
+      { q: "Which Listening part is the hardest?", a: "For most candidates, Part 4, because it is a single academic lecture with no pause in the middle. Part 1 is where easy marks are lost to spelling and numbers." },
+    ],
+  },
+  {
     slug: "recent-ielts-speaking-questions-december-2026",
     seoTitle: "IELTS Speaking Questions December 2026 (Parts 1–3)",
     title: "IELTS Speaking questions December 2026: cue cards, Part 1 & 3",
@@ -112,6 +236,8 @@ export const POSTS: BlogPost[] = [
         { label: "IELTS Speaking questions November 2026", href: "/blog/recent-ielts-speaking-questions-november-2026" },
         { label: "Recent IELTS Speaking questions: September & October 2026", href: "/blog/recent-ielts-speaking-questions-september-october-2026" },
         { label: "IELTS Writing Task 2 topics December 2026", href: "/blog/recent-ielts-writing-task-2-topics-december-2026" },
+        { label: "Recent IELTS Listening topics: November & December 2026", href: "/blog/recent-ielts-listening-topics-november-december-2026" },
+        { label: "Recent IELTS Reading topics: November & December 2026", href: "/blog/recent-ielts-reading-topics-november-december-2026" },
       ] },
       { heading: "Practise December's cue cards with instant band scores", paragraphs: ["Reading a cue card list will not raise your band. Speaking does. On IELTSVega you can record Part 1, 2 and 3 answers with the built-in one-minute Part 2 prep timer, then get an instant band on Fluency, Vocabulary, Grammar and Pronunciation, so you know which of the four is costing you marks before test day."] },
     ],
@@ -170,6 +296,8 @@ export const POSTS: BlogPost[] = [
         { label: "IELTS Writing Task 2 topics November 2026", href: "/blog/recent-ielts-writing-task-2-topics-november-2026" },
         { label: "Recent IELTS Writing Task 2 topics: September & October 2026", href: "/blog/recent-ielts-writing-task-2-topics-september-october-2026" },
         { label: "IELTS Speaking questions December 2026", href: "/blog/recent-ielts-speaking-questions-december-2026" },
+        { label: "Recent IELTS Reading topics: November & December 2026", href: "/blog/recent-ielts-reading-topics-november-december-2026" },
+        { label: "Recent IELTS Listening topics: November & December 2026", href: "/blog/recent-ielts-listening-topics-november-december-2026" },
       ] },
       { heading: "Write December's essays and get a band instantly", paragraphs: ["A plan is the easy part. Writing 260 clear words in 40 minutes is where bands are lost. On IELTSVega you can write a Task 2 essay on any of these themes and get an instant band on Task Response, Coherence and Cohesion, Lexical Resource and Grammar, with notes on exactly what is holding the score down."] },
     ],
@@ -1437,11 +1565,13 @@ export const POST_BY_SLUG = Object.fromEntries(POSTS.map((p) => [p.slug, p])) as
  * the blog page shows an "out of date" pointer on expired lists and the
  * homepage always links the list for this month.
  * ---------------------------------------------------------------- */
-export type RecentKind = "speaking" | "writing";
+export type RecentKind = "speaking" | "writing" | "listening" | "reading";
 
 const RECENT_PREFIX: Record<RecentKind, string> = {
   speaking: "recent-ielts-speaking-questions-",
   writing: "recent-ielts-writing-task-2-topics-",
+  listening: "recent-ielts-listening-topics-",
+  reading: "recent-ielts-reading-topics-",
 };
 const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
 

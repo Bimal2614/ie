@@ -126,6 +126,7 @@ const QUESTION_HUB: {
       { label: "Matching questions in Listening", href: "/resources/listening#matching" },
       { label: "Sentence and summary completion", href: "/resources/listening#sentence-summary-completion" },
       { label: "Listening strategies that actually work", href: "/blog/ielts-listening-strategies" },
+      { label: "Recent Listening topics this month", href: `/blog/${currentRecentPost("listening").slug}` },
     ],
   },
   {
@@ -143,6 +144,7 @@ const QUESTION_HUB: {
       { label: "Summary, note and table completion", href: "/resources/reading#completion-tasks" },
       { label: "Short-answer questions", href: "/resources/reading#short-answer" },
       { label: "Reading tips to improve your score fast", href: "/blog/ielts-reading-tips-improve-score" },
+      { label: "Recent Reading passages this month", href: `/blog/${currentRecentPost("reading").slug}` },
     ],
   },
   {
@@ -163,6 +165,7 @@ const QUESTION_HUB: {
       { label: "Advantages and disadvantages essays", href: "/resources/writing/task-2/advantages-disadvantages" },
       { label: "Problem and solution essays", href: "/resources/writing/task-2/problem-solution" },
       { label: "Two-part questions", href: "/resources/writing/task-2/two-part" },
+      { label: "Recent Writing Task 2 topics this month", href: `/blog/${currentRecentPost("writing").slug}` },
     ],
   },
   {
