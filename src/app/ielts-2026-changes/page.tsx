@@ -52,6 +52,12 @@ const CHANGES: {
   },
   {
     Icon: Globe,
+    title: "The UK promised two-year Graduate visas for some universities",
+    body: "Under today's rules the UK Graduate visa lasts two years if you apply on or before 31 December 2026 and 18 months from 1 January 2027, with three years for a PhD. The Budget of 28 October 2026 announced that graduates of high-compliance universities with strong job outcomes will keep two years, but gave no start date, no definition and no list. It is not yet in the Immigration Rules. The Graduate visa has no English test of its own.",
+    link: { label: "UK Graduate visa: two years or 18 months?", href: "/blog/uk-graduate-visa-2-years-or-18-months-2026" },
+  },
+  {
+    Icon: Globe,
     title: "What did not change: the questions or the marking",
     body: "Nothing about what the test asks or how it is scored moved in 2026. The same question types, the same timings, the same 0-9 band scale, the same four criteria in Writing and Speaking. Scores are fully comparable across delivery formats, and there is no scoring advantage or penalty either way. Preparation material written for the paper test is still accurate about content — only about medium is it out of date.",
   },

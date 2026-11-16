@@ -18,6 +18,97 @@ import type { BlogPost } from "./blog-types";
  */
 export const TOPIC_POSTS_2026: BlogPost[] = [
   /**
+   * Timely policy post (28 Oct 2026): UK Budget 2026 announced the Graduate visa
+   * will be two years for graduates of "high compliance universities". ANNOUNCED
+   * ONLY: no start date, no definition, no Statement of Changes. The law today is
+   * still 2 years if applying by 31 Dec 2026, 18 months from 1 Jan 2027, PhD 3 years.
+   */
+  {
+    slug: "uk-graduate-visa-2-years-or-18-months-2026",
+    seoTitle: "UK Graduate Visa 2026: 2 Years or 18 Months?",
+    title: "UK Graduate visa 2026: will you get 2 years or 18 months?",
+    excerpt:
+      "The 2026 Budget promised two years for graduates of high-compliance universities, but no date or list exists. What the law says today and what to do.",
+    category: "Requirements",
+    date: "November 2026",
+    publishedAt: "2026-11-16",
+    readMins: 6,
+    keywords: [
+      "uk graduate visa 2 years",
+      "uk graduate visa 18 months",
+      "graduate route budget 2026",
+      "high compliance universities uk",
+      "will i get 2 years graduate visa uk",
+      "uk graduate visa 2027",
+      "graduate visa phd 3 years",
+      "high potential individual visa top 150",
+      "ielts for uk graduate visa",
+      "uk student visa ielts requirement",
+    ],
+    sections: [
+      { paragraphs: [
+        "Short answer: if you apply for the Graduate visa on or before 31 December 2026, you get two years, whichever UK university you studied at. From 1 January 2027 the law gives 18 months, and the Budget of 28 October 2026 promised that graduates of some universities will keep two years. It has not said which universities, or when.",
+        "That second part is an announcement, not a rule. Until the Home Office publishes a change to the Immigration Rules, the dates below are what a caseworker will apply. Check gov.uk on the day you apply.",
+      ] },
+      {
+        heading: "What is law today, and what was announced",
+        table: {
+          caption: "UK Graduate visa length. Law today from gov.uk/graduate-visa; announcement from Budget 2026 (HM Treasury, 28 October 2026). Checked 16 November 2026; confirm on gov.uk before you apply.",
+          headers: ["Your situation", "Law today", "After the Budget announcement"],
+          rows: [
+            ["Bachelor's or master's, apply on or before 31 December 2026", "2 years", "No change: 2 years"],
+            ["Bachelor's or master's, apply on or after 1 January 2027", "18 months", "2 years if your university is 'high compliance' with strong graduate job outcomes. Not yet defined, no start date"],
+            ["PhD or other doctorate", "3 years", "No change announced"],
+            ["Fee and health surcharge", "£937, plus usually £1,035 per year", "No change announced"],
+          ],
+        },
+      },
+      { heading: "Is the two-year extension law yet?", paragraphs: [
+        "No. The Budget says the government will set the Graduate visa at two years for graduates of high compliance universities where graduates have strong labour market outcomes. It gives no start date, no definition of either test, and no list of universities. No Statement of Changes to the Immigration Rules has been laid.",
+        "So the 18-month rule for applications from 1 January 2027 still stands in law. Whether the two-year exception arrives before, on or after that date is not known. UKCISA, the UK's international student advice body, said on 28 October that no further detail was available yet.",
+      ] },
+      { heading: "Which universities count as high compliance?", paragraphs: [
+        "Nobody can tell you yet, and you should be wary of anyone who claims to. The government has not defined it. Some commentators link it to the Basic Compliance Assessment that sponsor universities already have to pass, which looks at visa refusals, enrolments and course completions, but the Budget does not say so. The second test, strong labour market outcomes, has not been defined either.",
+        "When the Home Office publishes the criteria or a list, this page will be updated.",
+      ] },
+      { heading: "If you finish your course this year", bullets: [
+        "If your university has already reported your course as completed and your Student visa is still valid, you can apply now. You do not need to wait for your graduation ceremony or certificate.",
+        "Applying on or before 31 December 2026 is the one route to two years that is certain under today's law, at any university.",
+        "You must be in the UK when you apply, and you must apply before your Student visa expires.",
+        "The visa starts on the day it is approved and cannot be extended, so the 18-month or two-year clock begins at approval.",
+      ] },
+      { heading: "If you are starting a UK course in 2027", paragraphs: [
+        "Plan on 18 months unless your university is later confirmed as qualifying. If post-study work time matters to your choice, ask each university's international office in writing whether it expects to qualify, and treat any answer as a forecast until the Home Office publishes the rule. Doctoral students keep three years either way.",
+      ] },
+      { heading: "The other change: High Potential Individual visa widened", paragraphs: [
+        "The same Budget said the High Potential Individual (HPI) visa will be opened to graduates of the top 150 universities in the world, up from the current list, with the cap raised in proportion. No date was given. HPI is a separate route for recent graduates of listed universities outside the UK, and it already requires English at CEFR B2 for first-time applicants.",
+      ] },
+      { heading: "What this does NOT change: your English test", paragraphs: [
+        "The Graduate visa has no English test of its own. You met the English requirement when you got your Student visa, and nothing in the Budget changes that requirement. A degree-level Student visa still needs CEFR B2, which on IELTS for UKVI means at least 5.5 in each of the four skills.",
+        "Whether you need IELTS for UKVI or standard IELTS Academic for your Student visa depends on your university. Get it in writing before you book.",
+      ], links: [
+        { label: "IELTS for UKVI vs IELTS Academic: which one your UK visa needs", href: "/blog/ielts-ukvi-vs-ielts-academic" },
+        { label: "IELTS Academic vs General Training", href: "/blog/ielts-academic-vs-general-training" },
+      ] },
+      { heading: "What to do now", bullets: [
+        "Finishing in 2026: check whether your university has reported your completion, and apply on or before 31 December 2026 if you can.",
+        "Applying for 2027 entry: assume 18 months in your plans and budget, and recheck when the Home Office publishes the criteria.",
+        "Still to sit your English test: book the right version (UKVI or Academic) for your university, and aim for at least 5.5 in every skill, not just overall.",
+        "Ignore any agent or website that names 'high compliance' universities before the Home Office does.",
+      ], links: [
+        { label: "Gov.uk: Graduate visa", href: "https://www.gov.uk/graduate-visa" },
+        { label: "Budget 2026 (HM Treasury), section 5.6", href: "https://www.gov.uk/government/publications/budget-2026-document/budget-2026-html" },
+      ] },
+    ],
+    faqs: [
+      { q: "Will I get a 2-year Graduate visa in the UK?", a: "Yes, if you apply on or before 31 December 2026, whichever UK university you attended. From 1 January 2027 the law gives 18 months; the 2026 Budget promised two years for graduates of 'high compliance' universities, but with no definition or start date yet." },
+      { q: "Which universities are high compliance for the UK Graduate visa?", a: "None have been named. The Budget of 28 October 2026 did not define 'high compliance' or 'strong labour market outcomes', and the Home Office has published no list. Treat any list you see before then as a guess." },
+      { q: "When does the two-year Graduate visa extension start?", a: "No date has been given. It was announced in the Budget on 28 October 2026 and still needs a change to the Immigration Rules. Until then, applications from 1 January 2027 get 18 months." },
+      { q: "Does the Graduate visa change affect PhD students?", a: "No. PhD and other doctoral graduates get three years under the current rules, and the Budget announced no change to that." },
+      { q: "Do I need IELTS for the UK Graduate visa?", a: "No. The Graduate visa has no separate English test; you met the requirement for your Student visa. A degree-level Student visa still needs CEFR B2, which on IELTS for UKVI is at least 5.5 in each skill." },
+    ],
+  },
+  /**
    * Evergreen, news-pegged (15 Oct 2026): what happens when the TEST CENTRE
    * cancels or a test fails on the day. The candidate-initiated transfer and
    * cancel rules are owned by how-to-book-ielts-test; link there, never copy.
@@ -505,7 +596,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       ] },
       { heading: "What this does NOT change: your English requirement", paragraphs: [
         "The proposal is about work after study, not about getting in. It does not change the F-1 visa, university admission or English testing. The US has no single visa-level IELTS score. Your university sets its own minimum, usually 6.5 to 7.0 for graduate programs and around 6.0 to 6.5 for undergraduate, and your I-20 records whether you met it.",
-        "Where it may change your plans is the choice of country. If US post-study work becomes expensive, some applicants will compare other countries' post-study work routes, each with its own English requirement. The UK Graduate Route, for example, is due to fall from two years to 18 months for applications made from 1 January 2027. Sitting one test that is accepted in all of them, and scoring high enough for the strictest, keeps your options open while the US rule is decided.",
+        "Where it may change your plans is the choice of country. If US post-study work becomes expensive, some applicants will compare other countries' post-study work routes, each with its own English requirement. The UK Graduate Route, for example, is due to fall from two years to 18 months for applications made from 1 January 2027, although the UK Budget of 28 October 2026 announced that graduates of some universities will keep two years. Sitting one test that is accepted in all of them, and scoring high enough for the strictest, keeps your options open while the US rule is decided.",
       ], links: [
         { label: "IELTS vs TOEFL: which one US universities prefer", href: "/blog/ielts-vs-toefl" },
         { label: "IELTS vs PTE vs Duolingo: which test is accepted where", href: "/blog/ielts-vs-pte-vs-duolingo" },
@@ -1155,7 +1246,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       { heading: "What happens differently on test day", paragraphs: ["The questions are the same, but the room is not. Expect a longer check-in. Your passport is checked against your booking, your photo is taken, and biometric data is collected for identity checks on behalf of the Home Office. CCTV records the test room before and during the test. The British Council's privacy notice says the footage is kept by the centre for 60 days, for security and malpractice checks.", "None of this changes how you are marked, but it does change the morning. Arrive early, bring the exact passport you booked with, and do not carry anything into the room that you would not want to explain on camera. Approved UKVI centres are also fewer than standard centres, so you may have to travel to another city for a date."], links: [{ label: "How to book the IELTS test, step by step", href: "/blog/how-to-book-ielts-test" }] },
       { heading: "Do you actually need UKVI?", paragraphs: ["Two questions decide it. First: are you applying to the UK Home Office for a visa, as opposed to applying to a university? Second: has your university told you it can assess your English itself?", "Many UK universities are permitted to assess English proficiency for degree-level students and will accept standard IELTS Academic. Many still require UKVI. The university's own admissions page is the authority here, not a general article, and it is worth asking admissions directly in writing. For Skilled Worker, family and settlement routes you are dealing with the Home Office directly, and UKVI or Life Skills is required.", "IELTS is not the only test the Home Office accepts. Its approved list also includes PTE Academic UKVI, LanguageCert SELT, Skills for English UKVI and Trinity's SELT. They are all valid for a UK visa, but your university may accept only some of them."], links: [{ label: "IELTS vs PTE vs Duolingo: which test fits your plan", href: "/blog/ielts-vs-pte-vs-duolingo" }] },
       { heading: "IELTS Online is not accepted for a UK visa", paragraphs: ["IELTS Online is the at-home version of IELTS Academic, and it is a common and expensive mistake for UK applicants. It is not on the Home Office list of approved Secure English Language Tests. The only IELTS tests on that list are IELTS for UKVI and IELTS Life Skills, sat at an approved centre.", "Some universities accept IELTS Online for admission, but that does not carry over to the visa. If you need a UK visa, book IELTS for UKVI at a centre, even if your university would have accepted the at-home test."], links: [{ label: "IELTS on computer or paper, and how IELTS Online differs", href: "/blog/ielts-online-vs-paper-based" }] },
-      { heading: "The scores the UK asks for", bullets: ["Degree-level Student visa: CEFR B2, which on IELTS for UKVI means at least 5.5 in each of the four skills. That is a per-skill minimum, not an overall average.", "From 8 January 2026, first-time Skilled Worker, Scale-up and High Potential Individual applicants must meet B2 rather than the previous B1, again meaning 5.5 in every skill.", "Below degree level, the requirement is usually B1, meaning 4.0 in each skill on IELTS for UKVI.", "Universities set their own, higher, requirements on top of the visa minimum, commonly 6.5 to 7.0 overall with 6.0 or 6.5 in Writing.", "Always check the current Home Office guidance and your institution's page. Thresholds change, and 2026 already moved one of them."], links: [{ label: "What IELTS band 5.5 means", href: "/ielts-band-scores" }, { label: "Every IELTS change in 2026", href: "/ielts-2026-changes" }] },
+      { heading: "The scores the UK asks for", bullets: ["Degree-level Student visa: CEFR B2, which on IELTS for UKVI means at least 5.5 in each of the four skills. That is a per-skill minimum, not an overall average.", "From 8 January 2026, first-time Skilled Worker, Scale-up and High Potential Individual applicants must meet B2 rather than the previous B1, again meaning 5.5 in every skill.", "Below degree level, the requirement is usually B1, meaning 4.0 in each skill on IELTS for UKVI.", "Universities set their own, higher, requirements on top of the visa minimum, commonly 6.5 to 7.0 overall with 6.0 or 6.5 in Writing.", "Always check the current Home Office guidance and your institution's page. Thresholds change, and 2026 already moved one of them."], links: [{ label: "What IELTS band 5.5 means", href: "/ielts-band-scores" }, { label: "Every IELTS change in 2026", href: "/ielts-2026-changes" }, { label: "How long the UK Graduate visa lasts after the 2026 Budget", href: "/blog/uk-graduate-visa-2-years-or-18-months-2026" }] },
       { heading: "The per-skill trap", paragraphs: ["An overall 6.5 with 5.0 in Writing does not meet a B2 requirement, because B2 is defined per skill. Candidates fail visa applications on this constantly, having comfortably exceeded the overall figure. Read your requirement carefully and find the lowest number you are allowed to score in any single skill, then treat that as your real target."], links: [{ label: "IELTS band score calculator", href: "/ielts-band-score-calculator" }] },
       { heading: "How to book IELTS for UKVI", paragraphs: ["In India, all IELTS tests are booked through IDP. The British Council stopped selling IELTS in India in 2021. On the booking page, choose IELTS for UKVI rather than IELTS on computer, then choose Academic or General Training. Those are two separate choices, and the first one is where people go wrong. Pick an approved centre, upload the passport you will bring on the day, and pay INR 19,250.", "Changing a UKVI booking is stricter than changing a standard one. You get one transfer per booking, only if you ask more than 14 days before the test, to a new date within three months, and there is an administration fee. Inside 14 days, a transfer counts as a cancellation. Check the details in your own booking before you commit to a date."], links: [{ label: "IELTS exam dates and slot booking in 2026", href: "/blog/ielts-exam-dates-slot-booking-2026" }] },
       { heading: "How long a UKVI result is valid", paragraphs: ["For a UK visa, your result must have been awarded in the two years before the date you apply. That counts from the date you apply, not the date you travel. If your test is 22 months old, you have about two months to submit, not two years.", "If one skill lands below your threshold, IELTS for UKVI on computer accepts One Skill Retake in selected locations, so you can re-sit only that skill rather than the whole test. If you think a band was marked wrongly, an Enquiry on Results is the other route, and it cannot lower your score."], links: [{ label: "IELTS One Skill Retake: fee, rules and when it is worth it", href: "/blog/ielts-one-skill-retake-guide" }, { label: "IELTS results, TRF validity and remarks", href: "/blog/ielts-results-trf-validity-remark" }] },
