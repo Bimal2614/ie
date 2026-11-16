@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { currentRecentPost } from "@/lib/blog";
 import Image from "next/image";
 import {
   ArrowRight, ArrowUpRight,
@@ -178,7 +179,7 @@ const QUESTION_HUB: {
       { label: "Part 3: the abstract two-way discussion", href: "/resources/speaking#part-3-discussion" },
       { label: "Sentence banks for Speaking Part 2", href: "/templates" },
       { label: "Band descriptors: Band 6 vs 7 vs 8", href: "/blog/ielts-speaking-band-descriptors" },
-      { label: "Recent Speaking questions this cycle", href: "/blog/recent-ielts-speaking-questions-september-october-2026" },
+      { label: "Recent Speaking questions this month", href: `/blog/${currentRecentPost("speaking").slug}` },
     ],
   },
 ];
@@ -194,6 +195,9 @@ const SKILLS = [
 // Signed-in visitors are sent to /dashboard by src/proxy.ts on cookie presence,
 // before the CDN. Checking the session here made the page dynamic and put a
 // database round trip in front of every anonymous visit to the top landing page.
+// Daily, so the "this month" Speaking link follows the calendar between deploys.
+export const revalidate = 86400;
+
 export default function Home() {
   return (
     <div className="landing min-h-svh bg-paper text-ink">

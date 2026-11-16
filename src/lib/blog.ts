@@ -47,6 +47,138 @@ export const POSTS: BlogPost[] = [
    * Add a new one each month; keep publishedAt current.
    * ---------------------------------------------------------------- */
   {
+    slug: "recent-ielts-speaking-questions-december-2026",
+    seoTitle: "IELTS Speaking Questions December 2026 (Parts 1–3)",
+    title: "IELTS Speaking questions December 2026: cue cards, Part 1 & 3",
+    excerpt:
+      "IELTS Speaking questions for December 2026: the last month of the Sept–Dec cue card pool, with Part 1 topics, Part 3 questions and model answers.",
+    category: "Speaking",
+    date: "November 2026",
+    publishedAt: "2026-11-16",
+    readMins: 8,
+    keywords: [
+      "ielts speaking questions december 2026",
+      "ielts cue cards december 2026",
+      "ielts speaking topics december 2026",
+      "ielts speaking questions december 2026 with answers",
+      "ielts speaking part 1 questions december 2026",
+      "ielts speaking forecast december 2026",
+      "ielts speaking cue cards september to december 2026",
+      "ielts cue cards january 2027",
+      "latest ielts speaking topics 2026",
+      "ielts practice",
+    ],
+    sections: [
+      { paragraphs: ["If your IELTS Speaking test is in December 2026, you will almost certainly get a Part 2 cue card from the pool that opened in September. December is the last month of the September–December cycle, so the cards below have now been reported for three months and are the safest ones to prepare. Cue cards are widely reported to change in January, so a test on or after 1 January 2027 may draw on a new pool.", "This page covers the cards most reported this cycle that our November page did not, with Part 1 topics, Part 3 questions and model answers. Use both pages together: the pool is the same."] },
+      { heading: "What December means for your preparation", bullets: ["Part 2: no new pool is expected before January. Every card reported since September is still in play, so December is the best-documented month of the cycle.", "Person cards are the most reported type this cycle. Have at least two people stories ready.", "Part 1: the opener (work or study, home, hometown) never changes. The short topic frames after it rotate more often, so expect one you have not seen.", "Part 3: follows your cue card topic, so it depends on which card you get.", "Testing in early January? See the section near the end: prepare this pool, but practise unfamiliar cards too."] },
+      { heading: "Part 2 cue cards to prepare for December 2026", paragraphs: ["These cards appear across this cycle's published cue card banks, which are built from candidate reports. They are grouped by type, because one well-prepared story usually covers two or three cards of the same type."], table: {
+        headers: ["Type", "Cue card (our wording)", "One story that covers it"],
+        rows: [
+          ["Person", "Describe a person you met only once and would like to know better.", "Someone on a train, at a wedding or at a workshop"],
+          ["Person", "Describe someone older than you whom you admire.", "A grandparent, a senior colleague or a neighbour"],
+          ["Person", "Describe a happy person you know.", "A friend or relative whose mood lifts a room"],
+          ["Person", "Describe a person who is very well organised.", "A manager, a sibling or a classmate with a system"],
+          ["Experience", "Describe a time you helped someone in your community.", "Helping a neighbour, a stranger or a local event"],
+          ["Experience", "Describe a time you were very busy.", "Exam season, a family wedding, a launch at work"],
+          ["Experience", "Describe a time you changed your mind about something.", "A food, a person, a career plan"],
+          ["Object", "Describe something you bought that you did not use much.", "Gym equipment, a gadget, clothes worn once"],
+          ["Place", "Describe a quiet place you like to go to.", "A library, a park bench, a temple, a rooftop"],
+          ["Place", "Describe a city you would like to live in for a short time.", "A city you have visited or read about"],
+          ["Activity", "Describe a skill you would like to learn that takes a long time.", "An instrument, a language, driving, coding"],
+          ["Media", "Describe a website or app you use often.", "A map, banking, video or learning app"],
+        ],
+      } },
+      { heading: "Part 2 model answer: a person you met only once", paragraphs: ["Card: Describe a person you met only once and would like to know better. You should say who this person was, where you met them, what you talked about, and explain why you would like to know them better.", "Model: \"Last spring I was on a long train journey from Ahmedabad to Delhi, and the woman in the seat opposite me turned out to be a retired engineer who had helped build bridges in the north-east. We started talking because I was struggling with a crossword, and she quietly gave me three answers in a row. For the next few hours she told me about working in remote areas in the eighties, where her team sometimes waited weeks for a single spare part. What struck me was how practical she was. Every story ended with what she had learned, not with what had gone wrong. We got off at different stations and, rather stupidly, I never asked for her number. I'd like to know her better because I'm studying civil engineering myself, and I think one more conversation with her would teach me more than a semester of lectures.\"", "Why it works: a clear setting, one specific detail (the crossword), a reason that links back to the speaker's own life, and natural phrases such as 'what struck me was' instead of memorised ones."] },
+      { heading: "Part 1 topics for December 2026", paragraphs: ["After the work, study and home questions, expect two short topic frames. These have been reported this cycle:"], bullets: ["Headphones: do you use headphones often? When do you not like using them?", "Teachers: did you have a favourite teacher at school? What made them good?", "Emails and letters: do you write emails or letters? Have you ever received a handwritten letter?", "Social media: which apps do you use most? Do you spend too much time on them?", "Weekends: what did you do last weekend? Are weekends different now from when you were a child?", "Gifts: do you like receiving gifts? What was the last gift you bought?", "Cold weather: do you like winter? What do people in your country do when it is cold?"] },
+      { heading: "Part 1 model answer", paragraphs: ["Q: Did you have a favourite teacher at school?", "Model: \"Yes, my maths teacher in Class 10. She never just gave us the formula. She made us work out why it worked first, which was frustrating at the time, but it's the reason I still enjoy numbers.\"", "One answer, one reason, one detail. About 20 seconds is the right length for Part 1."] },
+      { heading: "Part 3 questions to expect in December", paragraphs: ["Part 3 takes your cue card topic and asks about society, not you. Likely follow-ups for this cycle's cards:"], bullets: ["People and strangers: is it easier to make friends now than in the past? Should children be taught to talk to strangers?", "Older people: what can young people learn from older generations? Do older people get enough respect today?", "Happiness: does money make people happier? Why are some people naturally more positive?", "Organisation: is being organised a skill you can learn? Do schools teach time management well enough?", "Community: why do fewer people know their neighbours today? Should volunteering be compulsory for students?", "Shopping: why do people buy things they do not need? Has online shopping made this worse?"] },
+      { heading: "Part 3 model answer", paragraphs: ["Q: What can young people learn from older generations?", "Model: \"I'd say patience more than anything. Older people grew up without instant everything, so they tend to plan further ahead and are less thrown by setbacks. My grandparents saved for years to buy their first scooter, and that attitude to money is something a lot of people my age could use. That said, it isn't one-way. Young people are often better at adapting to new technology, so the best families are the ones where the learning goes in both directions.\"", "Structure: answer, reason, example, counterpoint. That pattern lifts Fluency and Coherence without sounding rehearsed."] },
+      { heading: "Testing in early January 2027?", paragraphs: ["Cue cards are widely reported to refresh at the start of January, though IELTS never confirms the date. If your test is in the first weeks of January, prepare this pool anyway, because carried-over cards are common in a new cycle. Then spend a third of your practice on cards you have never seen, with a strict one-minute prep, so an unfamiliar card does not throw you. We will publish the January 2027 list once candidates start reporting the new pool."] },
+      { heading: "A seven-day plan if your test is in December", table: {
+        headers: ["Day", "Focus", "Task"],
+        rows: [
+          ["1", "Stories", "Write one-line notes for five stories: two people, an experience, a place, an object"],
+          ["2", "Part 2", "Record the two person cards above with one minute to prepare and two minutes to speak"],
+          ["3", "Part 1", "Answer every Part 1 frame above in about 20 seconds each"],
+          ["4", "Part 3", "Answer five Part 3 questions using answer, reason, example, counterpoint"],
+          ["5", "November pool", "Record two cards from our November list, since the pool is the same"],
+          ["6", "Full test", "One full mock: Part 1, a fresh cue card and Part 3, timed, without stopping"],
+          ["7", "Review", "Listen back, score yourself on the four criteria and fix the weakest one"],
+        ],
+      } },
+      { heading: "How we built this forecast", paragraphs: ["Nobody outside IELTS knows the December questions in advance. This list is drawn from the September–December 2026 cue card banks published by IELTS prep sites, which are built from candidate reports, and we chose cards that cover the most common card types. It is a forecast, not a leak. Use it to prepare stories, not to memorise scripts."] },
+      { heading: "Earlier this cycle", paragraphs: ["December uses the same pool as September, October and November, so work through those cards as well."], links: [
+        { label: "IELTS Speaking questions November 2026", href: "/blog/recent-ielts-speaking-questions-november-2026" },
+        { label: "Recent IELTS Speaking questions: September & October 2026", href: "/blog/recent-ielts-speaking-questions-september-october-2026" },
+        { label: "IELTS Writing Task 2 topics December 2026", href: "/blog/recent-ielts-writing-task-2-topics-december-2026" },
+      ] },
+      { heading: "Practise December's cue cards with instant band scores", paragraphs: ["Reading a cue card list will not raise your band. Speaking does. On IELTSVega you can record Part 1, 2 and 3 answers with the built-in one-minute Part 2 prep timer, then get an instant band on Fluency, Vocabulary, Grammar and Pronunciation, so you know which of the four is costing you marks before test day."] },
+    ],
+    faqs: [
+      { q: "What are the IELTS Speaking questions for December 2026?", a: "No one can give you the exact questions, because live IELTS questions are confidential. December is the last month of the September to December cycle, so the cue cards reported since September, such as a person you met once, someone older you admire or a quiet place you like, are the ones to prepare." },
+      { q: "Do IELTS cue cards change in December?", a: "Not usually. Part 2 cue cards are widely reported to refresh in January, May and September, so a December test normally draws on the pool that started in September. IELTS does not confirm these dates." },
+      { q: "Will the cue cards change in January 2027?", a: "A new pool is widely expected from January, based on the pattern candidates have reported for years. Some cards usually carry over, so prepare the September–December pool and also practise unfamiliar cards." },
+      { q: "Is there a PDF of IELTS Speaking questions for December 2026 with answers?", a: "Any PDF claiming to hold the real December questions is guessing. A topic list with model answers is the honest version. Do not memorise the answers, because examiners are trained to spot rehearsed speech and it lowers your Fluency score." },
+      { q: "How many cue cards should I prepare for December?", a: "Prepare five strong stories rather than fifty answers: two people, an experience, a place and an object cover most of this cycle's cards with small changes." },
+    ],
+  },
+  {
+    slug: "recent-ielts-writing-task-2-topics-december-2026",
+    seoTitle: "IELTS Writing Task 2 Topics December 2026",
+    title: "IELTS Writing Task 2 topics December 2026: recent essay questions",
+    excerpt:
+      "IELTS Writing Task 2 topics for December 2026, from themes candidates reported in November, grouped by question type with essay plans.",
+    category: "Writing",
+    date: "November 2026",
+    publishedAt: "2026-11-16",
+    readMins: 5,
+    keywords: [
+      "ielts writing task 2 topics december 2026",
+      "ielts essay topics december 2026",
+      "recent ielts essay questions december 2026",
+      "ielts writing task 2 questions december 2026 with answers",
+      "ielts writing task 2 topics 2026",
+      "latest ielts writing topics",
+      "ielts writing task 2 sample",
+      "ielts essay questions",
+      "ielts practice",
+    ],
+    sections: [
+      { paragraphs: ["IELTS Writing Task 2 topics for December 2026 are best predicted from what candidates reported in November: class sizes in education, animal extinction, the media and national culture, advertising, renting versus owning a home, artificial intelligence and jobs, attention spans, renewable energy and practical skills at school. Task 2 has no fixed rotation the way Speaking does, so the most useful preparation is a bank of arguments for each recurring theme. Below are the themes, a representative question for each in our own wording, and plans for three of them."] },
+      { heading: "Themes reported in November, to prepare for December", table: {
+        headers: ["Theme", "Representative question (our wording)", "Question type"],
+        rows: [
+          ["Class size", "Some say small classes are essential for learning a language. Others think class size makes little difference. Discuss both views.", "Discussion"],
+          ["Extinction", "Some people think the extinction of animal species is a natural process and humans should not try to prevent it. To what extent do you agree?", "Opinion"],
+          ["Media and culture", "Films and TV shared across the world are making countries less different from each other. Is this a positive or negative development?", "Positive / negative"],
+          ["Advertising", "Advertising has a strong influence on what people buy. What are the effects of this, and should it be controlled?", "Two-part"],
+          ["Housing", "In some countries owning a home is seen as essential, while in others most people rent. What are the advantages and disadvantages of each?", "Advantages / disadvantages"],
+          ["AI and jobs", "Artificial intelligence will replace most human workers. To what extent do you agree?", "Opinion"],
+          ["Attention spans", "Many people now struggle to concentrate for long periods. What are the causes, and what can be done?", "Cause / solution"],
+          ["Renewable energy", "Governments should spend more on renewable energy than on other public services. To what extent do you agree?", "Opinion"],
+          ["Life skills", "Schools should teach practical skills such as cooking and managing money instead of only academic subjects. Do you agree?", "Opinion"],
+          ["Crime", "Some believe criminals are born, while others think crime is caused by environment and upbringing. Discuss both views.", "Discussion"],
+        ],
+      } },
+      { heading: "Reported theme 1: AI and jobs (opinion)", paragraphs: ["\"Some people believe artificial intelligence will eventually replace most human workers. To what extent do you agree or disagree?\"", "Plan: Introduction, a clear partial-disagree position. Body 1, the case for: routine work such as data entry, basic customer service and simple translation is already being automated. Body 2, why 'most' goes too far: jobs built on judgement, care and physical skill (nursing, teaching, plumbing) are hard to automate, and new technology tends to create roles as well as remove them. Conclusion, AI will change most jobs but replace a minority.", "Band 8 opening: \"Artificial intelligence is already doing work that once needed a person, from answering bank queries to drafting simple reports. However, while it will reshape almost every job, I disagree that it will replace most workers.\""] },
+      { heading: "Reported theme 2: renting versus owning (advantages / disadvantages)", paragraphs: ["\"In some countries, owning a home is considered very important, while in others most people rent. What are the advantages and disadvantages of each?\"", "Plan: Body 1, owning: security, freedom to change the home, an asset to pass on; but a large debt and less freedom to move for work. Body 2, renting: flexibility, no maintenance costs, easier to move cities; but rising rents, no long-term asset and less control. Answer both halves of the question in roughly equal depth, or Task Response suffers."] },
+      { heading: "Reported theme 3: extinction as a natural process (opinion)", paragraphs: ["\"Some people say the extinction of animal species is a natural process and that humans should not try to stop it. To what extent do you agree?\"", "Plan: Disagree. Body 1, today's extinctions are mostly caused by humans (habitat loss, hunting, pollution), so calling them natural is misleading. Body 2, species matter to people directly, through pollination, food chains and medicines, so protecting them protects us. Concede in one sentence that conservation money is limited and must be spent where it works."] },
+      { heading: "Turning a theme into a band 7+ essay", bullets: ["Name the question type before you plan. A two-part question needs both parts answered, and an advantages question needs both sides.", "Give each theme two arguments and one concrete example, in your own notes, so you never start from nothing in the exam.", "State your position in the introduction and keep it the same to the end. A changing position costs Task Response marks.", "Spend five minutes planning. A clear plan saves more time than it costs."] },
+      { heading: "Earlier topics", paragraphs: ["Task 2 themes repeat across months, so the November list is still worth working through."], links: [
+        { label: "IELTS Writing Task 2 topics November 2026", href: "/blog/recent-ielts-writing-task-2-topics-november-2026" },
+        { label: "Recent IELTS Writing Task 2 topics: September & October 2026", href: "/blog/recent-ielts-writing-task-2-topics-september-october-2026" },
+        { label: "IELTS Speaking questions December 2026", href: "/blog/recent-ielts-speaking-questions-december-2026" },
+      ] },
+      { heading: "Write December's essays and get a band instantly", paragraphs: ["A plan is the easy part. Writing 260 clear words in 40 minutes is where bands are lost. On IELTSVega you can write a Task 2 essay on any of these themes and get an instant band on Task Response, Coherence and Cohesion, Lexical Resource and Grammar, with notes on exactly what is holding the score down."] },
+    ],
+    faqs: [
+      { q: "What are the IELTS Writing Task 2 topics for December 2026?", a: "IELTS does not publish its questions, so no list is official. Based on what candidates reported in November 2026, expect themes such as class size, animal extinction, the media and culture, advertising, renting versus owning, AI and jobs, attention spans, renewable energy and life skills at school." },
+      { q: "Do IELTS Writing topics change in December?", a: "Not on a fixed schedule. Unlike Speaking cue cards, Task 2 has no reported rotation. The same broad themes return with different wording, which is why preparing by theme works better than collecting monthly lists." },
+      { q: "Are these the real IELTS essay questions for December?", a: "No. They are representative questions we wrote around the themes candidates reported. Anyone selling the real December questions is guessing or breaking IELTS rules." },
+      { q: "How should I practise Task 2 before a December test?", a: "Write one timed essay every two days on a different theme from the table, then check it against the four criteria. Feedback matters more than volume: ten essays with the same mistake only teach the mistake." },
+    ],
+  },
+  {
     slug: "recent-ielts-speaking-questions-november-2026",
     seoTitle: "IELTS Speaking Questions November 2026 (Parts 1–3)",
     title: "IELTS Speaking questions November 2026: cue cards, Part 1 & 3",
@@ -107,6 +239,7 @@ export const POSTS: BlogPost[] = [
       } },
       { heading: "How we built this forecast", paragraphs: ["Nobody outside IELTS knows the November questions in advance. This list is drawn from the September–December 2026 cue card banks and forecasts published by IELTS prep sites, which are themselves built from candidate reports, and we chose cards that cover the most common card types. It is a forecast, not a leak. Use it to prepare stories and ideas, not to memorise answers."] },
       { heading: "Earlier this cycle", paragraphs: ["The September and October cards are still in use, so work through those as well."], links: [
+        { label: "IELTS Speaking questions December 2026", href: "/blog/recent-ielts-speaking-questions-december-2026" },
         { label: "Recent IELTS Speaking questions: September & October 2026", href: "/blog/recent-ielts-speaking-questions-september-october-2026" },
         { label: "IELTS Writing Task 2 topics November 2026", href: "/blog/recent-ielts-writing-task-2-topics-november-2026" },
         { label: "Recent IELTS Speaking questions: July 2026", href: "/blog/recent-ielts-speaking-questions-july-2026" },
@@ -165,6 +298,7 @@ export const POSTS: BlogPost[] = [
       { heading: "Reported theme 3: university and success (discussion)", paragraphs: ["\"Some people think a university education is essential for success. Others believe people can be successful without one. Discuss both views and give your opinion.\"", "Plan: Body 1, why a degree matters: professions such as medicine and law require one, and graduates tend to earn more over a career. Body 2, other routes: apprenticeships, technical trades and online learning, and well-known founders without degrees. Conclusion: a degree is essential for some careers but is only one route to success.", "Band 8 opening: \"While a degree remains the only way into professions such as medicine or law, I would argue that success in most fields depends more on skills and persistence than on a university certificate.\""] },
       { heading: "Turning a theme into a band 7+ essay", bullets: ["Name the question type before you plan. A discussion question that gets only your opinion loses Task Response marks, however good the English.", "Give each theme two arguments and one concrete example, written in your own notes, so you are never thinking of ideas from nothing in the exam.", "State your position in the introduction and keep it the same through the conclusion. Changing your mind halfway is the most common Task Response mistake.", "Keep to 260–290 words and 40 minutes: 5 to plan, 30 to write, 5 to check articles, plurals and verb tenses."] },
       { heading: "Earlier topics", paragraphs: ["Task 2 themes repeat across months, so the September and October list is still worth working through."], links: [
+        { label: "IELTS Writing Task 2 topics December 2026", href: "/blog/recent-ielts-writing-task-2-topics-december-2026" },
         { label: "Recent IELTS Writing Task 2 topics: September & October 2026", href: "/blog/recent-ielts-writing-task-2-topics-september-october-2026" },
         { label: "IELTS Speaking questions November 2026", href: "/blog/recent-ielts-speaking-questions-november-2026" },
         { label: "Recent IELTS Writing Task 2 topics: July 2026", href: "/blog/recent-ielts-writing-task-2-topics-july-2026" },
@@ -1291,3 +1425,49 @@ export const POSTS: BlogPost[] = [
 ];
 
 export const POST_BY_SLUG = Object.fromEntries(POSTS.map((p) => [p.slug, p])) as Record<string, BlogPost>;
+
+/* ---------------------------------------------------------------- *
+ * Monthly "recent questions" posts go stale on a schedule. The slug
+ * carries the month(s) the list is for ("…-september-october-2026"),
+ * so the month a post stops being current is derived, never hand-kept:
+ * the blog page shows an "out of date" pointer on expired lists and the
+ * homepage always links the list for this month.
+ * ---------------------------------------------------------------- */
+export type RecentKind = "speaking" | "writing";
+
+const RECENT_PREFIX: Record<RecentKind, string> = {
+  speaking: "recent-ielts-speaking-questions-",
+  writing: "recent-ielts-writing-task-2-topics-",
+};
+const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+
+/** Kind and last covered month (year*12 + monthIndex) of a recent-questions post, or null. */
+export function recentInfo(slug: string): { kind: RecentKind; lastMonth: number } | null {
+  for (const kind of Object.keys(RECENT_PREFIX) as RecentKind[]) {
+    if (!slug.startsWith(RECENT_PREFIX[kind])) continue;
+    const parts = slug.slice(RECENT_PREFIX[kind].length).split("-");
+    const year = Number(parts.pop());
+    const month = MONTHS.indexOf(parts.pop() ?? "");
+    if (!Number.isFinite(year) || month < 0) return null;
+    return { kind, lastMonth: year * 12 + month };
+  }
+  return null;
+}
+
+const monthNow = (now: Date) => now.getUTCFullYear() * 12 + now.getUTCMonth();
+
+/** The list a candidate testing now should read: the earliest one still covering this month, else the newest. */
+export function currentRecentPost(kind: RecentKind, now = new Date()): BlogPost {
+  const lists = POSTS.map((p) => ({ p, info: recentInfo(p.slug) }))
+    .filter((x): x is { p: BlogPost; info: { kind: RecentKind; lastMonth: number } } => x.info?.kind === kind)
+    .sort((a, b) => a.info.lastMonth - b.info.lastMonth);
+  return (lists.find((x) => x.info.lastMonth >= monthNow(now)) ?? lists[lists.length - 1]).p;
+}
+
+/** For an expired recent-questions post, the current list to send readers to; null when the post is still current. */
+export function supersedingRecentPost(slug: string, now = new Date()): BlogPost | null {
+  const info = recentInfo(slug);
+  if (!info || info.lastMonth >= monthNow(now)) return null;
+  const current = currentRecentPost(info.kind, now);
+  return current.slug === slug ? null : current;
+}

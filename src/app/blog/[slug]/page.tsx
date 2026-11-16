@@ -6,7 +6,7 @@ import { Fragment } from "react";
 import { ArrowLeft, Clock, ArrowRight } from "lucide-react";
 import { MarketingShell } from "@/components/marketing/marketing-shell";
 import { PracticeCta, practiceCtaKindFor } from "@/components/marketing/practice-cta";
-import { POSTS, POST_BY_SLUG } from "@/lib/blog";
+import { POSTS, POST_BY_SLUG, supersedingRecentPost } from "@/lib/blog";
 import { SITE_URL } from "@/lib/site";
 
 type Params = { slug: string };
@@ -73,6 +73,10 @@ const CROSS_CATEGORY_BRIDGE: ReadonlyMap<string, string> = (() => {
 
   return bridge;
 })();
+
+// Re-render daily so a monthly "recent questions" list picks up its
+// out-of-date pointer when the month turns, without waiting for a deploy.
+export const revalidate = 86400;
 
 export function generateStaticParams() {
   return POSTS.map((p) => ({ slug: p.slug }));
@@ -280,6 +284,7 @@ export default async function BlogArticle({ params }: { params: Promise<Params> 
    * keep only their own closing CTA, and posts too short to have a middle get none.
    */
   const showInlineCta = post.category !== B2B_CATEGORY && post.sections.length >= 4;
+  const superseding = supersedingRecentPost(post.slug);
 
   return (
     <MarketingShell>
@@ -318,6 +323,20 @@ export default async function BlogArticle({ params }: { params: Promise<Params> 
 
         <h1 className="font-serif mt-4 text-4xl leading-tight tracking-tight sm:text-5xl">{post.title}</h1>
         <p className="mt-4 text-lg text-ink-soft">{post.excerpt}</p>
+
+        {superseding ? (
+          <Link
+            href={`/blog/${superseding.slug}`}
+            className="mt-6 flex items-start gap-3 rounded-xl border border-amber-300/70 bg-amber-50 px-4 py-3 text-sm text-amber-950 transition-colors hover:bg-amber-100 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-100 dark:hover:bg-amber-500/15"
+          >
+            <span className="mt-0.5 shrink-0 rounded-full bg-amber-200 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-amber-900 dark:bg-amber-500/30 dark:text-amber-50">Out of date</span>
+            <span>
+              These questions are from an earlier month.
+              {" "}If your test is coming up, read the current one: <span className="font-semibold underline underline-offset-2">{superseding.title}</span>
+              <ArrowRight className="ml-1 inline size-3.5" />
+            </span>
+          </Link>
+        ) : null}
 
         <div className="mt-8 space-y-7 border-t border-line pt-8">
           {post.sections.map((s, i) => (
