@@ -47,6 +47,132 @@ export const POSTS: BlogPost[] = [
    * Add a new one each month; keep publishedAt current.
    * ---------------------------------------------------------------- */
   {
+    slug: "recent-ielts-writing-task-1-topics-november-december-2026",
+    seoTitle: "Recent IELTS Writing Task 1 Topics Nov–Dec 2026",
+    title: "Recent IELTS Writing Task 1 topics: November & December 2026",
+    excerpt:
+      "IELTS Academic Writing Task 1 charts, maps and processes reported in 2026, with an overview sentence for each type and a free scored Task 1 practice.",
+    category: "Writing",
+    date: "November 2026",
+    publishedAt: "2026-11-19",
+    readMins: 6,
+    keywords: [
+      "recent ielts writing task 1 topics 2026",
+      "ielts writing task 1 november 2026",
+      "ielts writing task 1 december 2026",
+      "ielts academic writing task 1 recent questions",
+      "ielts task 1 bar chart line graph pie chart 2026",
+      "ielts writing task 1 map and process",
+      "ielts writing task 1 practice",
+      "ielts practice",
+    ],
+    sections: [
+      { paragraphs: ["Recent IELTS Academic Writing Task 1 questions in 2026 have covered housework hours by gender, recycling rates over three decades, government spending by sector, waste per person by country, how instant noodles are made, and a town centre before and after redevelopment. Every Task 1 is one of six visual types: line graph, bar chart, pie chart, table, map or process. The subjects change, but the language each type needs does not, so a November or December test is best prepared type by type.", "Below are the visuals candidates reported this year, in our own wording, with what to compare in each. The practice link under every prompt opens a Task 1 that is scored on the four official criteria. It gives you a Task 1 of the same kind, not this exact chart."] },
+      { heading: "Task 1 visuals reported in 2026", paragraphs: ["Reported by candidates and collected by IELTS prep sites. The charts are described in our words; exact figures from the real test are not public."], table: {
+        headers: ["Visual type", "Prompt (our wording)", "What to compare"],
+        practice: { next: "/practice/writing/writing_task1_academic", label: "Write a Task 1 report, scored free", column: 1 },
+        rows: [
+          ["Bar chart", "Weekly hours spent on housework by men and women, split by whether they are employed", "Gender gap within each group, and how employment changes it"],
+          ["Line graph", "The share of household waste recycled in one country over thirty years", "The overall rise, the fastest period, any plateau"],
+          ["Pie charts", "How a government divided its spending between sectors in two different years", "The largest sector, the biggest increase and decrease"],
+          ["Table", "Waste produced per person in five countries", "Highest and lowest, then countries that are close together"],
+          ["Process", "How instant noodles are produced in a factory", "Number of stages, start and end point, the passive voice"],
+          ["Maps", "A town centre today and after a planned twenty-year redevelopment", "What is added, removed and converted"],
+          ["Line graph", "Overseas visitors to three countries between 1990 and 2020", "Which country led, when the order changed"],
+          ["Bar chart", "How commuters travelled to work in a capital city in 2000 and 2020", "The shift between transport modes over twenty years"],
+          ["Maps", "A fishing village that became a tourist resort", "Land use before and after, new roads and buildings"],
+          ["Bar chart", "Household ownership of digital devices from 2018 to 2024", "Devices that grew, devices that fell"],
+          ["Climate graph", "Monthly temperature and rainfall in three cities", "Hottest and wettest months, the city with the most variation"],
+          ["Process", "The life cycle of the honeybee", "Each stage in order, how long the cycle takes"],
+        ],
+      } },
+      { heading: "What the list tells you", bullets: ["Environment and spending dominate. Recycling, waste and government budgets make up a third of the reports, so learn the vocabulary of proportion: a quarter, the majority, a small fraction.", "Two of the twelve are maps and two are processes. Candidates who only practise graphs lose time on these, because they need different language: was converted into, was replaced by, once the mixture has cooled.", "Comparison over time is in most of them. Practise past tenses with trend verbs (rose, fell, levelled off) and the prepositions that go with numbers (by 10%, to 40%)."] },
+      { heading: "The overview: the sentence that decides Task Achievement", paragraphs: ["A Task 1 answer without a clear overview cannot score above Band 5 for Task Achievement, however accurate the details. Write it second, straight after the one-sentence introduction, and give the two biggest features with no numbers.", "Line graph (recycling): \"Overall, the proportion of waste recycled rose steadily across the thirty years, with the sharpest growth in the final decade.\"", "Process (instant noodles): \"Overall, production involves eight stages, beginning with the delivery of flour and ending with sealed cups ready for sale.\"", "Maps (town centre): \"Overall, the plan would make the centre far more pedestrian-friendly, replacing the car park and main road with open public space.\""] },
+      { heading: "Task 1 in 20 minutes", bullets: ["Three minutes reading the visual: find the two biggest features before you write anything.", "One sentence of introduction, paraphrasing the title. Do not copy it.", "The overview, then two body paragraphs grouping the data logically, not one sentence per bar.", "Aim for 160–190 words. Going far past 200 costs time you need for Task 2, which is worth twice as much.", "Two minutes checking tenses: past for past data, future forms for predictions and planned maps."] },
+      { heading: "How we built this list", paragraphs: ["IELTS does not publish its Writing questions. We looked for candidate reports from October and November 2026 and found few that were specific, so this list also includes visuals candidates reported earlier in 2026. Task 1 visuals are reused across test dates, which makes earlier reports a fair guide. Treat the list as a guide to the kinds of visual in circulation, not a promise of what you will get."] },
+      { heading: "Recent questions for the other skills", paragraphs: ["The same cycle's lists:"], links: [
+        { label: "IELTS Writing Task 2 topics December 2026", href: "/blog/recent-ielts-writing-task-2-topics-december-2026" },
+        { label: "Recent IELTS General Training letter topics: November & December 2026", href: "/blog/recent-ielts-general-training-letter-topics-november-december-2026" },
+        { label: "IELTS Speaking questions December 2026", href: "/blog/recent-ielts-speaking-questions-december-2026" },
+        { label: "IELTS Writing Task 1 guide: how to reach Band 9", href: "/blog/ielts-writing-task-1-guide-band-9" },
+        { label: "All recent IELTS questions, this month", href: "/ielts-recent-questions" },
+      ] },
+      { heading: "Write a Task 1 report and get a band today", paragraphs: ["Reading model sentences is not the same as producing 170 accurate words in 20 minutes. On IELTSVega you can write an Academic Task 1 on a chart, map or process and get an instant band on Task Achievement, Coherence and Cohesion, Lexical Resource and Grammar, with notes on what is holding the score down."] },
+    ],
+    faqs: [
+      { q: "What are the recent IELTS Writing Task 1 topics in 2026?", a: "Candidates reported Academic Task 1 visuals on housework hours by gender, recycling rates over thirty years, government spending by sector, waste per person in five countries, instant noodle production, a town centre redevelopment, tourism to three countries, commuting modes and the life cycle of the honeybee." },
+      { q: "Will these charts come up in November or December 2026?", a: "No one can know. Task 1 visuals are reused across test dates, so recent reports show the kinds of chart in circulation, but the exact visual you get is confidential. Prepare all six types rather than these exact charts." },
+      { q: "Which Task 1 type is hardest?", a: "Most candidates find maps and processes harder than graphs, because they need different language: changes in land use for maps, and sequencing with the passive voice for processes. Practise at least one of each before the test." },
+      { q: "How many words should Task 1 be?", a: "At least 150. Around 160 to 190 is the sensible target in 20 minutes. Writing much more does not raise your band and takes time away from Task 2, which counts for twice as much." },
+    ],
+  },
+  {
+    slug: "recent-ielts-general-training-letter-topics-november-december-2026",
+    seoTitle: "Recent IELTS General Training Letter Topics Nov–Dec 2026",
+    title: "Recent IELTS General Training letter topics: November & December 2026",
+    excerpt:
+      "IELTS General Training Writing Task 1 letter topics reported in late 2026, with the right tone for each, a plan, an opening line and free scored practice.",
+    category: "Writing",
+    date: "November 2026",
+    publishedAt: "2026-11-19",
+    readMins: 6,
+    keywords: [
+      "recent ielts general training letter topics 2026",
+      "ielts general writing task 1 november 2026",
+      "ielts letter topics december 2026",
+      "ielts gt letter writing recent questions",
+      "ielts formal letter topics",
+      "ielts informal letter topics",
+      "ielts general training writing task 1 practice",
+      "ielts practice",
+    ],
+    sections: [
+      { paragraphs: ["Recent IELTS General Training Writing Task 1 letters reported in late 2026 include a suggestion to a library manager, a complaint to a car hire company, a complaint about a faulty online clothing order, a letter telling a friend you have moved house, a request to join a college course after the deadline, a resignation, and an application for restaurant work. Every GT letter gives you a situation and three bullet points, and you have 20 minutes and at least 150 words.", "The situations change, but the decisions do not: who you are writing to, which tone that needs, and one paragraph per bullet. Below are the reported situations in our own wording, with the tone each needs. The practice link under every situation opens a GT letter that is scored on the four official criteria. It gives you a letter of the same kind, not this exact situation."] },
+      { heading: "Letter situations reported this autumn", paragraphs: ["Reported by candidates and collected by IELTS prep sites, described in our words."], table: {
+        headers: ["Letter type", "Situation (our wording)", "Tone"],
+        practice: { next: "/practice/writing/writing_task1_general", label: "Write a GT letter, scored free", column: 1 },
+        rows: [
+          ["Suggestion", "Write to the manager of your local library suggesting improvements to its services", "Formal"],
+          ["Complaint", "Write to a car hire company about a problem with the car you rented", "Formal"],
+          ["Complaint", "Write to an online clothing shop about an order that arrived damaged or wrong", "Formal"],
+          ["Informal news", "Write to a friend telling them you have moved house and inviting them to visit", "Informal"],
+          ["Request", "Write to a college enrolment officer asking to join a course after the deadline", "Formal"],
+          ["Resignation", "Write to your manager to say you are leaving your job", "Semi-formal"],
+          ["Application", "Write to a restaurant owner applying for a part-time job", "Formal"],
+          ["Request", "Write to your landlord about a repair that has not been done", "Semi-formal"],
+          ["Apology", "Write to a friend apologising for missing an important event", "Informal"],
+        ],
+      } },
+      { heading: "Choose the tone from who you are writing to", table: {
+        headers: ["Tone", "When", "Open with", "Close with"],
+        rows: [
+          ["Formal", "A company or a person whose name you do not know", "Dear Sir or Madam,", "Yours faithfully,"],
+          ["Semi-formal", "Someone you know by name but not well: a manager, a landlord, a neighbour", "Dear Mr Patel,", "Yours sincerely,"],
+          ["Informal", "A friend or family member", "Dear Sam,", "Best wishes, / Take care,"],
+        ],
+      } },
+      { heading: "Reported situation 1: a complaint to a car hire company (formal)", paragraphs: ["Bullets you might get: describe the problem, explain how it affected your trip, say what you want the company to do.", "Plan: Paragraph 1, the booking and what went wrong (the car broke down on the second day). Paragraph 2, the effect (a missed meeting, a taxi you paid for). Paragraph 3, the action you want (a refund for two days and the taxi fare).", "Opening line: \"I am writing to complain about a car I hired from your airport branch on 3 November, which broke down on the second day of my rental.\""] },
+      { heading: "Reported situation 2: joining a course after the deadline (formal)", paragraphs: ["Bullets you might get: say which course you want to join, explain why you missed the deadline, say why you should still be accepted.", "Plan: Paragraph 1, the course and the start date. Paragraph 2, the reason (a delayed visa, a family emergency), told briefly and factually. Paragraph 3, why you would still succeed (relevant experience, willingness to catch up on missed classes).", "Opening line: \"I am writing to ask whether I could still enrol on the evening accounting course that begins on 10 November, although I have missed the application deadline.\""] },
+      { heading: "Reported situation 3: telling a friend you have moved (informal)", paragraphs: ["Bullets you might get: describe your new home, explain why you moved, invite your friend to visit.", "Plan: Paragraph 1, the new place and what you like about it. Paragraph 2, the reason (closer to work, a bigger flat). Paragraph 3, the invitation, with a date and what you will do together.", "Opening line: \"Guess what? I've finally moved, and I'm writing this from my new balcony with a view of the river.\""] },
+      { heading: "Four habits that lift a letter to Band 7", bullets: ["One paragraph per bullet point, in the order given. Missing a bullet caps Task Achievement, however good the English.", "State the purpose in the first sentence. The reader should know why you are writing before line two.", "Keep the tone consistent. A formal complaint that slips into \"anyway, hope you're well\" loses marks for register.", "Aim for 160–180 words in 20 minutes, and keep five minutes at the end of the hour for Task 2."] },
+      { heading: "How we built this list", paragraphs: ["IELTS does not publish its Writing questions. These situations come from candidate reports collected by IELTS prep sites in autumn 2026. Where a report was only a fragment, we kept the situation and wrote the bullets ourselves. GT letters reuse the same situations across test dates, so treat this as a guide to the letter types in circulation, not a promise of what you will get."] },
+      { heading: "More on GT letters and other recent questions", links: [
+        { label: "How to write the General Training letter, with model letters", href: "/blog/ielts-letter-writing" },
+        { label: "IELTS Writing Task 2 topics December 2026", href: "/blog/recent-ielts-writing-task-2-topics-december-2026" },
+        { label: "Recent IELTS Writing Task 1 topics: November & December 2026", href: "/blog/recent-ielts-writing-task-1-topics-november-december-2026" },
+        { label: "IELTS Speaking questions December 2026", href: "/blog/recent-ielts-speaking-questions-december-2026" },
+        { label: "All recent IELTS questions, this month", href: "/ielts-recent-questions" },
+      ] },
+      { heading: "Write a letter and get a band today", paragraphs: ["Knowing the openings is the easy part. On IELTSVega you can write a General Training letter and get an instant band on Task Achievement, Coherence and Cohesion, Lexical Resource and Grammar, including whether your tone matches the situation."] },
+    ],
+    faqs: [
+      { q: "What are the recent IELTS General Training letter topics?", a: "Candidates reported letters in late 2026 suggesting library improvements, complaining to a car hire company and an online clothing shop, telling a friend about moving house, asking to join a college course late, resigning from a job, applying for restaurant work, asking a landlord for a repair and apologising to a friend." },
+      { q: "How do I know whether a GT letter should be formal or informal?", a: "From who you are writing to. A company or someone whose name you do not know needs a formal letter (Dear Sir or Madam, Yours faithfully). Someone you know by name but not well needs semi-formal (Dear Mr Patel, Yours sincerely). A friend or relative needs informal." },
+      { q: "Are these the real GT letters for November and December 2026?", a: "No. Live IELTS questions are confidential. These are situations candidates reported after their tests, and the same kinds of situation come back with different details." },
+      { q: "How long should a General Training letter be?", a: "At least 150 words. Around 160 to 180 is a good target in 20 minutes, which leaves the remaining 40 minutes for Task 2, which counts for twice as much." },
+    ],
+  },
+  {
     slug: "recent-ielts-reading-topics-november-december-2026",
     seoTitle: "Recent IELTS Reading Topics Nov–Dec 2026 (Academic)",
     title: "Recent IELTS Reading topics: November & December 2026",
@@ -95,7 +221,10 @@ export const POSTS: BlogPost[] = [
         ],
       } },
       { heading: "How we built this list", paragraphs: ["IELTS does not publish its passages. This list comes from candidate reports collected by IELTS prep sites in September to November 2026. Where two sites reported the same topic, we kept it; where only one did, we kept it only if it matched a recurring passage type. Treat it as a guide to the kinds of texts in circulation, not a list of guaranteed passages."] },
-      { heading: "Recent questions for the other skills", paragraphs: ["The same cycle's lists for the other three skills:"], links: [
+      { heading: "Recent questions for the other skills", paragraphs: ["The same cycle's lists for the other skills:"], links: [
+        { label: "Recent IELTS Writing Task 1 topics: November & December 2026", href: "/blog/recent-ielts-writing-task-1-topics-november-december-2026" },
+        { label: "Recent IELTS General Training letter topics: November & December 2026", href: "/blog/recent-ielts-general-training-letter-topics-november-december-2026" },
+        { label: "All recent IELTS questions, this month", href: "/ielts-recent-questions" },
         { label: "IELTS Speaking questions December 2026", href: "/blog/recent-ielts-speaking-questions-december-2026" },
         { label: "IELTS Writing Task 2 topics December 2026", href: "/blog/recent-ielts-writing-task-2-topics-december-2026" },
         { label: "Recent IELTS Listening topics: November & December 2026", href: "/blog/recent-ielts-listening-topics-november-december-2026" },
@@ -155,7 +284,10 @@ export const POSTS: BlogPost[] = [
         ],
       } },
       { heading: "How we built this guide", paragraphs: ["We looked for candidate reports of Listening topics from October and November 2026 and found too few to list honestly. So this page describes what every Listening test contains, based on the official test format, and the topics that have recurred across years of reported tests. If reliable reports appear, we will add them here."] },
-      { heading: "Recent questions for the other skills", paragraphs: ["The same cycle's lists for the other three skills:"], links: [
+      { heading: "Recent questions for the other skills", paragraphs: ["The same cycle's lists for the other skills:"], links: [
+        { label: "Recent IELTS Writing Task 1 topics: November & December 2026", href: "/blog/recent-ielts-writing-task-1-topics-november-december-2026" },
+        { label: "Recent IELTS General Training letter topics: November & December 2026", href: "/blog/recent-ielts-general-training-letter-topics-november-december-2026" },
+        { label: "All recent IELTS questions, this month", href: "/ielts-recent-questions" },
         { label: "IELTS Speaking questions December 2026", href: "/blog/recent-ielts-speaking-questions-december-2026" },
         { label: "IELTS Writing Task 2 topics December 2026", href: "/blog/recent-ielts-writing-task-2-topics-december-2026" },
         { label: "Recent IELTS Reading topics: November & December 2026", href: "/blog/recent-ielts-reading-topics-november-december-2026" },
@@ -293,6 +425,9 @@ export const POSTS: BlogPost[] = [
       { heading: "Reported theme 3: extinction as a natural process (opinion)", paragraphs: ["\"Some people say the extinction of animal species is a natural process and that humans should not try to stop it. To what extent do you agree?\"", "Plan: Disagree. Body 1, today's extinctions are mostly caused by humans (habitat loss, hunting, pollution), so calling them natural is misleading. Body 2, species matter to people directly, through pollination, food chains and medicines, so protecting them protects us. Concede in one sentence that conservation money is limited and must be spent where it works."] },
       { heading: "Turning a theme into a band 7+ essay", bullets: ["Name the question type before you plan. A two-part question needs both parts answered, and an advantages question needs both sides.", "Give each theme two arguments and one concrete example, in your own notes, so you never start from nothing in the exam.", "State your position in the introduction and keep it the same to the end. A changing position costs Task Response marks.", "Spend five minutes planning. A clear plan saves more time than it costs."] },
       { heading: "Earlier topics", paragraphs: ["Task 2 themes repeat across months, so the November list is still worth working through."], links: [
+        { label: "Recent IELTS Writing Task 1 topics: November & December 2026", href: "/blog/recent-ielts-writing-task-1-topics-november-december-2026" },
+        { label: "Recent IELTS General Training letter topics: November & December 2026", href: "/blog/recent-ielts-general-training-letter-topics-november-december-2026" },
+        { label: "All recent IELTS questions, this month", href: "/ielts-recent-questions" },
         { label: "IELTS Writing Task 2 topics November 2026", href: "/blog/recent-ielts-writing-task-2-topics-november-2026" },
         { label: "Recent IELTS Writing Task 2 topics: September & October 2026", href: "/blog/recent-ielts-writing-task-2-topics-september-october-2026" },
         { label: "IELTS Speaking questions December 2026", href: "/blog/recent-ielts-speaking-questions-december-2026" },
@@ -430,6 +565,9 @@ export const POSTS: BlogPost[] = [
       { heading: "Reported theme 3: university and success (discussion)", paragraphs: ["\"Some people think a university education is essential for success. Others believe people can be successful without one. Discuss both views and give your opinion.\"", "Plan: Body 1, why a degree matters: professions such as medicine and law require one, and graduates tend to earn more over a career. Body 2, other routes: apprenticeships, technical trades and online learning, and well-known founders without degrees. Conclusion: a degree is essential for some careers but is only one route to success.", "Band 8 opening: \"While a degree remains the only way into professions such as medicine or law, I would argue that success in most fields depends more on skills and persistence than on a university certificate.\""] },
       { heading: "Turning a theme into a band 7+ essay", bullets: ["Name the question type before you plan. A discussion question that gets only your opinion loses Task Response marks, however good the English.", "Give each theme two arguments and one concrete example, written in your own notes, so you are never thinking of ideas from nothing in the exam.", "State your position in the introduction and keep it the same through the conclusion. Changing your mind halfway is the most common Task Response mistake.", "Keep to 260–290 words and 40 minutes: 5 to plan, 30 to write, 5 to check articles, plurals and verb tenses."] },
       { heading: "Earlier topics", paragraphs: ["Task 2 themes repeat across months, so the September and October list is still worth working through."], links: [
+        { label: "Recent IELTS Writing Task 1 topics: November & December 2026", href: "/blog/recent-ielts-writing-task-1-topics-november-december-2026" },
+        { label: "Recent IELTS General Training letter topics: November & December 2026", href: "/blog/recent-ielts-general-training-letter-topics-november-december-2026" },
+        { label: "All recent IELTS questions, this month", href: "/ielts-recent-questions" },
         { label: "IELTS Writing Task 2 topics December 2026", href: "/blog/recent-ielts-writing-task-2-topics-december-2026" },
         { label: "Recent IELTS Writing Task 2 topics: September & October 2026", href: "/blog/recent-ielts-writing-task-2-topics-september-october-2026" },
         { label: "IELTS Speaking questions November 2026", href: "/blog/recent-ielts-speaking-questions-november-2026" },
@@ -1565,11 +1703,13 @@ export const POST_BY_SLUG = Object.fromEntries(POSTS.map((p) => [p.slug, p])) as
  * the blog page shows an "out of date" pointer on expired lists and the
  * homepage always links the list for this month.
  * ---------------------------------------------------------------- */
-export type RecentKind = "speaking" | "writing" | "listening" | "reading";
+export type RecentKind = "speaking" | "writing" | "task1" | "letter" | "listening" | "reading";
 
 const RECENT_PREFIX: Record<RecentKind, string> = {
   speaking: "recent-ielts-speaking-questions-",
   writing: "recent-ielts-writing-task-2-topics-",
+  task1: "recent-ielts-writing-task-1-topics-",
+  letter: "recent-ielts-general-training-letter-topics-",
   listening: "recent-ielts-listening-topics-",
   reading: "recent-ielts-reading-topics-",
 };

@@ -32,6 +32,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/ielts-band-score-calculator",
     "/ielts-typing-test",
     "/ielts-2026-changes",
+    "/ielts-recent-questions",
   ];
 
   const sectionPaths = STUDY.filter((s) => s.key !== "writing").map((s) => `/resources/${s.key}`);

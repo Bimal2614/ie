@@ -166,6 +166,8 @@ const QUESTION_HUB: {
       { label: "Problem and solution essays", href: "/resources/writing/task-2/problem-solution" },
       { label: "Two-part questions", href: "/resources/writing/task-2/two-part" },
       { label: "Recent Writing Task 2 topics this month", href: `/blog/${currentRecentPost("writing").slug}` },
+      { label: "Recent Task 1 charts, maps and processes", href: `/blog/${currentRecentPost("task1").slug}` },
+      { label: "Recent General Training letter topics", href: `/blog/${currentRecentPost("letter").slug}` },
     ],
   },
   {
@@ -183,6 +185,7 @@ const QUESTION_HUB: {
       { label: "Sentence banks for Speaking Part 2", href: "/templates" },
       { label: "Band descriptors: Band 6 vs 7 vs 8", href: "/blog/ielts-speaking-band-descriptors" },
       { label: "Recent Speaking questions this month", href: `/blog/${currentRecentPost("speaking").slug}` },
+      { label: "All recent IELTS questions, every skill", href: "/ielts-recent-questions" },
     ],
   },
 ];
