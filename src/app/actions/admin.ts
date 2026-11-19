@@ -8,6 +8,7 @@ import { users, auditLog } from "@/db/schema";
 import { requireAdmin } from "@/lib/dal";
 import { destroyAllSessions } from "@/lib/session";
 import { isUuid } from "@/lib/uuid";
+import { clearDeactivation } from "@/lib/security/rate-guard";
 import { DEFAULT_OFFERED_PLAN, isOfferedPlan, OFFERED_PLANS, priceFor, type PlanKey } from "@/lib/plans";
 import {
   grantPlan,
@@ -34,23 +35,16 @@ function revalidateStudentScreens() {
 
 /**
  * Reactivate an account that was disabled (e.g. by automatic rate-limit
- * deactivation). Admin-only. Clears the deactivation flag; the user can sign in
- * again and old rate-limit violation counters expire on their own window.
+ * deactivation). Admin-only. Clears the deactivation flag and the strike count
+ * behind it, so the user starts clean.
  */
 export async function reactivateAccount(userId: string): Promise<AdminOpResult> {
   const admin = await requireAdmin();
   if (!isUuid(userId)) return { ok: false, error: "That request wasn't valid." }; // see src/lib/uuid.ts
 
-  await db
-    .update(users)
-    .set({ deactivatedAt: null, deactivationReason: null, updatedAt: new Date() })
-    .where(eq(users.id, userId));
-
-  await db.insert(auditLog).values({
-    userId,
-    event: "account.reactivated",
-    metadata: { by: admin.id },
-  });
+  // Also wipes the rate-limit strike count, so a re-enabled account is not one
+  // throttle away from being deactivated again — see clearDeactivation.
+  await clearDeactivation(userId, "account.reactivated", { by: admin.id });
 
   revalidateStudentScreens();
   return { ok: true };

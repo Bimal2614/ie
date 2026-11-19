@@ -16,6 +16,8 @@ import {
 import { createSession, getRequestContext } from "@/lib/session";
 import { safeEqual } from "@/lib/security/tokens";
 import { normalizePhone } from "@/lib/phone";
+import { hoursLeft, pauseEndsAt } from "@/lib/account-status";
+import { liftExpiredPause } from "@/lib/security/rate-guard";
 import { SIGNED_UP_COOKIE } from "@/lib/analytics";
 import { creditsForNewAccount, readDeviceSignals, recordSignupDevice } from "@/lib/security/ai-credits";
 
@@ -186,7 +188,21 @@ export async function GET(req: Request) {
     }
   }
 
-  if (user.deactivatedAt) return fail("deactivated");
+  if (user.deactivatedAt) {
+    // An automatic pause past its 48 hours is lifted and sign-in continues; a
+    // live one gets its own wording on /login (src/lib/account-status.ts).
+    const [row] = await db
+      .select({ deactivatedAt: users.deactivatedAt, deactivationReason: users.deactivationReason })
+      .from(users)
+      .where(eq(users.id, user.id))
+      .limit(1);
+    const state = { id: user.id, ...row };
+    if (!(await liftExpiredPause(state))) {
+      const ends = pauseEndsAt(state);
+      if (!ends) return fail("deactivated");
+      return NextResponse.redirect(new URL(`/login?oauth=paused&hours=${hoursLeft(ends)}`, req.url));
+    }
+  }
 
   // An EXISTING account that opened an invitation addressed to it is taken to
   // the page where it decides whether to join — never joined on its behalf.

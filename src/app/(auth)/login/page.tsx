@@ -3,11 +3,12 @@ import { LoginForm } from "@/components/auth/login-form";
 import { AuthHeader } from "@/components/auth/auth-ui";
 import { GoogleButton } from "@/components/auth/google-button";
 import { requestTenant } from "@/lib/partner-tenant";
+import { DEACTIVATED_MESSAGE, pausedMessage, PAUSE_HOURS } from "@/lib/account-status";
 
 const OAUTH_ERROR: Record<string, string> = {
   unavailable: "Google sign-in isn't available right now. Please use your email and password.",
   failed: "Google sign-in didn't complete. Please try again.",
-  deactivated: "This account has been deactivated. Contact support if you think this is a mistake.",
+  deactivated: DEACTIVATED_MESSAGE,
 };
 
 export const metadata: Metadata = {
@@ -15,9 +16,17 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ verified?: string; verify?: string; oauth?: string; signedout?: string; next?: string }> }) {
-  const { verified, verify, oauth, signedout, next } = await searchParams;
-  const oauthError = oauth ? OAUTH_ERROR[oauth] : null;
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ verified?: string; verify?: string; oauth?: string; signedout?: string; next?: string; hours?: string }> }) {
+  const { verified, verify, oauth, signedout, next, hours } = await searchParams;
+  // `paused` carries the hours left from the Google callback: parsed and
+  // bounded, never echoed, so the URL can't put words on our page.
+  const pauseHours = Number.parseInt(hours ?? "", 10);
+  const oauthError =
+    oauth === "paused"
+      ? pausedMessage(pauseHours > 0 && pauseHours <= PAUSE_HOURS ? pauseHours : null)
+      : oauth
+        ? OAUTH_ERROR[oauth]
+        : null;
   // A class's students are enrolled by the class with a password, and Google
   // can only call back to www — so a class's own sign-in page has no Google.
   const tenant = await requestTenant();

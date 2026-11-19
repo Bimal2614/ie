@@ -15,6 +15,8 @@ import {
   getRequestContext,
 } from "@/lib/session";
 import { getCurrentUser } from "@/lib/dal";
+import { deactivatedMessage } from "@/lib/account-status";
+import { liftExpiredPause } from "@/lib/security/rate-guard";
 import { isUniqueViolation } from "@/lib/db-errors";
 import { referringPartner } from "@/lib/partners";
 import { partnerOrigin, requestTenant } from "@/lib/partner-tenant";
@@ -266,6 +268,16 @@ export async function login(
       .where(eq(users.id, user.id));
     await audit(user.id, "login.fail", ip, userAgent, { attempts });
     return { error: INVALID_CREDENTIALS };
+  }
+
+  // A deactivated account is refused HERE, with its reason, after the password
+  // (so the answer reveals nothing to a stranger). Without this the session was
+  // created, the DAL rejected it, and /logout showed "signed in on another
+  // device" — see src/lib/account-status.ts.
+  // An automatic pause past its 48 hours is lifted here and sign-in continues.
+  if (user.deactivatedAt && !(await liftExpiredPause(user))) {
+    await audit(user.id, "login.blocked.deactivated", ip, userAgent);
+    return { error: deactivatedMessage(user) };
   }
 
   /*

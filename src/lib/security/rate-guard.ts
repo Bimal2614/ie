@@ -4,7 +4,8 @@ import { db } from "@/db";
 import { users, sessions, auditLog } from "@/db/schema";
 import { env } from "@/lib/env";
 import { getRequestContext } from "@/lib/session";
-import { rateLimit } from "./rate-limit";
+import { rateLimit, clearRateLimit } from "./rate-limit";
+import { pauseEndsAt, RATE_LIMIT_DEACTIVATION_PREFIX } from "@/lib/account-status";
 
 /**
  * Per-account rate limiting on top of the DB limiter.
@@ -55,7 +56,7 @@ async function registerViolation(userId: string, scope: string): Promise<void> {
   const violations = COUNTER_MAX - r.remaining; // actual count in the window
 
   if (violations >= env.RATE_LIMIT_VIOLATIONS_BEFORE_DEACTIVATE) {
-    const reason = `Automatic: ${violations} rate-limit violations within ${env.RATE_LIMIT_VIOLATION_WINDOW_DAYS} days`;
+    const reason = `${RATE_LIMIT_DEACTIVATION_PREFIX} ${violations} rate-limit violations within ${env.RATE_LIMIT_VIOLATION_WINDOW_DAYS} days`;
     await db
       .update(users)
       .set({ deactivatedAt: new Date(), deactivationReason: reason, updatedAt: new Date() })
@@ -64,6 +65,40 @@ async function registerViolation(userId: string, scope: string): Promise<void> {
     await db.delete(sessions).where(eq(sessions.userId, userId));
     await audit(userId, "account.deactivated", { reason, violations });
   }
+}
+
+/**
+ * Undo a deactivation AND wipe the strike count behind it.
+ *
+ * THE COUNTER IS THE POINT. The violation window is 30 days, so an account
+ * re-enabled with its three strikes still on the books was one throttle away
+ * from being deactivated again, instantly, for the same thing it was just
+ * forgiven for. A clean slate is what "re-enabled" has to mean.
+ */
+export async function clearDeactivation(userId: string, event: string, metadata: Record<string, unknown>) {
+  await db
+    .update(users)
+    .set({ deactivatedAt: null, deactivationReason: null, updatedAt: new Date() })
+    .where(eq(users.id, userId));
+  await clearRateLimit(`rl-violation:${userId}`);
+  await audit(userId, event, metadata);
+}
+
+/**
+ * Lift an automatic pause whose PAUSE_HOURS have run out, at sign-in.
+ *
+ * Returns true when the account may proceed. Only an automatic pause can expire;
+ * an admin's deactivation returns false here forever. Checked by both sign-in
+ * paths AFTER the credential is proven, so it can't be used to probe accounts.
+ */
+export async function liftExpiredPause(
+  user: { id: string; deactivatedAt: Date | null; deactivationReason: string | null },
+  now = new Date(),
+): Promise<boolean> {
+  const ends = pauseEndsAt(user);
+  if (!ends || ends > now) return false;
+  await clearDeactivation(user.id, "account.pause_expired", { pausedAt: user.deactivatedAt });
+  return true;
 }
 
 /** Throttle general per-user actions (60/min + 6000/day by default). */

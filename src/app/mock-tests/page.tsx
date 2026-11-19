@@ -3,6 +3,7 @@ import Link from "next/link";
 import { BookOpen, Clock, Headphones, Mic, PenLine, Trophy } from "lucide-react";
 import { requireUser } from "@/lib/dal";
 import { getMockCatalogue } from "@/app/actions/mock";
+import { RateLimitError } from "@/lib/security/rate-guard";
 import { SECTIONS, SECTION_ORDER, type SectionKey } from "@/lib/ielts";
 import { MOCK_MODULE_MINUTES, MOCK_MODULE_NOTE, totalMinutes } from "@/lib/mock-timing";
 import { MockCatalogue } from "@/components/mock/mock-catalogue";
@@ -33,7 +34,34 @@ export default async function MockTestsPage({
 }) {
   const user = await requireUser();
   const { module: requested } = await searchParams;
-  const { module, tests, openSitting } = await getMockCatalogue(requested ?? null);
+  // A throttle is the candidate going fast, not the site breaking: say so,
+  // rather than letting it fall through to the error page (it used to, and
+  // paged Slack as an "unhandled render error").
+  let catalogue: Awaited<ReturnType<typeof getMockCatalogue>>;
+  try {
+    catalogue = await getMockCatalogue(requested ?? null);
+  } catch (e) {
+    if (!(e instanceof RateLimitError)) throw e;
+    return (
+      <div className="mx-auto w-full max-w-xl py-16 text-center">
+        <div className="mx-auto mb-4 grid size-12 place-items-center rounded-xl chip-accent">
+          <Clock className="size-6" />
+        </div>
+        <h1 className="display text-2xl">Slow down a moment</h1>
+        <p className="mt-2 text-sm text-ink-muted">
+          You&apos;re moving faster than we allow. Wait about a minute, then open mock tests again.
+          Nothing you&apos;ve done has been lost.
+        </p>
+        <Link
+          href="/mock-tests"
+          className="mt-6 inline-flex rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white"
+        >
+          Try again
+        </Link>
+      </div>
+    );
+  }
+  const { module, tests, openSitting } = catalogue;
 
   const total = totalMinutes(SECTION_ORDER);
   const isTheirs = module === user.targetModule;

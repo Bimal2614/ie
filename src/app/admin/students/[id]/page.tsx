@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 
 import { StudentControls } from "@/components/admin/student-controls";
 import { BandCell, cardClass, StatTile } from "@/components/dashboard/ui";
+import { pauseEndsAt } from "@/lib/account-status";
 import { adminStudentDetail } from "@/lib/admin";
 import { requireAdmin } from "@/lib/dal";
 import { formatDate, formatDateTime } from "@/lib/format-date";
@@ -32,6 +33,15 @@ import { isUuid } from "@/lib/uuid";
 
 const date = (d: unknown) => formatDate(d) ?? "—";
 const dateTime = (d: unknown) => formatDateTime(d) ?? "—";
+
+/** For an automatic pause only: when it lifts by itself (at their next sign-in). */
+function pauseNote(s: { deactivatedAt: Date | null; deactivationReason: string | null }): string {
+  const ends = pauseEndsAt(s);
+  if (!ends) return "";
+  return ends > new Date()
+    ? `. Lifts automatically at their first sign-in after ${dateTime(ends)}, or press Enable now.`
+    : ". The 48 hours are up: it lifts at their next sign-in.";
+}
 
 function Meta({ label, value }: { label: string; value: string }) {
   return (
@@ -120,6 +130,7 @@ export default async function AdminStudentPage({
           <p className="mt-1 text-xs text-danger">
             Disabled {date(student.deactivatedAt)}
             {student.deactivationReason ? ` — ${student.deactivationReason}` : ""}
+            {pauseNote(student)}
           </p>
         )}
       </div>

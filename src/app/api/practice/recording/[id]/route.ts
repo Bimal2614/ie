@@ -3,7 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { mockTestAnswers, mockTestSessions, userResponses } from "@/db/schema";
 import { getCurrentUser } from "@/lib/dal";
-import { guardGeneral, RateLimitError } from "@/lib/security/rate-guard";
+import { guardMedia, RateLimitError } from "@/lib/security/rate-guard";
 import { keyFromUrl, presignGetUrl } from "@/lib/speech/s3";
 import { isUuid } from "@/lib/uuid";
 
@@ -55,7 +55,11 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
   try {
-    await guardGeneral(user.id);
+    // guardMedia, not guardGeneral: a review page fires one request per
+    // <audio>, so a couple of reloads spent the 60/minute general allowance and
+    // three of those deactivated the account (17 Nov 2026, a real candidate).
+    // Playing back your own answers is not abuse — see guardMedia.
+    await guardMedia(user.id);
   } catch (e) {
     if (e instanceof RateLimitError) {
       return new NextResponse("Too many requests: slow down.", { status: 429 });
