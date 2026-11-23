@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { INLINE_ANALYTICS_SCRIPTS } from "@/lib/analytics-snippets";
-import { SIGNED_OUT_PARAM } from "@/lib/auth-routes";
+import { SIGNED_OUT_PARAM, safeNext } from "@/lib/auth-routes";
 import { subdomainFromHost } from "@/lib/partner-brand";
 
 /**
@@ -316,9 +316,16 @@ export function proxy(request: NextRequest): NextResponse {
   // the "signed in → your dashboard" hop it used to make with a database lookup
   // happens here instead. A stale cookie costs one extra hop — /dashboard's own
   // session check sends it through /logout, which clears it.
+  //
+  // HONOUR `next` ON THE AUTH ROUTES. The practice links under every prompt in
+  // the blog's topic tables go through /signup?next=/practice/…; sending a
+  // signed-in reader to /dashboard instead loses the page the link promised.
+  // `safeNext` is the same validation the sign-in action uses (same-site path
+  // only, never back to an auth route), so this opens no redirect.
   const justSignedOut = request.nextUrl.searchParams.has(SIGNED_OUT_PARAM);
   if ((isAuthRoute || pathname === "/") && hasSession && !justSignedOut) {
-    const res = NextResponse.redirect(new URL("/dashboard", request.url));
+    const destination = isAuthRoute ? safeNext(request.nextUrl.searchParams.get("next")) : "/dashboard";
+    const res = NextResponse.redirect(new URL(destination, request.url));
     applySecurityHeaders(res, csp, partnerHost);
     return res;
   }
