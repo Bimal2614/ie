@@ -18,6 +18,81 @@ import type { BlogPost } from "./blog-types";
  */
 export const TOPIC_POSTS_2026: BlogPost[] = [
   /**
+   * Booking-season post (23 Nov 2026): "when should I book IELTS for 2027".
+   * Nothing on the site answered it at peak booking season, while a competitor
+   * refreshed its 2027 guide on 27 Oct. Distinct from ielts-exam-dates-slot-
+   * booking-2026 (how to FIND a slot); this one is WHEN, worked back from the
+   * intake. Every timing figure (3 to 5 day results, 4 to 6 week lead, peak
+   * months, INR fees, 60-day One Skill Retake) matches what the site already
+   * says elsewhere. Intake deadlines are written as "typically" because each
+   * university sets its own.
+   */
+  {
+    slug: "when-to-book-ielts-2027",
+    seoTitle: "When to Book IELTS for 2027: A Date for Every Intake",
+    title: "When should you book IELTS for 2027? A date for every intake",
+    excerpt:
+      "Work back from your 2027 intake or visa deadline: when to sit IELTS, when to book, which months fill first, and how to leave room for a retake.",
+    category: "Booking",
+    date: "November 2026",
+    publishedAt: "2026-11-23",
+    readMins: 8,
+    keywords: [
+      "when should i book ielts",
+      "when to book ielts for 2027",
+      "ielts exam dates 2027",
+      "ielts test dates 2027",
+      "ielts for september 2027 intake",
+      "ielts for fall 2027",
+      "ielts for january 2027 intake",
+      "how early should i take ielts",
+      "how far in advance should i book ielts",
+      "ielts booking 2027",
+    ],
+    sections: [
+      { paragraphs: ["Short answer: sit your first IELTS about three months before the date you need the score in hand, and book it four to six weeks before that. Three months leaves room for results, one retake if a skill falls short, and the busy months when the best slots go first. For a UK or Australian intake in early 2027 that means testing now. For September 2027 it means testing between February and May, before the June to August rush.", "Your score is valid for two years, so testing early costs you nothing for a study application in 2027. The real risk runs the other way: leaving the test so late that one weak skill leaves you with no time to fix it."] },
+      { heading: "The rule: work back from your deadline", paragraphs: ["Start from the date the university or visa office needs your result, not from the intake date. Then subtract:"], bullets: ["3 to 5 days for results. Computer-delivered IELTS results usually arrive within 3 to 5 days of the test.", "About 6 to 8 weeks for one retake. If one skill misses, One Skill Retake must be taken within 60 days of your original test, in the same country. If more than one skill misses, you need a full test, and that means booking another slot.", "4 to 6 weeks of booking lead time, more in peak months, for the slot you actually want.", "Your preparation. Book the first date after your practice scores are already at your target band, not the date you hope to get there by."] },
+      { heading: "When to test and book, by 2027 intake", paragraphs: ["The dates below are typical. Each university and visa office sets its own deadline, and it is printed in your offer letter or on the course page. Use that date when you have one."], table: {
+        caption: "Typical windows as of November 2026. Your offer letter or course page has the date that actually applies to you.",
+        headers: ["Your intake or goal", "When you usually need the score", "Sit IELTS by", "Book by"],
+        rows: [
+          ["UK January 2027", "Now: offer conditions and CAS are being issued", "Early December 2026", "Today"],
+          ["Australia Semester 1 (Feb–Mar 2027)", "Before you accept the offer and lodge the visa", "December 2026", "Today"],
+          ["US or Canada Fall 2027, graduate", "With the application, usually December 2026 to February 2027", "December 2026 to January 2027", "November to December 2026"],
+          ["Australia Semester 2 (July 2027)", "Around March to April 2027", "February to March 2027", "January to February 2027"],
+          ["UK September 2027", "Usually by June to July 2027, to turn a conditional offer into a CAS", "February to May 2027", "January to April 2027"],
+          ["Canada Express Entry (PR)", "Valid on the day you submit your PR application", "When your mocks are at target", "4 to 6 weeks ahead"],
+          ["UK Skilled Worker visa", "Valid (2 years) on the day you apply", "When your mocks reach 5.5 in each skill", "4 to 6 weeks ahead"],
+        ],
+      } },
+      { heading: "Which months fill first in 2027", paragraphs: ["Demand follows university deadlines. Centres feel it in the same months every year:"], bullets: ["December and January: peak. Late applicants for January and February intakes, plus Fall applicants meeting application deadlines.", "February to April: the easiest stretch of the year. Often a slot within two weeks. This is the best window for September 2027 applicants.", "May: busier as UK and Australian offer deadlines approach.", "June to August: peak. Everyone holding a conditional offer for September needs the score now. Book four to six weeks ahead, or longer for a weekend slot.", "September to November: easier again, and the time to test for a January 2028 or Fall 2028 application."] },
+      { heading: "Can you book a 2027 IELTS date now?", paragraphs: ["Partly. Test centres publish dates in blocks covering the next two to three months and add more as capacity is confirmed. In late November you will usually see dates into January or February 2027. If the month you want is missing, it has probably not been released yet, so check again in a week or two rather than settling for a date that does not suit you. Check both providers where both operate. In India, IELTS is booked through IDP only."], links: [
+        { label: "IELTS slot booking: how to find an available date fast", href: "/blog/ielts-exam-dates-slot-booking-2026" },
+        { label: "How to book the IELTS test, step by step", href: "/blog/how-to-book-ielts-test" },
+      ] },
+      { heading: "Is it too early to take IELTS in 2026 for a 2027 course?", paragraphs: ["Usually not. A Test Report Form is normally valid for two years from the test date, so a test in December 2026 is valid until December 2028, long after a 2027 intake. Two cases need a closer look:"], bullets: ["Visas check the date you apply. A UK visa needs a result still within its two years on the day you apply. An Australian student visa expects the test to have been taken within two years before you lodge.", "Canada Express Entry needs results less than two years old on the day you submit the PR application, not the day you create the profile. If PR is a year or more away, testing now may mean testing twice."], links: [
+        { label: "IELTS results, TRF validity and remarks", href: "/blog/ielts-results-trf-validity-remark" },
+        { label: "IELTS score for Canada Express Entry", href: "/blog/ielts-score-for-canada-express-entry" },
+      ] },
+      { heading: "Leave room for one retake", paragraphs: ["Plan for a second attempt even if you do not expect to need one. If one skill misses your target, One Skill Retake lets you re-sit just that skill within 60 days of the original test and in the same country. It is offered for computer-delivered tests only and costs less than a full test: in India, INR 12,650 against INR 19,000 for IELTS on computer, or INR 19,250 for IELTS for UKVI. Confirm that your university or visa route accepts a One Skill Retake result before you rely on one.", "A first test three months before your deadline gives you time for a One Skill Retake and still leaves a full test as a backup. A first test three weeks before leaves you with no second chance."], links: [
+        { label: "IELTS One Skill Retake: rules, fee and who accepts it", href: "/blog/ielts-one-skill-retake-guide" },
+        { label: "IELTS exam fee 2026", href: "/blog/ielts-exam-fee-2026" },
+      ] },
+      { heading: "Policy dates that matter for 2027 plans", bullets: ["UK Graduate visa: 18 months for applications made from 1 January 2027, and two years for applications made on or before 31 December 2026. A two-year exception for some universities was announced in the 28 October Budget but is not yet law.", "Australia: since 2 October 2026 most new student visas cannot include a partner or children. No IELTS requirement changed.", "UK Skilled Worker: since 8 January 2026, first-time applicants need B2, which on IELTS for UKVI means 5.5 in every skill."], links: [
+        { label: "UK Graduate visa: two years or 18 months?", href: "/blog/uk-graduate-visa-2-years-or-18-months-2026" },
+        { label: "Australia student visa 2026: can you still bring your spouse?", href: "/blog/australia-student-visa-dependants-ban-2026" },
+      ] },
+      { heading: "Book when your practice says you are ready", paragraphs: ["The best date is the first one after your mock scores are already at target. Booking a date in the hope of getting there by then is how most retakes happen. On IELTSVega you can sit full timed mock tests on screen, the way the computer test runs, and get an instant band for Writing and Speaking, so you know when you are ready to spend the fee."] },
+    ],
+    faqs: [
+      { q: "When should I book IELTS for the September 2027 intake?", a: "Aim to sit the test between February and May 2027 and book four to six weeks before. Most UK and Australian universities want the score by June or July to turn a conditional offer into a CAS or CoE, and June to August is peak season, when the best slots go first." },
+      { q: "How early should I take IELTS before applying to university?", a: "About three months before the date the university needs your score. That covers results in 3 to 5 days, a One Skill Retake within 60 days if one skill falls short, and the booking lead time. Your score is valid for two years, so testing early does not hurt a 2027 application." },
+      { q: "Are IELTS test dates for 2027 out yet?", a: "Partly. Centres publish dates two to three months ahead and add more as capacity is confirmed, so in late 2026 you will usually see dates into early 2027. Later months appear as the year goes on. In major cities, computer-delivered IELTS runs on most days of the week." },
+      { q: "Is December 2026 too early for a 2027 course?", a: "No. A December 2026 result is valid until December 2028. The exception is Canada Express Entry, where results must be under two years old on the day you submit the PR application, so check your PR timeline before you test." },
+      { q: "How far in advance should I book IELTS in 2027?", a: "Four to six weeks in most cities, and longer in December, January and June to August, when demand peaks. February to April and September to November are quieter, and a slot within two weeks is often available." },
+    ],
+  },
+  /**
    * Timely policy post (28 Oct 2026): UK Budget 2026 announced the Graduate visa
    * will be two years for graduates of "high compliance universities". ANNOUNCED
    * ONLY: no start date, no definition, no Statement of Changes. The law today is
@@ -898,7 +973,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
     sections: [
       { paragraphs: ["Booking IELTS used to mean picking from a handful of fixed Saturdays. Since delivery moved to computer, major cities run tests on most days of the week, often with morning, afternoon and evening slots. And yet candidates still open the booking page and find nothing for six weeks. Here is why, and what to do about it."] },
       { heading: "How dates are actually released", paragraphs: ["Test centres publish dates in blocks, typically covering the next two to three months, and top them up as capacity is confirmed. Two things follow. First, a date that does not exist today may appear next week, so an empty calendar is not a closed door. Second, the last dates in a published block are the least contested, because most people book from the front of the list."] },
-      { heading: "When demand peaks", bullets: ["June to August and December to January are the heaviest periods, driven by university intake deadlines. Book four to six weeks ahead in these windows.", "February to April and September to November are noticeably easier. You can often find something within two weeks.", "Weekend and morning slots go first everywhere. Weekday afternoon and evening slots frequently sit open.", "Test cycles around major visa deadlines in your own country can spike locally, regardless of the global pattern."] },
+      { heading: "When demand peaks", bullets: ["June to August and December to January are the heaviest periods, driven by university intake deadlines. Book four to six weeks ahead in these windows.", "February to April and September to November are noticeably easier. You can often find something within two weeks.", "Weekend and morning slots go first everywhere. Weekday afternoon and evening slots frequently sit open.", "Test cycles around major visa deadlines in your own country can spike locally, regardless of the global pattern."], links: [{ label: "When to book IELTS for 2027: a date for every intake", href: "/blog/when-to-book-ielts-2027" }] },
       { heading: "Six tactics that find you an earlier slot", bullets: ["Widen the city, not just the date. A centre 60 to 90 minutes away often has capacity when your nearest one does not.", "Check both providers. The British Council and IDP publish separate calendars, and candidates routinely check only one.", "Take a weekday slot. If you can take a day off, you will usually find something one to two weeks sooner.", "Check back mid-week. Cancellations and transfers release seats, and they are re-listed immediately rather than held.", "Book the confirmed date you can get, then use the reschedule window if a better one appears. Check the fee and deadline first, because rescheduling is usually cheaper than losing the seat.", "If your Speaking test can be on a separate day, do not filter that out. Same-day Speaking slots are the scarcest part of the calendar."] },
       { heading: "What to have ready before you start", paragraphs: ["Complete the booking in one sitting. The slot you have selected is held only for a short window, and abandoned bookings release it. Have your passport or accepted national ID open in front of you: the name and number must match exactly, because you will present that same document at the centre, and a mismatch means refused entry.", "Decide two things before you start clicking: Academic or General Training, and standard IELTS or IELTS for UKVI. Both are chosen during booking, both are difficult to change afterwards, and choosing wrong is the most expensive mistake in the whole process."] },
       { heading: "Rescheduling and cancelling", paragraphs: ["In India, IDP lets you move an IELTS on Computer booking free of charge 15 or more days before the test, and for an administration fee of up to 25% between 5 and 14 days before. Cancelling 15 or more days out refunds the fee minus up to 25%; inside 14 days there is no refund. Illness and similar emergencies go through special consideration. Other countries set their own deadlines and fees, so read the terms your centre shows during booking.", "If the test centre cancels instead, the position reverses: you choose a full refund or a free transfer."], links: [{ label: "IDP India's transfer and cancellation table", href: "/blog/how-to-book-ielts-test" }, { label: "IELTS test cancelled by the centre: your refund and rebooking rights", href: "/blog/ielts-test-cancelled-refund-rights" }] },

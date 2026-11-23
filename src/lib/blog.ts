@@ -450,9 +450,10 @@ export const POSTS: BlogPost[] = [
     excerpt:
       "IELTS Speaking questions for November 2026 tests: the Part 2 cue cards still in the Sept–Dec pool, Part 1 topics, Part 3 questions and model answers.",
     category: "Speaking",
-    date: "October 2026",
+    date: "November 2026",
     publishedAt: "2026-10-27",
-    readMins: 8,
+    updatedAt: "2026-11-23",
+    readMins: 9,
     keywords: [
       "ielts speaking questions november 2026",
       "ielts cue cards november 2026",
@@ -467,6 +468,9 @@ export const POSTS: BlogPost[] = [
     ],
     sections: [
       { paragraphs: ["If your IELTS Speaking test is in November 2026, you will most likely get a Part 2 cue card from the pool that opened in September, not a brand-new set. Cue cards are widely reported to change in January, May and September, so November sits in the middle of the September–December cycle. Below are the cue cards, Part 1 topics and Part 3 questions to prepare for November, with model answers. IELTS never publishes live questions. This is a forecast built from this cycle's published cue card banks, not an official list."] },
+      { heading: "Late-November update: what candidates actually reported", paragraphs: ["Updated 23 November 2026. With most of November's tests done, the reports confirm the forecast: no new pool arrived, and the cards below are still the ones to prepare. The one shift is in card type. Person cards were reported more often than any other type this month, especially a person you met only once, someone older you admire, a happy person and a very organised person. If your test is in the last week of November, prepare two person stories alongside the object and experience stories on this page.", "From 1 December, use our December page. It is the same September–December pool, with the person cards and the Part 1 frames reported in November added, and a note on what to do if your test falls in early January 2027, when cue cards are widely reported to refresh."], links: [
+        { label: "IELTS Speaking questions December 2026", href: "/blog/recent-ielts-speaking-questions-december-2026" },
+      ] },
       { heading: "What changes in November, and what does not", bullets: ["Part 2 cue cards: no new pool is expected. The cards reported since September should keep appearing until the end of December.", "Part 1: the opener (work or study, home, hometown) never changes. The two short topic frames after it rotate more often, so expect a few you have not seen in any list.", "Part 3: always follows from your Part 2 card. Prepare the card well and Part 3 has a predictable direction.", "Wording: the topic repeats, the sentence does not. A card about 'an object you value' may arrive as 'something you own that you would never sell'."] },
       { heading: "Part 2 cue cards to prepare for November 2026", paragraphs: ["These cards appear in this cycle's published cue card banks and forecasts. They are grouped by type, because one well-prepared story usually covers two or three cards of the same type."], table: {
         headers: ["Type", "Cue card (our wording)", "One story that covers it"],
@@ -1292,6 +1296,7 @@ export const POSTS: BlogPost[] = [
         links: [
           { label: "IELTS exam fee 2026: what the test costs in each country", href: "/blog/ielts-exam-fee-2026" },
           { label: "IELTS slot booking: how to find an available date fast", href: "/blog/ielts-exam-dates-slot-booking-2026" },
+          { label: "When to book IELTS for 2027: a date for every intake", href: "/blog/when-to-book-ielts-2027" },
           { label: "IELTS on computer or paper: which format to book", href: "/blog/ielts-online-vs-paper-based" },
           { label: "IELTS Academic vs General Training: which version you need", href: "/blog/ielts-academic-vs-general-training" },
           { label: "IELTS for UKVI vs IELTS Academic: when you need UKVI", href: "/blog/ielts-ukvi-vs-ielts-academic" },

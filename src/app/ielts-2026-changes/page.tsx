@@ -46,8 +46,8 @@ const CHANGES: {
   },
   {
     Icon: Users,
-    title: "Australia is restricting student and graduate visa dependants",
-    body: "On 17 September 2026 the Australian government announced that most new Student (subclass 500) and Temporary Graduate (subclass 485) visas will no longer allow a partner or children to be attached. PhD students and Pacific and ASEAN nationals are exempt, families already in Australia are not affected, and no start date has been published yet. No IELTS score requirement changed.",
+    title: "Australia stopped most student visa dependants from 2 October 2026",
+    body: "Since 2 October 2026, most new Student (subclass 500) visa applications can no longer include a partner or children. What counts is the date you lodge: applications made on or before 1 October follow the old rules. PhD students, Australian- or foreign-government-sponsored students, and Pacific and ASEAN nationals are exempt, and families already in Australia on a student visa are protected. The same change for Temporary Graduate (subclass 485) visas was announced on 17 September but is not yet law. No IELTS score requirement changed.",
     link: { label: "Australia student visa 2026: can you still bring your spouse?", href: "/blog/australia-student-visa-dependants-ban-2026" },
   },
   {
@@ -138,7 +138,7 @@ export default function Ielts2026ChangesPage() {
       />
 
       <PageHead
-        eyebrow="Updated August 2026"
+        eyebrow="Updated November 2026"
         title="What changed in IELTS in 2026."
         lead="2026 was a delivery year, not a content year. The exam still asks the same things and marks them the same way, but how you sit it, and what happens if one skill lets you down, both changed."
       />
