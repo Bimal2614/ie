@@ -111,6 +111,8 @@ export const KEYWORDS = {
     "IELTS on computer 2026",
     "IELTS new format 2026",
     "IELTS test format changes",
+    "IELTS changes 2027",
+    "IELTS new rules 2027",
   ],
 
   /** Module choice — a very common pre-booking query. */

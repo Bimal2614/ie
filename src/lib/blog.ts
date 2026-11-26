@@ -7,7 +7,7 @@
  * Every call-to-action points at IELTSVega; we never link to other platforms.
  */
 
-import type { BlogPost } from "./blog-types";
+import type { BlogPost, BlogSection } from "./blog-types";
 import { TOPIC_POSTS_2026 } from "./blog-2026-topics";
 import { PRACTICE_POSTS } from "./blog-practice";
 import { PARTNER_POSTS } from "./blog-partners";
@@ -35,6 +35,28 @@ function rawScoreRows(): string[][] {
 
 /** Re-exported so `import type { BlogPost } from "@/lib/blog"` keeps working. */
 export type { BlogPost, BlogSection } from "./blog-types";
+
+/**
+ * Shared closing block for the monthly recent-questions posts.
+ *
+ * Those posts take most of the site's search traffic (83% of non-branded
+ * clicks, Nov 2026) but linked only to each other, so none of their authority
+ * reached the evergreen test-admin pages stuck at positions 13–30 (booking,
+ * band calculator, One Skill Retake, UKVI). Readers of these posts are usually
+ * close to a test date, so these are also the next questions they have.
+ */
+const BOOKING_AND_RETAKE_SECTION: BlogSection = {
+  heading: "Booking, scores and retakes",
+  paragraphs: [
+    "If your test is close, three practical questions usually follow: how to book or move a date, what your practice scores add up to, and what to do if one skill falls short. These guides answer each one.",
+  ],
+  links: [
+    { label: "How to book IELTS with IDP or British Council, and what moving a date costs", href: "/blog/how-to-book-ielts-test" },
+    { label: "IELTS band score calculator: your overall band from four skill scores", href: "/ielts-band-score-calculator" },
+    { label: "IELTS One Skill Retake: re-sit one skill within 60 days", href: "/blog/ielts-one-skill-retake-guide" },
+    { label: "IELTS for UKVI vs IELTS Academic: which test a UK visa needs", href: "/blog/ielts-ukvi-vs-ielts-academic" },
+  ],
+};
 
 export const POSTS: BlogPost[] = [
 
@@ -232,6 +254,7 @@ export const POSTS: BlogPost[] = [
         { label: "Recent IELTS Listening topics: November & December 2026", href: "/blog/recent-ielts-listening-topics-november-december-2026" },
         { label: "IELTS Reading tips to improve your score fast", href: "/blog/ielts-reading-tips-improve-score" },
       ] },
+      BOOKING_AND_RETAKE_SECTION,
       { heading: "Practise Reading under exam timing", paragraphs: ["Knowing the topics helps, but Reading is lost on time. On IELTSVega you can take full Academic and General Training Reading passages with every official question type, timed like the real test, and see exactly which question types cost you marks."] },
     ],
     faqs: [
@@ -295,6 +318,7 @@ export const POSTS: BlogPost[] = [
         { label: "Recent IELTS Reading topics: November & December 2026", href: "/blog/recent-ielts-reading-topics-november-december-2026" },
         { label: "IELTS Listening strategies that actually work", href: "/blog/ielts-listening-strategies" },
       ] },
+      BOOKING_AND_RETAKE_SECTION,
       { heading: "Practise Listening the way the test plays it", paragraphs: ["Listening is a skill you build by doing it under test conditions. On IELTSVega the audio plays once, exactly like exam day, across all four parts and 40 questions, and you get your band and the questions you missed straight away."] },
     ],
     faqs: [
@@ -373,6 +397,7 @@ export const POSTS: BlogPost[] = [
         { label: "Recent IELTS Listening topics: November & December 2026", href: "/blog/recent-ielts-listening-topics-november-december-2026" },
         { label: "Recent IELTS Reading topics: November & December 2026", href: "/blog/recent-ielts-reading-topics-november-december-2026" },
       ] },
+      BOOKING_AND_RETAKE_SECTION,
       { heading: "Practise December's cue cards with instant band scores", paragraphs: ["Reading a cue card list will not raise your band. Speaking does. On IELTSVega you can record Part 1, 2 and 3 answers with the built-in one-minute Part 2 prep timer, then get an instant band on Fluency, Vocabulary, Grammar and Pronunciation, so you know which of the four is costing you marks before test day."] },
     ],
     faqs: [
@@ -438,6 +463,7 @@ export const POSTS: BlogPost[] = [
         { label: "Recent IELTS Reading topics: November & December 2026", href: "/blog/recent-ielts-reading-topics-november-december-2026" },
         { label: "Recent IELTS Listening topics: November & December 2026", href: "/blog/recent-ielts-listening-topics-november-december-2026" },
       ] },
+      BOOKING_AND_RETAKE_SECTION,
       { heading: "Write December's essays and get a band instantly", paragraphs: ["A plan is the easy part. Writing 260 clear words in 40 minutes is where bands are lost. On IELTSVega you can write a Task 2 essay on any of these themes and get an instant band on Task Response, Coherence and Cohesion, Lexical Resource and Grammar, with notes on exactly what is holding the score down."] },
     ],
     faqs: [
@@ -518,6 +544,7 @@ export const POSTS: BlogPost[] = [
         { label: "IELTS Writing Task 2 topics November 2026", href: "/blog/recent-ielts-writing-task-2-topics-november-2026" },
         { label: "Recent IELTS Speaking questions: July 2026", href: "/blog/recent-ielts-speaking-questions-july-2026" },
       ] },
+      BOOKING_AND_RETAKE_SECTION,
       { heading: "Practise November's cue cards with instant band scores", paragraphs: ["Reading a cue card list will not raise your band. Speaking does. On IELTSVega you can record Part 1, 2 and 3 answers with the built-in one-minute Part 2 prep timer, then get an instant band on Fluency, Vocabulary, Grammar and Pronunciation, so you know which of the four is costing you marks before test day."] },
     ],
     faqs: [
@@ -581,6 +608,7 @@ export const POSTS: BlogPost[] = [
         { label: "IELTS Speaking questions November 2026", href: "/blog/recent-ielts-speaking-questions-november-2026" },
         { label: "Recent IELTS Writing Task 2 topics: July 2026", href: "/blog/recent-ielts-writing-task-2-topics-july-2026" },
       ] },
+      BOOKING_AND_RETAKE_SECTION,
       { heading: "Write November's essays and get a band instantly", paragraphs: ["A plan is the easy part. Writing 260 clear words in 40 minutes is where bands are lost. On IELTSVega you can write a Task 2 essay on any of these themes and get an instant band on Task Response, Coherence and Cohesion, Lexical Resource and Grammar, with notes on exactly what is holding the score down."] },
     ],
     faqs: [

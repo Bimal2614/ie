@@ -1046,14 +1046,15 @@ export const PRACTICE_POSTS: BlogPost[] = [
   },
   {
     slug: "ielts-linking-words",
-    seoTitle: "IELTS Linking Words: List, Examples & How to Use Them",
+    seoTitle: "IELTS Linking Words for Writing Task 1, Task 2 & Speaking",
     title: "IELTS linking words: the list, examples, and how many to use",
     excerpt:
-      "IELTS linking words by function for Writing Task 1, Task 2 and Speaking, with examples, and why overusing them costs you marks in Coherence and Cohesion.",
+      "IELTS linking words for Writing Task 1 (by chart type, with a marked model paragraph), Task 2 and Speaking, and why overusing them costs marks in Coherence and Cohesion.",
     category: "Writing",
     date: "September 2026",
     publishedAt: "2026-09-26",
-    readMins: 10,
+    updatedAt: "2026-11-25",
+    readMins: 12,
     keywords: [
       "ielts linking words",
       "linking words for ielts writing task 2",
@@ -1066,6 +1067,8 @@ export const PRACTICE_POSTS: BlogPost[] = [
       "coherence and cohesion ielts",
       "reference and substitution ielts",
       "ielts linking words examples",
+      "connectors for ielts writing task 1",
+      "linkers for ielts writing task 1",
     ],
     sections: [
       {
@@ -1140,21 +1143,43 @@ export const PRACTICE_POSTS: BlogPost[] = [
       {
         heading: "Linking words for IELTS Writing Task 1",
         paragraphs: [
-          "Academic Task 1 has its own small set, because you are comparing figures and describing change rather than arguing.",
+          "Academic Task 1 has its own set, because you are reporting and comparing figures, not arguing. That changes which linkers do the work. Contrast and similarity words carry most Task 1 reports, time phrases carry line graphs, and sequence words carry process diagrams. Opinion and cause linkers (\"I believe\", \"because\") barely appear, since Task 1 asks you to describe the data, not explain it.",
         ],
         table: {
-          caption: "Task 1 linking words by chart type",
+          caption: "Task 1 linking words by what you are describing",
           headers: ["You are describing", "Useful linking words", "Example"],
           rows: [
-            ["A comparison", "whereas, while, by contrast, similarly, likewise, compared with", "Sales in Japan doubled, whereas those in Korea fell slightly."],
+            ["The overview", "Overall, In general, It is clear that, The most noticeable feature is", "Overall, car use rose while bus use declined."],
+            ["A difference", "whereas, while, by contrast, in comparison, however, conversely", "Sales in Japan doubled, whereas those in Korea fell slightly."],
+            ["A similarity", "similarly, likewise, a similar pattern was seen in, as was", "Spending on food rose by 10%, as did spending on rent."],
+            ["Two figures at once", "respectively, the former… the latter, compared with", "Men and women spent 12 and 15 hours online, respectively."],
             ["A trend over time", "over the period, from… to…, by 2020, thereafter, before levelling off", "Numbers rose steadily until 2010 and levelled off thereafter."],
+            ["Change in two stages", "followed by, after which, then, before", "There was a sharp rise in 2015, followed by a gradual decline."],
+            ["Adding a detail", "in addition, also, as well as, with", "Bus use fell, with the steepest drop in 2018."],
             ["A process diagram", "first, next, once, after which, subsequently, finally, at the same time", "Once the bottles are sorted, they are washed, after which they are crushed."],
-            ["A map", "meanwhile, in place of, to the north of, whereas previously", "The park remains, whereas the factory has been replaced by housing."],
-            ["The overview", "Overall, In general, It is clear that", "Overall, car use rose while bus use declined."],
+            ["A map", "meanwhile, in place of, to the north of, whereas previously, by contrast", "The park remains, whereas the factory has been replaced by housing."],
           ],
         },
+      },
+      {
+        heading: "A Task 1 paragraph with the linking words marked",
+        paragraphs: [
+          "Here is an overview and one body paragraph for a line graph showing car, bus and bicycle commuting in a city from 2000 to 2020. The linkers are in brackets.",
+          "\"[Overall,] car commuting increased over the period, [whereas] bus use fell and cycling remained the least common choice throughout.\"",
+          "\"In 2000, cars and buses each carried around 40% of commuters, [while] only 5% cycled. Car use then climbed steadily to 60% by 2020. Bus use, [by contrast,] dropped to 25%, with the sharpest fall between 2010 and 2015, [followed by] a slight recovery. Cycling doubled to 10%, [although] it was still far behind the other two.\"",
+          "Count them: five linkers across four sentences, and every one marks a comparison or a change in the data. There is no \"Firstly\", no \"Moreover\" and no \"In conclusion\". Task 1 needs none of them, and \"In conclusion\" in particular reads as a misunderstanding of the task, because a Task 1 report ends with the data, or with the overview if you put it last.",
+        ],
+        bullets: [
+          "Put the overview straight after the opening sentence that paraphrases the question. \"Overall\" signals it, so an examiner can find it at a glance.",
+          "Use \"respectively\" only with two lists in the same order: \"12 and 15 hours, respectively\", matching \"men and women\".",
+          "\"Whereas\" and \"while\" join two clauses in one sentence. \"By contrast\" and \"However\" start a new one.",
+          "Vary the sentence, not only the linker. \"Bus use, by contrast, dropped…\" and \"By contrast, bus use dropped…\" are equally correct, and mixing them stops the report sounding mechanical.",
+          "Do not explain causes the chart does not show. \"Because petrol became cheaper\" is a guess, and guessing is a Task Achievement problem, not a cohesion one.",
+        ],
         links: [
           { label: "IELTS writing templates and sentence patterns", href: "/templates" },
+          { label: "IELTS Writing Task 1 line graph: structure and model answer", href: "/resources/writing/task-1/line-graph" },
+          { label: "IELTS Writing Task 1 process diagram: sequence language", href: "/resources/writing/task-1/process-diagram" },
         ],
       },
       {
@@ -1235,6 +1260,7 @@ export const PRACTICE_POSTS: BlogPost[] = [
       { q: "Can I start a sentence with \"And\" or \"But\" in IELTS Writing?", a: "It is common in journalism, but in an IELTS essay it reads as informal. Use \"In addition\" or \"However\" to start a sentence, or join the ideas with \"and\" or \"but\" inside one sentence. In an informal General Training letter, starting with \"And\" or \"But\" is acceptable." },
       { q: "Which linking words should I use in IELTS Speaking?", a: "Short spoken markers: well, actually, to be honest, I mean, the thing is, that said, on the other hand, for instance. They sound natural and buy thinking time. Written connectors like moreover and furthermore sound like an essay read aloud, and a rehearsed chain of them can make answers sound memorised." },
       { q: "Do linking words matter in IELTS Writing Task 1?", a: "Yes, but the set is different. Task 1 is mostly comparison and change over time, so whereas, while, by contrast, similarly and thereafter do most of the work, and process diagrams need sequence words such as once, after which and finally. Start the overview with \"Overall\"." },
+      { q: "Should I use \"Firstly\" or \"In conclusion\" in IELTS Writing Task 1?", a: "No. Task 1 is a report of data, not an argument, so there are no points to number and nothing to conclude. Signal the overview with \"Overall\", then link your body sentences with comparison and time words such as whereas, by contrast, followed by and respectively. Ending with \"In conclusion\" and a new comment is a common sign the task was misunderstood." },
     ],
   },
   {

@@ -102,6 +102,12 @@ export default async function ScorePage({ params }: { params: Promise<Params> })
   const bandGuide = BAND_SLUGS.find((s) => s === b.replace(".0", "").replace(".", "-"));
   const path = scorePath(f.key, f.score);
   const otherBands = [5.5, 6, 6.5, 7, 7.5, 8];
+  // "32 out of 40 in ielts reading" rarely says which module, and the AI
+  // Overview leads with both bands (Nov 2026: "7.0 Academic and 6.5 General
+  // Training", citing pages that state both up front). Ours only showed the
+  // other module in a side table, so the intro now says it in one sentence.
+  const otherReading =
+    f.key === "listening" ? null : f.others.find((o) => o.key !== "listening" && o.key !== f.key);
 
   return (
     <MarketingShell>
@@ -128,7 +134,14 @@ export default async function ScorePage({ params }: { params: Promise<Params> })
           {f.next
             ? `${f.next.more} more correct answer${f.next.more === 1 ? "" : "s"} (${f.next.min}/40) would make it Band ${fmtBand(f.next.band)}.`
             : "That is the top of the scale."}{" "}
-          {f.section.note}
+          {f.cushion > 0
+            ? `${f.cushion} fewer would still be Band ${b}.`
+            : `One fewer would drop you below Band ${b}.`}{" "}
+          {!otherReading
+            ? f.section.note
+            : otherReading.band === f.band
+              ? `In ${otherReading.name}, ${f.score} out of 40 is also Band ${b}.`
+              : `In ${otherReading.name}, the same ${f.score} out of 40 is Band ${fmtBand(otherReading.band)}, because each module has its own conversion table.`}
         </p>
       </header>
 

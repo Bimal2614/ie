@@ -6,9 +6,9 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { KEYWORDS, breadcrumbJsonLd, faqJsonLd, pageMeta } from "@/lib/seo";
 
 const PATH = "/ielts-2026-changes";
-const TITLE = "IELTS 2026 Changes: Computer Tests & One Skill Retake";
+const TITLE = "IELTS Changes 2026 & 2027: What's Real, What's Rumour";
 const DESCRIPTION =
-  "What changed in IELTS in 2026: paper-based testing retired, computer-delivered IELTS as the standard, One Skill Retake, and the new Writing on Paper option.";
+  "No IELTS format change is announced for 2027. Reading in order and longer Listening are rumours. What did change in 2026: computer tests and One Skill Retake.";
 
 export const metadata = pageMeta({
   title: TITLE,
@@ -16,6 +16,30 @@ export const metadata = pageMeta({
   path: PATH,
   keywords: [...KEYWORDS.changes2026, ...KEYWORDS.modules],
 });
+
+/**
+ * 2027 rumours, fact-checked 25 Nov 2026 against ielts.org/news-and-insights
+ * (nothing since the 5 Mar 2026 delivery update announces a format change) and
+ * the official test-format pages. Re-check before editing: if IELTS announces a
+ * real 2027 change, it goes in CHANGES and the matching row here is removed.
+ */
+const RUMOURS: { claim: string; verdict: string; detail: string }[] = [
+  {
+    claim: "From 2027, Reading questions will come in sequence: paragraph 1 answers question 1, and so on.",
+    verdict: "Not announced. Partly true already.",
+    detail: "Most Reading question types already follow the order of the passage: True/False/Not Given, Yes/No/Not Given, multiple choice, short answers, and sentence, note, table and flow-chart completion. Matching tasks (headings, which paragraph contains the information, matching features) are not in order, because finding the place is the skill being tested. A set of questions can also cover only part of a passage, so question 1 is not guaranteed to sit in paragraph 1. IELTS has announced no change to any of this.",
+  },
+  {
+    claim: "IELTS Listening is getting more time in 2027.",
+    verdict: "False.",
+    detail: "Listening is still about 30 minutes of recording, four parts and 40 questions, heard once. If anything the computer test gives you less spare time, not more: there is no 10-minute transfer period as on paper, just about two minutes at the end to check what you typed.",
+  },
+  {
+    claim: "The IELTS format is changing in 2027.",
+    verdict: "No official announcement.",
+    detail: "The most recent change to how IELTS is delivered was announced on 5 March 2026: paper-based testing ends from mid-2026, Writing on Paper comes in selected markets, and IELTS says this does not change the skills assessed or the test construct. Its news since then covers Test Report Forms, research and test security. It has announced no new question types, timings, sections or scoring for 2027.",
+  },
+];
 
 const CHANGES: {
   Icon: LucideIcon;
@@ -81,6 +105,18 @@ const PREP_SHIFTS = [
 
 const FAQS = [
   {
+    q: "Is IELTS changing in 2027?",
+    a: "As of 25 November 2026, IELTS has announced no change to the test format, question types, timings or scoring for 2027. The latest change to delivery was announced in March 2026: paper-based testing ends from mid-2026 and a Writing on Paper option comes in selected markets. Treat any other '2027 IELTS change' as a rumour until it appears on ielts.org.",
+  },
+  {
+    q: "Will IELTS Reading questions be in order from 2027?",
+    a: "Nothing has been announced. Most Reading question types already follow the order of the passage, including True/False/Not Given, multiple choice and the completion tasks. Matching headings, matching information and matching features do not, and there is no announcement that this will change.",
+  },
+  {
+    q: "Has the IELTS Listening time increased?",
+    a: "No. The recording is still about 30 minutes, with four parts and 40 questions, played once. On computer there is no 10-minute transfer time as on paper, only about two minutes to check your answers at the end, so in practice the spare time is shorter.",
+  },
+  {
     q: "Is the paper-based IELTS test still available in 2026?",
     a: "In most markets, no. IELTS moved to computer-delivered as the standard, with the final paper-based date set at 27 June 2026 in most markets. Some markets offer a Writing on Paper option, where you handwrite the Writing component only. Availability varies by centre, so check locally before booking.",
   },
@@ -119,6 +155,9 @@ const FAQS = [
 ];
 
 const SOURCES = [
+  { label: "IELTS.org: updates to IELTS test delivery (5 March 2026)", href: "https://ielts.org/news-and-insights/updates-to-ielts-test-delivery" },
+  { label: "IELTS.org: news and insights", href: "https://ielts.org/news-and-insights" },
+  { label: "Cambridge English: IELTS test format", href: "https://www.cambridgeenglish.org/exams-and-tests/ielts/test-format/" },
   { label: "IDP IELTS: test delivery updates for 2026", href: "https://ielts.idp.com/about/news-and-articles/article-updates-to-ielts-test-delivery" },
   { label: "IELTS.org: ways to take IELTS", href: "https://ielts.org/take-a-test/test-types" },
   { label: "UK Home Office: English language requirement for work visas", href: "https://www.gov.uk/english-language" },
@@ -138,10 +177,32 @@ export default function Ielts2026ChangesPage() {
       />
 
       <PageHead
-        eyebrow="Updated November 2026"
-        title="What changed in IELTS in 2026."
-        lead="2026 was a delivery year, not a content year. The exam still asks the same things and marks them the same way, but how you sit it, and what happens if one skill lets you down, both changed."
+        eyebrow="Updated 25 November 2026"
+        title="What changed in IELTS in 2026, and what is not changing in 2027."
+        lead="2026 was a delivery year, not a content year. The exam still asks the same things and marks them the same way, but how you sit it, and what happens if one skill lets you down, both changed. For 2027, IELTS has announced no format change at all."
       />
+
+      {/* 2027 rumour check: the cluster "ielts changes 2027" lands here, not on a new post */}
+      <section id="2027" className="mt-10 scroll-mt-24">
+        <h2 className="text-xl font-semibold text-ink">IELTS 2027 changes: the rumours checked</h2>
+        <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+          Claims about a "new IELTS pattern from 2027" are spreading on social media. We checked each
+          one against IELTS&apos;s own announcements on 25 November 2026.
+        </p>
+        <div className="mt-4 space-y-4">
+          {RUMOURS.map((r) => (
+            <div key={r.claim} className="rounded-2xl border border-line bg-paper-elev p-5">
+              <p className="text-sm font-semibold text-ink">&ldquo;{r.claim}&rdquo;</p>
+              <p className="mt-2 inline-flex rounded-full bg-paper-sunken px-2.5 py-0.5 text-xs font-semibold text-ink">
+                {r.verdict}
+              </p>
+              <p className="mt-2.5 text-sm leading-relaxed text-ink-soft">{r.detail}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <h2 className="mt-14 text-xl font-semibold text-ink">What actually changed in 2026</h2>
 
       {/* The three real changes */}
       <div className="mt-10 space-y-5">
