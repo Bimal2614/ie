@@ -46,15 +46,18 @@ export type { BlogPost, BlogSection } from "./blog-types";
  * close to a test date, so these are also the next questions they have.
  */
 const BOOKING_AND_RETAKE_SECTION: BlogSection = {
-  heading: "Booking, scores and retakes",
+  heading: "Booking, fees, results and retakes",
   paragraphs: [
-    "If your test is close, three practical questions usually follow: how to book or move a date, what your practice scores add up to, and what to do if one skill falls short. These guides answer each one.",
+    "If your test is close, the practical questions usually follow: what the test costs, how to book or move a date, how to plan the weeks before it, what your practice scores add up to, and what to do if a result falls short. These guides answer each one.",
   ],
   links: [
     { label: "How to book IELTS with IDP or British Council, and what moving a date costs", href: "/blog/how-to-book-ielts-test" },
     { label: "IELTS band score calculator: your overall band from four skill scores", href: "/ielts-band-score-calculator" },
     { label: "IELTS One Skill Retake: re-sit one skill within 60 days", href: "/blog/ielts-one-skill-retake-guide" },
     { label: "IELTS for UKVI vs IELTS Academic: which test a UK visa needs", href: "/blog/ielts-ukvi-vs-ielts-academic" },
+    { label: "IELTS exam fee 2026 by country, and why IELTS is so expensive", href: "/blog/ielts-exam-fee-2026" },
+    { label: "IELTS study plan: 1, 4, 8 and 12-week schedules, including UKVI", href: "/blog/ielts-4-week-study-plan" },
+    { label: "How long an IELTS remark takes, and when it is worth the fee", href: "/blog/ielts-results-trf-validity-remark" },
   ],
 };
 
