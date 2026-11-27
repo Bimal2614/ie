@@ -208,6 +208,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
     category: "Booking",
     date: "October 2026",
     publishedAt: "2026-10-15",
+    updatedAt: "2026-11-26",
     readMins: 8,
     keywords: [
       "ielts test cancelled",
@@ -226,6 +227,13 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
           "If the test centre cancels your IELTS test, whether for bad weather, unrest or a technical failure, the official IELTS terms give you the choice: a full refund, or a transfer to a future test date at no cost. That is the opposite of what happens when you cancel, when you lose up to 25% of the fee or all of it, depending on how close the test is.",
           "Between 10 and 13 October 2026, the British Council cancelled computer-delivered IELTS across mainland China after a technical failure, and around 10,000 candidates found out what those rights look like in practice. Here is what happened, what you are entitled to if it happens to you, what to do if your test fails partway through, and the One Skill Retake question nobody has answered yet.",
         ],
+      },
+      {
+        heading: "Cancelling your own IELTS test instead?",
+        paragraphs: [
+          "This page is about tests the centre cancels. If you want to cancel or move your own booking, different rules apply and you usually lose part of the fee. In India, IDP refunds the fee minus up to 25% if you cancel 15 or more days before the test, and nothing inside 14 days. Moving the date is free 15 or more days out and costs an administration fee of up to 25% between 5 and 14 days before. A serious illness or emergency goes through special consideration, with evidence, rather than the normal cancellation rules. Elsewhere, the terms are set locally and shown when you book.",
+        ],
+        links: [{ label: "How to cancel or move an IELTS booking, and what it costs", href: "/blog/how-to-book-ielts-test" }],
       },
       {
         heading: "What happened to IELTS in China in October 2026",
@@ -350,6 +358,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       },
     ],
     faqs: [
+      { q: "Can I cancel my own IELTS test and get a refund?", a: "Partly, if you cancel early enough. In India, IDP refunds the fee minus an administration charge of up to 25% when you cancel 15 or more days before the test, and refunds nothing inside 14 days. Illness and similar emergencies go through special consideration, with evidence. Other countries set their own terms, shown at booking. This is different from a cancellation by the centre, which always gives you a full refund or a free transfer." },
       { q: "What happens if my IELTS test is cancelled by the test centre?", a: "You choose between a full refund and a transfer to a future test date at no cost. That applies whether the cause was outside the centre's control, such as extreme weather or unrest, or a technical failure or venue problem. The centre should give you as much notice as possible." },
       { q: "Do I get a full refund if IELTS cancels my test?", a: "Yes, if you choose a refund rather than a transfer. The administration fee of up to 25% applies only when you cancel, not when the test centre does." },
       { q: "Will IELTS pay my travel costs if the test is cancelled?", a: "Not as a standard right. The IELTS terms promise a refund or a transfer, not travel costs. In October 2026 the British Council did reimburse reasonable travel and accommodation for candidates in mainland China, but that was part of a one-off package. Ask in writing with receipts, but do not count on it." },
@@ -1079,11 +1088,11 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
     seoTitle: "IELTS Exam Fee in the USA: USD 325 Since 1 October 2026",
     title: "IELTS exam fee in the USA 2026: USD 325 since 1 October",
     excerpt:
-      "IELTS now costs USD 325 at most US centres, up USD 40 on 1 October 2026. IELTS Online is USD 244.40. What the fee covers, extra charges and other countries.",
+      "IELTS costs USD 325 at most US centres since 1 October 2026, USD 340 at ELS. UKVI, Life Skills and IELTS Online fees, ID you need, and what the fee covers.",
     category: "Booking",
     date: "September 2026",
     publishedAt: "2026-09-14",
-    updatedAt: "2026-10-02",
+    updatedAt: "2026-11-26",
     readMins: 5,
     keywords: [
       "ielts exam fee usa",
@@ -1094,6 +1103,9 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       "ielts academic fee usa",
       "ielts general training fee usa",
       "ielts test centre usa cost",
+      "ielts ukvi fee usa",
+      "ielts life skills fee usa",
+      "ielts els test center fee",
     ],
     sections: [
       { paragraphs: ["IELTS in the United States now costs USD 325 at most test centres, for both Academic and General Training. The fee rose by USD 40, about 14%, for tests taken on or after 1 October 2026. Before that date it was USD 285. IELTS Online, sat at home, is still USD 244.40."], links: [{ label: "The F-1 four-year rule and what the court ruling means", href: "/blog/us-f1-duration-of-status-rule-blocked-2026" }] },
@@ -1108,7 +1120,27 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
             ["IELTS Online (at home)", "USD 244.40", "USD 244.40", "Unchanged"],
           ],
         },
-        paragraphs: ["USD 325 is the price most centres list, but it is not quite national. Some centres add a non-refundable admin fee on top, and one ELS centre lists USD 325 plus USD 15, so USD 340 in total. British Council quotes a US range of about USD 280 to 340 depending on location. Check the total on your centre's booking page before you pay."],
+        paragraphs: ["USD 325 is the price most centres list, but it is not quite national. ELS Language Centers, which run IELTS in Boston, Houston, Philadelphia, San Francisco, Minneapolis, St. Petersburg, Cincinnati, Cleveland and Nashville, charge USD 325 plus a USD 15 non-refundable admin fee, so USD 340 in total. Their Cleveland and Nashville centres charge USD 365 plus the same USD 15, so USD 380. British Council quotes a US range of USD 280 to 340 depending on location. Check the total on your centre's booking page before you pay."],
+      },
+      {
+        heading: "IELTS for UKVI and Life Skills fees in the USA",
+        table: {
+          caption: "From British Council's United States page and ELS centre listings, checked 26 November 2026.",
+          headers: ["Test", "Fee", "Who needs it"],
+          rows: [
+            ["IELTS Academic / General Training", "USD 325 at most centres (USD 340 at ELS, USD 380 at ELS Cleveland and Nashville)", "Universities, US and Canadian immigration, professional bodies"],
+            ["IELTS for UKVI (Academic or General Training)", "USD 305 on British Council's US page", "UK visa applications that ask for a UKVI-approved test"],
+            ["IELTS Life Skills (A1 or B1)", "USD 195", "UK family and settlement visas that ask for speaking and listening only"],
+            ["IELTS Online (at home)", "USD 244.40", "Some universities only; never UK visas"],
+          ],
+        },
+        paragraphs: ["The British Council's UKVI figure has not visibly changed since the 1 October rise on the standard test, so treat it as a floor and confirm the total at booking. Only book the UKVI version if a UK visa actually requires it: for a US or Canadian university the standard test is the one they ask for."],
+        links: [{ label: "IELTS for UKVI vs IELTS Academic: which test a UK visa needs", href: "/blog/ielts-ukvi-vs-ielts-academic" }],
+      },
+      {
+        heading: "What you need to book IELTS in the USA",
+        bullets: ["A valid ID: a passport, US Permanent Resident Card or US Employment Authorization Card (ELS centres also accept a US Passport Card). You upload a clear scan when you book.", "The same original ID on test day. A different document, or a photocopy, means you are not allowed to sit.", "Under 18: a parent or guardian must register you and give consent. IELTS is not recommended for anyone under 16.", "Your Speaking time. The confirmation email gives separate start times for Speaking and for Listening, Reading and Writing, and the centre can move the Speaking slot."],
+        links: [{ label: "How to book IELTS with IDP or British Council, step by step", href: "/blog/how-to-book-ielts-test" }],
       },
       { heading: "What changed on 1 October 2026", paragraphs: ["The standard fee at US test centres went from USD 285 to USD 325. The increase applies by test date, not by booking date, so a test taken on or after 1 October is charged at the new price at most centres even if you are only booking now.", "If you missed the old price, do not rush to make up for it. A re-sit costs the full fee again, so the cheapest test is the one you only sit once. Book when your timed mock scores are consistently at or above the band you need."], links: [{ label: "An IELTS 4-week study plan, if your test is a month away", href: "/blog/ielts-4-week-study-plan" }] },
       { heading: "What the fee covers, and what it does not", links: [{ label: "IELTS remark (Enquiry on Results): how long it takes and when the fee is refunded", href: "/blog/ielts-results-trf-validity-remark" }, { label: "IELTS exam fee in every country, and why IELTS is so expensive", href: "/blog/ielts-exam-fee-2026" }], bullets: ["All four sections — Listening, Reading, Writing and a face-to-face Speaking interview with a human examiner.", "One Test Report Form for you, plus a number of copies sent directly to receiving institutions (the free allowance varies by centre).", "It does not cover an Enquiry on Results, which is charged separately and refunded in full if any band changes.", "It does not cover rescheduling, which normally carries an administrative fee if you move your date more than about five weeks out.", "It does not cover One Skill Retake, which has its own lower fee — and note that One Skill Retake is not available in the United States."] },
@@ -1137,7 +1169,9 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
     faqs: [
       { q: "How much does IELTS cost in the USA in 2026?", a: "USD 325 at most test centres for tests taken on or after 1 October 2026, up from USD 285. The fee is the same for IELTS Academic and IELTS General Training. IELTS Online, sat at home, costs USD 244.40. Some centres add an admin fee, so confirm the total on your centre's booking page." },
       { q: "Did the IELTS fee go up in the USA?", a: "Yes. The standard fee at US test centres rose from USD 285 to USD 325 for tests taken on or after 1 October 2026, an increase of about 14%. The change is tied to the test date, so a test sat now is charged at the new price at most centres." },
-      { q: "Is IELTS cheaper in some US cities than others?", a: "Barely. Most centres list the same USD 325, including those in New York, San Francisco and Washington DC. A few add a non-refundable admin fee, and British Council quotes a range of about USD 280 to 340 depending on location. The difference is rarely worth travelling for, so choose your centre on date availability and convenience." },
+      { q: "Is IELTS cheaper in some US cities than others?", a: "Slightly. Most centres list USD 325, including those in New York, San Francisco and Washington DC. ELS centres add a USD 15 admin fee (USD 340), and ELS Cleveland and Nashville charge USD 380 in total. British Council quotes a range of USD 280 to 340 depending on location. Choose your centre on date availability first, then compare totals." },
+      { q: "How much is IELTS for UKVI in the USA?", a: "British Council's United States page lists USD 305 for IELTS for UKVI (Academic or General Training) and USD 195 for IELTS Life Skills A1 or B1. Confirm the total on the booking page, and only choose UKVI if a UK visa requires it." },
+      { q: "What ID do I need to book IELTS in the USA?", a: "A passport, US Permanent Resident Card or US Employment Authorization Card; ELS centres also accept a US Passport Card. You upload a scan when booking and must bring the same original document on test day." },
       { q: "Why is IELTS so expensive?", a: "Mostly because of the Speaking test. It is a live one-to-one interview with a trained human examiner, which has to be scheduled, staffed and marked individually. Add venue hire, invigilation and secure test materials, and the fee ends up well above fully automated tests." },
       { q: "Is IELTS Online accepted in the USA?", a: "It depends entirely on who is receiving your score. IELTS Online is cheaper at USD 244.40, but it is not accepted for UK visa and immigration purposes and not every university accepts it. Confirm acceptance in writing with your institution before booking, because an unaccepted result means paying for the test twice." },
       { q: "Can I retake just one section of IELTS in the USA?", a: "No. One Skill Retake is available in most IELTS countries but not in the United States. If you fall short in a single skill, a full re-sit at the current fee is the only route, which is a strong argument for not booking until your practice scores are consistently at target." },
@@ -1288,7 +1322,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
     category: "Requirements",
     date: "August 2026",
     publishedAt: "2026-08-11",
-    updatedAt: "2026-10-14",
+    updatedAt: "2026-11-26",
     readMins: 11,
     keywords: [
       "ielts ukvi",
@@ -1336,6 +1370,9 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       { heading: "Practise for the per-skill minimum", paragraphs: ["If your requirement is per-skill, your weakest skill is the only one that matters. On IELTSVega you can see your band by skill after every practice set and mock test, get instant AI scoring on Writing and Speaking against all four criteria, and drill the one skill sitting below your threshold, which is exactly where visa applications are won or lost."], links: [{ label: "Build a UKVI study plan", href: "/blog/ielts-4-week-study-plan" }, { label: "IELTS Writing practice online with AI band scores", href: "/blog/ielts-writing-practice-online" }] },
     ],
     faqs: [
+      { q: "What does UKVI mean in IELTS?", a: "UKVI stands for UK Visas and Immigration, the part of the UK Home Office that decides visa applications. IELTS for UKVI is the version of IELTS it approves as a Secure English Language Test (SELT) for visas that need one. The questions and marking are the same as ordinary IELTS; what changes is where you sit it and how your result is reported." },
+      { q: "Is IELTS for UKVI Academic or General Training?", a: "Either. IELTS for UKVI comes in an Academic version and a General Training version, plus IELTS Life Skills (A1, A2 or B1) for some family and settlement routes. Students going to a UK university usually book IELTS for UKVI Academic; work routes usually accept either, so check what your visa or sponsor names." },
+      { q: "IELTS UKVI vs normal IELTS: what is the difference?", a: "The test itself is the same: four skills, the same questions and the same band scores. Normal IELTS is accepted by universities and most employers. IELTS for UKVI is sat at a Home Office approved centre with stricter identity checks, costs slightly more, and is the version a UK visa asks for when it needs a SELT. If your UK university can assess your English itself, normal IELTS Academic may be enough, so ask the university before paying for UKVI." },
       { q: "What is the difference between IELTS for UKVI and IELTS Academic?", a: "The test content, questions and marking are identical. IELTS for UKVI is delivered at UK Home Office approved centres under extra identity and security requirements, and your details are reported to the Home Office. It costs slightly more and produces a Test Report Form a visa caseworker can verify." },
       { q: "Do I need IELTS for UKVI for a UK student visa?", a: "It depends on your institution. Many UK universities can assess English themselves for degree-level courses and accept standard IELTS Academic; many still require UKVI. Confirm with your university's admissions team in writing before booking, because the wrong booking cannot be used." },
       { q: "What IELTS score do I need for a UK Skilled Worker visa?", a: "From 8 January 2026, first-time Skilled Worker, Scale-up and High Potential Individual applicants must meet CEFR B2, which on IELTS for UKVI means at least 5.5 in each of the four skills. It is a per-skill minimum, so an overall 6.5 with 5.0 in one skill does not qualify." },
@@ -1608,6 +1645,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
     category: "Requirements",
     date: "August 2026",
     publishedAt: "2026-08-13",
+    updatedAt: "2026-11-26",
     readMins: 9,
     keywords: [
       "ielts vs pte",
@@ -1628,6 +1666,7 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       { heading: "Cost and results speed", bullets: ["IELTS: typically USD 230 to 490 equivalent depending on the country; results in 3 to 5 days for computer-delivered tests.", "PTE Academic: generally somewhat cheaper than IELTS in most markets; results usually within about two days.", "Duolingo English Test: substantially cheaper than both; results usually within about two days.", "Fees and turnaround change. Check the current figures on each provider's site before deciding on price."] },
       { heading: "Which is actually easier?", paragraphs: ["None of them is easier in the abstract, but they reward different people. IELTS suits candidates who are comfortable talking to a person, have good general reading stamina, and write reasonable essays. PTE suits candidates who are comfortable with a microphone, dislike being watched, and are willing to learn a fairly mechanical task technique. Duolingo suits candidates who want a short, cheap, adaptive test and are not applying anywhere that demands a traditional test.", "The one honest generalisation: PTE's AI scoring is more predictable and less forgiving of technique errors, IELTS Writing and Speaking are more forgiving of technique but harder to game, and Duolingo's brevity means a single bad ten minutes weighs more heavily."] },
       { heading: "Choose in three steps", bullets: ["Step 1: list every institution and visa route you might apply to, and check what each accepts. If only one test appears on every list, you are done.", "Step 2: if several are accepted, take a free practice test of the two frontrunners and compare how they feel, not how they are described.", "Step 3: pick the one where your weakest skill is least exposed. If Speaking to a person terrifies you, that is a real argument for PTE. If your written English is your strength and your microphone technique is not, that is an argument for IELTS."] },
+      { heading: "IELTS vs Duolingo in Peru", paragraphs: ["For students in Peru the decision usually comes down to where you are applying, because the two tests are sat very differently. IELTS is taken at a test centre, on computer, in Lima or Arequipa, with a face-to-face Speaking interview. The Duolingo English Test is taken at home online, so it is available anywhere in Peru with a reliable connection and a quiet room."], bullets: ["Applying to US or Canadian universities: many accept the Duolingo English Test, and it is cheaper and faster to book. Confirm on each university's admissions page before choosing it.", "Applying to UK universities with a student visa: book IELTS for UKVI or another UK-approved test. The Duolingo English Test is not a UK visa test, even where a university accepts it for admission.", "Applying for migration or a work visa anywhere: choose IELTS (or PTE where it is accepted). Duolingo coverage for visas is thin.", "Not sure yet: IELTS keeps every door open, which matters if your list of countries could still change."], links: [{ label: "IELTS on paper vs computer in Peru: what you can book now", href: "/blog/ielts-online-vs-paper-based" }, { label: "IELTS vs TOEFL: which test to take", href: "/blog/ielts-vs-toefl" }] },
       { heading: "One thing to avoid", paragraphs: ["Do not choose a test because it is cheaper or shorter and then discover your target university requires something else. A cheap test your institution rejects costs you the whole fee plus the delay of booking the right one, and application deadlines rarely wait. The fee difference between these tests is small compared with the cost of applying twice."] },
       { heading: "If you choose IELTS, prepare for the format", paragraphs: ["Once IELTS is decided, format-specific practice is what moves your band. IELTSVega covers every IELTS question type across Academic and General Training, gives instant AI band scoring on Writing and Speaking against all four official criteria, and lets you sit full computer-delivered mock tests on real timing, so nothing about test day is new."] },
     ],
@@ -1635,6 +1674,8 @@ export const TOPIC_POSTS_2026: BlogPost[] = [
       { q: "Is IELTS or PTE easier?", a: "Neither is easier by design. PTE is fully computer-based with AI scoring and rewards a learnable, quite mechanical technique; IELTS has a live Speaking interview and a wider range of question types. Choose the format that exposes your weakest skill least." },
       { q: "Is the Duolingo English Test accepted for visas?", a: "Acceptance for study is broad, with more than 5,000 universities and programmes, but it is noticeably thinner for immigration and visa purposes than IELTS. If your route involves a visa English requirement, verify acceptance on the official immigration guidance before booking." },
       { q: "Which English test is cheapest?", a: "The Duolingo English Test is generally the cheapest, followed by PTE Academic, with IELTS usually the most expensive. The saving is small compared with the cost of taking a test your institution does not accept, so check acceptance before price." },
+      { q: "Which is better in Peru, IELTS or Duolingo?", a: "It depends on where you are applying. Many US and Canadian universities accept the Duolingo English Test, which you take at home and which costs less. For a UK student visa, or for migration and work visas, IELTS is the safer choice, and it is taken at test centres in Lima and Arequipa. Check every university and visa on your list before booking." },
+      { q: "PTE vs Duolingo: which is easier and which is better for Canadian universities?", a: "Neither is easier overall. Duolingo is shorter (about an hour, at home) and adaptive; PTE is about two hours at a test centre and rewards a learnable technique. Many Canadian universities accept both, so check your programme's page. If a Canadian immigration route is involved later, note that Duolingo is not an accepted test for it." },
       { q: "Can I switch to IELTS if I already took PTE or Duolingo?", a: "Yes, there is nothing stopping you sitting a different test, and many candidates do after a disappointing result. You pay the new fee in full, so it is worth taking a free practice test of the new format first to confirm it genuinely suits you better." },
     ],
   },

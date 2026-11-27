@@ -816,6 +816,7 @@ export const PRACTICE_POSTS: BlogPost[] = [
     category: "Writing",
     date: "September 2026",
     publishedAt: "2026-09-26",
+    updatedAt: "2026-11-26",
     readMins: 14,
     keywords: [
       "ielts letter writing",
@@ -1040,6 +1041,7 @@ export const PRACTICE_POSTS: BlogPost[] = [
       { q: "Is it \"Yours faithfully\" or \"Yours sincerely\" in an IELTS letter?", a: "Use \"Yours faithfully\" after \"Dear Sir or Madam\", when you do not know the reader's name. Use \"Yours sincerely\" after a named greeting such as \"Dear Mr Khan\". In a semi-formal letter to someone you know, \"Kind regards\" is also natural. Informal letters end with \"Take care\" or \"Best wishes\"." },
       { q: "Can I use contractions in an IELTS letter?", a: "In an informal letter, yes, and you should: contractions are part of what makes the tone genuinely informal. In a semi-formal letter an occasional one is acceptable. In a formal letter, avoid them entirely and write \"I would\", \"I am\" and \"cannot\" in full." },
       { q: "What if the IELTS letter prompt does not say whether it is formal or informal?", a: "It never says so directly, but it always tells you who the reader is, and that decides it. A company or someone you do not know means formal. Someone you know in a formal relationship, like a manager or landlord, means semi-formal. A friend or relative means informal." },
+      { q: "Is the IELTS letter an email? What format should I use?", a: "The task asks for a letter, but the format is the one you would use for a clear email: a greeting (Dear Sir or Madam, Dear Mr Patel, or Dear Sam), an opening line that says why you are writing, one paragraph for each bullet point, and a sign-off that matches the greeting (Yours faithfully, Yours sincerely, or Best wishes). You do not need a subject line, addresses or a date." },
       { q: "Do Academic candidates write a letter in IELTS?", a: "No. The letter is General Training Writing Task 1 only. Academic Task 1 asks you to describe a graph, chart, table, process or map instead. Task 2, the essay, exists in both modules, so check which module you are booked for before you start preparing letters." },
       { q: "Can I use a memorised template for the IELTS letter?", a: "A structure, yes: greeting, purpose line, a paragraph per bullet, closing line, sign-off. Memorised sentences are riskier. Stock lines that do not fit the situation read as learned rather than written for the task, and they fill your word count without extending any bullet." },
     ],
@@ -1562,6 +1564,7 @@ export const PRACTICE_POSTS: BlogPost[] = [
     category: "Reading",
     date: "October 2026",
     publishedAt: "2026-10-06",
+    updatedAt: "2026-11-26",
     readMins: 10,
     keywords: [
       "true false not given ielts",
@@ -1659,6 +1662,34 @@ export const PRACTICE_POSTS: BlogPost[] = [
         bullets: [
           "In Yes / No / Not Given, look for the writer's stance: words like \"argue\", \"clearly\", \"unfortunately\", \"it is a mistake to\". A view reported from someone else (\"critics say\") is not necessarily the writer's own.",
         ],
+      },
+      {
+        heading: "True False Not Given vocabulary: the paraphrases that decide the answer",
+        paragraphs: [
+          "The statement almost never repeats the passage word for word. It says the same thing in other words, or it changes one word so the meaning flips. Most wrong answers come from missing which of the two is happening. These are the pairs that come up again and again.",
+        ],
+        table: {
+          caption: "Our own examples. If the passage says the left column, the statement in the middle column is the answer on the right.",
+          headers: ["Passage says", "Statement says", "Answer"],
+          rows: [
+            ["The scheme was abandoned after two years", "The scheme ended within three years", "TRUE (paraphrase)"],
+            ["Most residents opposed the plan", "Few residents opposed the plan", "FALSE (quantity flipped)"],
+            ["The method may reduce costs", "The method reduces costs", "NOT GIVEN (a possibility is not a fact)"],
+            ["Prices rose after the factory opened", "The factory caused prices to rise", "NOT GIVEN (sequence is not cause)"],
+            ["The bridge was the first of its kind in Europe", "No bridge like it existed in Europe before", "TRUE (paraphrase)"],
+            ["Researchers rarely found the bird outside forests", "The bird never lives outside forests", "FALSE (rarely is not never)"],
+            ["The museum attracts many foreign visitors", "Most of the museum's visitors are foreign", "NOT GIVEN (many is not most)"],
+            ["Critics argue the policy is too expensive", "The policy is too expensive", "NOT GIVEN (an opinion the writer does not confirm)"],
+          ],
+        },
+        bullets: [
+          "Quantity words: all, most, many, some, few, none. Changing one of these is the commonest FALSE.",
+          "Frequency words: always, usually, often, rarely, never. \"Rarely\" against \"never\" is FALSE, not TRUE.",
+          "Certainty words: may, might, could, is believed to. A statement that removes the hedge is usually NOT GIVEN.",
+          "Cause words: because, led to, caused, as a result. If the passage only gives an order of events, the cause is NOT GIVEN.",
+          "Comparison words: more, the first, the largest, the only. Check the passage makes the same comparison, not just mentions both things.",
+        ],
+        links: [{ label: "IELTS paraphrasing: how to spot the same idea in different words", href: "/blog/ielts-paraphrasing" }],
       },
       {
         heading: "How to answer True False Not Given, step by step",
@@ -1924,6 +1955,7 @@ export const PRACTICE_POSTS: BlogPost[] = [
     category: "Writing",
     date: "September 2026",
     publishedAt: "2026-09-26",
+    updatedAt: "2026-11-26",
     readMins: 9,
     keywords: [
       "ielts paraphrasing",
@@ -2069,6 +2101,31 @@ export const PRACTICE_POSTS: BlogPost[] = [
         paragraphs: [
           "Not for learning, and never as a model. Automatic paraphrasers swap words for dictionary synonyms without checking collocation or register, so they produce sentences like \"The administration ought to finance open conveyance\" for \"The government should fund public transport\". Learning from output like that trains exactly the errors the Band 7 descriptor calls inappropriacies in style and collocation. In the exam you have no tool anyway. Practise the techniques above until they are automatic.",
         ],
+      },
+      {
+        heading: "15 IELTS paraphrasing examples",
+        paragraphs: ["Each example takes a sentence of the kind you meet in a Task 2 question, a Task 1 prompt or a Reading passage, and rewrites it without changing the meaning. The right-hand column names the technique, so you can see which move did the work. Notice that most good paraphrases combine two techniques rather than swapping words one by one."],
+        table: {
+          caption: "Our own examples. Keep the meaning, change the form.",
+          headers: ["Original", "Paraphrase", "Technique"],
+          rows: [
+            ["Many people believe that university education should be free.", "A large number of people think that students should not have to pay for higher education.", "Synonyms + word form"],
+            ["Governments should spend more money on public transport.", "More public funding ought to go into buses and trains.", "Change the subject"],
+            ["Some people think that children should start school at an early age.", "It is sometimes argued that formal education ought to begin when children are very young.", "Passive opening + synonyms"],
+            ["The number of people living alone has increased.", "There has been a rise in the number of one-person households.", "Verb to noun"],
+            ["Technology has made our lives easier.", "Daily life has become more convenient because of technology.", "Change the subject + clause order"],
+            ["Advertising encourages people to buy things they do not need.", "People are persuaded by advertisements to purchase unnecessary goods.", "Active to passive"],
+            ["Online learning is becoming more popular.", "A growing number of students are choosing to study online.", "General to specific"],
+            ["Crime rates are higher in cities than in the countryside.", "Urban areas experience more crime than rural ones.", "Synonyms + comparative"],
+            ["Young people today spend too much time on social media.", "The amount of time teenagers spend on social networks is excessive.", "Noun phrase subject"],
+            ["Tourism can damage the environment.", "The environment may be harmed by tourism.", "Active to passive + modal swap"],
+            ["Working from home has both advantages and disadvantages.", "Remote work brings benefits as well as drawbacks.", "Synonyms"],
+            ["The graph shows the percentage of households with internet access.", "The line graph illustrates the proportion of homes that had access to the internet.", "Task 1 opening"],
+            ["Fewer people are buying newspapers than in the past.", "Newspaper sales have fallen over time.", "Change the subject + verb"],
+            ["It is important for children to learn a foreign language.", "Learning a second language is essential for young people.", "Gerund subject"],
+            ["Some people prefer to live in a house, while others prefer an apartment.", "Opinions differ on whether a house or a flat is the better place to live.", "Restructure the whole sentence"],
+          ],
+        },
       },
       {
         heading: "IELTS paraphrasing exercises with answers",
