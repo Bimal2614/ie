@@ -71,11 +71,18 @@ export const SCORING_LOOKBACK_HOURS = 3;
 
 /** Practice and section-practice answers a scorer can still do something with. */
 export const scorableResponse = or(
-  // A writing task with something written in it. `->>` yields NULL for a missing
-  // key and for JSON null alike, which coalesce folds into the empty case.
+  // A writing task with something written in it: at least one non-whitespace
+  // character, which is exactly what the scorer's JS `.trim()` keeps. A POSIX
+  // class rather than `\S` so no backslash has to survive the template literal.
+  //
+  // NOT `btrim(x) <> ''`. One-argument btrim strips SPACES ONLY, so a task left
+  // holding a bare newline passed here while the scorer discarded it as blank:
+  // the row sat in the queue for three hours and paged as "stuck" (27 Nov 2026).
+  // `->>` yields NULL for a missing key or JSON null; `NULL ~ …` is NULL, which
+  // WHERE treats as false, so those stay out too.
   and(
     eq(userResponses.section, "writing"),
-    sql`coalesce(btrim(${userResponses.response}->>'text'), '') <> ''`,
+    sql`${userResponses.response}->>'text' ~ '[^[:space:]]'`,
   ),
   // A speaking answer with a recording that has not already been judged
   // unscorable (no speech in it — a permanent fact, recorded as a verdict).
@@ -96,7 +103,7 @@ export const scorableResponse = or(
 export const scorableMockAnswer = or(
   and(
     eq(mockTestAnswers.section, "writing"),
-    sql`coalesce(btrim(${mockTestAnswers.response}->>'text'), '') <> ''`,
+    sql`${mockTestAnswers.response}->>'text' ~ '[^[:space:]]'`,
   ),
   and(
     eq(mockTestAnswers.section, "speaking"),

@@ -13,6 +13,49 @@ function norm(s: unknown): string {
     .replace(/\s+/g, " ");
 }
 
+/**
+ * The form a written answer is compared in. An examiner marks the answer, not
+ * the typing: "0207 946 0321" and "02079460321" are the same phone number,
+ * "library." is "library", "£50" in a gap printed after a £ is "50", and
+ * "7:30" is "7.30". Spelling still has to be right, and nothing here can turn
+ * a different word or number into the key (dots are kept, so 1.5 never
+ * becomes 15).
+ */
+function canon(s: unknown): string {
+  return norm(String(s ?? "").normalize("NFKC"))
+    .replace(/[‘’ʼ`]/g, "'")
+    .replace(/[‐-―−]/g, "-")
+    .replace(/^[\s.,;:!?"'()]+|[\s.,;:!?"'()]+$/g, "") // a full stop or quotes around it
+    .replace(/\s*-\s*/g, "-") // "kick - off"
+    .replace(/\s*&\s*/g, " and ")
+    .replace(/[£$€₹]/g, "")
+    .replace(/\b(per ?cent)\b/g, "%")
+    // 8th = 8 (15th March = 15 March); only the right ending, so "8st" stays wrong
+    .replace(/(\d+) ?(st|nd|rd|th)\b/g, (m, n: string, suf: string) => (ordinal(n) === suf ? n : m))
+    .replace(/(\d),(?=\d{3}\b)/g, "$1") // 1,500 = 1500
+    .replace(/(\d):(\d\d)\b/g, "$1.$2") // 7:30 = 7.30
+    .trim();
+}
+
+function ordinal(n: string): string {
+  const v = Number(n) % 100;
+  if (v >= 11 && v <= 13) return "th";
+  return ({ 1: "st", 2: "nd", 3: "rd" } as Record<number, string>)[v % 10] ?? "th";
+}
+
+/** Same answer once typing differences are set aside. */
+function sameAnswer(given: unknown, key: unknown): boolean {
+  const a = canon(given);
+  const b = canon(key);
+  if (!a || !b) return false;
+  if (a === b) return true;
+  // Numbers, phone numbers, postcodes, codes, measurements: spacing and
+  // hyphens are layout, not content ("BS8 1QU", "50km", "01632-960123").
+  if (/\d/.test(b)) return a.replace(/[\s-]/g, "") === b.replace(/[\s-]/g, "");
+  // Words: a hyphen and a space are the same join (kick-off / kick off).
+  return a.replace(/-/g, " ") === b.replace(/-/g, " ");
+}
+
 export function grade(
   family: InputFamily,
   ans: Record<string, unknown> | undefined,
@@ -39,7 +82,7 @@ export function grade(
       const accepted = (ca.any as string[]) ?? [];
       // Lettered labelling answers arrive as a key rather than typed text.
       const given = ans.text ?? ans.key;
-      return accepted.length > 0 && accepted.some((e) => norm(given) === norm(e));
+      return accepted.length > 0 && accepted.some((e) => sameAnswer(given, e));
     }
     default:
       return false;
